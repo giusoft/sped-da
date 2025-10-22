@@ -1,0 +1,35 @@
+services:
+  # Serviço PHP-FPM
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gnotas_app
+    restart: unless-stopped
+    volumes:
+      # Mapeia o projeto INTEIRO para o workdir do container
+      - .:/var/www/html
+      # Mantemos o volume anônimo para a pasta vendor para evitar sobrescrever
+      - /var/www/html/vendor
+    networks:
+      - gnotas_network
+
+  # Serviço Apache
+  webserver:
+    image: httpd:2.4
+    container_name: gnotas_webserver_apache
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      # O Apache também precisa ver o projeto inteiro
+      - .:/var/www/html
+      - ./apache.conf:/usr/local/apache2/conf/httpd.conf
+    depends_on:
+      - app
+    networks:
+      - gnotas_network
+
+networks:
+  gnotas_network:
+    driver: bridge
