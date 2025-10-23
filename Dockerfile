@@ -45,14 +45,14 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # [cite_start]5. Copia os arquivos de dependência e instala as dependências do Composer [cite: 3]
 # Isso aproveita o cache do Docker. O vendor só será reconstruído se o composer.json ou .lock mudar.
-COPY composer.json composer.lock* ./
+COPY lib/composer.json lib/composer.lock* ./
 RUN composer install --no-dev --no-interaction --no-scripts --optimize-autoloader
 
 # [cite_start]6. Copia o código da sua aplicação [cite: 3, 4]
-COPY api/ ./api/
+COPY . .
 
 # [cite_start]7. Ajusta as permissões da pasta para o usuário do servidor web [cite: 4]
-RUN chown -R www-data:www-data /var/www/html/api
+RUN chown -R www-data:www-data /var/www/html
 
 # [cite_start]Expõe a porta padrão do PHP-FPM [cite: 4]
 EXPOSE 9000
