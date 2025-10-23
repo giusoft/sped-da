@@ -45,7 +45,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # [cite_start]5. Copia os arquivos de dependência e instala as dependências do Composer [cite: 3]
 # Isso aproveita o cache do Docker. O vendor só será reconstruído se o composer.json ou .lock mudar.
-COPY lib/composer.json lib/composer.lock* ./
+COPY src/Lib/composer.json src/Lib/composer.lock* ./
 RUN composer install --no-dev --no-interaction --no-scripts --optimize-autoloader
 
 # [cite_start]6. Copia o código da sua aplicação [cite: 3, 4]
