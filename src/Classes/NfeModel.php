@@ -28,15 +28,14 @@ class NfeModel
 
         try {
             // 1. MONTA O XML
-            $nfe = $this->montarXML($this->corpoRequisicao);
-            $xmlString = $nfe->getXML();
-
+            $xmlString = $this->montarXML($this->corpoRequisicao);
+            dar retorno que ele foi gerado
             // 2. ASSINA O XML (já faz validação automática)
             $xmlAssinado = $this->tools->signNFe($xmlString);
-
+            dar um retorno pro js que o xml foi assinado
             // 3. ENVIA PARA SEFAZ (modo síncrono - indSinc=1)
             $idLote = str_pad(time(), 15, '0', STR_PAD_LEFT);
-            $response = $this->tools->sefazEnviaLote([$xmlAssinado], $idLote, 1); // 1 = modo síncrono
+            $response = $this->tools->sefazEnviaLote([$xmlAssinado], $idLote, 1); esse parametro 1 deve ser pego do bd // 1 = modo síncrono
 
             // 4. PROCESSA RESPOSTA
             $stdCl = new Standardize();
@@ -50,7 +49,7 @@ class NfeModel
                     'erro' => 'Erro ao processar lote',
                     'codigo' => $std->cStat,
                     'mensagem' => $std->xMotivo ?: 'Erro desconhecido'
-                ]);
+                ]); emitirErro()
                 return;
             }
 
@@ -77,7 +76,7 @@ class NfeModel
                         'cStat' => $cStat,
                         'dhRecbto' => $std->protNFe->infProt->dhRecbto ?: null,
                         'xml' => base64_encode($xmlProtocolado)
-                    ]);
+                    ]); emitirErro()
                 } else {
                     // Nota rejeitada
                     http_response_code(400);
@@ -86,12 +85,12 @@ class NfeModel
                         'erro' => 'Nota rejeitada',
                         'codigo' => $cStat,
                         'mensagem' => $std->protNFe->infProt->xMotivo ?: 'Erro desconhecido'
-                    ]);
+                    ]); emitirSucesso()
                 }
             } elseif (isset($std->infRec->nRec)) {
                 // Resposta assíncrona (fallback) - consulta o recibo
                 $recibo = $std->infRec->nRec;
-                sleep(3);
+                sleep(3); tirar esse sleep
                 $protocolo = $this->consultarProtocolo($recibo, $xmlAssinado);
 
                 http_response_code($protocolo['success'] ? 200 : 400);
@@ -108,30 +107,40 @@ class NfeModel
             }
         } catch (\Exception $e) {
             http_response_code(500);
-            echo json_encode(['sucesso' => false, 'erro' => $e->getMessage()]);
+            echo json_encode(['sucesso' => false, 'erro' => $e->getMessage()]); emitirErro();
         }
     }
 
 
+    public function carregarDadosDefault()
+    {
+        $this->default['versao'] = '4.00';
+        $this->default['modelo'] = 55;
+        $this->default['dataEmissao'] = date('Y-m-d\TH:i:sP');
+        $this->default['serie'] = 1;
+        $this->default['cNF'] = sprintf('%08d', rand(1, 99999999));
+        $this->default['tpNF'] = 1;
+    }
+
     public function montarXML($dados)
     {
         $nfe = new Make();
-
+        criar tabela nfe_setup
         // ===== IDENTIFICAÇÃO DA NFe =====
         $std = new \stdClass();
-        $std->versao = '4.00';
+        $std->versao = $this->defaul['versao']; guardar versao na nfe_numeros
         $nfe->taginfNFe($std);
 
         $std = new \stdClass();
         $std->cUF = $this->config['cUF'];
-        $std->cNF = sprintf('%08d', rand(1, 99999999));
+        $std->cNF = $this->default['cNF'];
         $std->natOp = $dados['naturezaOperacao'] ?: 'VENDA DE MERCADORIA';
-        $std->mod = 55;
-        $std->serie = $dados['serie'] ?: 1;
+        $std->mod = $this->default['modelo'];
+        $std->serie = $dados['serie'] ?: $this->default['serie'];
         $std->nNF = $dados['numero'];
-        $std->dhEmi = date('Y-m-d\TH:i:sP');
-        $std->dhSaiEnt = date('Y-m-d\TH:i:sP');
-        $std->tpNF = 1;
+        $std->dhEmi = $this->default['dataEmissao'];
+        $std->dhSaiEnt = $this->default['dataEmissao'];
+        $std->tpNF = $this->default['tpNF']; que isso?
 
         // Define idDest baseado na UF do destinatário
         $ufEmitente = $this->config['siglaUF'];
@@ -141,6 +150,7 @@ class NfeModel
         } else {
             $std->idDest = 2; // Operação interestadual
         }
+        tem 3 que é exterior
 
         $std->cMunFG = $this->config['cmun'];
         $std->tpImp = 1;
@@ -196,7 +206,7 @@ class NfeModel
         $std->xMun = $cli['municipio'];
         $std->UF = $cli['uf'];
         $std->CEP = preg_replace('/[^0-9]/', '', $cli['cep']);
-        $std->cPais = 1058;
+        $std->cPais = 1058;  tem que pegar da enderecos_paises
         $std->xPais = 'BRASIL';
         $nfe->tagenderDest($std);
 
@@ -296,7 +306,7 @@ class NfeModel
         $std->CNPJ = '13937073000156'; // CNPJ da SEFAZ-BA (padrão se não tiver contador)
         $nfe->tagautXML($std);
 
-        return $nfe;
+        return $nfe->getXML();
     }
 
 
@@ -354,6 +364,7 @@ class NfeModel
             mkdir($dir, 0755, true);
         }
         file_put_contents("{$dir}/{$chave}-nfe.xml", $xml);
+        tem que salvar no bd tbm
     }
 
 
