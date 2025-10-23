@@ -1,0 +1,21 @@
+{
+    "name": "seu-vendor/gnotas-api",
+    "description": "API para emissão de notas fiscais utilizando NFePHP.",
+    "type": "project",
+    "require": {
+        "php": "^8.4",
+        "nfephp-org/sped-nfe": "^5.0",
+        "nfephp-org/sped-da": "^1.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
