@@ -1,11 +1,10 @@
 <?php
 
 if (!function_exists('emitirErro')) {
-    function emitirErro($mensagem, $codigoHttp = 400, $titulo = 'Erro ao processar requisicao', $dadosExtras = [])
+    function emitirErro($mensagem, $codigoHttp = 400, $dadosExtras = [])
     {
         $resposta = [
             'sucesso' => false,
-            'titulo' => $titulo,
             'status' => $codigoHttp,
             'mensagem' => $mensagem,
         ];
@@ -24,7 +23,6 @@ if (!function_exists('emitirSucesso')) {
     {
         $resposta = [
             'sucesso' => true,
-            'titulo' => 'Sucesso',
             'status' => $codigoHttp,
             'mensagem' => $mensagem,
         ];
