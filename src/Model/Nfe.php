@@ -474,7 +474,7 @@ class Nfe
     public function salvarXML($chave, $xml)
     {
         $cnpjLimpo = preg_replace('/[^0-9]/', '', $this->config['cnpj']);
-        $dir = __DIR__ . "/storage/notas/{$cnpjLimpo}/autorizadas";
+        $dir = __DIR__ . "/../storage/notas/{$cnpjLimpo}/autorizadas";
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
         }
