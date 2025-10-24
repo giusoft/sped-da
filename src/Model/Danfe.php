@@ -20,7 +20,7 @@ class Danfe
             $this->carregarEmpresas($dados['cnpj_emitente']);
 
             $chave = $dados['chave'];
-            $cnpjLimpo = preg_replace('/[^0-9]/', '', $this->config['cnpj']);
+            $cnpjLimpo = soNumeros($this->config['cnpj']);
             $xmlPath = __DIR__ . "/notas/{$cnpjLimpo}/autorizadas/{$chave}-nfe.xml";
 
             if (!file_exists($xmlPath)) {
