@@ -10,7 +10,6 @@ use NFePHP\NFe\Complements;
 
 class Nfe
 {
-
     private $corpoRequisicao;
     private $config;
     private $tools;
@@ -25,9 +24,24 @@ class Nfe
     }
 
 
+    public function carregarDadosDefault()
+    {
+        $this->default['versao'] = '4.00';
+        $this->default['modelo'] = 55;
+        $this->default['dataEmissao'] = date('Y-m-d\TH:i:sP');
+        $this->default['serie'] = 1;
+        $this->default['cNF'] = sprintf('%08d', rand(1, 99999999));
+        $this->default['tpNF'] = 1;
+        $this->default['tipoImpressao'] = 1;
+        $this->default['tipoEmissao'] = 1;
+        $this->default['finalidadeEmissao'] = 1;
+        $this->default['cnjpAutorizadoSefaz'] = '13937073000156';
+        $this->default['codigoPais'] = 1058; // Código do Brasil = 1058
+    }
+
+
     public function enviar()
     {
-
         try {
             // 1. MONTA O XML
             $xmlString = $this->montarXML($this->corpoRequisicao);
@@ -124,21 +138,6 @@ class Nfe
         }
     }
 
-
-    public function carregarDadosDefault()
-    {
-        $this->default['versao'] = '4.00';
-        $this->default['modelo'] = 55;
-        $this->default['dataEmissao'] = date('Y-m-d\TH:i:sP');
-        $this->default['serie'] = 1;
-        $this->default['cNF'] = sprintf('%08d', rand(1, 99999999));
-        $this->default['tpNF'] = 1;
-        $this->default['tipoImpressao'] = 1;
-        $this->default['tipoEmissao'] = 1;
-        $this->default['finalidadeEmissao'] = 1;
-        $this->default['cnjpAutorizadoSefaz'] = '13937073000156';
-        $this->default['codigoPais'] = 1058; // Código do Brasil = 1058
-    }
 
     public function montarXML($dados)
     {
@@ -385,10 +384,18 @@ class Nfe
     public function cancelarNFe()
     {
         try {
+            $dados = json_decode(file_get_contents('php://input'), true);
 
-            $chave = $this->corpoRequisicao['chave'] ?: '';
-            $protocolo = $this->corpoRequisicao['protocolo'] ?: '';
-            $justificativa = $this->corpoRequisicao['justificativa'] ?: '';
+            if (empty($dados['cnpj_emitente'])) {
+                throw new \Exception('O campo "cnpj_emitente" é obrigatório.');
+            }
+
+            // Carrega o contexto da empresa
+            $this->carregarEmpresas($dados['cnpj_emitente']);
+
+            $chave = $dados['chave'] ?: '';
+            $protocolo = $dados['protocolo'] ?: '';
+            $justificativa = $dados['justificativa'] ?: '';
 
             if (empty($chave) || empty($protocolo) || empty($justificativa)) {
                 http_response_code(400);
@@ -401,7 +408,11 @@ class Nfe
                 return;
             }
 
+            // Envia o cancelamento e captura tanto a requisição quanto a resposta
             $response = $this->tools->sefazCancela($chave, $justificativa, $protocolo);
+
+            // Pega o XML do evento que foi enviado (está disponível após o envio)
+            $xmlEvento = $this->tools->lastRequest;
 
             $stdCl = new Standardize();
             $std = $stdCl->toStd($response);
@@ -410,8 +421,9 @@ class Nfe
                 // Evento registrado com sucesso
                 $protocoloCancelamento = $std->retEvento->infEvento->nProt ?: '';
 
-                // Salva XML do cancelamento
-                $this->salvarXMLCancelado($chave, $response);
+                // Junta o evento enviado com a resposta recebida usando Complements
+                $xmlProtocolado = Complements::toAuthorize($xmlEvento, $response);
+                $this->salvarXMLCancelado($chave, $xmlProtocolado);
 
                 http_response_code(200);
                 echo json_encode([
@@ -435,6 +447,94 @@ class Nfe
         } catch (\Exception $e) {
             http_response_code(500);
             echo json_encode(['erro' => $e->getMessage()]);
+        }
+    }
+
+
+    public function inutilizarNFe()
+    {
+        try {
+
+            if (
+                !isset($this->corpoRequisicao['serie'])
+                || !isset($this->corpoRequisicao['numero_inicial'])
+                || !isset($this->corpoRequisicao['numero_final'])
+                || !isset($this->corpoRequisicao['justificativa'])
+            ) {
+                emitirErro('Os campos: cnpj_emitente, serie, numero_inicial, numero_final e justificativa sao obrigatorios', 400);
+                return;
+            }
+
+            if (strlen($this->corpoRequisicao['justificativa']) < 15) {
+                emitirErro('A justificativa deve ter no mínimo 15 caracteres', 400);
+            }
+
+            if ($this->corpoRequisicao['numero_inicial'] > $this->corpoRequisicao['numero_final']) {
+                emitirErro('O "numero_inicial" não pode ser maior que o "numero_final"', 400);
+            }
+
+            $response = $this->tools->sefazInutiliza(
+                            $this->corpoRequisicao['serie'],
+                            $this->corpoRequisicao['numero_inicial'],
+                            $this->corpoRequisicao['numero_final'],
+                            $this->corpoRequisicao['justificativa'],
+                            null,
+                            null
+                        );
+
+            $stdCl = new Standardize();
+            $std = $stdCl->toStd($response);
+
+            if (isset($std->infInut->cStat) && $std->infInut->cStat == 102) {
+
+                $protocolo = "";
+                if (isset($std->infInut->nProt)) {
+                    $protocolo =  $std->infInut->nProt;
+                }
+
+                $this->salvarXMLInutilizado($std->infInut, $response);
+
+                $motivo = 'Inutilização homologada';
+                if (isset($std->infInut->xMotivo)) {
+                    $motivo = $std->infInut->xMotivo;
+                }
+
+                emitirSucesso(
+                    [
+                        'mensagem' => $motivo,
+                        'codigo' => $std->infInut->cStat,
+                        'protocolo' => $protocolo,
+                        'xml' => base64_encode($response) // A resposta já é o XML protocolado
+                    ],
+                    200
+                );
+            } else {
+
+                $motivo = 'Erro desconhecido na inutilização';
+                if (isset($std->infInut->xMotivo) && $std->infInut->xMotivo) {
+                    $motivo = $std->infInut->xMotivo;
+                } elseif (isset($std->xMotivo) && $std->xMotivo) {
+                    $motivo = $std->xMotivo;
+                }
+
+                $codigo = 'N/A';
+                if (isset($std->infInut->cStat) && $std->infInut->cStat) {
+                    $codigo = $std->infInut->cStat;
+                } elseif (isset($std->cStat) && $std->cStat) {
+                    $codigo = $std->cStat;
+                }
+
+                emitirErro(
+                    [
+                        'erro' => $motivo,
+                        'codigo' => $codigo
+                    ]
+                    , 400
+                );
+            }
+
+        } catch (\Exception $e) {
+            emitirErro($e->getMessage(), 500);
         }
     }
 
@@ -471,9 +571,29 @@ class Nfe
 
 
     ### SALVAR NO BANCO DE DADOS ###
+    public function salvarXMLInutilizado($infInut, $xml)
+    {
+        $cnpjLimpo = soNumeros($this->config['cnpj']);
+        $dir = __DIR__ . "/../storage/notas/{$cnpjLimpo}/inutilizadas";
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $ano = $infInut->ano ?: date('Y');
+        $serie = $infInut->serie ?: 'NA';
+        $nIni = $infInut->nNFIni ?: 'NA';
+        $nFin = $infInut->nNFFin ?: 'NA';
+
+        $nomeArquivo = "{$ano}-{$serie}-{$nIni}-{$nFin}-inut.xml";
+
+        file_put_contents("{$dir}/{$nomeArquivo}", $xml);
+    }
+
+
+    ### SALVAR NO BANCO DE DADOS ###
     public function salvarXML($chave, $xml)
     {
-        $cnpjLimpo = preg_replace('/[^0-9]/', '', $this->config['cnpj']);
+        $cnpjLimpo = soNumeros($this->config['cnpj']);
         $dir = __DIR__ . "/../storage/notas/{$cnpjLimpo}/autorizadas";
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
@@ -485,8 +605,8 @@ class Nfe
     ### SALVAR NO BANCO DE DADOS ###
     public function salvarXMLCancelado($chave, $xml)
     {
-        $cnpjLimpo = preg_replace('/[^0-9]/', '', $this->config['cnpj']);
-        $dir = __DIR__ . "/storage/notas/{$cnpjLimpo}/canceladas";
+        $cnpjLimpo = soNumeros($this->config['cnpj']);
+        $dir = __DIR__ . "/../storage/notas/{$cnpjLimpo}/canceladas";
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
         }
