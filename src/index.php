@@ -17,9 +17,7 @@ if ($path) {
         try {
             $controller = new Nfe();
         } catch (\Exception $e) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Erro interno ao iniciar API.', 'detalhe' => $e->getMessage()]);
-            exit;
+            emitirErro("Erro interno ao iniciar API", 500, $e->getMessage());
         }
     }
 
@@ -27,9 +25,7 @@ if ($path) {
         try {
             $controller = new Danfe();
         } catch (\Exception $e) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Erro interno ao iniciar API.', 'detalhe' => $e->getMessage()]);
-            exit;
+            emitirErro("Erro interno ao iniciar API", 500, $e->getMessage());
         }
     }
 
@@ -42,6 +38,5 @@ if ($path) {
     }
 
 } else {
-    http_response_code(404);
-    echo json_encode(['error' => 'Rota não encontrada.']);
+    emitirErro("Rota nao encontrada", 404);
 }
