@@ -8,7 +8,6 @@ use App\Model\Nfe as NfeModel;
 
 class Nfe
 {
-
     public $corpoRequisicao;
     public $config;
     public $tools;
@@ -30,7 +29,7 @@ class Nfe
     {
 
         if (!$this->corpoRequisicao['cnpj_emitente']) {
-            throw new \Exception('O campo "cnpj_emitente" é obrigatório.');
+            emitirErro("O campo 'cnpj_emitente' é obrigatório", 400);
         }
 
         $this->buscarCertificado();
@@ -41,15 +40,15 @@ class Nfe
 
     public function buscarCertificado()
     {
-        $cnpjLimpo = preg_replace('/[^0-9]/', '', $this->corpoRequisicao['cnpj_emitente']);
+        $cnpjLimpo = soNumeros($this->corpoRequisicao['cnpj_emitente']);
         if (strlen($cnpjLimpo) != 14) {
-            throw new \Exception("CNPJ inválido: {$this->corpoRequisicao['cnpj_emitente']}");
+            emitirErro("CNPJ inválido: {$this->corpoRequisicao['cnpj_emitente']}", 400);
         }
 
         $configPath = __DIR__ . "/../config/empresas/{$cnpjLimpo}.json";
 
         if (!file_exists($configPath)) {
-            throw new \Exception("Arquivo de configuração não encontrado para o CNPJ: {$cnpjLimpo}");
+            emitirErro("Arquivo de configuração não encontrado para o CNPJ: {$cnpjLimpo}", 400);
         }
         $configJson = file_get_contents($configPath);
         $this->config = json_decode($configJson, true);
@@ -58,7 +57,7 @@ class Nfe
         $certSenha = $this->config['senhaCertificado'];
         $certPath = __DIR__ . "/../certificados/{$cnpjLimpo}/{$certNome}";
         if (!file_exists($certPath)) {
-            throw new \Exception("Arquivo de certificado não encontrado: {$certPath}");
+            emitirErro("Arquivo de certificado não encontrado: {$certPath}", 400);
         }
 
         $certificate = Certificate::readPfx(
@@ -73,7 +72,7 @@ class Nfe
 
     public function chamarMetodoClasse()
     {
-        $nfe = new NfeModel($this); // chama o modelo, não o controller
+        $nfe = new NfeModel($this);
 
         $metodo = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
         if (method_exists($nfe, $metodo[1])) {
