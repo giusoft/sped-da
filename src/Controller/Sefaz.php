@@ -29,7 +29,7 @@ class Sefaz
     public function processarRequisicao()
     {
 
-        if (!$this->corpoRequisicao['cnpj_emitente']) {
+        if (!isset($this->corpoRequisicao['cnpj_emitente'])) {
             emitirErro("O campo 'cnpj_emitente' é obrigatório", 400);
         }
 
