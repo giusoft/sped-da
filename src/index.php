@@ -1,13 +1,11 @@
 <?php
 
-header("Content-Type: application/json; charset=UTF-8");
-
-require __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/Lib/utils.php';
 
 use App\Controller\NFeController;
 
 $requestUri = $_SERVER['REQUEST_URI'];
-// $requestMethod = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($requestUri, PHP_URL_PATH);
 
 // Verifica se o path tem nfe
