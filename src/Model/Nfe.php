@@ -543,11 +543,13 @@ class Nfe
     {
         try {
 
-            $chave = $this->corpoRequisicao['chave'] ?: '';
-            if (empty($chave) || strlen($chave) != 44) {
-                http_response_code(400);
-                echo json_encode(['erro' => 'chave de acesso válida é obrigatória.']);
-                return;
+            $chave = '';
+            if (isset($this->corpoRequisicao['chave'])) {
+                $chave = $this->corpoRequisicao['chave'];
+            }
+
+            if (!$chave || strlen($chave) != 44) {
+                emitirErro("Chave de acesso valida eh obrigatoria", 400);
             }
 
             $response = $this->tools->sefazConsultaChave($chave);
@@ -555,17 +557,33 @@ class Nfe
             $stdCl = new Standardize();
             $std = $stdCl->toStd($response);
 
-            http_response_code(200);
-            echo json_encode([
-                'situacao' => $std->xMotivo ?: 'Sem informação',
-                'codigo' => $std->cStat ?: 'N/A',
-                'protocolo' => $std->protNFe->infProt->nProt ?: null,
-                'resposta_sefaz' => $std
-            ]);
+            $motivo = 'Sem informação';
+            if (isset($std->xMotivo)) {
+                $motivo = $std->xMotivo;
+            }
+
+            $codigoSituacaoNF = 'Sem informação';
+            if (isset($std->cStat)) {
+                $codigoSituacaoNF = $std->cStat;
+            }
+
+            $protocolo = null;
+            if (isset($std->protNFe->infProt->nProt)) {
+                $protocolo = $std->protNFe->infProt->nProt;
+            }
+
+            emitirSucesso(
+                [
+                    'situacao' => $motivo,
+                    'codigo' => $codigoSituacaoNF,
+                    'protocolo' => $protocolo,
+                    'resposta_sefaz' => $std
+                ],
+                200
+            );
 
         } catch (\Exception $e) {
-            http_response_code(500);
-            echo json_encode(['erro' => $e->getMessage()]);
+            emitirErro($e->getMessage(), 500);
         }
     }
 
