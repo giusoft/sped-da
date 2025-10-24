@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Classes;
+namespace App\Model;
 
 use NFePHP\NFe\Make;
 use NFePHP\NFe\Tools;
@@ -8,7 +8,7 @@ use NFePHP\Common\Certificate;
 use NFePHP\NFe\Common\Standardize;
 use NFePHP\NFe\Complements;
 
-class NfeModel
+class Nfe
 {
 
     private $corpoRequisicao;

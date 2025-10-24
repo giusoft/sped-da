@@ -2,16 +2,10 @@
 
 namespace App\Controller;
 
-use NFePHP\NFe\Make;
-use NFePHP\NFe\Tools;
-use NFePHP\Common\Certificate;
-use NFePHP\NFe\Common\Standardize;
-use NFePHP\DA\NFe\Danfe;
-use NFePHP\NFe\Complements;
+use NFePHP\DA\NFe\Danfe as NFeDanfe;
 
-class DanfeModel
+class Danfe
 {
-
     private $tools;
     private $config;
 
@@ -37,7 +31,7 @@ class DanfeModel
 
             $xml = file_get_contents($xmlPath);
 
-            $danfe = new Danfe($xml);
+            $danfe = new NFeDanfe($xml);
             $pdf = $danfe->render();
 
             $pdfPath = __DIR__ . "/storage/notas/{$cnpjLimpo}/autorizadas/{$chave}-danfe.pdf";
@@ -54,5 +48,4 @@ class DanfeModel
             echo json_encode(['erro' => $e->getMessage()]);
         }
     }
-
 }
