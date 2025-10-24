@@ -5,6 +5,7 @@ require_once __DIR__ . '/Lib/utils.php';
 
 use App\Controller\Nfe;
 use App\Controller\Danfe;
+use App\Controller\Sefaz;
 
 $requestUri = $_SERVER['REQUEST_URI'];
 $path = parse_url($requestUri, PHP_URL_PATH);
@@ -29,6 +30,14 @@ if ($path) {
             http_response_code(500);
             echo json_encode(['error' => 'Erro interno ao iniciar API.', 'detalhe' => $e->getMessage()]);
             exit;
+        }
+    }
+
+    if (strpos($path, '/sefaz/') === 0) {
+        try {
+            $controller = new Sefaz();
+        } catch (\Exception $e) {
+            emitirErro("Erro interno ao iniciar API", 500, $e->getMessage());
         }
     }
 
