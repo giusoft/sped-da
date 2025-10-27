@@ -2,26 +2,18 @@
 
 namespace App\Model;
 
-use NFePHP\NFe\Make;
 use NFePHP\NFe\Tools;
-use NFePHP\Common\Certificate;
 use NFePHP\NFe\Common\Standardize;
-use NFePHP\NFe\Complements;
 
 class Sefaz
 {
-
-    private $corpoRequisicao;
     private $config;
     private $tools;
-    private $default;
 
     public function __construct($dados)
     {
-        $this->corpoRequisicao = $dados->corpoRequisicao;
         $this->config = $dados->config;
         $this->tools = $dados->tools;
-        // $this->carregarDadosDefault();
     }
 
 
