@@ -63,8 +63,13 @@ class Nfe
 
             // Verifica se houve erro no lote primeiro
             if (isset($std->cStat) && !in_array($std->cStat, [100, 103, 104])) {
+                $motivo = 'Erro desconhecido';
+                if (isset($std->xMotivo)) {
+                    $motivo = $std->xMotivo;
+                }
+                
                 emitirErro(
-                    $std->xMotivo ?: 'Erro desconhecido',
+                    $motivo,
                     400,
                     'Erro ao processar lote',
                     ['codigoSituacaoNF' => $std->cStat]
@@ -76,9 +81,15 @@ class Nfe
                 $cStat = $std->protNFe->infProt->cStat;
 
                 if (!in_array($cStat, [100, 150])) {
+
+                    $motivo = 'Erro desconhecido';
+                    if (isset($std->protNFe->infProt->xMotivo)) {
+                        $motivo = $std->protNFe->infProt->xMotivo;
+                    }
+
                     // Nota rejeitada
                     emitirErro(
-                        $std->protNFe->infProt->xMotivo ?: 'Erro desconhecido',
+                        $motivo,
                         400,
                         'Nota rejeitada',
                         ['codigoSituacaoNF' => $cStat]
@@ -94,14 +105,24 @@ class Nfe
                 // Salva XML
                 $this->salvarXML($chave, $xmlProtocolado);
 
+                $motivo = 'Autorizada';
+                if (isset($std->protNFe->infProt->xMotivo)){
+                    $motivo = $std->protNFe->infProt->xMotivo;
+                }
+
+                $dataHoraRecebimento = null;
+                if (isset($std->protNFe->infProt->dhRecbto)) {
+                    $dataHoraRecebimento = $std->protNFe->infProt->dhRecbto;
+                }
+
                 emitirSucesso(
-                    $std->protNFe->infProt->xMotivo ?: 'Autorizada',
+                    $motivo,
                     200,
                     [
                         'chave' => $chave,
                         'protocolo' => $protocolo,
                         'codigoSituacaoNF' => $cStat,
-                        'dhRecbto' => $std->protNFe->infProt->dhRecbto ?: null,
+                        'dhRecbto' => $dataHoraRecebimento,
                         'xml' => base64_encode($xmlProtocolado)
                     ]
                 );
@@ -111,9 +132,14 @@ class Nfe
                 $recibo = $std->infRec->nRec;
                 $protocolo = $this->consultarProtocolo($recibo, $xmlAssinado);
 
+                $motivo = 'Erro desconhecido';
+                if (isset($std->xMotivo)) {
+                    $motivo = $std->xMotivo;
+                }
+
                 if ($protocolo['success'] != 200) {
                     emitirErro(
-                        $std->xMotivo ?: 'Erro desconhecido',
+                        $motivo,
                         400,
                         'Erro ao processar lote',
                         ['codigoSituacaoNF' => $std->cStat]
@@ -122,9 +148,15 @@ class Nfe
 
                 emitirSucesso($protocolo, 200);
             } else {
+
+                $motivo = 'Resposta inesperada da SEFAZ';
+                if (isset($std->xMotivo)) {
+                    $motivo = $std->xMotivo;
+                }
+
                 // Erro no lote
                 emitirErro(
-                    $std->xMotivo ?: 'Resposta inesperada da SEFAZ',
+                    $motivo,
                     400,
                     'Erro ao processar lote',
                     ['codigoSituacaoNF' => $std->cStat]
@@ -152,7 +184,12 @@ class Nfe
         $std->cNF = $this->default['cNF'];                                 // Código numérico da nota
         $std->natOp = $dados['naturezaOperacao'] ?: 'VENDA DE MERCADORIA'; // Natureza da operação
         $std->mod = $this->default['modelo'];                              // Modelo do documento (55 = NF-e (modelo eletrônico), 65 = NFC-e)
-        $std->serie = $dados['serie'] ?: $this->default['serie'];          // Série da nota fiscal
+
+        $std->serie = $this->default['serie'];                             // Série da nota fiscal
+        if (isset($dados['serie'])) {
+            $std->serie = $dados['serie'];
+        }
+
         $std->nNF = $dados['numero'];                                      // Número da nota fiscal
         $std->dhEmi = $this->default['dataEmissao'];                       // Data/hora de emissão
         $std->dhSaiEnt = $this->default['dataEmissao'];                    // Data/hora de saída ou entrada (Opcional — geralmente usada em operações com circulação de mercadoria)
@@ -356,21 +393,36 @@ class Nfe
                     // Salva XML
                     $this->salvarXML($chave, $xmlProtocolado);
 
+                    $mensagem = "Autorizada";
+                    if (isset($std->protNFe->infProt->xMotivo)) {
+                        $mensagem = $std->protNFe->infProt->xMotivo;
+                    }
+
                     return [
                         'success' => true,
                         'chave' => $chave,
                         'protocolo' => $protocolo,
-                        'mensagem' => $std->protNFe->infProt->xMotivo ?: 'Autorizada',
+                        'mensagem' => $mensagem,
                         'xml' => base64_encode($xmlProtocolado)
                     ];
                 }
             }
+            $motivo = 'Erro desconhecido';
+            if (isset($std->xMotivo)) {
+                $motivo = $std->xMotivo;
+            }
+
+            $codigoSituacaoNF = 'N/A';
+            if (isset($std->cStat)) {
+                $codigoSituacaoNF = $std->cStat;
+            }
 
             return [
                 'success' => false,
-                'erro' => $std->xMotivo ?: 'Erro desconhecido',
-                'codigo' => $std->cStat ?: 'N/A'
+                'erro' =>  $motivo,
+                'codigo' => $codigoSituacaoNF
             ];
+
         } catch (\Exception $e) {
             return [
                 'success' => false,
@@ -384,28 +436,27 @@ class Nfe
     public function cancelarNFe()
     {
         try {
-            $dados = json_decode(file_get_contents('php://input'), true);
-
-            if (empty($dados['cnpj_emitente'])) {
-                throw new \Exception('O campo "cnpj_emitente" é obrigatório.');
+            $chave = '';
+            if (isset($this->corpoRequisicao['chave'])) {
+                $chave = $this->corpoRequisicao['chave'];
             }
 
-            // Carrega o contexto da empresa
-            $this->carregarEmpresas($dados['cnpj_emitente']);
-
-            $chave = $dados['chave'] ?: '';
-            $protocolo = $dados['protocolo'] ?: '';
-            $justificativa = $dados['justificativa'] ?: '';
-
-            if (empty($chave) || empty($protocolo) || empty($justificativa)) {
-                http_response_code(400);
-                echo json_encode(['erro' => 'chave, protocolo e justificativa são obrigatórios.']);
-                return;
+            $protocolo = '';
+            if (isset($this->corpoRequisicao['protocolo'])) {
+                $protocolo = $this->corpoRequisicao['protocolo'];
             }
+
+            $justificativa = '';
+            if (isset($this->corpoRequisicao['justificativa'])) {
+                $justificativa = $this->corpoRequisicao['justificativa'];
+            }
+
+            if (!$chave || !$protocolo || !$justificativa) {
+                emitirErro("Os campos: chave, protocolo e justificativa sao obrigatorios", 400);
+            }
+
             if (strlen($justificativa) < 15) {
-                http_response_code(400);
-                echo json_encode(['erro' => 'A justificativa deve ter no mínimo 15 caracteres.']);
-                return;
+                emitirErro("A justificativa deve ter no minimo 15 caracteres", 400);
             }
 
             // Envia o cancelamento e captura tanto a requisição quanto a resposta
@@ -419,34 +470,49 @@ class Nfe
 
             if (isset($std->retEvento->infEvento) && $std->retEvento->infEvento->cStat == 135) {
                 // Evento registrado com sucesso
-                $protocoloCancelamento = $std->retEvento->infEvento->nProt ?: '';
+                $protocoloCancelamento = '';
+                if (isset($std->retEvento->infEvento->nProt)) {
+                    $protocoloCancelamento = $std->retEvento->infEvento->nProt;
+                }
 
                 // Junta o evento enviado com a resposta recebida usando Complements
                 $xmlProtocolado = Complements::toAuthorize($xmlEvento, $response);
                 $this->salvarXMLCancelado($chave, $xmlProtocolado);
 
-                http_response_code(200);
-                echo json_encode([
-                    'success' => true,
-                    'mensagem' => $std->retEvento->infEvento->xMotivo ?: 'Cancelamento homologado',
-                    'codigo' => $std->retEvento->infEvento->cStat,
-                    'protocolo' => $protocoloCancelamento
-                ]);
-            } else {
-                $motivo = $std->retEvento->infEvento->xMotivo ?: $std->xMotivo ?: 'Erro desconhecido';
-                $codigo = $std->retEvento->infEvento->cStat ?: $std->cStat ?: 'N/A';
+                $mensagem = 'Cancelamento homologado';
+                if (isset($std->retEvento->infEvento->xMotivo)) {
+                    $mensagem = $std->retEvento->infEvento->xMotivo;
+                }
 
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'erro' => $motivo,
-                    'codigo' => $codigo
-                ]);
+                emitirSucesso(
+                    [
+                        'success' => true,
+                        'mensagem' => $mensagem,
+                        'codigo' => $std->retEvento->infEvento->cStat,
+                        'protocolo' => $protocoloCancelamento
+                    ],
+                    200
+                );
+            } else {
+                $motivo = 'Erro desconhecido';
+                if (!empty($std->retEvento->infEvento->xMotivo)) {
+                    $motivo = $std->retEvento->infEvento->xMotivo;
+                } elseif (!empty($std->xMotivo)) {
+                    $motivo = $std->xMotivo;
+                }
+
+                $codigo = 'N/A';
+                if (!empty($std->retEvento->infEvento->cStat)) {
+                    $codigo = $std->retEvento->infEvento->cStat;
+                } elseif (!empty($std->cStat)) {
+                    $codigo = $std->cStat;
+                }
+
+                emitirErro($motivo, 400, $codigo);
             }
 
         } catch (\Exception $e) {
-            http_response_code(500);
-            echo json_encode(['erro' => $e->getMessage()]);
+            emitirErro($e->getMessage(), 500);
         }
     }
 
@@ -597,10 +663,25 @@ class Nfe
             mkdir($dir, 0755, true);
         }
 
-        $ano = $infInut->ano ?: date('Y');
-        $serie = $infInut->serie ?: 'NA';
-        $nIni = $infInut->nNFIni ?: 'NA';
-        $nFin = $infInut->nNFFin ?: 'NA';
+        $ano = date('Y');
+        if (isset($infInut->ano)) {
+            $ano = $infInut->ano;
+        }
+
+        $serie = 'NA';
+        if (isset($infInut->serie)) {
+            $serie = $infInut->serie;
+        }
+
+        $nIni = 'NA';
+        if (isset($infInut->nNFIni)) {
+            $nIni = $infInut->nNFIni;
+        }
+
+        $nFin = 'NA';
+        if (isset($infInut->nNFFin)) {
+            $nFin = $infInut->nNFFin;
+        }
 
         $nomeArquivo = "{$ano}-{$serie}-{$nIni}-{$nFin}-inut.xml";
 
