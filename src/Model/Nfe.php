@@ -604,6 +604,78 @@ class Nfe
     }
 
 
+    public function cartaCorrecao()
+    {
+        try {
+
+            $chave = '';
+            if (isset($this->corpoRequisicao['chave'])) {
+                $chave = $this->corpoRequisicao['chave'];
+            }
+
+            $correcao = '';
+            if (isset($this->corpoRequisicao['correcao'])) {
+                $correcao = $this->corpoRequisicao['correcao'];
+            }
+
+            if (!$chave || !$correcao) {
+                emitirErro("Os campos: chave e correcao sao obrigatorios", 400);
+                return;
+            }
+
+            if (strlen($correcao) < 15) {
+                emitirErro("A correcao deve ter no minimo 15 caracteres", 400);
+
+            }
+
+            $nSeqEvento = 1; // Sequência do evento (1 para primeira CC-e)
+            if (isset($this->corpoRequisicao['sequencia'])) {
+                $nSeqEvento = $this->corpoRequisicao['sequencia'];
+            }
+
+            $response = $this->tools->sefazCCe($chave, $correcao, $nSeqEvento);
+
+            $xmlEvento = $this->tools->lastRequest;
+
+            $stdCl = new Standardize();
+            $std = $stdCl->toStd($response);
+
+            if ($std->cStat != 128) { // 128 = Lote de Evento Processado
+                emitirErro($std->xMotivo, 400, ['codigo' => $std->cStat]);
+            }
+
+            if ($std->retEvento->infEvento->cStat != 135) { // Evento Vinculado
+                emitirErro($std->retEvento->infEvento->xMotivo, 400, ['codigo' => $std->retEvento->infEvento->cStat]);
+            }
+
+            $protocolo = $std->retEvento->infEvento->nProt;
+
+            // 3. JUNTA OS DOIS XMLs (Requisição + Resposta)
+            $xmlProtocolado = Complements::toAuthorize($xmlEvento, $response);
+
+            $this->salvarXMLCCe($chave, $xmlProtocolado, $nSeqEvento);
+
+            $dataEvento = null;
+            if (isset($std->retEvento->infEvento->dhRegEvento)) {
+                $dataEvento = $std->retEvento->infEvento->dhRegEvento;
+            }
+
+            emitirSucesso(
+                $std->retEvento->infEvento->xMotivo,
+                200,
+                [
+                    'protocolo' => $protocolo,
+                    'sequencia' => $nSeqEvento,
+                    'data_evento' => $dataEvento
+                ]
+            );
+
+        } catch (\Exception $e) {
+            emitirErro($e->getMessage(), 500);
+        }
+    }
+
+
     public function consultarNFe()
     {
         try {
@@ -709,6 +781,19 @@ class Nfe
             mkdir($dir, 0755, true);
         }
         $nomeArquivo = str_replace('-nfe', '', $chave) . '-canc.xml';
+        file_put_contents("{$dir}/{$nomeArquivo}", $xml);
+    }
+
+    ### SALVAR NO BANCO DE DADOS ###
+    public function salvarXMLCCe($chave, $xml, $sequencia)
+    {
+        $cnpjLimpo = preg_replace('/[^0-9]/', '', $this->config['cnpj']);
+        $dir = __DIR__ . "/../storage/notas/{$cnpjLimpo}/cce";
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $nomeArquivo = str_replace('-nfe', '', $chave) . "-cce-{$sequencia}.xml";
         file_put_contents("{$dir}/{$nomeArquivo}", $xml);
     }
 
