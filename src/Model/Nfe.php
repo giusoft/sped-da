@@ -67,7 +67,7 @@ class Nfe
                 if (isset($std->xMotivo)) {
                     $motivo = $std->xMotivo;
                 }
-                
+
                 emitirErro(
                     $motivo,
                     400,
@@ -182,7 +182,7 @@ class Nfe
         $std = new \stdClass();
         $std->cUF = $this->config['cUF'];                                  // Código da UF (Unidade da Federação) do emitente
         $std->cNF = $this->default['cNF'];                                 // Código numérico da nota
-        $std->natOp = $dados['naturezaOperacao'] ?: 'VENDA DE MERCADORIA'; // Natureza da operação
+        $std->natOp = $dados['naturezaOperacao'];                          // Natureza da operação
         $std->mod = $this->default['modelo'];                              // Modelo do documento (55 = NF-e (modelo eletrônico), 65 = NFC-e)
 
         $std->serie = $this->default['serie'];                             // Série da nota fiscal
@@ -387,7 +387,6 @@ class Nfe
                     $protocolo = $std->protNFe->infProt->nProt;
                     $chave = $std->protNFe->infProt->chNFe;
 
-                    // CORREÇÃO: Usar Complements::toAuthorize
                     $xmlProtocolado = Complements::toAuthorize($xmlAssinado, $response);
 
                     // Salva XML
