@@ -4,7 +4,7 @@
     "type": "project",
     "require": {
         "php": "^8.4",
-        "nfephp-org/sped-nfe": "^5.0",
+        "nfephp-org/sped-nfe": "dev-master",
         "nfephp-org/sped-da": "^1.1"
     },
     "autoload": {
