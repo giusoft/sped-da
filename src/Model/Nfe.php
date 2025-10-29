@@ -29,6 +29,7 @@ class Nfe
         $this->default['versao'] = '4.00';
         $this->default['modelo'] = 55;
         $this->default['dataEmissao'] = date('Y-m-d\TH:i:sP');
+        $this->default['dataSaidaEntrada'] = date('Y-m-d\TH:i:sP');
         $this->default['serie'] = 1;
         $this->default['cNF'] = sprintf('%08d', rand(1, 99999999));
         $this->default['tpNF'] = 1;
@@ -173,38 +174,53 @@ class Nfe
 
     public function montarXML()
     {
-        $dados = $this->corpoRequisicao;
         $nfe = new MakeDev('PL_010_V1.30');
 
         // ===== IDENTIFICAÇÃO DA NFe =====
         $std = new \stdClass();
-        $std->versao = '4.00';
+        $std->versao = $this->default['versao'];
         $nfe->taginfNFe($std);
 
         $std = new \stdClass();
-        $std->cUF = $this->config['cUF'];
-        $std->cNF = sprintf('%08d', rand(1, 99999999));
-        $std->natOp = $dados['naturezaOperacao'] ?? 'VENDA DE MERCADORIA';
-        $std->mod = 55;
-        $std->serie = $dados['serie'] ?? 1;
-        $std->nNF = $dados['numero'];
-        $std->dhEmi = date('Y-m-d\TH:i:sP');
-        $std->dhSaiEnt = date('Y-m-d\TH:i:sP');
-        $std->tpNF = 1;
+        $std->cUF = $this->config['cUF']; // Código da UF (Unidade da Federação) do emitente
+        $std->cNF = $this->default['cNF']; // Código numérico da nota
+        $std->natOp = $this->corpoRequisicao['naturezaOperacao']; // Natureza da operação
+        $std->mod = $this->default['modelo']; // Modelo do documento (55 = NF-e (modelo eletrônico), 65 = NFC-e)
 
+        $std->serie = $this->default['serie']; // Série da nota fiscal
+        if (isset($this->corpoRequisicao['serie'])) {
+            $std->serie = $this->corpoRequisicao['serie'];
+        }
+
+        $std->nNF = $this->corpoRequisicao['numero']; // Número da nota fiscal
+        $std->dhEmi = $this->default['dataEmissao']; // Data/hora de emissão
+        $std->dhSaiEnt = $this->default['dataEmissao']; // Data/hora de saída ou entrada (Opcional — geralmente usada em operações com circulação de mercadoria)
+        $std->tpNF = $this->default['tpNF']; // Tipo da NF (0 = Entrada, 1 = Saída)
+
+        // Define idDest baseado na UF do destinatário
         $ufEmitente = $this->config['siglaUF'];
-        $ufDestinatario = $dados['cliente']['uf'];
-        if ($ufEmitente == $ufDestinatario) {
+        $ufDestinatario = $this->corpoRequisicao['cliente']['uf'];
+
+        $paisDestinatario = $this->default['codigoPais'];
+        if ($this->corpoRequisicao['cliente']['cPais']) {
+            $paisDestinatario = $this->corpoRequisicao['cliente']['cPais'];
+        }
+
+        if ($paisDestinatario != 1058) {
+            $std->idDest = 3; // Exterior
+        } elseif ($ufEmitente === $ufDestinatario) {
             $std->idDest = 1; // Operação interna
         } else {
             $std->idDest = 2; // Operação interestadual
         }
 
-        $std->cMunFG = $this->config['cmun'];
-        $std->tpImp = 1;
-        $std->tpEmis = 1;
-        $std->tpAmb = $this->config['tpAmb'];
-        $std->finNFe = $dados['finNFe'] ?? 1; // padrão: normal
+        $std->cMunFG = $this->config['cmun'];               // Código do município de ocorrência do fato gerador
+        $std->tpImp = $this->default['tipoImpressao'];      // Tipo de impressão do DANFE (1 = Retrato, 2 = Paisagem);
+        $std->tpEmis = $this->default['tipoImpressao'];     // Tipo de emissão da NF-e (1 = Normal, 2 = Contingência FS-IA, 3 = SCAN, 4 = DPEC, 5 = FS-DA, 6 = SVC-AN, 7 = SVC-RS, 9 = off-line)
+        // $std->cDV = 0;                                   // Dígito verificador da chave da NF-e;
+        $std->tpAmb = $this->config['tpAmb'];               // Tipo de ambiente (1 = PRODUÇÃO, 2 = HOMOLOGAÇÃO)
+        $std->finNFe = $this->default['finalidadeEmissao']; // Finalidade de emissão (1 = Normal, 2 = Complementar, 3 = Ajuste, 4 = Devolução)
+        $std->indFinal = 1;                                 // Consumidor final (0 = Não, 1 = Sim)
 
         if (in_array($std->finNFe, [2, 3, 6])) {
             $std->tpNFDebito = '01';
@@ -214,56 +230,57 @@ class Nfe
             $std->tpNFCredito = '01';
         }
 
-        $std->indFinal = 1;
-        $std->indPres = 1;
-        $std->procEmi = 3;
-        $std->verProc = 'API GNotas 1.0';
+        $std->indPres = 1;                                  // Indicador de presença do comprador (0 = Não se aplica, 1 = Presencial, 2 = Internet, 3 = Teleatendimento)
+        $std->procEmi = 0;                                  // Processo de emissão (0 = Emissão pelo próprio contribuinte, 1 = Avulsa Fisco, 2 = Avulsa contrib. com certificado, 3 = Aplicativo do Fisco)
+        $std->verProc = 'API GNotas 1.0';                   // Versão do aplicativo emissor
         $nfe->tagide($std);
 
         // ===== EMITENTE =====
         $std = new \stdClass();
-        $std->xNome = $this->config['razaosocial'];
-        $std->xFant = $this->config['razaosocial'];
-        $std->IE = $this->config['ie'];
-        $std->CRT = $this->config['regime'];
-        $std->CNPJ = preg_replace('/[^0-9]/', '', $this->config['cnpj']);
+        $std->xNome = $this->config['razaosocial'];         // Razão social / nome do emitente
+        $std->xFant = $this->config['razaosocial'];         // Nome fantasia (Opcional)
+        $std->IE = $this->config['ie'];                     // Inscrição estadual (Obrigatória (exceto isento))
+        $std->CRT = $this->config['regime'];                // Regime tributário (No nosso caso passamos sempre 3)
+        $std->CNPJ = soNumeros($this->config['cnpj']);      // Documento do emitente (Apenas um deve ser informado CNPJ || CPF) - Ver com thiago
         $nfe->tagemit($std);
 
         $std = new \stdClass();
-        $std->xLgr = $this->config['logradouro'];
-        $std->nro = $this->config['numero'];
-        $std->xBairro = $this->config['bairro'];
-        $std->cMun = $this->config['cmun'];
-        $std->xMun = $this->config['xmun'];
-        $std->UF = $this->config['siglaUF'];
-        $std->CEP = preg_replace('/[^0-9]/', '', $this->config['cep']);
-        $std->cPais = 1058;
-        $std->xPais = 'BRASIL';
-        $std->fone = preg_replace('/[^0-9]/', '', $this->config['fone'] ?? null);
+        $std->xLgr = $this->config['logradouro'];           // Logradouro (rua)
+        $std->nro = $this->config['numero'];                // Número
+        $std->xBairro = $this->config['bairro'];            // Bairro
+        $std->cMun = $this->config['cmun'];                 // Código IBGE do município
+        $std->xMun = $this->config['xmun'];                 // Nome do município
+        $std->UF = $this->config['siglaUF'];                // Sigla do estado
+        $std->CEP = soNumeros($this->config['cep']);        // Código postal
+        $std->cPais = $this->config['cPais'];               // Código do país
+        $std->xPais = $this->config['xPais'];               // Nome do país
+        $std->fone = soNumeros($this->config['fone']);      // Telefone do Emitente
         $nfe->tagenderEmit($std);
 
         // ===== DESTINATÁRIO =====
-        $cli = $dados['cliente'];
+        $cli = $this->corpoRequisicao['cliente'];
         $std = new \stdClass();
-        $std->xNome = $cli['nome'];
+        $std->xNome = $cli['nome']; // Nome / razão social
+
         if (!empty($cli['cnpj'])) {
-            $std->CNPJ = preg_replace('/[^0-9]/', '', $cli['cnpj']);
+            $std->CNPJ = soNumeros($cli['cnpj']); // Documento do destinatário
         } else {
-            $std->CPF = preg_replace('/[^0-9]/', '', $cli['cpf'] ?? null);
+            $std->CPF = soNumeros($cli['cpf']);   // Documento do destinatário
         }
-        $std->indIEDest = 9;
+
+        $std->indIEDest = 9; // (Vai vir nos dados do cliente) // Indicador IE destinatário (1 = Contribuinte, 2 = Isento, 9 = Não contribuinte)
         $nfe->tagdest($std);
 
         $std = new \stdClass();
-        $std->xLgr = $cli['endereco'];
-        $std->nro = $cli['numero'];
-        $std->xBairro = $cli['bairro'];
-        $std->cMun = $cli['codigoMunicipio'];
-        $std->xMun = $cli['municipio'];
-        $std->UF = $cli['uf'];
-        $std->CEP = preg_replace('/[^0-9]/', '', $cli['cep'] ?? null);
-        $std->cPais = $cli['cPais'] ?? 1058;
-        $std->xPais = 'BRASIL';
+        $std->xLgr = $cli['endereco'];        // Rua
+        $std->nro = $cli['numero'];           // Número
+        $std->xBairro = $cli['bairro'];       // Bairro
+        $std->cMun = $cli['codigoMunicipio']; // Código Município
+        $std->xMun = $cli['municipio'];       // Município
+        $std->UF = $cli['uf'];                // UF
+        $std->CEP = soNumeros($cli['cep']);   // CEP
+        $std->cPais = $this->config['cPais']; // Código do país (Vai vir nos dados do cliente)
+        $std->xPais = $this->config['xPais']; // Nome do país (Vai vir nos dados do cliente)
         $nfe->tagenderDest($std);
 
         // ===== PRODUTOS =====
@@ -273,35 +290,35 @@ class Nfe
         $totalCBS = 0;
         $totalBC_IBSCBS = 0;
 
-        foreach ($dados['produtos'] as $i => $prod) {
+        foreach ($this->corpoRequisicao['produtos'] as $i => $prod) {
             $item = $i + 1;
-            $quantidade = (float)($prod['quantidade'] ?? 1);
-            $valorUnitario = (float)($prod['valorUnitario'] ?? 0);
+            $quantidade = (float) ($prod['quantidade'] ?? 1);
+            $valorUnitario = (float) ($prod['valorUnitario'] ?? 0);
             $vProd = $quantidade * $valorUnitario;
             $totalProdutos += $vProd;
 
             // TAG PRODUTO
             $std = new \stdClass();
-            $std->item = $item;
-            $std->cProd = $prod['codigo'] ?? 'SEMPROD';
-            $std->cEAN = $prod['cEAN'] ?? 'SEM GTIN';
-            $std->xProd = $prod['descricao'] ?? 'PRODUTO SEM DESCRICAO';
-            $std->NCM = preg_replace('/[^0-9]/', '', $prod['ncm']);
-            $std->CFOP = $prod['cfop'];
-            $std->uCom = $prod['unidade'] ?? 'UN';
-            $std->qCom = $quantidade;
-            $std->vUnCom = number_format($valorUnitario, 2, '.', '');
-            $std->vProd = number_format($vProd, 2, '.', '');
-            $std->cEANTrib = $prod['cEANTrib'] ?? 'SEM GTIN';
-            $std->uTrib = $prod['unidade'] ?? 'UN';
-            $std->qTrib = $quantidade;
-            $std->vUnTrib = number_format($valorUnitario, 2, '.', '');
-            $std->indTot = 1;
+            $std->item = $item; // Número sequencial do item
+            $std->cProd = $prod['codigo'] ?? 'SEMPROD'; // Código interno do produto
+            $std->cEAN = $prod['cEAN'] ?? 'SEM GTIN'; // Código de barras
+            $std->xProd = $prod['descricao'] ?? 'PRODUTO SEM DESCRICAO'; // Descrição do produto
+            $std->NCM = soNumeros($prod['ncm']); // Código NCM (classificação fiscal)
+            $std->CFOP = $prod['cfop']; // Código Fiscal da Operação
+            $std->uCom = $prod['unidade'] ?? 'UN'; // Unidade
+            $std->qCom = number_format($prod['quantidade'], 4, '.', ''); // Quantidade
+            $std->vUnCom = number_format($prod['valorUnitario'], 10, '.', ''); // Valor Unitário
+            $std->vProd = number_format($vProd, 2, '.', ''); // Valor Total
+            $std->cEANTrib = $prod['cEANTrib'] ?? 'SEM GTIN'; // Código de barras do produto para tributação
+            $std->uTrib = $prod['unidade'] ?? 'UN'; // Unidade de medida para tributação
+            $std->qTrib = number_format($prod['quantidade'], 4, '.', ''); // Quantidade tributável
+            $std->vUnTrib = number_format($prod['valorUnitario'], 10, '.', ''); // Valor unitário tributável
+            $std->indTot = 1; // 1 = inclui no total da NF
             $nfe->tagprod($std);
 
             // TAG IMPOSTO (container principal)
             $std = new \stdClass();
-            $std->item = $item;
+            $std->item = $item; // Número do item
             $nfe->tagimposto($std);
 
             $impostos = $prod['impostos'] ?? [];
@@ -331,8 +348,8 @@ class Nfe
             $vPIS = $vProd * $pPIS / 100;
             if ($pis) {
                 $std = new \stdClass();
-                $std->item = $item;
-                $std->CST = str_pad($pis['CST'] ?? '06', 2, '0', STR_PAD_LEFT);
+                $std->item = $item; // Número do item
+                $std->CST = str_pad($pis['CST'] ?? '06', 2, '0', STR_PAD_LEFT); // Código de situação tributária (ex: 01, 07)
                 $std->vBC = number_format($vProd, 2, '.', '');
                 $std->pPIS = number_format($pPIS, 4, '.', '');
                 $std->vPIS = number_format($vPIS, 2, '.', '');
@@ -345,8 +362,8 @@ class Nfe
             $vCOFINS = $vProd * $pCOFINS / 100;
             if ($cofins) {
                 $std = new \stdClass();
-                $std->item = $item;
-                $std->CST = str_pad($cofins['CST'] ?? '06', 2, '0', STR_PAD_LEFT);
+                $std->item = $item; // Número do item
+                $std->CST = str_pad($cofins['CST'] ?? '06', 2, '0', STR_PAD_LEFT); // Código de situação tributária (ex: 01, 07)
                 $std->vBC = number_format($vProd, 2, '.', '');
                 $std->pCOFINS = number_format($pCOFINS, 4, '.', '');
                 $std->vCOFINS = number_format($vCOFINS, 2, '.', '');
@@ -441,28 +458,29 @@ class Nfe
 
         // ===== TRANSPORTE =====
         $std = new \stdClass();
-        $std->modFrete = 9; // Sem transporte
+        $std->modFrete = 9; // Modalidade do frete (0 = emitente, 1 = destinatário, 2 = terceiros, 9 = sem frete)
         $nfe->tagtransp($std);
 
         // ===== PAGAMENTO =====
         $std = new \stdClass();
-        $std->vTroco = 0.00;
+        $std->vTroco = 0.00; // Valor do troco (obrigatório para NFC-e modelo 65)
         $nfe->tagpag($std);
 
         $std = new \stdClass();
-        $std->tPag = '01'; // Dinheiro
-        $std->vPag = number_format($totalNota, 2, '.', '');
+        $std->tPag = '01'; // Tipo de pagamento (01 = dinheiro, 02 = cheque, 03 = cartão, 15 = PIX)
+        $std->vPag = number_format($totalProdutos, 2, '.', ''); // Valor pago pelo cliente
         $nfe->tagdetPag($std);
 
         // ===== INFORMAÇÕES ADICIONAIS =====
         $std = new \stdClass();
-        $std->infCpl = $dados['informacoesAdicionais'] ??
+        $std->infCpl = $this->corpoRequisicao['informacoesAdicionais'] ??
             'DOCUMENTO EMITIDO SOB O NOVO REGIME TRIBUTARIO (IBS/CBS/IS)';
         $nfe->taginfAdic($std);
 
         // ===== AUTORIZAÇÃO XML (OBRIGATÓRIO PARA BA) =====
+        // Se não tiver contador, informar CNPJ da SEFAZ-BA
         $std = new \stdClass();
-        $std->CNPJ = '13937073000156'; // SEFAZ-BA
+        $std->CNPJ = $this->default['cnjpAutorizadoSefaz']; // CNPJ autorizado a baixar o XML da NF-e (SEFAZ-BA)
         $nfe->tagautXML($std);
 
         return $nfe->getXML();
