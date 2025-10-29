@@ -203,12 +203,20 @@ class Nfe
         $std->cMunFG = $this->config['cmun'];
         $std->tpImp = 1;
         $std->tpEmis = 1;
-        $std->cDV = 0;
         $std->tpAmb = $this->config['tpAmb'];
-        $std->finNFe = 1;
+        $std->finNFe = $dados['finNFe'] ?? 1; // padrão: normal
+
+        if (in_array($std->finNFe, [2, 3, 6])) {
+            $std->tpNFDebito = '01';
+        }
+
+        if (in_array($std->finNFe, [4, 5])) {
+            $std->tpNFCredito = '01';
+        }
+
         $std->indFinal = 1;
         $std->indPres = 1;
-        $std->procEmi = 0;
+        $std->procEmi = 3;
         $std->verProc = 'API GNotas 1.0';
         $nfe->tagide($std);
 
@@ -231,7 +239,7 @@ class Nfe
         $std->CEP = preg_replace('/[^0-9]/', '', $this->config['cep']);
         $std->cPais = 1058;
         $std->xPais = 'BRASIL';
-        $std->fone = preg_replace('/[^0-9]/', '', $this->config['fone'] ?? '');
+        $std->fone = preg_replace('/[^0-9]/', '', $this->config['fone'] ?? null);
         $nfe->tagenderEmit($std);
 
         // ===== DESTINATÁRIO =====
@@ -241,7 +249,7 @@ class Nfe
         if (!empty($cli['cnpj'])) {
             $std->CNPJ = preg_replace('/[^0-9]/', '', $cli['cnpj']);
         } else {
-            $std->CPF = preg_replace('/[^0-9]/', '', $cli['cpf'] ?? '00000000000');
+            $std->CPF = preg_replace('/[^0-9]/', '', $cli['cpf'] ?? null);
         }
         $std->indIEDest = 9;
         $nfe->tagdest($std);
@@ -253,7 +261,7 @@ class Nfe
         $std->cMun = $cli['codigoMunicipio'];
         $std->xMun = $cli['municipio'];
         $std->UF = $cli['uf'];
-        $std->CEP = preg_replace('/[^0-9]/', '', $cli['cep']);
+        $std->CEP = preg_replace('/[^0-9]/', '', $cli['cep'] ?? null);
         $std->cPais = $cli['cPais'] ?? 1058;
         $std->xPais = 'BRASIL';
         $nfe->tagenderDest($std);
@@ -278,8 +286,8 @@ class Nfe
             $std->cProd = $prod['codigo'] ?? 'SEMPROD';
             $std->cEAN = $prod['cEAN'] ?? 'SEM GTIN';
             $std->xProd = $prod['descricao'] ?? 'PRODUTO SEM DESCRICAO';
-            $std->NCM = preg_replace('/[^0-9]/', '', $prod['ncm'] ?? '00000000');
-            $std->CFOP = $prod['cfop'] ?? '5102';
+            $std->NCM = preg_replace('/[^0-9]/', '', $prod['ncm']);
+            $std->CFOP = $prod['cfop'];
             $std->uCom = $prod['unidade'] ?? 'UN';
             $std->qCom = $quantidade;
             $std->vUnCom = number_format($valorUnitario, 2, '.', '');
@@ -300,11 +308,10 @@ class Nfe
 
             // ICMS
             $icms = $impostos['icms'] ?? [];
-            $icmsAliquota = (float)($icms['aliquota'] ?? 18);
-            $icmsRedBC = (float)($icms['pRedBC'] ?? 0);
-            $bcICMS = $vProd * (1 - $icmsRedBC/100);
-            $vICMS = $bcICMS * $icmsAliquota/100;
-
+            $aliqICMS = (float)($icms['aliquota'] ?? 18);
+            $redBC = (float)($icms['pRedBC'] ?? 0);
+            $bcICMS = $vProd * (1 - $redBC / 100);
+            $vICMS = $bcICMS * $aliqICMS / 100;
             if ($icms) {
                 $std = new \stdClass();
                 $std->item = $item;
@@ -312,36 +319,36 @@ class Nfe
                 $std->CST = str_pad($icms['CST'] ?? '00', 2, '0', STR_PAD_LEFT);
                 $std->modBC = 3;
                 $std->vBC = number_format($bcICMS, 2, '.', '');
-                $std->pICMS = number_format($icmsAliquota, 2, '.', '');
+                $std->pICMS = number_format($aliqICMS, 2, '.', '');
                 $std->vICMS = number_format($vICMS, 2, '.', '');
-                $std->pRedBC = number_format($icmsRedBC, 2, '.', '');
+                $std->pRedBC = ($redBC > 0) ? number_format($redBC, 2, '.', '') : null;
                 $nfe->tagICMS($std);
             }
 
             // PIS
             $pis = $impostos['pis'] ?? [];
-            $pisAliquota = (float)($pis['aliquota'] ?? 0.65);
-            $vPIS = $vProd * $pisAliquota/100;
+            $pPIS = (float)($pis['aliquota'] ?? 0.00);
+            $vPIS = $vProd * $pPIS / 100;
             if ($pis) {
                 $std = new \stdClass();
                 $std->item = $item;
                 $std->CST = str_pad($pis['CST'] ?? '06', 2, '0', STR_PAD_LEFT);
                 $std->vBC = number_format($vProd, 2, '.', '');
-                $std->pPIS = number_format($pisAliquota, 2, '.', '');
+                $std->pPIS = number_format($pPIS, 4, '.', '');
                 $std->vPIS = number_format($vPIS, 2, '.', '');
                 $nfe->tagPIS($std);
             }
 
             // COFINS
             $cofins = $impostos['cofins'] ?? [];
-            $cofinsAliquota = (float)($cofins['aliquota'] ?? 3.00);
-            $vCOFINS = $vProd * $cofinsAliquota/100;
+            $pCOFINS = (float)($cofins['aliquota'] ?? 0.00);
+            $vCOFINS = $vProd * $pCOFINS / 100;
             if ($cofins) {
                 $std = new \stdClass();
                 $std->item = $item;
                 $std->CST = str_pad($cofins['CST'] ?? '06', 2, '0', STR_PAD_LEFT);
                 $std->vBC = number_format($vProd, 2, '.', '');
-                $std->pCOFINS = number_format($cofinsAliquota, 2, '.', '');
+                $std->pCOFINS = number_format($pCOFINS, 4, '.', '');
                 $std->vCOFINS = number_format($vCOFINS, 2, '.', '');
                 $nfe->tagCOFINS($std);
             }
@@ -357,6 +364,8 @@ class Nfe
                 $std->vBCIS = number_format((float)($is['vBCIS'] ?? 0), 2, '.', '');
                 $std->pIS = number_format((float)($is['pIS'] ?? 0), 2, '.', '');
                 $std->vIS = number_format($vIS, 2, '.', '');
+                $std->uTrib = $is['uTrib'] ?? 'UN';
+                $std->qTrib = number_format((float)($is['qTrib'] ?? 0), 4, '.', '');
                 $nfe->tagIS($std);
                 $totalIS += $vIS;
             }
@@ -364,9 +373,18 @@ class Nfe
             // IBS/CBS (Reforma Tributária)
             $ibs = $impostos['ibscbs'] ?? [];
             $vBC_IBSCBS = (float)($ibs['vBC'] ?? $vProd);
-            $gIBSUF_vIBSUF = $vBC_IBSCBS * (($ibs['gIBSUF_pAliqEfet'] ?? 0.5)/100);
-            $gIBSMun_vIBSMun = $vBC_IBSCBS * (($ibs['gIBSMun_pAliqEfet'] ?? 0.5)/100);
-            $gCBS_vCBS = $vBC_IBSCBS * (($ibs['gCBS_pAliqEfet'] ?? 0.5)/100);
+
+            if ((int)date('Y') >= 2026) {
+                $ibs['gCBS_pAliqEfet'] = 0.9;
+            }
+
+            $gIBSUF_pAliqEfet = round((float)($ibs['gIBSUF_pAliqEfet'] ?? 0), 2);
+            $gIBSMun_pAliqEfet = round((float)($ibs['gIBSMun_pAliqEfet'] ?? 0), 2);
+            $gCBS_pAliqEfet = round((float)($ibs['gCBS_pAliqEfet'] ?? 0), 2);
+
+            $gIBSUF_vIBSUF = round($vBC_IBSCBS * $gIBSUF_pAliqEfet / 100, 2);
+            $gIBSMun_vIBSMun = round($vBC_IBSCBS * $gIBSMun_pAliqEfet / 100, 2);
+            $gCBS_vCBS = round($vBC_IBSCBS * $gCBS_pAliqEfet / 100, 2);
 
             if ($ibs) {
                 $std = new \stdClass();
@@ -374,28 +392,25 @@ class Nfe
                 $std->CST = str_pad($ibs['CST'] ?? '200', 3, '0', STR_PAD_LEFT);
                 $std->cClassTrib = str_pad($ibs['cClassTrib'] ?? '200003', 6, '0', STR_PAD_LEFT);
                 $std->indDoacao = (int)($ibs['indDoacao'] ?? 0);
-
-                // Grupo gIBSCBS (tributação regular)
                 $std->vBC = number_format($vBC_IBSCBS, 2, '.', '');
 
-                // --- IBS UF ---
+                // IBS Estadual
                 $std->gIBSUF_pIBSUF = number_format((float)($ibs['gIBSUF_pIBSUF'] ?? 0), 4, '.', '');
-                $std->gIBSUF_pRedAliq = number_format((float)($ibs['gIBSUF_pRedAliq'] ?? 0), 2, '.', '');
-                $std->gIBSUF_pAliqEfet = number_format((float)($ibs['gIBSUF_pAliqEfet'] ?? 0.5), 2, '.', '');
+                $std->gIBSUF_pRedAliq = number_format((float)($ibs['gIBSUF_pRedAliq'] ?? 0), 4, '.', '');
+                $std->gIBSUF_pAliqEfet = number_format($gIBSUF_pAliqEfet, 4, '.', '');
                 $std->gIBSUF_vIBSUF = number_format($gIBSUF_vIBSUF, 2, '.', '');
 
-                // --- IBS Municipal ---
+                // IBS Municipal
                 $std->gIBSMun_pIBSMun = number_format((float)($ibs['gIBSMun_pIBSMun'] ?? 0), 4, '.', '');
-                $std->gIBSMun_pRedAliq = number_format((float)($ibs['gIBSMun_pRedAliq'] ?? 0), 2, '.', '');
-                $std->gIBSMun_pAliqEfet = number_format((float)($ibs['gIBSMun_pAliqEfet'] ?? 0.5), 2, '.', '');
+                $std->gIBSMun_pRedAliq = number_format((float)($ibs['gIBSMun_pRedAliq'] ?? 0), 4, '.', '');
+                $std->gIBSMun_pAliqEfet = number_format($gIBSMun_pAliqEfet, 4, '.', '');
                 $std->gIBSMun_vIBSMun = number_format($gIBSMun_vIBSMun, 2, '.', '');
 
-                // --- CBS ---
+                // CBS Federal
                 $std->gCBS_pCBS = number_format((float)($ibs['gCBS_pCBS'] ?? 0), 4, '.', '');
-                $std->gCBS_pRedAliq = number_format((float)($ibs['gCBS_pRedAliq'] ?? 0), 2, '.', '');
-                $std->gCBS_pAliqEfet = number_format((float)($ibs['gCBS_pAliqEfet'] ?? 0.5), 2, '.', '');
+                $std->gCBS_pRedAliq = number_format((float)($ibs['gCBS_pRedAliq'] ?? 0), 4, '.', '');
+                $std->gCBS_pAliqEfet = number_format($gCBS_pAliqEfet, 4, '.', '');
                 $std->gCBS_vCBS = number_format($gCBS_vCBS, 2, '.', '');
-
                 $nfe->tagIBSCBS($std);
 
                 $totalIBS += $gIBSUF_vIBSUF + $gIBSMun_vIBSMun;
@@ -419,8 +434,10 @@ class Nfe
         $stdIBSCBSTot->gCBS_vCBS = number_format($totalCBS, 2, '.', '');
         $nfe->tagIBSCBSTot($stdIBSCBSTot);
 
-        // ===== TOTAIS (ICMS) =====
-        // A biblioteca MakeDev calcula automaticamente os totais de ICMS
+        $totalNota = $totalProdutos + $totalIS + $totalIBS + $totalCBS;
+        $stdTotal = new \stdClass();
+        $stdTotal->vNFTot = number_format($totalNota, 2, '.', '');
+        $nfe->tagtotal($stdTotal);
 
         // ===== TRANSPORTE =====
         $std = new \stdClass();
@@ -428,7 +445,6 @@ class Nfe
         $nfe->tagtransp($std);
 
         // ===== PAGAMENTO =====
-        $totalNota = $totalProdutos + $totalIS + $totalIBS + $totalCBS;
         $std = new \stdClass();
         $std->vTroco = 0.00;
         $nfe->tagpag($std);
