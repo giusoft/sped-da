@@ -195,7 +195,7 @@ class Nfe
         $std->nNF = $this->corpoRequisicao['numero']; // Número da nota fiscal
         $std->dhEmi = $this->default['dataEmissao']; // Data/hora de emissão
         $std->dhSaiEnt = $this->default['dataEmissao']; // Data/hora de saída ou entrada (Opcional — geralmente usada em operações com circulação de mercadoria)
-        $std->tpNF = $this->default['tpNF']; // Tipo da NF (0 = Entrada, 1 = Saída)
+        $std->tpNF = $this->corpoRequisicao['tipoOperacao'] ?? $this->default['tpNF']; // Tipo da NF (0 = Entrada, 1 = Saída)
 
         // Define idDest baseado na UF do destinatário
         $ufEmitente = $this->config['siglaUF'];
@@ -234,6 +234,12 @@ class Nfe
         $std->procEmi = 0;                                  // Processo de emissão (0 = Emissão pelo próprio contribuinte, 1 = Avulsa Fisco, 2 = Avulsa contrib. com certificado, 3 = Aplicativo do Fisco)
         $std->verProc = 'API GNotas 1.0';                   // Versão do aplicativo emissor
         $nfe->tagide($std);
+
+        if (!empty($this->corpoRequisicao['chaveReferenciada'])) {
+            $stdRef = new \stdClass();
+            $stdRef->refNFe = $this->corpoRequisicao['chaveReferenciada'];
+            $nfe->tagrefNFe($stdRef);
+        }
 
         // ===== EMITENTE =====
         $std = new \stdClass();
@@ -463,12 +469,23 @@ class Nfe
 
         // ===== PAGAMENTO =====
         $std = new \stdClass();
-        $std->vTroco = 0.00; // Valor do troco (obrigatório para NFC-e modelo 65)
+        $std->vTroco = 0.00;
         $nfe->tagpag($std);
 
+        $finalidade = $this->corpoRequisicao['finalidadeEmissao'] ?? 1; // 1 = NF-e Normal por padrão
+
         $std = new \stdClass();
-        $std->tPag = '01'; // Tipo de pagamento (01 = dinheiro, 02 = cheque, 03 = cartão, 15 = PIX)
-        $std->vPag = number_format($totalProdutos, 2, '.', ''); // Valor pago pelo cliente
+        if (in_array($finalidade, [3, 4])) {
+            // 3 = NF-e de Ajuste
+            // 4 = NF-e de Devolução/Estorno
+            $std->tPag = '90'; // 90 = Sem Pagamento
+            $std->vPag = 0.00; // Valor do pagamento é zero
+        } else {
+            // 1 = NF-e Normal (Venda)
+            $std->tPag = '01'; // Tipo de pagamento (01 = dinheiro, 02 = cheque, 03 = cartão, 15 = PIX)
+            $std->vPag = number_format($totalProdutos, 2, '.', ''); // Valor pago pelo cliente
+        }
+
         $nfe->tagdetPag($std);
 
         // ===== INFORMAÇÕES ADICIONAIS =====
@@ -836,6 +853,110 @@ class Nfe
 
         } catch (\Exception $e) {
             emitirErro($e->getMessage(), 500);
+        }
+    }
+
+
+    public function estornarNFe()
+    {
+        try {
+            $dadosEstorno = $this->corpoRequisicao;
+
+            // 1. VALIDAÇÕES OBRIGATÓRIAS
+            if (
+                !isset($dadosEstorno['chaveReferenciada']) ||
+                !isset($dadosEstorno['produtos']) ||
+                !isset($dadosEstorno['numero']) ||
+                !isset($dadosEstorno['cliente'])
+            ) {
+                emitirErro(
+                    "Para estorno, os campos 'chaveReferenciada', 'numero', 'cliente' e 'produtos' são obrigatórios.",
+                    400
+                );
+            }
+
+            if (strlen($dadosEstorno['chaveReferenciada']) != 44) {
+                emitirErro("A chave referenciada deve ter 44 dígitos.", 400);
+            }
+
+            // (OPCIONAL, MAS É BOM QUE EVITA ERROS, VAMOS VER SE VAI PRECISAR...)
+            $consultaOriginal = $this->consultarNotaOriginal($dadosEstorno['chaveReferenciada']);
+            if (!$consultaOriginal['autorizada']) {
+                emitirErro(
+                    "A NF-e original (chave: {$dadosEstorno['chaveReferenciada']}) não está autorizada. Estorno não permitido.",
+                    400
+                );
+            }
+
+            $this->corpoRequisicao['tipoOperacao'] = 0; // ENTRADA
+            $this->corpoRequisicao['finalidadeEmissao'] = 3; // AJUSTE
+            $this->corpoRequisicao['naturezaOperacao'] = '999 - ESTORNO DE NFE NAO CANCELADA NO PRAZO LEGAL'; // ESTÁ ASSIM EM UM PDF DE ESTORNO ENVIADO POR GONZAGAO
+
+            // VALIDA PRODUTOS (TALVEZ ISSO NÃO PRECISE, IREMOS PASSAR DE LÁ DO WMS (VAMOS PEGAR TODOS ITENS DE LÁ) )
+            foreach ($this->corpoRequisicao['produtos'] as &$prod) {
+                $prod['cfop'] = '1905';
+
+                // Valida quantidade
+                if (!isset($prod['quantidade']) || $prod['quantidade'] <= 0) {
+                    emitirErro("Produto com quantidade inválida ou não informada.", 400);
+                }
+
+                // Valida valor unitário
+                if (!isset($prod['valorUnitario']) || $prod['valorUnitario'] <= 0) {
+                    emitirErro("Produto com valor unitário inválido ou não informado.", 400);
+                }
+
+                // Define impostos padrões se não informados
+                // (Isso já cobre a lógica que estava duplicada)
+                if (empty($prod['impostos'])) {
+                    $prod['impostos'] = [
+                        'icms' => ['CST' => '41', 'orig' => 0], // Não tributado
+                        'pis' => ['CST' => '49'], // Outras operações
+                        'cofins' => ['CST' => '49'] // Outras operações
+                    ];
+                }
+            }
+            unset($prod);
+
+            // $infoAdicional = sprintf(
+            //     // AQUI DENTRO VAI PEGAR DE INFORMAÇÕES DA NOTA DE SAÍDA...
+            //     // EXEMPLO QUE ESTÁ EM UMA NOTA DE ESTORNO QUE GONZAGAO ME MANDOU -> NAO INCIDE ICMS, DEC. 13.780/12-RICMS/BA, LEI No 7.014/1996-SUBSECAO II ARTIGO 3oRESPALDA A NAO-INCIDENCIA
+            // );
+
+            // $this->corpoRequisicao['informacoesAdicionais'] = $infoAdicional;
+
+            $this->enviar();
+
+        } catch (\Exception $e) {
+            emitirErro($e->getMessage(), 500);
+        }
+    }
+
+
+    public function consultarNotaOriginal($chave)
+    {
+        try {
+            $response = $this->tools->sefazConsultaChave($chave);
+            $stdCl = new Standardize();
+            $std = $stdCl->toStd($response);
+
+            // 100 = Autorizada, 101 = Cancelada, 110 = Uso Denegado
+            $autorizada = isset($std->protNFe->infProt->cStat) &&
+                        in_array($std->protNFe->infProt->cStat, [100, 101]);
+
+            return [
+                'autorizada' => $autorizada,
+                'situacao' => $std->protNFe->infProt->cStat ?? null,
+                'motivo' => $std->protNFe->infProt->xMotivo ?? 'Não consultada'
+            ];
+
+        } catch (\Exception $e) {
+            // Se falhar a consulta, permite o estorno (pode estar offline)
+            return [
+                'autorizada' => true,
+                'situacao' => null,
+                'motivo' => 'Consulta não realizada: ' . $e->getMessage()
+            ];
         }
     }
 
