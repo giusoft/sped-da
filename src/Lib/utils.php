@@ -91,3 +91,11 @@ if (!function_exists('soNumeros')) {
         return(preg_replace('/[^0-9]+/i ', '', $var));
     }
 }
+
+
+if (!function_exists('tirarPontos')) {
+    function tirarPontos($dados)
+    {
+        return(str_replace('/', '', str_replace(")", "", str_replace("(", "", str_replace(" ", "", str_replace(".", "", str_replace("-", "", $dados)))))));
+    }
+}
