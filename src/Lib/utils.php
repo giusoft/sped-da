@@ -42,11 +42,7 @@ if (!function_exists('finalizarRequisicao')) {
         http_response_code($codigoHttp);
         header('Content-Type: application/json; charset=UTF-8');
 
-        echo json_encode(
-            $resposta,
-            JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_NUMERIC_CHECK
-        );
-
+        echo json_encode($resposta);
         exit;
     }
 }
