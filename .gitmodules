@@ -1,0 +1,9 @@
+[submodule "src/Lib/sped-da"]
+	path = src/Lib/sped-da
+	url = git@github.com:giusoft/sped-da.git
+[submodule "src/Lib/sped-common"]
+	path = src/Lib/sped-common
+	url = git@github.com:giusoft/sped-common.git
+[submodule "src/Lib/sped-nfe"]
+	path = src/Lib/sped-nfe
+	url = git@github.com:giusoft/sped-nfe.git

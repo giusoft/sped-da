@@ -51,7 +51,11 @@ RUN composer install --no-dev --no-interaction --no-scripts --optimize-autoloade
 # [cite_start]6. Copia o código da sua aplicação [cite: 3, 4]
 COPY . .
 
-# [cite_start]7. Ajusta as permissões da pasta para o usuário do servidor web [cite: 4]
+# 7. Atualiza os submódulos Git
+RUN git config --global --add safe.directory /var/www/html \
+    && git submodule update --init --recursive
+
+# [cite_start]8. Ajusta as permissões da pasta para o usuário do servidor web [cite: 4]
 RUN chown -R www-data:www-data /var/www/html
 
 # [cite_start]Expõe a porta padrão do PHP-FPM [cite: 4]
