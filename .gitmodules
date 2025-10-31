@@ -1,9 +1,0 @@
-[submodule "src/Lib/emitenota/src/Lib/sped-da"]
-	path = src/Lib/emitenota/src/Lib/sped-da
-	url = git@github.com:nfephp-org/sped-da.git
-[submodule "src/Lib/emitenota/src/Lib/sped-common"]
-	path = src/Lib/emitenota/src/Lib/sped-common
-	url = git@github.com:nfephp-org/sped-common.git
-[submodule "src/Lib/emitenota/src/Lib/sped-nfe"]
-	path = src/Lib/emitenota/src/Lib/sped-nfe
-	url = git@github.com:nfephp-org/sped-nfe.git
