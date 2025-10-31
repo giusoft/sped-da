@@ -4,9 +4,10 @@ namespace App\Model;
 
 use NFePHP\NFe\MakeDev;
 use NFePHP\NFe\Tools;
-use NFePHP\Common\Certificate;
-use NFePHP\NFe\Common\Standardize;
 use NFePHP\NFe\Complements;
+use NFePHP\NFe\Common\Standardize;
+use NFePHP\Common\Certificate;
+use NFePHP\Common\Validator;
 
 class Nfe
 {
@@ -50,6 +51,14 @@ class Nfe
             ### DAR RETORNO QUE ELE FOI GERADO ###
             // 2. ASSINA O XML (já faz validação automática)
             $xmlAssinado = $this->tools->signNFe($xmlMontado);
+
+            $xsd = __DIR__ . "/../Lib/sped-nfe/schemes/PL_010_V1.30/nfe_v4.00.xsd";
+            $erroxsd = null;
+            try {
+                Validator::isValid($xmlAssinado, $xsd);
+            } catch (ValidatorException $e) {
+                emitirErro($e->getMessage(), 400);
+            }
 
             ### DAR UM RETORNO PRO JS QUE O XML FOI ASSINADO ###
             // 3. ENVIA PARA SEFAZ (modo síncrono - indSinc=1)
@@ -195,7 +204,10 @@ class Nfe
         $std->nNF = $this->corpoRequisicao['numero']; // Número da nota fiscal
         $std->dhEmi = $this->default['dataEmissao']; // Data/hora de emissão
         $std->dhSaiEnt = $this->default['dataEmissao']; // Data/hora de saída ou entrada (Opcional — geralmente usada em operações com circulação de mercadoria)
-        $std->tpNF = $this->corpoRequisicao['tipoOperacao'] ?? $this->default['tpNF']; // Tipo da NF (0 = Entrada, 1 = Saída)
+        $std->tpNF = $this->default['tpNF'];
+        if (isset($this->corpoRequisicao['tipoOperacao'])) {
+            $std->tpNF = $this->corpoRequisicao['tipoOperacao']; // Tipo da NF (0 = Entrada, 1 = Saída)
+        }
 
         // Define idDest baseado na UF do destinatário
         $ufEmitente = $this->config['siglaUF'];
