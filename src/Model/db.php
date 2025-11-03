@@ -1,4 +1,9 @@
 <?php
+
+namespace App\Model;
+
+use PDO;
+
 date_default_timezone_set('America/Bahia');
 
 class DB
@@ -17,54 +22,65 @@ class DB
 	{
 		$this->parametro = $parametro;
 		if ($this->parametro['caminhoSetup']) {
-			$this->carregarSetup($this->parametro['caminhoSetup']);
+			// $this->carregarSetup($this->parametro['caminhoSetup']);
 		}
-		$this->nomeArquivoLog = "emitenota_" . $this->setup["global.logfile"];
+		// $this->nomeArquivoLog = "emitenota_" . $this->setup["global.logfile"];
 
-		$this->conectarBanco($this->parametro['conexaoBanco'] ?: $this->setup);
+		$conexao = $this->setup;
+		if (isset($this->parametro['conexaoBanco'])) {
+			$conexao = $this->parametro['conexaoBanco'];
+		}
+
+		$this->conectarBanco($conexao);
 		$this->gParam = $this->carregarParametros();
 	}
 
 
-	public function carregarSetup()
-	{
-		include $this->parametro['caminhoSetup'];
+	// public function carregarSetup()
+	// {
+	// 	include $this->parametro['caminhoSetup'];
 
-		$stp = trim(str_replace("\n", "", $gSETUP));
-		$mtz = explode("}", $stp);
-		foreach ($mtz as $el) {
-			if (strpos($el, "{") !== false) {
-				$class = trim(substr($el, 0, strpos($el, "{")));
-				$parm = substr($el, strpos($el, "{")+1);
-				$parm = trim(substr($parm, 0, strlen($parm)-1));
-				$parms = $this->cssDecode($parm);
-				foreach ($parms as $key=>$value)
-					$classes[$class . "." . $key] = $value;
-			}
-		}
-		$this->setup = $classes;
-	}
+	// 	$stp = trim(str_replace("\n", "", $gSETUP));
+	// 	$mtz = explode("}", $stp);
+	// 	foreach ($mtz as $el) {
+	// 		if (strpos($el, "{") !== false) {
+	// 			$class = trim(substr($el, 0, strpos($el, "{")));
+	// 			$parm = substr($el, strpos($el, "{")+1);
+	// 			$parm = trim(substr($parm, 0, strlen($parm)-1));
+	// 			$parms = $this->cssDecode($parm);
+	// 			foreach ($parms as $key=>$value)
+	// 				$classes[$class . "." . $key] = $value;
+	// 		}
+	// 	}
+	// 	$this->setup = $classes;
+	// }
 
 
 	public function conectarBanco($credenciais)
 	{
-		$conexao = 'mysql:host=' . $credenciais['database.url']
-			. '; port=' . $credenciais['database.port']
-			. '; charset=' . ($credenciais['database.charset'] ?: 'latin1')
-			. ';  dbname='  . $credenciais['database.name'];
-		$this->conexaoBanco = new PDO($conexao, $credenciais['database.user'], $credenciais['database.password']);
+		// $conexao = 'mysql:host=' . '172.17.0.1'
+		// 	. '; charset=' . 'latin1'
+		// 	. '; dbname=' . 'wms_logiclog';
+
+		// $usuario = $credenciais['database.user'] ?? 'web';
+		// $senha = $credenciais['database.password'] ?? 'web';
+
+		$this->conexaoBanco = new PDO('mysql:host=host.docker.internal;dbname=wms_logiclog', 'web', 'web');
 		$this->conexaoBanco->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-		if ($this->parametro['transacao']) {
+
+
+		if (isset($this->parametro['transacao'])) {
 			$this->conexaoBanco->beginTransaction();
 		}
+
 	}
 
 
 	public function executarQuery($query, $retornarId = 0)
 	{
-		$this->debug($query);
+		// $this->debug($query);
 
-		$this->gLog($query, 0, $this->nomeArquivoLog);
+		// $this->gLog($query, 0, $this->nomeArquivoLog);
 		$stmt = $this->conexaoBanco->prepare($query);
 
 		try {
@@ -372,7 +388,7 @@ class DB
 
 	public function __destruct()
     {
-    	if (!$this->parametro['transacao']) {
+    	if (!isset($this->parametro['transacao'])) {
     		return;
     	}
 
