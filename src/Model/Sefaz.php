@@ -7,13 +7,13 @@ use NFePHP\NFe\Common\Standardize;
 
 class Sefaz
 {
-    private $config;
     private $tools;
+    private $corpoRequisicao;
 
     public function __construct($dados)
     {
-        $this->config = $dados->config;
         $this->tools = $dados->tools;
+        $this->corpoRequisicao = $dados->corpoRequisicao['empresa'];
     }
 
 
@@ -37,11 +37,11 @@ class Sefaz
             }
 
             $ambiente = 'Homologação';
-            if ($std->tpAmb == 1 || $this->config['tpAmb'] == 1) {
+            if ($std->tpAmb == 1 || $this->corpoRequisicao['tpAmb'] == 1) {
                 $ambiente = 'Produção';
             }
 
-            $codigoUf = $this->config['siglaUF'];
+            $codigoUf = $this->corpoRequisicao['siglaUF'];
             if ($std->cUF) {
                 $codigoUf = $std->cUF;
             }
