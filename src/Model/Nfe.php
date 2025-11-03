@@ -12,14 +12,12 @@ use NFePHP\Common\Validator;
 class Nfe
 {
     private $corpoRequisicao;
-    private $config;
     private $tools;
     private $default;
 
     public function __construct($dados)
     {
         $this->corpoRequisicao = $dados->corpoRequisicao;
-        $this->config = $dados->config;
         $this->tools = $dados->tools;
         $this->carregarDadosDefault();
     }
@@ -191,7 +189,7 @@ class Nfe
         $nfe->taginfNFe($std);
 
         $std = new \stdClass();
-        $std->cUF = $this->config['cUF']; // Código da UF (Unidade da Federação) do emitente
+        $std->cUF = $this->corpoRequisicao['empresa']['cUF']; // Código da UF (Unidade da Federação) do emitente
         $std->cNF = $this->default['cNF']; // Código numérico da nota
         $std->natOp = $this->corpoRequisicao['naturezaOperacao']; // Natureza da operação
         $std->mod = $this->default['modelo']; // Modelo do documento (55 = NF-e (modelo eletrônico), 65 = NFC-e)
@@ -201,8 +199,8 @@ class Nfe
             $std->serie = $this->corpoRequisicao['serie'];
         }
 
-        $std->nNF = $this->corpoRequisicao['numero']; // Número da nota fiscal
-        $std->dhEmi = $this->default['dataEmissao']; // Data/hora de emissão
+        $std->nNF = $this->corpoRequisicao['numero'];   // Número da nota fiscal
+        $std->dhEmi = $this->default['dataEmissao'];    // Data/hora de emissão
         $std->dhSaiEnt = $this->default['dataEmissao']; // Data/hora de saída ou entrada (Opcional — geralmente usada em operações com circulação de mercadoria)
         $std->tpNF = $this->default['tpNF'];
         if (isset($this->corpoRequisicao['tipoOperacao'])) {
@@ -210,7 +208,7 @@ class Nfe
         }
 
         // Define idDest baseado na UF do destinatário
-        $ufEmitente = $this->config['siglaUF'];
+        $ufEmitente = $this->corpoRequisicao['empresa']['siglaUF'];
         $ufDestinatario = $this->corpoRequisicao['cliente']['uf'];
 
         $paisDestinatario = $this->default['codigoPais'];
@@ -226,13 +224,13 @@ class Nfe
             $std->idDest = 2; // Operação interestadual
         }
 
-        $std->cMunFG = $this->config['cmun'];               // Código do município de ocorrência do fato gerador
-        $std->tpImp = $this->default['tipoImpressao'];      // Tipo de impressão do DANFE (1 = Retrato, 2 = Paisagem);
-        $std->tpEmis = $this->default['tipoImpressao'];     // Tipo de emissão da NF-e (1 = Normal, 2 = Contingência FS-IA, 3 = SCAN, 4 = DPEC, 5 = FS-DA, 6 = SVC-AN, 7 = SVC-RS, 9 = off-line)
-        // $std->cDV = 0;                                   // Dígito verificador da chave da NF-e;
-        $std->tpAmb = $this->config['tpAmb'];               // Tipo de ambiente (1 = PRODUÇÃO, 2 = HOMOLOGAÇÃO)
-        $std->finNFe = $this->default['finalidadeEmissao']; // Finalidade de emissão (1 = Normal, 2 = Complementar, 3 = Ajuste, 4 = Devolução)
-        $std->indFinal = 1;                                 // Consumidor final (0 = Não, 1 = Sim)
+        $std->cMunFG = $this->corpoRequisicao['empresa']['cmun']; // Código do município de ocorrência do fato gerador
+        $std->tpImp = $this->default['tipoImpressao'];            // Tipo de impressão do DANFE (1 = Retrato, 2 = Paisagem);
+        $std->tpEmis = $this->default['tipoImpressao'];           // Tipo de emissão da NF-e (1 = Normal, 2 = Contingência FS-IA, 3 = SCAN, 4 = DPEC, 5 = FS-DA, 6 = SVC-AN, 7 = SVC-RS, 9 = off-line)
+        // $std->cDV = 0;                                         // Dígito verificador da chave da NF-e;
+        $std->tpAmb = $this->corpoRequisicao['empresa']['tpAmb']; // Tipo de ambiente (1 = PRODUÇÃO, 2 = HOMOLOGAÇÃO)
+        $std->finNFe = $this->default['finalidadeEmissao'];       // Finalidade de emissão (1 = Normal, 2 = Complementar, 3 = Ajuste, 4 = Devolução)
+        $std->indFinal = 1;                                       // Consumidor final (0 = Não, 1 = Sim)
 
         if (in_array($std->finNFe, [2, 3, 6])) {
             $std->tpNFDebito = '01';
@@ -255,24 +253,24 @@ class Nfe
 
         // ===== EMITENTE =====
         $std = new \stdClass();
-        $std->xNome = $this->config['razaosocial'];         // Razão social / nome do emitente
-        $std->xFant = $this->config['razaosocial'];         // Nome fantasia (Opcional)
-        $std->IE = $this->config['ie'];                     // Inscrição estadual (Obrigatória (exceto isento))
-        $std->CRT = $this->config['regime'];                // Regime tributário (No nosso caso passamos sempre 3)
-        $std->CNPJ = soNumeros($this->config['cnpj']);      // Documento do emitente (Apenas um deve ser informado CNPJ || CPF) - Ver com thiago
+        $std->xNome = $this->corpoRequisicao['empresa']['razaosocial'];         // Razão social / nome do emitente
+        $std->xFant = $this->corpoRequisicao['empresa']['razaosocial'];         // Nome fantasia (Opcional)
+        $std->IE = $this->corpoRequisicao['empresa']['ie'];                     // Inscrição estadual (Obrigatória (exceto isento))
+        $std->CRT = $this->corpoRequisicao['empresa']['regime'];                // Regime tributário (No nosso caso passamos sempre 3)
+        $std->CNPJ = soNumeros($this->corpoRequisicao['empresa']['cnpj']);      // Documento do emitente (Apenas um deve ser informado CNPJ || CPF) - Ver com thiago
         $nfe->tagemit($std);
 
         $std = new \stdClass();
-        $std->xLgr = $this->config['logradouro'];           // Logradouro (rua)
-        $std->nro = $this->config['numero'];                // Número
-        $std->xBairro = $this->config['bairro'];            // Bairro
-        $std->cMun = $this->config['cmun'];                 // Código IBGE do município
-        $std->xMun = $this->config['xmun'];                 // Nome do município
-        $std->UF = $this->config['siglaUF'];                // Sigla do estado
-        $std->CEP = soNumeros($this->config['cep']);        // Código postal
-        $std->cPais = $this->config['cPais'];               // Código do país
-        $std->xPais = $this->config['xPais'];               // Nome do país
-        $std->fone = soNumeros($this->config['fone']);      // Telefone do Emitente
+        $std->xLgr = $this->corpoRequisicao['empresa']['logradouro'];           // Logradouro (rua)
+        $std->nro = $this->corpoRequisicao['empresa']['numero'];                // Número
+        $std->xBairro = $this->corpoRequisicao['empresa']['bairro'];            // Bairro
+        $std->cMun = $this->corpoRequisicao['empresa']['cmun'];                 // Código IBGE do município
+        $std->xMun = $this->corpoRequisicao['empresa']['xmun'];                 // Nome do município
+        $std->UF = $this->corpoRequisicao['empresa']['siglaUF'];                // Sigla do estado
+        $std->CEP = soNumeros($this->corpoRequisicao['empresa']['cep']);        // Código postal
+        $std->cPais = $this->corpoRequisicao['empresa']['cPais'];               // Código do país
+        $std->xPais = $this->corpoRequisicao['empresa']['xPais'];               // Nome do país
+        $std->fone = soNumeros($this->corpoRequisicao['empresa']['fone']);      // Telefone do Emitente
         $nfe->tagenderEmit($std);
 
         // ===== DESTINATÁRIO =====
@@ -297,8 +295,8 @@ class Nfe
         $std->xMun = $cli['municipio'];       // Município
         $std->UF = $cli['uf'];                // UF
         $std->CEP = soNumeros($cli['cep']);   // CEP
-        $std->cPais = $this->config['cPais']; // Código do país (Vai vir nos dados do cliente)
-        $std->xPais = $this->config['xPais']; // Nome do país (Vai vir nos dados do cliente)
+        $std->cPais = $this->corpoRequisicao['empresa']['cPais']; // Código do país (Vai vir nos dados do cliente)
+        $std->xPais = $this->corpoRequisicao['empresa']['xPais']; // Nome do país (Vai vir nos dados do cliente)
         $nfe->tagenderDest($std);
 
         // ===== PRODUTOS =====
@@ -976,7 +974,7 @@ class Nfe
     ### SALVAR NO BANCO DE DADOS ###
     public function salvarXMLInutilizado($infInut, $xml)
     {
-        $cnpjLimpo = soNumeros($this->config['cnpj']);
+        $cnpjLimpo = soNumeros($this->corpoRequisicao['cnpj_emitente']);
         $dir = __DIR__ . "/../storage/notas/{$cnpjLimpo}/inutilizadas";
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
@@ -1011,7 +1009,7 @@ class Nfe
     ### SALVAR NO BANCO DE DADOS ###
     public function salvarXML($chave, $xml)
     {
-        $cnpjLimpo = soNumeros($this->config['cnpj']);
+        $cnpjLimpo = soNumeros($this->corpoRequisicao['cnpj_emitente']);
         $dir = __DIR__ . "/../storage/notas/{$cnpjLimpo}/autorizadas";
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
@@ -1023,7 +1021,7 @@ class Nfe
     ### SALVAR NO BANCO DE DADOS ###
     public function salvarXMLCancelado($chave, $xml)
     {
-        $cnpjLimpo = soNumeros($this->config['cnpj']);
+        $cnpjLimpo = soNumeros($this->corpoRequisicao['cnpj_emitente']);
         $dir = __DIR__ . "/../storage/notas/{$cnpjLimpo}/canceladas";
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
@@ -1035,7 +1033,7 @@ class Nfe
     ### SALVAR NO BANCO DE DADOS ###
     public function salvarXMLCCe($chave, $xml, $sequencia)
     {
-        $cnpjLimpo = preg_replace('/[^0-9]/', '', $this->config['cnpj']);
+        $cnpjLimpo = preg_replace('/[^0-9]/', '', $this->corpoRequisicao['cnpj_emitente']);
         $dir = __DIR__ . "/../storage/notas/{$cnpjLimpo}/cce";
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
