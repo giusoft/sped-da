@@ -1,4 +1,5 @@
 <?php
+$AESKEY = "emiteNota";
 
 if (!function_exists('emitirErro')) {
     function emitirErro($mensagem, $codigoHttp = 400, $dadosExtras = [])
@@ -97,5 +98,23 @@ if (!function_exists('tirarPontos')) {
     function tirarPontos($dados)
     {
         return(str_replace('/', '', str_replace(")", "", str_replace("(", "", str_replace(" ", "", str_replace(".", "", str_replace("-", "", $dados)))))));
+    }
+}
+
+
+if (!function_exists("desencriptar")) {
+    function desencriptar($nomeCampo) {
+        global $AESKEY;
+
+        return 'CAST(AES_DECRYPT(UNHEX(' . $nomeCampo . '),"' . $AESKEY . '") AS CHAR(150))';
+    }
+}
+
+
+if (!function_exists("encriptar")) {
+    function encriptar($valorEncriptar) {
+        global $AESKEY;
+
+        return 'HEX(AES_ENCRYPT(' . $valorEncriptar . ',"' . $AESKEY . '"))';
     }
 }
