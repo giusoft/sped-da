@@ -7,19 +7,17 @@ use NFePHP\DA\NFe\Danfe as NFeDanfe;
 class Danfe
 {
     private $corpoRequisicao;
-    private $config;
 
     public function __construct($dados)
     {
         $this->corpoRequisicao = $dados->corpoRequisicao;
-        $this->config = $dados->config;
     }
 
     public function gerarDanfe()
     {
         try {
             $chave = $this->corpoRequisicao['chave'];
-            $cnpjLimpo = soNumeros($this->config['cnpj']);
+            $cnpjLimpo = soNumeros($this->corpoRequisicao['cnpj_emitente']);
             $xmlPath = __DIR__ . "/../storage/notas/{$cnpjLimpo}/autorizadas/{$chave}-nfe.xml";
 
             if (!file_exists($xmlPath)) {
