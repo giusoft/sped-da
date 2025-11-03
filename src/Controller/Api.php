@@ -81,19 +81,24 @@ class Api
 
     public function chamarMetodoClasse()
     {
-        $dadosUrl = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
+        $rota = $_GET['rota'] ?? null;
+        $recurso = $_GET['recurso'] ?? null;
 
-        if (!class_exists($this->classes[$dadosUrl[0]])) {
-            emitirErro("A classe {$classe} não existe");
+        if (!$rota || !$recurso) {
+            emitirErro("Os parâmetros 'rota' e 'recurso' são obrigatórios na URL (ex: index.php?rota=nfe&recurso=enviar)", 400);
         }
 
-        $classe = new $this->classes[$dadosUrl[0]]($this);
-
-        if (!method_exists($classe, $dadosUrl[1])) {
-            emitirErro("Método " . $dadosUrl[1] . " não encontrado na classe " . $dadosUrl[0] . "");
+        if (!isset($this->classes[$rota]) || !class_exists($this->classes[$rota])) {
+            emitirErro("A classe '{$rota}' não foi encontrada.", 404);
         }
 
-        return $classe->{$dadosUrl[1]}($this->corpoRequisicao);
+        $classe = new $this->classes[$rota]($this);
+
+        if (!method_exists($classe, $recurso)) {
+            emitirErro("Método '{$recurso}' não encontrado na classe '{$rota}'.", 404);
+        }
+
+        return $classe->{$recurso}($this->corpoRequisicao);
     }
 
 }
