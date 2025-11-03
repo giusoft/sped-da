@@ -7,11 +7,11 @@ use NFePHP\Common\Certificate;
 use App\Model\Nfe;
 use App\Model\Danfe;
 use App\Model\Sefaz;
+use App\Model\db;
 
 class Api
 {
     public $corpoRequisicao;
-    public $config;
     public $tools;
     public $classes;
 
@@ -54,19 +54,34 @@ class Api
             emitirErro("CNPJ inválido: {$this->corpoRequisicao['cnpj_emitente']}", 400);
         }
 
-        $configPath = __DIR__ . "/../Config/empresas/{$cnpjLimpo}.json";
-
-        if (!file_exists($configPath)) {
-            emitirErro("Arquivo de configuração não encontrado para o CNPJ: {$cnpjLimpo}", 400);
+        if (!isset($this->corpoRequisicao['empresa'])) {
+            emitirErro("Os campos da empresa não foram informados", 400);
         }
-        $configJson = file_get_contents($configPath);
-        $this->config = json_decode($configJson, true);
+
+        $parametros = array(
+            'caminhoSetup' => '/var/www/html/wms/logiclog/setup.php'
+        );
+
+        $db = new DB($parametros);
+
+        $sql = "SELECT
+                    schemes,
+                    tpAmb,
+                    regime,
+                    " . desencriptar('senhaCertificado') . " AS senhaCertificado
+                FROM armazens_notas WHERE cnpj = '{$cnpjLimpo}'";
+        $config = $db->executarQuery($sql)[0];
 
         $certNome = "certificado.pfx";
-        $certSenha = $this->config['senhaCertificado'];
+        $certSenha = $config['senhaCertificado'];
         $certPath = __DIR__ . "/../Certificados/{$cnpjLimpo}/{$certNome}";
+
+        $this->corpoRequisicao['empresa']['schemes'] = $config['schemes'];
+        $this->corpoRequisicao['empresa']['tpAmb']   = $config['tpAmb'];
+        $this->corpoRequisicao['empresa']['regime']  = $config['regime'];
+
         if (!file_exists($certPath)) {
-            emitirErro("Arquivo de certificado não encontrado: {$certPath}", 400);
+            emitirErro("Certificado não encontrado: {$certPath}", 400);
         }
 
         $certificate = Certificate::readPfx(
@@ -74,15 +89,22 @@ class Api
             $certSenha
         );
 
-        $this->tools = new Tools(json_encode($this->config), $certificate);
+        $this->tools = new Tools(json_encode($this->corpoRequisicao['empresa']), $certificate);
         $this->tools->model('55');
     }
 
 
     public function chamarMetodoClasse()
     {
-        $rota = $_GET['rota'] ?? null;
-        $recurso = $_GET['recurso'] ?? null;
+        $rota = null;
+        if (isset($_GET['rota'])) {
+            $rota = $_GET['rota'];
+        }
+
+        $recurso = null;
+        if (isset($_GET['recurso'])) {
+            $recurso = $_GET['recurso'];
+        }
 
         if (!$rota || !$recurso) {
             emitirErro("Os parâmetros 'rota' e 'recurso' são obrigatórios na URL (ex: index.php?rota=nfe&recurso=enviar)", 400);
