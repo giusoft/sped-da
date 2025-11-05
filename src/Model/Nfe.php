@@ -43,22 +43,22 @@ class Nfe
     public function enviar()
     {
         try {
-            // 1. MONTA O XML
+            // Update de submetido
             $xmlMontado = $this->montarXML($this->corpoRequisicao);
+            enviarAndamento('status_montagem', 'XML Montado');
 
-            ### DAR RETORNO QUE ELE FOI GERADO ###
-            // 2. ASSINA O XML (já faz validação automática)
             $xmlAssinado = $this->tools->signNFe($xmlMontado);
+            enviarAndamento('status_assinado', 'XML Assinado');
 
             $xsd = __DIR__ . "/../Lib/sped-nfe/schemes/PL_010_V1.30/nfe_v4.00.xsd";
-            $erroxsd = null;
             try {
                 Validator::isValid($xmlAssinado, $xsd);
             } catch (ValidatorException $e) {
                 emitirErro($e->getMessage(), 400);
             }
+            // Update de Assinado
+            enviarAndamento('status_validado', 'XML Validado');
 
-            ### DAR UM RETORNO PRO JS QUE O XML FOI ASSINADO ###
             // 3. ENVIA PARA SEFAZ (modo síncrono - indSinc=1)
             $idLote = str_pad(time(), 15, '0', STR_PAD_LEFT);
 
@@ -94,7 +94,7 @@ class Nfe
                     if (isset($std->protNFe->infProt->xMotivo)) {
                         $motivo = $std->protNFe->infProt->xMotivo;
                     }
-
+                    // Update de Reprovado
                     // Nota rejeitada
                     emitirErro(
                         $motivo,
@@ -122,7 +122,7 @@ class Nfe
                 if (isset($std->protNFe->infProt->dhRecbto)) {
                     $dataHoraRecebimento = $std->protNFe->infProt->dhRecbto;
                 }
-
+                // Update de Aprovado
                 emitirSucesso(
                     $motivo,
                     200,
@@ -216,12 +216,16 @@ class Nfe
             $paisDestinatario = $this->corpoRequisicao['cliente']['cPais'];
         }
 
-        if ($paisDestinatario != 1058) {
-            $std->idDest = 3; // Exterior
-        } elseif ($ufEmitente === $ufDestinatario) {
-            $std->idDest = 1; // Operação interna
+        if (!isset($this->corpoRequisicao['idDest'])) {
+            if ($paisDestinatario != 1058) {
+                $std->idDest = 3; // Exterior
+            } elseif ($ufEmitente === $ufDestinatario) {
+                $std->idDest = 1; // Operação interna
+            } else {
+                $std->idDest = 2; // Operação interestadual
+            }
         } else {
-            $std->idDest = 2; // Operação interestadual
+            $std->idDest = $this->corpoRequisicao['idDest'];
         }
 
         $std->cMunFG = $this->corpoRequisicao['empresa']['cmun']; // Código do município de ocorrência do fato gerador
@@ -281,7 +285,9 @@ class Nfe
         if (!empty($cli['cnpj'])) {
             $std->CNPJ = soNumeros($cli['cnpj']); // Documento do destinatário
         } else {
-            $std->CPF = soNumeros($cli['cpf']);   // Documento do destinatário
+            if (isset($cli['cpf'])) {
+                $std->CPF = soNumeros($cli['cpf']);   // Documento do destinatário
+            }
         }
 
         $std->indIEDest = 9; // (Vai vir nos dados do cliente) // Indicador IE destinatário (1 = Contribuinte, 2 = Isento, 9 = Não contribuinte)
