@@ -70,15 +70,19 @@ class Api
                     regime,
                     " . desencriptar('senhaCertificado') . " AS senhaCertificado
                 FROM armazens_notas WHERE cnpj = '{$cnpjLimpo}'";
-        $config = $db->executarQuery($sql)[0];
+        $config = $db->executarQuery($sql);
+
+        if (!$config) {
+            emitirErro("CNPJ informado nao possui certificado valido ou nao existe", 400);
+        }
 
         $certNome = "certificado.pfx";
-        $certSenha = $config['senhaCertificado'];
+        $certSenha = $config[0]['senhaCertificado'];
         $certPath = __DIR__ . "/../Certificados/{$cnpjLimpo}/{$certNome}";
 
-        $this->corpoRequisicao['empresa']['schemes'] = $config['schemes'];
-        $this->corpoRequisicao['empresa']['tpAmb']   = $config['tpAmb'];
-        $this->corpoRequisicao['empresa']['regime']  = $config['regime'];
+        $this->corpoRequisicao['empresa']['schemes'] = $config[0]['schemes'];
+        $this->corpoRequisicao['empresa']['tpAmb']   = $config[0]['tpAmb'];
+        $this->corpoRequisicao['empresa']['regime']  = $config[0]['regime'];
 
         if (!file_exists($certPath)) {
             emitirErro("Certificado não encontrado: {$certPath}", 400);
