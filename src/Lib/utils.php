@@ -29,7 +29,7 @@ if (!function_exists('emitirSucesso')) {
         ];
 
         if ($dados) {
-            $resposta['dados'] = $dados;
+            $resposta['detalhes'] = $dados;
         }
 
         finalizarRequisicao($resposta, $codigoHttp);
