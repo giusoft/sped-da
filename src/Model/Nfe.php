@@ -59,15 +59,19 @@ class Nfe
             $retorno = 'XML submetido com sucesso';
             if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Submetida", "Assinada", "Aprovada", "Reprovada"])) {
                 $xmlMontado = $this->montarXML($this->corpoRequisicao);
-                $sql = "UPDATE nfe SET situacao = 'Submetido', xml = '{$xmlMontado}' WHERE id = {$idNfe}";
-                $this->db->executarQuery($sql);
+                if (isset($idNfe)) {
+                    $sql = "UPDATE nfe SET situacao = 'Submetido', xml = '{$xmlMontado}' WHERE id = {$idNfe}";
+                    $this->db->executarQuery($sql);
+                }
             }
 
             $retorno .= '|XML montado com sucesso';
             if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Assinada", "Aprovada", "Reprovada"])) {
                 $xmlAssinado = $this->tools->signNFe($xmlMontado);
-                $sql = "UPDATE nfe SET situacao = 'Assinado', xml = '{$xmlAssinado}' WHERE id = {$idNfe}";
-                $this->db->executarQuery($sql);
+                if (isset($idNfe)) {
+                    $sql = "UPDATE nfe SET situacao = 'Assinado', xml = '{$xmlAssinado}' WHERE id = {$idNfe}";
+                    $this->db->executarQuery($sql);
+                }
             }
 
             $retorno .= '|XML assinado com sucesso';
@@ -122,7 +126,7 @@ class Nfe
                     if (isset($std->protNFe->infProt->xMotivo)) {
                         $motivo = $std->protNFe->infProt->xMotivo;
                     }
-                    // Update de Reprovado
+
                     // Nota rejeitada
                     emitirErro(
                         $motivo,
@@ -154,20 +158,22 @@ class Nfe
                     $dataHoraRecebimento = $data->format('Y-m-d H:i:s');
                 }
 
-                $sql = "UPDATE nfe
-                        SET situacao = 'Aprovada',
-                            chave = '{$chave}',
-                            mensagens = '{$motivo}',
-                            protocolo = '{$protocolo}',
-                            data_recibo = '{$dataHoraRecebimento}',
-                            xml = '{$xmlProtocolado}'
-                        WHERE id = {$idNfe}";
-                $this->db->executarQuery($sql);
+                if (isset($idNfe)) {
+                    $sql = "UPDATE nfe
+                            SET situacao = 'Aprovada',
+                                chave = '{$chave}',
+                                mensagens = '{$motivo}',
+                                protocolo = '{$protocolo}',
+                                data_recibo = '{$dataHoraRecebimento}',
+                                xml = '{$xmlProtocolado}'
+                            WHERE id = {$idNfe}";
+                    $this->db->executarQuery($sql);
 
-                $sql = "UPDATE notas
-                        SET id_nfe = {$idNfe}
-                        WHERE id = " . $this->corpoRequisicao["idNota"];
-                $this->db->executarQuery($sql);
+                    $sql = "UPDATE notas
+                            SET id_nfe = {$idNfe}
+                            WHERE id = " . $this->corpoRequisicao["idNota"];
+                    $this->db->executarQuery($sql);
+                }
 
                 emitirSucesso(
                     $motivo,
