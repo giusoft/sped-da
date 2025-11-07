@@ -1,6 +1,65 @@
 <?php
 $AESKEY = "emiteNota";
 
+if (!function_exists('gCleanField')) {
+    function gCleanField($valor)
+    {
+        if (is_array($valor)) {
+            foreach ($valor as $key => $val) {
+                $valor[$key] = gCleanField($val);
+            }
+            return $valor;
+        }
+
+        if (!is_string($valor)) {
+            return $valor;
+        }
+
+        if (!check_utf8($valor)) {
+            $valor = utf8_encode($valor);
+        }
+
+        $valor = str_replace("'", "‘", $valor);
+        $valor = str_replace('"', '“', $valor);
+        $valor = trim($valor);
+
+        return $valor;
+    }
+}
+
+
+if (!function_exists('check_utf8')) {
+    function check_utf8($str)
+    {
+        if (!is_string($str)) {
+            return true;
+        }
+
+        $len = strlen($str);
+        for ($i = 0; $i < $len; $i++) {
+            $c = ord($str[$i]);
+
+            if ($c <= 128) continue;
+
+            if ($c > 247) return false;
+            elseif ($c > 239) $bytes = 4;
+            elseif ($c > 223) $bytes = 3;
+            elseif ($c > 191) $bytes = 2;
+            else return false;
+
+            if (($i + $bytes) > $len) return false;
+
+            while (--$bytes > 0) {
+                $b = ord($str[++$i]);
+                if ($b < 128 || $b > 191) return false;
+            }
+        }
+
+        return true;
+    }
+}
+
+
 if (!function_exists('emitirErro')) {
     function emitirErro($mensagem, $codigoHttp = 400, $dadosExtras = [])
     {
