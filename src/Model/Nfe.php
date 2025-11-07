@@ -8,18 +8,26 @@ use NFePHP\NFe\Complements;
 use NFePHP\NFe\Common\Standardize;
 use NFePHP\Common\Certificate;
 use NFePHP\Common\Validator;
+use App\Model\db;
 
 class Nfe
 {
     private $corpoRequisicao;
     private $tools;
     private $default;
+    private $db;
 
     public function __construct($dados)
     {
         $this->corpoRequisicao = $dados->corpoRequisicao;
         $this->tools = $dados->tools;
         $this->carregarDadosDefault();
+
+        $parametros = array(
+            'caminhoSetup' => '/var/www/html/wms/logiclog/setup.php'
+        );
+
+        $this->db = new DB($parametros);
     }
 
 
@@ -43,27 +51,44 @@ class Nfe
     public function enviar()
     {
         try {
-            // Update de submetido
-            $xmlMontado = $this->montarXML($this->corpoRequisicao);
-            enviarAndamento('status_montagem', 'XML Montado');
 
-            $xmlAssinado = $this->tools->signNFe($xmlMontado);
-            enviarAndamento('status_assinado', 'XML Assinado');
-
-            $xsd = __DIR__ . "/../Lib/sped-nfe/schemes/PL_010_V1.30/nfe_v4.00.xsd";
-            try {
-                Validator::isValid($xmlAssinado, $xsd);
-            } catch (ValidatorException $e) {
-                emitirErro($e->getMessage(), 400);
+            if (isset($this->corpoRequisicao["xml"]) && !$this->corpoRequisicao["xml"]) {
+                $idNfe = $this->salvarNFE();
             }
-            // Update de Assinado
-            enviarAndamento('status_validado', 'XML Validado');
+
+            $retorno = 'XML submetido com sucesso';
+            if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Submetida", "Assinada", "Aprovada", "Reprovada"])) {
+                $xmlMontado = $this->montarXML($this->corpoRequisicao);
+                $sql = "UPDATE nfe SET situacao = 'Submetido', xml = '{$xmlMontado}' WHERE id = {$idNfe}";
+                $this->db->executarQuery($sql);
+            }
+
+            $retorno .= '|XML montado com sucesso';
+            if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Assinada", "Aprovada", "Reprovada"])) {
+                $xmlAssinado = $this->tools->signNFe($xmlMontado);
+                $sql = "UPDATE nfe SET situacao = 'Assinado', xml = '{$xmlAssinado}' WHERE id = {$idNfe}";
+                $this->db->executarQuery($sql);
+            }
+
+            $retorno .= '|XML assinado com sucesso';
+            if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Aprovada", "Reprovada"])) {
+                $xsd = __DIR__ . "/../Lib/sped-nfe/schemes/PL_010_V1.30/nfe_v4.00.xsd";
+                try {
+                    Validator::isValid($xmlAssinado, $xsd);
+                } catch (ValidatorException $e) {
+                    emitirErro($e->getMessage(), 400, $retorno);
+                }
+            }
+
+            $retorno .= '|XML validado com sucesso';
 
             // 3. ENVIA PARA SEFAZ (modo síncrono - indSinc=1)
             $idLote = str_pad(time(), 15, '0', STR_PAD_LEFT);
 
-            // ESSE PARAMETRO 1 DEVE SER PEGO DO BD (O modo deve ser passado pelo banco de dados)
-            $response = $this->tools->sefazEnviaLote([$xmlAssinado], $idLote, 1); // 1 = modo síncrono
+            if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Aprovada", "Reprovada"])) {
+                // ESSE PARAMETRO 1 DEVE SER PEGO DO BD (O modo deve ser passado pelo banco de dados)
+                $response = $this->tools->sefazEnviaLote([$xmlAssinado], $idLote, 1); // 1 = modo síncrono
+            }
 
             // 4. PROCESSA RESPOSTA
             $stdCl = new Standardize();
@@ -79,8 +104,11 @@ class Nfe
                 emitirErro(
                     $motivo,
                     400,
-                    'Erro ao processar lote',
-                    ['codigoSituacaoNF' => $std->cStat]
+                    [
+                        'mensagem' => 'Erro ao processar lote',
+                        'codigoSituacaoNF' => $std->cStat,
+                        'andamento' => $retorno
+                    ]
                 );
             }
 
@@ -99,8 +127,11 @@ class Nfe
                     emitirErro(
                         $motivo,
                         400,
-                        'Nota rejeitada',
-                        ['codigoSituacaoNF' => $cStat]
+                        [
+                            'mensagem' => 'Nota rejeitada',
+                            'codigoSituacaoNF' => $cStat,
+                            'andamento' => $retorno
+                        ]
                     );
                 }
 
@@ -110,19 +141,34 @@ class Nfe
 
                 $xmlProtocolado = Complements::toAuthorize($xmlAssinado, $response);
 
-                // Salva XML
-                $this->salvarXML($chave, $xmlProtocolado);
-
                 $motivo = 'Autorizada';
-                if (isset($std->protNFe->infProt->xMotivo)){
+                if (isset($std->protNFe->infProt->xMotivo)) {
                     $motivo = $std->protNFe->infProt->xMotivo;
                 }
 
                 $dataHoraRecebimento = null;
                 if (isset($std->protNFe->infProt->dhRecbto)) {
                     $dataHoraRecebimento = $std->protNFe->infProt->dhRecbto;
+
+                    $data = new \DateTime($dataHoraRecebimento);
+                    $dataHoraRecebimento = $data->format('Y-m-d H:i:s');
                 }
-                // Update de Aprovado
+
+                $sql = "UPDATE nfe
+                        SET situacao = 'Aprovada',
+                            chave = '{$chave}',
+                            mensagens = '{$motivo}',
+                            protocolo = '{$protocolo}',
+                            data_recibo = '{$dataHoraRecebimento}',
+                            xml = '{$xmlProtocolado}'
+                        WHERE id = {$idNfe}";
+                $this->db->executarQuery($sql);
+
+                $sql = "UPDATE notas
+                        SET id_nfe = {$idNfe}
+                        WHERE id = " . $this->corpoRequisicao["idNota"];
+                $this->db->executarQuery($sql);
+
                 emitirSucesso(
                     $motivo,
                     200,
@@ -131,6 +177,7 @@ class Nfe
                         'protocolo' => $protocolo,
                         'codigoSituacaoNF' => $cStat,
                         'dhRecbto' => $dataHoraRecebimento,
+                        'andamento' => $retorno,
                         'xml' => base64_encode($xmlProtocolado)
                     ]
                 );
@@ -149,12 +196,15 @@ class Nfe
                     emitirErro(
                         $motivo,
                         400,
-                        'Erro ao processar lote',
-                        ['codigoSituacaoNF' => $std->cStat]
+                        [
+                            'mensagem' => 'Erro ao processar lote',
+                            'codigoSituacaoNF' => $std->cStat,
+                            'andamento' => $retorno
+                        ]
                     );
                 }
 
-                emitirSucesso($protocolo, 200);
+                emitirSucesso($protocolo, 200, ['andamento' => $retorno]);
             } else {
 
                 $motivo = 'Resposta inesperada da SEFAZ';
@@ -166,16 +216,83 @@ class Nfe
                 emitirErro(
                     $motivo,
                     400,
-                    'Erro ao processar lote',
-                    ['codigoSituacaoNF' => $std->cStat]
+                    [
+                        'mensagem' => 'Erro ao processar lote',
+                        'codigoSituacaoNF' => $std->cStat,
+                        'andamento' => $retorno
+                    ]
                 );
             }
         } catch (\Exception $e) {
             emitirErro(
                 $e->getMessage(),
-                500
+                500,
+                ['andamento' => $retorno]
             );
         }
+    }
+
+
+    public function prepararNFE()
+    {
+        /*
+            sistema             OK
+            data                OK
+            numero              OK
+            serie               OK
+            chave               OK
+            situacao            OK
+            data_recibo         OK
+            id_os               OK
+            id_empresa          OK
+            id_cliente          OK
+            id_pessoa           OK
+            id_operacao         OK
+            cancelada           OK
+            enviada             --
+            confirmada          --
+            xml                 OK
+            txt                 --
+            recibo              OK
+            mensagens           OK
+            protocolo           OK
+            xml_cancelamento    OK
+            idd                 --
+            nfeid               --
+            id_notas            OK
+            sped                --
+            data_cancelamento   OK
+            id_pessoas_cancelou OK
+        */
+        $dadosNfe = array();
+        $dadosNfe['sistema']     = $this->corpoRequisicao["sistema"];
+        $dadosNfe['data']        = date("Y-m-d H:i:s");
+        $dadosNfe['numero']      = $this->corpoRequisicao["numero"];
+        $dadosNfe['serie']       = $this->corpoRequisicao["serie"];
+        $dadosNfe['chave']       = '';
+        $dadosNfe['situacao']    = 'Submetida';
+        $dadosNfe['data_recibo'] = '';
+        $dadosNfe['id_os']       = $this->corpoRequisicao["idProgramacao"];
+        $dadosNfe['id_empresa']  = $this->corpoRequisicao["idEmpresa"];
+        $dadosNfe['id_cliente']  = $this->corpoRequisicao["cliente"]['idCliente'];
+        $dadosNfe['id_pessoa']   = $this->corpoRequisicao["idPessoaEmitente"];
+        $dadosNfe['id_operacao'] = $this->corpoRequisicao["idOperacao"];
+        $dadosNfe['cancelada']   = 0;
+        $dadosNfe['enviada']     = 0;
+        $dadosNfe['xml']         = '';
+        $dadosNfe['recibo']      = '';
+        $dadosNfe['id_notas']    = $this->corpoRequisicao["idNota"];
+        return $dadosNfe;
+    }
+
+
+    public function salvarNFE()
+    {
+        $sql = "UPDATE nfe_numeros SET numero = numero + 1 WHERE id = " . $this->corpoRequisicao['idNfeNumeros'];
+        $this->db->executarQuery($sql);
+
+        $dadosNfe = $this->prepararNFE();
+        return $this->db->insertTable("nfe", $dadosNfe, 1);
     }
 
 
