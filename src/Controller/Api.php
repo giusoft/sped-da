@@ -68,6 +68,7 @@ class Api
                     schemes,
                     tpAmb,
                     regime,
+                    versao_xml,
                     " . desencriptar('senhaCertificado') . " AS senhaCertificado
                 FROM armazens_notas WHERE cnpj = '{$cnpjLimpo}'";
         $config = $db->executarQuery($sql);
@@ -83,6 +84,7 @@ class Api
         $this->corpoRequisicao['empresa']['schemes'] = $config[0]['schemes'];
         $this->corpoRequisicao['empresa']['tpAmb']   = $config[0]['tpAmb'];
         $this->corpoRequisicao['empresa']['regime']  = $config[0]['regime'];
+        $this->corpoRequisicao['empresa']['versao']  = $config[0]['versao_xml'];
 
         if (!file_exists($certPath)) {
             emitirErro("Certificado não encontrado: {$certPath}", 400);
