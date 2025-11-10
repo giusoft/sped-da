@@ -5,6 +5,7 @@ namespace App\Model;
 use NFePHP\NFe\MakeDev;
 use NFePHP\NFe\Tools;
 use NFePHP\NFe\Complements;
+use NFePHP\NFe\Factories\Contingency;
 use NFePHP\NFe\Common\Standardize;
 use NFePHP\Common\Certificate;
 use NFePHP\Common\Validator;
@@ -57,6 +58,19 @@ class Nfe
             }
 
             $retorno = 'XML enviado com sucesso para processamento';
+
+            if (in_array($this->corpoRequisicao['modoOperacao'], [6, 7])) {
+                $dadosContingencia = json_encode([
+                    "motive" => "SEFAZ fora do AR",
+                    "timestamp" => strtotime($this->corpoRequisicao['dataHoraContingencia']),
+                    "tpEmis" => $this->corpoRequisicao['modoOperacao'],
+                    "type" => "SVCRS"
+                ]);
+
+                $this->tools->contingency = new Contingency($dadosContingencia);
+                $retorno .= '|Modo de contingência ativado';
+            }
+
             if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Submetida", "Assinada", "Aprovada", "Reprovada"])) {
                 $xmlMontado = $this->montarXML($this->corpoRequisicao);
                 if (isset($idNfe)) {
@@ -90,8 +104,21 @@ class Nfe
             $idLote = str_pad(time(), 15, '0', STR_PAD_LEFT);
 
             if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Aprovada", "Reprovada"])) {
+                $xmlsRetornados = array();
                 // ESSE PARAMETRO 1 DEVE SER PEGO DO BD (O modo deve ser passado pelo banco de dados)
-                $response = $this->tools->sefazEnviaLote([$xmlAssinado], $idLote, 1); // 1 = modo síncrono
+                // O método sefazEnviaLote ajusta automaticamente o XML para contingência e retorna os XMLs ajustados em $xmlsRetornados
+                $response = $this->tools->sefazEnviaLote(
+                    [$xmlAssinado],
+                    $idLote,
+                    1, // modo síncrono
+                    false,
+                    $xmlsRetornados
+                );
+
+                // IMPORTANTE: Se foi contingência, usar o XML retornado ajustado
+                if (!empty($xmlsRetornados)) {
+                    $xmlAssinado = $xmlsRetornados[0];
+                }
             }
 
             // 4. PROCESSA RESPOSTA
@@ -392,7 +419,17 @@ class Nfe
 
         $std->cMunFG = $this->corpoRequisicao['empresa']['cmun']; // Código do município de ocorrência do fato gerador
         $std->tpImp = $this->default['tipoImpressao'];            // Tipo de impressão do DANFE (1 = Retrato, 2 = Paisagem);
-        $std->tpEmis = $this->default['tipoImpressao'];           // Tipo de emissão da NF-e (1 = Normal, 2 = Contingência FS-IA, 3 = SCAN, 4 = DPEC, 5 = FS-DA, 6 = SVC-AN, 7 = SVC-RS, 9 = off-line)
+
+        $std->tpEmis = $this->default['tipoEmissao'];             // Tipo de emissão da NF-e (1 = Normal, 2 = Contingência FS-IA, 3 = SCAN, 4 = DPEC, 5 = FS-DA, 6 = SVC-AN, 7 = SVC-RS, 9 = off-line)
+        if (!empty($this->corpoRequisicao['modoOperacao'])) {
+            $std->tpEmis = $this->corpoRequisicao['modoOperacao'];
+        }
+
+        if (in_array($this->corpoRequisicao['modoOperacao'], [6, 7])) {
+            $std->xJust = "Sefaz fora do ar";
+            $std->dhCont = $this->corpoRequisicao['dataHoraContingencia'];
+        }
+
         // $std->cDV = 0;                                         // Dígito verificador da chave da NF-e;
         $std->tpAmb = $this->corpoRequisicao['empresa']['tpAmb']; // Tipo de ambiente (1 = PRODUÇÃO, 2 = HOMOLOGAÇÃO)
         $std->finNFe = $this->default['finalidadeEmissao'];       // Finalidade de emissão (1 = Normal, 2 = Complementar, 3 = Ajuste, 4 = Devolução)
@@ -443,6 +480,7 @@ class Nfe
         $cli = $this->corpoRequisicao['cliente'];
         $std = new \stdClass();
         $std->xNome = $cli['nome']; // Nome / razão social
+        $std->IE = $cli['ie'];
 
         if (!empty($cli['cnpj'])) {
             $std->CNPJ = soNumeros($cli['cnpj']); // Documento do destinatário
