@@ -172,7 +172,6 @@ class Nfe
                         'codigoSituacaoNF' => $cStat,
                         'dataHoraRecebimento' => $dataHoraRecebimento,
                         'andamento' => $retorno,
-                        'dadosNfe' => $this->preparar(),
                         'xml' => base64_encode($xmlProtocolado)
                     ]
                 );
@@ -225,59 +224,6 @@ class Nfe
                 ['andamento' => $retorno]
             );
         }
-    }
-
-
-    public function preparar()
-    {
-        /*
-            sistema             OK
-            data                OK
-            numero              OK
-            serie               OK
-            chave               OK
-            situacao            OK
-            data_recibo         OK
-            id_os               OK
-            id_empresa          OK
-            id_cliente          OK
-            id_pessoa           OK
-            id_operacao         OK
-            cancelada           OK
-            enviada             --
-            confirmada          --
-            xml                 OK
-            txt                 --
-            recibo              OK
-            mensagens           OK
-            protocolo           OK
-            xml_cancelamento    OK
-            idd                 --
-            nfeid               --
-            id_notas            OK
-            sped                --
-            data_cancelamento   OK
-            id_pessoas_cancelou OK
-        */
-        $dadosNfe = array();
-        $dadosNfe['sistema']     = $this->corpoRequisicao["sistema"];
-        $dadosNfe['data']        = date("Y-m-d H:i:s");
-        $dadosNfe['numero']      = $this->corpoRequisicao["numeroNota"];
-        $dadosNfe['serie']       = $this->corpoRequisicao["serie"];
-        $dadosNfe['chave']       = '';
-        $dadosNfe['situacao']    = 'Submetida';
-        $dadosNfe['data_recibo'] = '0000-00-00 00:00:00';
-        $dadosNfe['id_os']       = $this->corpoRequisicao["idProgramacao"];
-        $dadosNfe['id_empresa']  = $this->corpoRequisicao['empresa']['idEmpresa'];
-        $dadosNfe['id_cliente']  = $this->corpoRequisicao["cliente"]['idCliente'];
-        $dadosNfe['id_pessoa']   = $this->corpoRequisicao["idPessoaEmitente"];
-        $dadosNfe['id_operacao'] = $this->corpoRequisicao["idOperacao"];
-        $dadosNfe['cancelada']   = 0;
-        $dadosNfe['enviada']     = 0;
-        $dadosNfe['xml']         = '';
-        $dadosNfe['recibo']      = '';
-        $dadosNfe['id_notas']    = $this->corpoRequisicao["idNota"];
-        return $dadosNfe;
     }
 
 
