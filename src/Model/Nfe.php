@@ -541,7 +541,6 @@ class Nfe
 
         // Força a inclusão das Tags de Totais (IS, IBS, CBS)
         // A biblioteca pode omitir se forem zero, mas a SEFAZ exige.
-
         if (!in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])) {
             // 1. Total de IS
             $stdISTot = new \stdClass();
