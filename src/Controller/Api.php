@@ -57,30 +57,17 @@ class Api
             emitirErro("Os campos da empresa não foram informados", 400);
         }
 
-        Receba estes dados pelo json enviado para o emiteNota. Passe todo o necessario por la
-       /* $db = new DB($parametros);
-
-        $sql = "SELECT
-                    schemes,
-                    tpAmb,
-                    regime,
-                    versao_xml,
-                    " . desencriptar('senhaCertificado') . " AS senhaCertificado
-                FROM armazens_notas WHERE cnpj = '{$cnpjLimpo}'";
-        $config = $db->executarQuery($sql);*/
-
-        if (!$config) {
-            emitirErro("CNPJ informado nao possui certificado valido ou nao existe", 400);
-        }
+        $senhaCertificado = openssl_decrypt(
+            hex2bin($this->corpoRequisicao['config']['senhaCertificado']),   // Dados criptografados
+            'AES-128-CBC',           // Modo de operação AES-128-CBC
+            'emiteNota',             // Chave
+            OPENSSL_RAW_DATA,        // Retorna os dados crus sem qualquer codificação
+            str_repeat("\0", 16)     // IV (Vetor de Inicialização)
+        );
 
         $certNome = "certificado.pfx";
-        $certSenha = $config[0]['senhaCertificado'];
         $certPath = __DIR__ . "/../Certificados/{$cnpjLimpo}/{$certNome}";
 
-        $this->corpoRequisicao['empresa']['schemes'] = $config[0]['schemes'];
-        $this->corpoRequisicao['empresa']['tpAmb']   = $config[0]['tpAmb'];
-        $this->corpoRequisicao['empresa']['regime']  = $config[0]['regime'];
-        $this->corpoRequisicao['empresa']['versao']  = $config[0]['versao_xml'];
 
         if (!file_exists($certPath)) {
             emitirErro("Certificado não encontrado: {$certPath}", 400);
@@ -88,7 +75,7 @@ class Api
 
         $certificate = Certificate::readPfx(
             file_get_contents($certPath),
-            $certSenha
+            $senhaCertificado
         );
 
         $this->tools = new Tools(json_encode($this->corpoRequisicao['empresa']), $certificate);
