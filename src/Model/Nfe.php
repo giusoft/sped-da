@@ -45,8 +45,8 @@ class Nfe
     {
         try {
 
-            $retorno = 'XML enviado com sucesso para processamento';
-            if (in_array($this->corpoRequisicao['modoOperacao'], [6, 7])) {
+            $retorno = 'XML submetido com sucesso para processamento';
+            if (in_array($this->corpoRequisicao['modoOperacao'], [6, 7])) { // [6, 7] tem que ser um defalt modo contingencia
                 $dadosContingencia = json_encode([
                     "motive" => "SEFAZ fora do AR", // Temos que passar o motivo que entrou em Contingencia
                     "timestamp" => strtotime($this->corpoRequisicao['dataHoraContingencia']),
@@ -55,8 +55,17 @@ class Nfe
                 ]);
 
                 $this->tools->contingency = new Contingency($dadosContingencia);
-                $retorno .= '|Modo de contingência ativado';
             }
+
+            $retorno .= '| ' . [
+                1 => 'Emissão normal',
+                2 => 'Contingência FS-IA',
+                3 => 'Contingência SCAN',
+                4 => 'Contingência DPEC',
+                5 => 'Contingência FS-DA',
+                6 => 'Contingência SVC-AN',
+                7 => 'Contingência SVC-RS'
+            ][$this->corpoRequisicao['modoOperacao']] . '  ativado';
 
             //MONTAR XML
             $xmlMontado = $this->montarXML($this->corpoRequisicao);
@@ -79,22 +88,23 @@ class Nfe
             // 3. ENVIA PARA SEFAZ (modo síncrono - indSinc=1)
             $idLote = str_pad(time(), 15, '0', STR_PAD_LEFT);
 
-            if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Aprovada", "Reprovada"])) {
-                $xmlsRetornados = array();
-                // ESSE PARAMETRO 1 DEVE SER PEGO DO BD (O modo deve ser passado pelo banco de dados)
-                // O método sefazEnviaLote ajusta automaticamente o XML para contingência e retorna os XMLs ajustados em $xmlsRetornados
-                $response = $this->tools->sefazEnviaLote(
-                    [$xmlAssinado],
-                    $idLote,
-                    1, // modo síncrono
-                    false,
-                    $xmlsRetornados
-                );
+            $xmlsRetornados = array();
+            // ESSE PARAMETRO 1 DEVE SER PEGO DO BD (O modo deve ser passado pelo banco de dados)
+            // O método sefazEnviaLote ajusta automaticamente o XML para contingência e retorna os XMLs ajustados em $xmlsRetornados
+            $retorno .= '|Enviando XML para a SEFAZ';
+            $response = $this->tools->sefazEnviaLote(
+                [$xmlAssinado],
+                $idLote,
+                1, // modo síncrono
+                false,
+                $xmlsRetornados
+            );
 
-                // IMPORTANTE: Se foi contingência, usar o XML retornado ajustado
-                if (!empty($xmlsRetornados)) {
-                    $xmlAssinado = $xmlsRetornados[0];
-                }
+            $retorno .= '|O XML foi enviado com sucesso para a SEFAZ';
+
+            // IMPORTANTE: Se foi contingência, usar o XML retornado ajustado
+            if (!empty($xmlsRetornados)) {
+                $xmlAssinado = $xmlsRetornados[0];
             }
 
             // 4. PROCESSA RESPOSTA
