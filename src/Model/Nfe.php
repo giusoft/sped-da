@@ -9,26 +9,18 @@ use NFePHP\NFe\Factories\Contingency;
 use NFePHP\NFe\Common\Standardize;
 use NFePHP\Common\Certificate;
 use NFePHP\Common\Validator;
-use App\Model\db;
 
 class Nfe
 {
     private $corpoRequisicao;
     private $tools;
     private $default;
-    private $db;
 
     public function __construct($dados)
     {
         $this->corpoRequisicao = $dados->corpoRequisicao;
         $this->tools = $dados->tools;
         $this->carregarDadosDefault();
-
-        $parametros = array(
-            'caminhoSetup' => '/var/www/html/wms/logiclog/setup.php'
-        );
-
-        $this->db = new DB($parametros);
     }
 
 
@@ -52,16 +44,16 @@ class Nfe
     public function enviar()
     {
         try {
-
-            if (isset($this->corpoRequisicao["xml"]) && !$this->corpoRequisicao["xml"]) {
+            retire a dependencia deste trecho
+            /*if (isset($this->corpoRequisicao["xml"]) && !$this->corpoRequisicao["xml"]) {
                 $idNfe = $this->salvarNFE();
-            }
+            }*/
 
             $retorno = 'XML enviado com sucesso para processamento';
 
             if (in_array($this->corpoRequisicao['modoOperacao'], [6, 7])) {
                 $dadosContingencia = json_encode([
-                    "motive" => "SEFAZ fora do AR",
+                    "motive" => "SEFAZ fora do AR", isso aqui é fixo mesmo?
                     "timestamp" => strtotime($this->corpoRequisicao['dataHoraContingencia']),
                     "tpEmis" => $this->corpoRequisicao['modoOperacao'],
                     "type" => "SVCRS"
@@ -70,34 +62,19 @@ class Nfe
                 $this->tools->contingency = new Contingency($dadosContingencia);
                 $retorno .= '|Modo de contingência ativado';
             }
-
-            if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Submetida", "Assinada", "Aprovada", "Reprovada"])) {
-                $xmlMontado = $this->montarXML($this->corpoRequisicao);
-                if (isset($idNfe)) {
-                    $sql = "UPDATE nfe SET situacao = 'Submetido', xml = '{$xmlMontado}' WHERE id = {$idNfe}";
-                    $this->db->executarQuery($sql);
-                }
-            }
-
+            //MONTAR XML
+            $xmlMontado = $this->montarXML($this->corpoRequisicao);
             $retorno .= '|Estrutura do XML criada com sucesso';
-            if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Assinada", "Aprovada", "Reprovada"])) {
-                $xmlAssinado = $this->tools->signNFe($xmlMontado);
-                if (isset($idNfe)) {
-                    $sql = "UPDATE nfe SET situacao = 'Assinado', xml = '{$xmlAssinado}' WHERE id = {$idNfe}";
-                    $this->db->executarQuery($sql);
-                }
-            }
-
+            //ASSINAR XML
+            $xmlAssinado = $this->tools->signNFe($xmlMontado);
             $retorno .= '|XML assinado digitalmente com sucesso';
-            if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Aprovada", "Reprovada"])) {
-                $xsd = __DIR__ . "/../Lib/sped-nfe/schemes/PL_010_V1.30/nfe_v4.00.xsd";
-                try {
-                    Validator::isValid($xmlAssinado, $xsd);
-                } catch (ValidatorException $e) {
-                    emitirErro($e->getMessage(), 400, $retorno);
-                }
+            //VALIDAR XML
+            $xsd = __DIR__ . "/../Lib/sped-nfe/schemes/PL_010_V1.30/nfe_v4.00.xsd";
+            try {
+                Validator::isValid($xmlAssinado, $xsd);
+            } catch (ValidatorException $e) {
+                emitirErro($e->getMessage(), 400, $retorno);
             }
-
             $retorno .= '|XML validado e pronto para envio a SEFAZ';
 
             // 3. ENVIA PARA SEFAZ (modo síncrono - indSinc=1)
@@ -185,6 +162,19 @@ class Nfe
                     $dataHoraRecebimento = $data->format('Y-m-d H:i:s');
                 }
 
+                retorne mais estes dados para a aplicação
+                {
+                    situacao = 'Aprovada',
+                    chave = '{$chave}',
+                    mensagens = '{$motivo}',
+                    protocolo = '{$protocolo}',
+                    data_recibo = '{$dataHoraRecebimento}',
+                    xml = '{$xmlProtocolado}'
+                    id_nfe = {$idNfe} -> com este dado vc conseguira fazer os dois updates abaixo
+                    TAMBEM ADICIONE AQUI OS DADOS DE prepararNFE()
+                    TAMBEM RETORNE OS DADOS NECESSARIOS PRA FAZER O INSERT na tabela nfe
+                }
+                /* APAGAR ESTE CODIGO COMENTADO
                 if (isset($idNfe)) {
                     $sql = "UPDATE nfe
                             SET situacao = 'Aprovada',
@@ -200,7 +190,7 @@ class Nfe
                             SET id_nfe = {$idNfe}
                             WHERE id = " . $this->corpoRequisicao["idNota"];
                     $this->db->executarQuery($sql);
-                }
+                }*/
 
                 emitirSucesso(
                     $motivo,
@@ -266,7 +256,7 @@ class Nfe
     }
 
 
-    public function prepararNFE()
+    public function prepararNFE()  --> renomeie para preparar()
     {
         /*
             sistema             OK
@@ -319,20 +309,21 @@ class Nfe
     }
 
 
-    public function salvarNFE()
+    public function salvarNFE() --> renomeie para salvar()
     {
         $this->obterDadosNfeNumeroEOperacao();
-        $sql = "UPDATE nfe_numeros SET numero = numero + 1 WHERE id = " . $this->corpoRequisicao['idNfeNumeros'];
-        $this->db->executarQuery($sql);
-
+        COLOQUE ESTE UPDATE NO WMS (local ja sinalizado no saida.php)
+        /* $sql = "UPDATE nfe_numeros SET numero = numero + 1 WHERE id = " . $this->corpoRequisicao['idNfeNumeros'];
+        $this->db->executarQuery($sql);*/
         $dadosNfe = $this->prepararNFE();
-        return $this->db->insertTable("nfe", $dadosNfe, 1);
+        NAO INSIRA MAIS OS DADOS AQUI, RETORNE TUDO NAQUELE JSON INDICADO, E A PARTIR DESTE RETORNO VC FAZ OS INSERTS, UPDATES... O QUE PRECISAR.
+        // return $this->db->insertTable("nfe", $dadosNfe, 1);
     }
 
 
     public function obterDadosNfeNumeroEOperacao()
 	{
-		$sql = "SELECT * FROM nfe_operacao ORDER BY id DESC LIMIT 1";
+		$sql = "SELECT * FROM nfe_operacao ORDER BY id DESC LIMIT 1";tire daqui, envie isso no proprio json. Exemplo do atributo no json {... "contigencia": 1 ... }
         $rs  = $this->db->executarQuery($sql)[0];
 
         $dados['serie'] = $rs['serie'];
@@ -346,7 +337,9 @@ class Nfe
         }
 
         $this->corpoRequisicao['idOperacao'] = $rs['id'];
-
+        receba estes dados a partir do json
+        COLOQUE ESTE TRECHO LA NO WMS
+DAQUI {
         $sql = "SELECT id, numero, serie
 				FROM nfe_numeros
 				WHERE id_armazens = " . $this->corpoRequisicao['empresa']['idEmpresa'] . " AND serie = '" . $dados['serie'] . "'";
@@ -361,7 +354,7 @@ class Nfe
 			$mtz['serie'] = $dados['serie'];
 			$this->db->insertTable('nfe_numeros', $mtz);
 		}
-
+} ATE AQUI ---> E RECEBA no Json o dado que vc precisar
         $this->corpoRequisicao['idNfeNumeros'] = $dadosNfeNumeros['id'];
         $this->corpoRequisicao['numeroNota'] = $numero;
         $this->corpoRequisicao['serie'] = $dadosNfeNumeros['serie'] ?: $dados['serie'];
@@ -780,7 +773,7 @@ class Nfe
     }
 
 
-    public function cancelarNFe()
+    public function cancelarNFe()  --> renomeie para cancelar()
     {
         try {
             $chave = '';
@@ -864,7 +857,7 @@ class Nfe
     }
 
 
-    public function inutilizarNFe()
+    public function inutilizarNFe() --> renomeie para inutilizar()
     {
         try {
 
@@ -1024,7 +1017,7 @@ class Nfe
     }
 
 
-    public function consultarNFe()
+    public function consultarNFe()  --> renomeie para consultar()
     {
         try {
 
@@ -1073,7 +1066,7 @@ class Nfe
     }
 
 
-    public function estornarNFe()
+    public function estornarNFe()  --> renomeie para estornar()
     {
         try {
             $dadosEstorno = $this->corpoRequisicao;
