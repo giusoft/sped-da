@@ -38,6 +38,7 @@ class Nfe
         $this->default['finalidadeEmissao'] = 1;
         $this->default['cnjpAutorizadoSefaz'] = '13937073000156';
         $this->default['codigoPais'] = 1058; // Código do Brasil = 1058
+        $this->default['modoContingencia'] = [6, 7];
     }
 
 
@@ -46,7 +47,7 @@ class Nfe
         try {
 
             $retorno = 'XML submetido com sucesso para processamento';
-            if (in_array($this->corpoRequisicao['modoOperacao'], [6, 7])) { // [6, 7] tem que ser um defalt modo contingencia
+            if (in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])) {
                 $dadosContingencia = json_encode([
                     "motive" => "SEFAZ fora do AR", // Temos que passar o motivo que entrou em Contingencia
                     "timestamp" => strtotime($this->corpoRequisicao['dataHoraContingencia']),
@@ -80,7 +81,14 @@ class Nfe
             try {
                 Validator::isValid($xmlAssinado, $xsd);
             } catch (ValidatorException $e) {
-                emitirErro($e->getMessage(), 400, $retorno);
+                emitirErro(
+                    $e->getMessage(),
+                    400,
+                    [
+                        'andamento' => $retorno,
+                        'xml' => base64_encode($xmlAssinado)
+                    ]
+                );
             }
 
             $retorno .= '|XML validado e pronto para envio a SEFAZ';
@@ -124,7 +132,8 @@ class Nfe
                     [
                         'mensagem' => 'Erro ao processar lote',
                         'codigoSituacaoNF' => $std->cStat,
-                        'andamento' => $retorno
+                        'andamento' => $retorno,
+                        'xml' => base64_encode($xmlAssinado)
                     ]
                 );
             }
@@ -148,7 +157,8 @@ class Nfe
                             // 'situacao' => 'Reprovada',
                             'mensagem' => 'Nota rejeitada',
                             'codigoSituacaoNF' => $cStat,
-                            'andamento' => $retorno
+                            'andamento' => $retorno,
+                            'xml' => base64_encode($xmlAssinado)
                         ]
                     );
                 }
@@ -294,7 +304,7 @@ class Nfe
             $std->tpEmis = $this->corpoRequisicao['modoOperacao'];
         }
 
-        if (in_array($this->corpoRequisicao['modoOperacao'], [6, 7])) {
+        if (in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])) {
             $std->xJust = "Sefaz fora do ar";
             $std->dhCont = $this->corpoRequisicao['dataHoraContingencia'];
         }
@@ -417,7 +427,7 @@ class Nfe
             // ICMS
             $icms = $impostos['icms'] ?? [];
             $aliqICMS = (float)($icms['aliquota'] ?? 18);
-            $redBC = (float)($icms['pRedBC'] ?? 0);
+            $redBC = (float) ($icms['pRedBC'] ?? 0);
             $bcICMS = $vProd * (1 - $redBC / 100);
             $vICMS = $bcICMS * $aliqICMS / 100;
             if ($icms) {
@@ -461,86 +471,90 @@ class Nfe
                 $nfe->tagCOFINS($std);
             }
 
-            // IS (Imposto Seletivo)
-            $is = $impostos['is'] ?? [];
-            $vIS = (float)($is['vIS'] ?? 0);
-            if ($is) {
-                $std = new \stdClass();
-                $std->item = $item;
-                $std->CSTIS = str_pad($is['CSTIS'] ?? '000', 3, '0', STR_PAD_LEFT);
-                $std->cClassTribIS = str_pad($is['cClassTribIS'] ?? '000000', 6, '0', STR_PAD_LEFT);
-                $std->vBCIS = number_format((float)($is['vBCIS'] ?? 0), 2, '.', '');
-                $std->pIS = number_format((float)($is['pIS'] ?? 0), 2, '.', '');
-                $std->vIS = number_format($vIS, 2, '.', '');
-                $std->uTrib = $is['uTrib'] ?? 'UN';
-                $std->qTrib = number_format((float)($is['qTrib'] ?? 0), 4, '.', '');
-                $nfe->tagIS($std);
-                $totalIS += $vIS;
-            }
+            if (!in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])) {
+                // IS (Imposto Seletivo)
+                $is = $impostos['is'] ?? [];
+                $vIS = (float)($is['vIS'] ?? 0);
+                if ($is) {
+                    $std = new \stdClass();
+                    $std->item = $item;
+                    $std->CSTIS = str_pad($is['CSTIS'] ?? '000', 3, '0', STR_PAD_LEFT);
+                    $std->cClassTribIS = str_pad($is['cClassTribIS'] ?? '000000', 6, '0', STR_PAD_LEFT);
+                    $std->vBCIS = number_format((float)($is['vBCIS'] ?? 0), 2, '.', '');
+                    $std->pIS = number_format((float)($is['pIS'] ?? 0), 2, '.', '');
+                    $std->vIS = number_format($vIS, 2, '.', '');
+                    $std->uTrib = $is['uTrib'] ?? 'UN';
+                    $std->qTrib = number_format((float)($is['qTrib'] ?? 0), 4, '.', '');
+                    $nfe->tagIS($std);
+                    $totalIS += $vIS;
+                }
 
-            // IBS/CBS (Reforma Tributária)
-            $ibs = $impostos['ibscbs'] ?? [];
-            $vBC_IBSCBS = (float)($ibs['vBC'] ?? $vProd);
+                // IBS/CBS (Reforma Tributária)
+                $ibs = $impostos['ibscbs'] ?? [];
+                $vBC_IBSCBS = (float)($ibs['vBC'] ?? $vProd);
 
-            if ((int)date('Y') >= 2026) {
-                $ibs['gCBS_pAliqEfet'] = 0.9;
-            }
+                if ((int)date('Y') >= 2026) {
+                    $ibs['gCBS_pAliqEfet'] = 0.9;
+                }
 
-            $gIBSUF_pAliqEfet = round((float)($ibs['gIBSUF_pAliqEfet'] ?? 0), 2);
-            $gIBSMun_pAliqEfet = round((float)($ibs['gIBSMun_pAliqEfet'] ?? 0), 2);
-            $gCBS_pAliqEfet = round((float)($ibs['gCBS_pAliqEfet'] ?? 0), 2);
+                $gIBSUF_pAliqEfet = round((float)($ibs['gIBSUF_pAliqEfet'] ?? 0), 2);
+                $gIBSMun_pAliqEfet = round((float)($ibs['gIBSMun_pAliqEfet'] ?? 0), 2);
+                $gCBS_pAliqEfet = round((float)($ibs['gCBS_pAliqEfet'] ?? 0), 2);
 
-            $gIBSUF_vIBSUF = round($vBC_IBSCBS * $gIBSUF_pAliqEfet / 100, 2);
-            $gIBSMun_vIBSMun = round($vBC_IBSCBS * $gIBSMun_pAliqEfet / 100, 2);
-            $gCBS_vCBS = round($vBC_IBSCBS * $gCBS_pAliqEfet / 100, 2);
+                $gIBSUF_vIBSUF = round($vBC_IBSCBS * $gIBSUF_pAliqEfet / 100, 2);
+                $gIBSMun_vIBSMun = round($vBC_IBSCBS * $gIBSMun_pAliqEfet / 100, 2);
+                $gCBS_vCBS = round($vBC_IBSCBS * $gCBS_pAliqEfet / 100, 2);
 
-            if ($ibs) {
-                $std = new \stdClass();
-                $std->item = $item;
-                $std->CST = str_pad($ibs['CST'] ?? '200', 3, '0', STR_PAD_LEFT);
-                $std->cClassTrib = str_pad($ibs['cClassTrib'] ?? '200003', 6, '0', STR_PAD_LEFT);
-                $std->indDoacao = (int)($ibs['indDoacao'] ?? 0);
-                $std->vBC = number_format($vBC_IBSCBS, 2, '.', '');
+                if ($ibs) {
+                    $std = new \stdClass();
+                    $std->item = $item;
+                    $std->CST = str_pad($ibs['CST'] ?? '200', 3, '0', STR_PAD_LEFT);
+                    $std->cClassTrib = str_pad($ibs['cClassTrib'] ?? '200003', 6, '0', STR_PAD_LEFT);
+                    $std->indDoacao = (int)($ibs['indDoacao'] ?? 0);
+                    $std->vBC = number_format($vBC_IBSCBS, 2, '.', '');
 
-                // IBS Estadual
-                $std->gIBSUF_pIBSUF = number_format((float)($ibs['gIBSUF_pIBSUF'] ?? 0), 4, '.', '');
-                $std->gIBSUF_pRedAliq = number_format((float)($ibs['gIBSUF_pRedAliq'] ?? 0), 4, '.', '');
-                $std->gIBSUF_pAliqEfet = number_format($gIBSUF_pAliqEfet, 4, '.', '');
-                $std->gIBSUF_vIBSUF = number_format($gIBSUF_vIBSUF, 2, '.', '');
+                    // IBS Estadual
+                    $std->gIBSUF_pIBSUF = number_format((float)($ibs['gIBSUF_pIBSUF'] ?? 0), 4, '.', '');
+                    $std->gIBSUF_pRedAliq = number_format((float)($ibs['gIBSUF_pRedAliq'] ?? 0), 4, '.', '');
+                    $std->gIBSUF_pAliqEfet = number_format($gIBSUF_pAliqEfet, 4, '.', '');
+                    $std->gIBSUF_vIBSUF = number_format($gIBSUF_vIBSUF, 2, '.', '');
 
-                // IBS Municipal
-                $std->gIBSMun_pIBSMun = number_format((float)($ibs['gIBSMun_pIBSMun'] ?? 0), 4, '.', '');
-                $std->gIBSMun_pRedAliq = number_format((float)($ibs['gIBSMun_pRedAliq'] ?? 0), 4, '.', '');
-                $std->gIBSMun_pAliqEfet = number_format($gIBSMun_pAliqEfet, 4, '.', '');
-                $std->gIBSMun_vIBSMun = number_format($gIBSMun_vIBSMun, 2, '.', '');
+                    // IBS Municipal
+                    $std->gIBSMun_pIBSMun = number_format((float)($ibs['gIBSMun_pIBSMun'] ?? 0), 4, '.', '');
+                    $std->gIBSMun_pRedAliq = number_format((float)($ibs['gIBSMun_pRedAliq'] ?? 0), 4, '.', '');
+                    $std->gIBSMun_pAliqEfet = number_format($gIBSMun_pAliqEfet, 4, '.', '');
+                    $std->gIBSMun_vIBSMun = number_format($gIBSMun_vIBSMun, 2, '.', '');
 
-                // CBS Federal
-                $std->gCBS_pCBS = number_format((float)($ibs['gCBS_pCBS'] ?? 0), 4, '.', '');
-                $std->gCBS_pRedAliq = number_format((float)($ibs['gCBS_pRedAliq'] ?? 0), 4, '.', '');
-                $std->gCBS_pAliqEfet = number_format($gCBS_pAliqEfet, 4, '.', '');
-                $std->gCBS_vCBS = number_format($gCBS_vCBS, 2, '.', '');
-                $nfe->tagIBSCBS($std);
+                    // CBS Federal
+                    $std->gCBS_pCBS = number_format((float)($ibs['gCBS_pCBS'] ?? 0), 4, '.', '');
+                    $std->gCBS_pRedAliq = number_format((float)($ibs['gCBS_pRedAliq'] ?? 0), 4, '.', '');
+                    $std->gCBS_pAliqEfet = number_format($gCBS_pAliqEfet, 4, '.', '');
+                    $std->gCBS_vCBS = number_format($gCBS_vCBS, 2, '.', '');
+                    $nfe->tagIBSCBS($std);
 
-                $totalIBS += $gIBSUF_vIBSUF + $gIBSMun_vIBSMun;
-                $totalCBS += $gCBS_vCBS;
-                $totalBC_IBSCBS += $vBC_IBSCBS;
+                    $totalIBS += $gIBSUF_vIBSUF + $gIBSMun_vIBSMun;
+                    $totalCBS += $gCBS_vCBS;
+                    $totalBC_IBSCBS += $vBC_IBSCBS;
+                }
             }
         }
 
         // Força a inclusão das Tags de Totais (IS, IBS, CBS)
         // A biblioteca pode omitir se forem zero, mas a SEFAZ exige.
 
-        // 1. Total de IS
-        $stdISTot = new \stdClass();
-        $stdISTot->vIS = number_format($totalIS, 2, '.', '');
-        $nfe->tagISTot($stdISTot);
+        if (!in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])) {
+            // 1. Total de IS
+            $stdISTot = new \stdClass();
+            $stdISTot->vIS = number_format($totalIS, 2, '.', '');
+            $nfe->tagISTot($stdISTot);
 
-        // 2. Totais de IBS/CBS
-        $stdIBSCBSTot = new \stdClass();
-        $stdIBSCBSTot->vBCIBSCBS = number_format($totalBC_IBSCBS, 2, '.', '');
-        $stdIBSCBSTot->gIBS_vIBS = number_format($totalIBS, 2, '.', '');
-        $stdIBSCBSTot->gCBS_vCBS = number_format($totalCBS, 2, '.', '');
-        $nfe->tagIBSCBSTot($stdIBSCBSTot);
+            // 2. Totais de IBS/CBS
+            $stdIBSCBSTot = new \stdClass();
+            $stdIBSCBSTot->vBCIBSCBS = number_format($totalBC_IBSCBS, 2, '.', '');
+            $stdIBSCBSTot->gIBS_vIBS = number_format($totalIBS, 2, '.', '');
+            $stdIBSCBSTot->gCBS_vCBS = number_format($totalCBS, 2, '.', '');
+            $nfe->tagIBSCBSTot($stdIBSCBSTot);
+        }
 
         $totalNota = $totalProdutos + $totalIS + $totalIBS + $totalCBS;
         $stdTotal = new \stdClass();
