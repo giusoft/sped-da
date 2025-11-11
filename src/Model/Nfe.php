@@ -135,6 +135,7 @@ class Nfe
                         $motivo,
                         400,
                         [
+                            // 'situacao' => 'Reprovada',
                             'mensagem' => 'Nota rejeitada',
                             'codigoSituacaoNF' => $cStat,
                             'andamento' => $retorno
@@ -265,7 +266,7 @@ class Nfe
         $dadosNfe['serie']       = $this->corpoRequisicao["serie"];
         $dadosNfe['chave']       = '';
         $dadosNfe['situacao']    = 'Submetida';
-        $dadosNfe['data_recibo'] = '';
+        $dadosNfe['data_recibo'] = '0000-00-00 00:00:00';
         $dadosNfe['id_os']       = $this->corpoRequisicao["idProgramacao"];
         $dadosNfe['id_empresa']  = $this->corpoRequisicao['empresa']['idEmpresa'];
         $dadosNfe['id_cliente']  = $this->corpoRequisicao["cliente"]['idCliente'];
