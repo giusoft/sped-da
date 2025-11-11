@@ -23,13 +23,11 @@ class Nfe
         $this->tools = $dados->tools;
         $this->carregarDadosDefault();
 
-        /*
-        ### pode apagar este trecho
         $parametros = array(
             'caminhoSetup' => '/var/www/html/wms/logiclog/setup.php'
         );
 
-        $this->db = new DB($parametros);*/
+        $this->db = new DB($parametros);
     }
 
 
@@ -53,30 +51,48 @@ class Nfe
     public function enviar()
     {
         try {
+
             if (isset($this->corpoRequisicao["xml"]) && !$this->corpoRequisicao["xml"]) {
                 $idNfe = $this->salvarNFE();
             }
-            //Monta XML
+
             $retorno = 'XML submetido com sucesso';
-            $xmlMontado = $this->montarXML($this->corpoRequisicao);
-            $retorno .= '|XML montado com sucesso';
-            //Assinar XML
-            $xmlAssinado = $this->tools->signNFe($xmlMontado);
-            $retorno .= '|XML assinado com sucesso';
-            //Validar XML
-            $xsd = __DIR__ . "/../Lib/sped-nfe/schemes/PL_010_V1.30/nfe_v4.00.xsd";
-            try {
-                Validator::isValid($xmlAssinado, $xsd);
-            } catch (ValidatorException $e) {
-                emitirErro($e->getMessage(), 400, $retorno);
+            if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Submetida", "Assinada", "Aprovada", "Reprovada"])) {
+                $xmlMontado = $this->montarXML($this->corpoRequisicao);
+                if (isset($idNfe)) {
+                    $sql = "UPDATE nfe SET situacao = 'Submetido', xml = '{$xmlMontado}' WHERE id = {$idNfe}";
+                    $this->db->executarQuery($sql);
+                }
             }
+
+            $retorno .= '|XML montado com sucesso';
+            if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Assinada", "Aprovada", "Reprovada"])) {
+                $xmlAssinado = $this->tools->signNFe($xmlMontado);
+                if (isset($idNfe)) {
+                    $sql = "UPDATE nfe SET situacao = 'Assinado', xml = '{$xmlAssinado}' WHERE id = {$idNfe}";
+                    $this->db->executarQuery($sql);
+                }
+            }
+
+            $retorno .= '|XML assinado com sucesso';
+            if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Aprovada", "Reprovada"])) {
+                $xsd = __DIR__ . "/../Lib/sped-nfe/schemes/PL_010_V1.30/nfe_v4.00.xsd";
+                try {
+                    Validator::isValid($xmlAssinado, $xsd);
+                } catch (ValidatorException $e) {
+                    emitirErro($e->getMessage(), 400, $retorno);
+                }
+            }
+
             $retorno .= '|XML validado com sucesso';
 
             // 3. ENVIA PARA SEFAZ (modo síncrono - indSinc=1)
             $idLote = str_pad(time(), 15, '0', STR_PAD_LEFT);
 
-            // TODO:: Criar modo assincrono de comunicacao com SEFAZ
-            $response = $this->tools->sefazEnviaLote([$xmlAssinado], $idLote, 1); // 1 = modo síncrono
+            if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Aprovada", "Reprovada"])) {
+                // ESSE PARAMETRO 1 DEVE SER PEGO DO BD (O modo deve ser passado pelo banco de dados)
+                $response = $this->tools->sefazEnviaLote([$xmlAssinado], $idLote, 1); // 1 = modo síncrono
+            }
 
             // 4. PROCESSA RESPOSTA
             $stdCl = new Standardize();
@@ -143,18 +159,6 @@ class Nfe
                 }
 
                 if (isset($idNfe)) {
-                    retorne estes dados para a aplicação
-                    {
-                        chave = '{$chave}',
-                        mensagens = '{$motivo}',
-                        protocolo = '{$protocolo}',
-                        data_recibo = '{$dataHoraRecebimento}',
-                        xml = '{$xmlProtocolado}'
-                        id_nfe = {$idNfe} -> com este dado vc conseguira fazer os dois updates abaixo
-                        TAMBEM ADICIONE AQUI OS DADOS DE prepararNFE()
-                        TAMBEM RETORNE OS DADOS NECESSARIOS PRA FAZER O INSERT na tabela nfe
-                    }
-                    /* APAGAR ESTE CODIGO COMENTADO
                     $sql = "UPDATE nfe
                             SET situacao = 'Aprovada',
                                 chave = '{$chave}',
@@ -168,7 +172,7 @@ class Nfe
                     $sql = "UPDATE notas
                             SET id_nfe = {$idNfe}
                             WHERE id = " . $this->corpoRequisicao["idNota"];
-                    $this->db->executarQuery($sql);*/
+                    $this->db->executarQuery($sql);
                 }
 
                 emitirSucesso(
@@ -235,7 +239,7 @@ class Nfe
     }
 
 
-    public function prepararNFE() ---> renomeie para preparar()
+    public function prepararNFE()
     {
         /*
             sistema             OK
@@ -288,15 +292,13 @@ class Nfe
     }
 
 
-    public function salvarNFE() -> renomeie para salvar()
+    public function salvarNFE()
     {
-        COLOQUE ESTE UPDATE NO WMS (local ja sinalizado no saida.php)
-        // $sql = "UPDATE nfe_numeros SET numero = numero + 1 WHERE id = " . $this->corpoRequisicao['idNfeNumeros'];
-        // $this->db->executarQuery($sql);
+        $sql = "UPDATE nfe_numeros SET numero = numero + 1 WHERE id = " . $this->corpoRequisicao['idNfeNumeros'];
+        $this->db->executarQuery($sql);
 
         $dadosNfe = $this->prepararNFE();
-        NAO INSIRA MAIS OS DADOS AQUI, RETORNE TUDO NAQUELE JSON INDICADO, E A PARTIR DESTE RETORNO VC FAZ OS INSERTS, UPDATES... O QUE PRECISAR.
-        // return $this->db->insertTable("nfe", $dadosNfe, 1);
+        return $this->db->insertTable("nfe", $dadosNfe, 1);
     }
 
 
@@ -701,7 +703,7 @@ class Nfe
     }
 
 
-    public function cancelarNFe() --> renomeie para cancelar()
+    public function cancelarNFe()
     {
         try {
             $chave = '';
@@ -785,7 +787,7 @@ class Nfe
     }
 
 
-    public function inutilizarNFe() --> renomeie para inutilizar()
+    public function inutilizarNFe()
     {
         try {
 
@@ -945,7 +947,7 @@ class Nfe
     }
 
 
-    public function consultarNFe() --> renomeie para consultar()
+    public function consultarNFe()
     {
         try {
 
@@ -994,7 +996,7 @@ class Nfe
     }
 
 
-    public function estornarNFe() --> renomeie para estornar()
+    public function estornarNFe()
     {
         try {
             $dadosEstorno = $this->corpoRequisicao;

@@ -7,6 +7,7 @@ use NFePHP\Common\Certificate;
 use App\Model\Nfe;
 use App\Model\Danfe;
 use App\Model\Sefaz;
+use App\Model\db;
 
 class Api
 {
@@ -57,8 +58,11 @@ class Api
             emitirErro("Os campos da empresa não foram informados", 400);
         }
 
-        envie todas estas configuracoes abaixo no proprio json a receber
-        /*$db = new DB($parametros);
+        $parametros = array(
+            'caminhoSetup' => '/var/www/html/wms/logiclog/setup.php'
+        );
+
+        $db = new DB($parametros);
 
         $sql = "SELECT
                     schemes,
@@ -66,7 +70,7 @@ class Api
                     regime,
                     " . desencriptar('senhaCertificado') . " AS senhaCertificado
                 FROM armazens_notas WHERE cnpj = '{$cnpjLimpo}'";
-        $config = $db->executarQuery($sql);*/
+        $config = $db->executarQuery($sql);
 
         if (!$config) {
             emitirErro("CNPJ informado nao possui certificado valido ou nao existe", 400);
