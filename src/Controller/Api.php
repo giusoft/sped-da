@@ -58,7 +58,7 @@ class Api
         }
 
         $senhaCertificado = openssl_decrypt(
-            hex2bin($this->corpoRequisicao['config']['senhaCertificado']),   // Dados criptografados
+            hex2bin($this->corpoRequisicao['empresa']['senhaCertificado']),   // Dados criptografados
             'AES-128-CBC',           // Modo de operação AES-128-CBC
             'emiteNota',             // Chave
             OPENSSL_RAW_DATA,        // Retorna os dados crus sem qualquer codificação
@@ -67,7 +67,6 @@ class Api
 
         $certNome = "certificado.pfx";
         $certPath = __DIR__ . "/../Certificados/{$cnpjLimpo}/{$certNome}";
-
 
         if (!file_exists($certPath)) {
             emitirErro("Certificado não encontrado: {$certPath}", 400);
