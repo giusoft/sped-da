@@ -5,6 +5,7 @@ namespace App\Model;
 use NFePHP\NFe\MakeDev;
 use NFePHP\NFe\Tools;
 use NFePHP\NFe\Complements;
+use NFePHP\NFe\Factories\Contingency;
 use NFePHP\NFe\Common\Standardize;
 use NFePHP\Common\Certificate;
 use NFePHP\Common\Validator;
@@ -56,7 +57,20 @@ class Nfe
                 $idNfe = $this->salvarNFE();
             }
 
-            $retorno = 'XML submetido com sucesso';
+            $retorno = 'XML enviado com sucesso para processamento';
+
+            if (in_array($this->corpoRequisicao['modoOperacao'], [6, 7])) {
+                $dadosContingencia = json_encode([
+                    "motive" => "SEFAZ fora do AR",
+                    "timestamp" => strtotime($this->corpoRequisicao['dataHoraContingencia']),
+                    "tpEmis" => $this->corpoRequisicao['modoOperacao'],
+                    "type" => "SVCRS"
+                ]);
+
+                $this->tools->contingency = new Contingency($dadosContingencia);
+                $retorno .= '|Modo de contingência ativado';
+            }
+
             if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Submetida", "Assinada", "Aprovada", "Reprovada"])) {
                 $xmlMontado = $this->montarXML($this->corpoRequisicao);
                 if (isset($idNfe)) {
@@ -65,7 +79,7 @@ class Nfe
                 }
             }
 
-            $retorno .= '|XML montado com sucesso';
+            $retorno .= '|Estrutura do XML criada com sucesso';
             if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Assinada", "Aprovada", "Reprovada"])) {
                 $xmlAssinado = $this->tools->signNFe($xmlMontado);
                 if (isset($idNfe)) {
@@ -74,7 +88,7 @@ class Nfe
                 }
             }
 
-            $retorno .= '|XML assinado com sucesso';
+            $retorno .= '|XML assinado digitalmente com sucesso';
             if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Aprovada", "Reprovada"])) {
                 $xsd = __DIR__ . "/../Lib/sped-nfe/schemes/PL_010_V1.30/nfe_v4.00.xsd";
                 try {
@@ -84,14 +98,27 @@ class Nfe
                 }
             }
 
-            $retorno .= '|XML validado com sucesso';
+            $retorno .= '|XML validado e pronto para envio a SEFAZ';
 
             // 3. ENVIA PARA SEFAZ (modo síncrono - indSinc=1)
             $idLote = str_pad(time(), 15, '0', STR_PAD_LEFT);
 
             if (!in_array($this->corpoRequisicao["andamentoNfe"], ["Aprovada", "Reprovada"])) {
+                $xmlsRetornados = array();
                 // ESSE PARAMETRO 1 DEVE SER PEGO DO BD (O modo deve ser passado pelo banco de dados)
-                $response = $this->tools->sefazEnviaLote([$xmlAssinado], $idLote, 1); // 1 = modo síncrono
+                // O método sefazEnviaLote ajusta automaticamente o XML para contingência e retorna os XMLs ajustados em $xmlsRetornados
+                $response = $this->tools->sefazEnviaLote(
+                    [$xmlAssinado],
+                    $idLote,
+                    1, // modo síncrono
+                    false,
+                    $xmlsRetornados
+                );
+
+                // IMPORTANTE: Se foi contingência, usar o XML retornado ajustado
+                if (!empty($xmlsRetornados)) {
+                    $xmlAssinado = $xmlsRetornados[0];
+                }
             }
 
             // 4. PROCESSA RESPOSTA
@@ -273,13 +300,13 @@ class Nfe
         $dadosNfe = array();
         $dadosNfe['sistema']     = $this->corpoRequisicao["sistema"];
         $dadosNfe['data']        = date("Y-m-d H:i:s");
-        $dadosNfe['numero']      = $this->corpoRequisicao["numero"];
+        $dadosNfe['numero']      = $this->corpoRequisicao["numeroNota"];
         $dadosNfe['serie']       = $this->corpoRequisicao["serie"];
         $dadosNfe['chave']       = '';
         $dadosNfe['situacao']    = 'Submetida';
         $dadosNfe['data_recibo'] = '';
         $dadosNfe['id_os']       = $this->corpoRequisicao["idProgramacao"];
-        $dadosNfe['id_empresa']  = $this->corpoRequisicao["idEmpresa"];
+        $dadosNfe['id_empresa']  = $this->corpoRequisicao['empresa']['idEmpresa'];
         $dadosNfe['id_cliente']  = $this->corpoRequisicao["cliente"]['idCliente'];
         $dadosNfe['id_pessoa']   = $this->corpoRequisicao["idPessoaEmitente"];
         $dadosNfe['id_operacao'] = $this->corpoRequisicao["idOperacao"];
@@ -294,12 +321,51 @@ class Nfe
 
     public function salvarNFE()
     {
+        $this->obterDadosNfeNumeroEOperacao();
         $sql = "UPDATE nfe_numeros SET numero = numero + 1 WHERE id = " . $this->corpoRequisicao['idNfeNumeros'];
         $this->db->executarQuery($sql);
 
         $dadosNfe = $this->prepararNFE();
         return $this->db->insertTable("nfe", $dadosNfe, 1);
     }
+
+
+    public function obterDadosNfeNumeroEOperacao()
+	{
+		$sql = "SELECT * FROM nfe_operacao ORDER BY id DESC LIMIT 1";
+        $rs  = $this->db->executarQuery($sql)[0];
+
+        $dados['serie'] = $rs['serie'];
+        if ($rs['modo_operacao'] == "6" || $rs['modo_operacao'] == "7") {
+            $this->corpoRequisicao['modoOperacao'] = $rs['modo_operacao']; // 3 = SCAN, 6 = SVC-AN, 7 = SVC-RS
+            $this->corpoRequisicao['dataHoraContingencia'] = str_replace(" ", "T", $rs['data']).date("P");
+        } else {
+            $this->corpoRequisicao['dataHoraContingencia'] = "";
+            $this->corpoRequisicao['modoOperacao'] = "1";
+            $dados['serie'] = "1";
+        }
+
+        $this->corpoRequisicao['idOperacao'] = $rs['id'];
+
+        $sql = "SELECT id, numero, serie
+				FROM nfe_numeros
+				WHERE id_armazens = " . $this->corpoRequisicao['empresa']['idEmpresa'] . " AND serie = '" . $dados['serie'] . "'";
+        $dadosNfeNumeros = $this->db->executarQuery($sql)[0];
+
+        $numero = (int) $dadosNfeNumeros['numero'] + 1;
+		if (!$dadosNfeNumeros) {
+			$numero = 1;
+			$mtz = array();
+			$mtz['id_armazens'] = $this->corpoRequisicao['empresa']['idEmpresa'];
+			$mtz['numero'] = 0;
+			$mtz['serie'] = $dados['serie'];
+			$this->db->insertTable('nfe_numeros', $mtz);
+		}
+
+        $this->corpoRequisicao['idNfeNumeros'] = $dadosNfeNumeros['id'];
+        $this->corpoRequisicao['numeroNota'] = $numero;
+        $this->corpoRequisicao['serie'] = $dadosNfeNumeros['serie'] ?: $dados['serie'];
+	}
 
 
     public function montarXML()
@@ -322,7 +388,7 @@ class Nfe
             $std->serie = $this->corpoRequisicao['serie'];
         }
 
-        $std->nNF = $this->corpoRequisicao['numero'];   // Número da nota fiscal
+        $std->nNF = $this->corpoRequisicao['numeroNota'];   // Número da nota fiscal
         $std->dhEmi = $this->default['dataEmissao'];    // Data/hora de emissão
         $std->dhSaiEnt = $this->default['dataEmissao']; // Data/hora de saída ou entrada (Opcional — geralmente usada em operações com circulação de mercadoria)
         $std->tpNF = $this->default['tpNF'];
@@ -353,7 +419,17 @@ class Nfe
 
         $std->cMunFG = $this->corpoRequisicao['empresa']['cmun']; // Código do município de ocorrência do fato gerador
         $std->tpImp = $this->default['tipoImpressao'];            // Tipo de impressão do DANFE (1 = Retrato, 2 = Paisagem);
-        $std->tpEmis = $this->default['tipoImpressao'];           // Tipo de emissão da NF-e (1 = Normal, 2 = Contingência FS-IA, 3 = SCAN, 4 = DPEC, 5 = FS-DA, 6 = SVC-AN, 7 = SVC-RS, 9 = off-line)
+
+        $std->tpEmis = $this->default['tipoEmissao'];             // Tipo de emissão da NF-e (1 = Normal, 2 = Contingência FS-IA, 3 = SCAN, 4 = DPEC, 5 = FS-DA, 6 = SVC-AN, 7 = SVC-RS, 9 = off-line)
+        if (!empty($this->corpoRequisicao['modoOperacao'])) {
+            $std->tpEmis = $this->corpoRequisicao['modoOperacao'];
+        }
+
+        if (in_array($this->corpoRequisicao['modoOperacao'], [6, 7])) {
+            $std->xJust = "Sefaz fora do ar";
+            $std->dhCont = $this->corpoRequisicao['dataHoraContingencia'];
+        }
+
         // $std->cDV = 0;                                         // Dígito verificador da chave da NF-e;
         $std->tpAmb = $this->corpoRequisicao['empresa']['tpAmb']; // Tipo de ambiente (1 = PRODUÇÃO, 2 = HOMOLOGAÇÃO)
         $std->finNFe = $this->default['finalidadeEmissao'];       // Finalidade de emissão (1 = Normal, 2 = Complementar, 3 = Ajuste, 4 = Devolução)
@@ -404,6 +480,7 @@ class Nfe
         $cli = $this->corpoRequisicao['cliente'];
         $std = new \stdClass();
         $std->xNome = $cli['nome']; // Nome / razão social
+        $std->IE = $cli['ie'];
 
         if (!empty($cli['cnpj'])) {
             $std->CNPJ = soNumeros($cli['cnpj']); // Documento do destinatário
