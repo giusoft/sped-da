@@ -889,7 +889,7 @@ class Nfe
             // 3. JUNTA OS DOIS XMLs (Requisição + Resposta)
             $xmlProtocolado = Complements::toAuthorize($xmlEvento, $response);
 
-            $this->salvarXMLCCe($chave, $xmlProtocolado, $nSeqEvento);
+            // $this->salvarXMLCCe($chave, $xmlProtocolado, $nSeqEvento);
 
             $dataEvento = null;
             if (isset($std->retEvento->infEvento->dhRegEvento)) {
@@ -902,7 +902,8 @@ class Nfe
                 [
                     'protocolo' => $protocolo,
                     'sequencia' => $nSeqEvento,
-                    'data_evento' => $dataEvento
+                    'data_evento' => $dataEvento,
+                    'xml' => base64_encode($xmlProtocolado)
                 ]
             );
 
