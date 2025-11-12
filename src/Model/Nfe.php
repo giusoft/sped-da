@@ -32,10 +32,10 @@ class Nfe
         $this->default['dataSaidaEntrada'] = date('Y-m-d\TH:i:sP');
         $this->default['serie'] = 1;
         $this->default['cNF'] = sprintf('%08d', rand(1, 99999999));
-        $this->default['tpNF'] = 1;
+        $this->default['tpNF'] = 1; // Tipo de Operação (Entrada = 0 | Saída = 1)
         $this->default['tipoImpressao'] = 1;
         $this->default['tipoEmissao'] = 1;
-        $this->default['finalidadeEmissao'] = 1;
+        $this->default['finNFe'] = 1;
         $this->default['cnjpAutorizadoSefaz'] = '13937073000156';
         $this->default['codigoPais'] = 1058; // Código do Brasil = 1058
         $this->default['modoContingencia'] = [6, 7];
@@ -270,6 +270,7 @@ class Nfe
         $std->nNF = $this->corpoRequisicao['numeroNota'];   // Número da nota fiscal
         $std->dhEmi = $this->default['dataEmissao'];    // Data/hora de emissão
         $std->dhSaiEnt = $this->default['dataEmissao']; // Data/hora de saída ou entrada (Opcional — geralmente usada em operações com circulação de mercadoria)
+
         $std->tpNF = $this->default['tpNF'];
         if (isset($this->corpoRequisicao['tipoOperacao'])) {
             $std->tpNF = $this->corpoRequisicao['tipoOperacao']; // Tipo da NF (0 = Entrada, 1 = Saída)
@@ -297,24 +298,29 @@ class Nfe
         }
 
         $std->cMunFG = $this->corpoRequisicao['empresa']['cmun']; // Código do município de ocorrência do fato gerador
-        $std->tpImp = $this->default['tipoImpressao'];            // Tipo de impressão do DANFE (1 = Retrato, 2 = Paisagem);
+        $std->tpImp = $this->default['tipoImpressao']; // Tipo de impressão do DANFE (1 = Retrato, 2 = Paisagem);
 
-        $std->tpEmis = $this->default['tipoEmissao'];             // Tipo de emissão da NF-e (1 = Normal, 2 = Contingência FS-IA, 3 = SCAN, 4 = DPEC, 5 = FS-DA, 6 = SVC-AN, 7 = SVC-RS, 9 = off-line)
+        $std->tpEmis = $this->default['tipoEmissao']; // Tipo de emissão da NF-e (1 = Normal, 2 = Contingência FS-IA, 3 = SCAN, 4 = DPEC, 5 = FS-DA, 6 = SVC-AN, 7 = SVC-RS, 9 = off-line)
         if (!empty($this->corpoRequisicao['modoOperacao'])) {
             $std->tpEmis = $this->corpoRequisicao['modoOperacao'];
         }
 
         if (in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])) {
-            $std->xJust = "Sefaz fora do ar";
+            $std->xJust = "Sefaz fora do ar"; // Aqui tem que ver a necessidade de passar o dado de fora ou não
             $std->dhCont = $this->corpoRequisicao['dataHoraContingencia'];
         }
 
-        // $std->cDV = 0;                                         // Dígito verificador da chave da NF-e;
+        // $std->cDV = 0; // Dígito verificador da chave da NF-e;
         $std->tpAmb = $this->corpoRequisicao['empresa']['tpAmb']; // Tipo de ambiente (1 = PRODUÇÃO, 2 = HOMOLOGAÇÃO)
-        $std->finNFe = $this->default['finalidadeEmissao'];       // Finalidade de emissão (1 = Normal, 2 = Complementar, 3 = Ajuste, 4 = Devolução)
-        $std->indFinal = 1;                                       // Consumidor final (0 = Não, 1 = Sim)
 
-        if (in_array($std->finNFe, [2, 3, 6])) {
+        $std->finNFe = $this->default['finNFe']; // Finalidade de emissão (1 = Normal, 2 = Complementar, 3 = Ajuste, 4 = Devolução)
+        if (isset($this->corpoRequisicao['finNFe'])) {
+            $std->finNFe = $this->corpoRequisicao['finNFe'];
+        }
+
+        $std->indFinal = 1; // Consumidor final (0 = Não, 1 = Sim)
+
+        if (in_array($std->finNFe, [6])) {
             $std->tpNFDebito = '01';
         }
 
@@ -322,14 +328,14 @@ class Nfe
             $std->tpNFCredito = '01';
         }
 
-        $std->indPres = 1;                                  // Indicador de presença do comprador (0 = Não se aplica, 1 = Presencial, 2 = Internet, 3 = Teleatendimento)
-        $std->procEmi = 0;                                  // Processo de emissão (0 = Emissão pelo próprio contribuinte, 1 = Avulsa Fisco, 2 = Avulsa contrib. com certificado, 3 = Aplicativo do Fisco)
-        $std->verProc = 'API GNotas 1.0';                   // Versão do aplicativo emissor
+        $std->indPres = 1; // Indicador de presença do comprador (0 = Não se aplica, 1 = Presencial, 2 = Internet, 3 = Teleatendimento)
+        $std->procEmi = 0; // Processo de emissão (0 = Emissão pelo próprio contribuinte, 1 = Avulsa Fisco, 2 = Avulsa contrib. com certificado, 3 = Aplicativo do Fisco)
+        $std->verProc = 'API GNotas 1.0'; // Versão do aplicativo emissor
         $nfe->tagide($std);
 
-        if (!empty($this->corpoRequisicao['chaveReferenciada'])) {
+        if (!empty($this->corpoRequisicao['chaveEstorno'])) {
             $stdRef = new \stdClass();
-            $stdRef->refNFe = $this->corpoRequisicao['chaveReferenciada'];
+            $stdRef->refNFe = $this->corpoRequisicao['chaveEstorno'];
             $nfe->tagrefNFe($stdRef);
         }
 
@@ -570,7 +576,7 @@ class Nfe
         $std->vTroco = 0.00;
         $nfe->tagpag($std);
 
-        $finalidade = $this->corpoRequisicao['finalidadeEmissao'] ?? 1; // 1 = NF-e Normal por padrão
+        $finalidade = $this->corpoRequisicao['finNFe'] ?? 1; // 1 = NF-e Normal por padrão
 
         $std = new \stdClass();
         if (in_array($finalidade, [3, 4])) {
@@ -958,70 +964,32 @@ class Nfe
     public function estornar()
     {
         try {
-            $dadosEstorno = $this->corpoRequisicao;
 
             // 1. VALIDAÇÕES OBRIGATÓRIAS
             if (
-                !isset($dadosEstorno['chaveReferenciada']) ||
-                !isset($dadosEstorno['produtos']) ||
-                !isset($dadosEstorno['numero']) ||
-                !isset($dadosEstorno['cliente'])
+                !isset($this->corpoRequisicao['chaveEstorno']) ||
+                !isset($this->corpoRequisicao['produtos']) ||
+                !isset($this->corpoRequisicao['numeroNota']) ||
+                !isset($this->corpoRequisicao['cliente'])
             ) {
                 emitirErro(
-                    "Para estorno, os campos 'chaveReferenciada', 'numero', 'cliente' e 'produtos' são obrigatórios.",
+                    "Para estorno, os campos 'chaveEstorno', 'numeroNota', 'cliente' e 'produtos' são obrigatórios.",
                     400
                 );
             }
 
-            if (strlen($dadosEstorno['chaveReferenciada']) != 44) {
+            if (strlen($this->corpoRequisicao['chaveEstorno']) != 44) {
                 emitirErro("A chave referenciada deve ter 44 dígitos.", 400);
             }
 
             // (OPCIONAL, MAS É BOM QUE EVITA ERROS, VAMOS VER SE VAI PRECISAR...)
-            $consultaOriginal = $this->consultarNotaOriginal($dadosEstorno['chaveReferenciada']);
+            $consultaOriginal = $this->consultarNotaOriginal($this->corpoRequisicao['chaveEstorno']);
             if (!$consultaOriginal['autorizada']) {
                 emitirErro(
-                    "A NF-e original (chave: {$dadosEstorno['chaveReferenciada']}) não está autorizada. Estorno não permitido.",
+                    "A NF-e original (chave: {$this->corpoRequisicao['chaveEstorno']}) não está autorizada. Estorno não permitido.",
                     400
                 );
             }
-
-            $this->corpoRequisicao['tipoOperacao'] = 0; // ENTRADA
-            $this->corpoRequisicao['finalidadeEmissao'] = 3; // AJUSTE
-            $this->corpoRequisicao['naturezaOperacao'] = '999 - ESTORNO DE NFE NAO CANCELADA NO PRAZO LEGAL'; // ESTÁ ASSIM EM UM PDF DE ESTORNO ENVIADO POR GONZAGAO
-
-            // VALIDA PRODUTOS (TALVEZ ISSO NÃO PRECISE, IREMOS PASSAR DE LÁ DO WMS (VAMOS PEGAR TODOS ITENS DE LÁ) )
-            foreach ($this->corpoRequisicao['produtos'] as &$prod) {
-                $prod['cfop'] = '1905';
-
-                // Valida quantidade
-                if (!isset($prod['quantidade']) || $prod['quantidade'] <= 0) {
-                    emitirErro("Produto com quantidade inválida ou não informada.", 400);
-                }
-
-                // Valida valor unitário
-                if (!isset($prod['valorUnitario']) || $prod['valorUnitario'] <= 0) {
-                    emitirErro("Produto com valor unitário inválido ou não informado.", 400);
-                }
-
-                // Define impostos padrões se não informados
-                // (Isso já cobre a lógica que estava duplicada)
-                if (empty($prod['impostos'])) {
-                    $prod['impostos'] = [
-                        'icms' => ['CST' => '41', 'orig' => 0], // Não tributado
-                        'pis' => ['CST' => '49'], // Outras operações
-                        'cofins' => ['CST' => '49'] // Outras operações
-                    ];
-                }
-            }
-            unset($prod);
-
-            // $infoAdicional = sprintf(
-            //     // AQUI DENTRO VAI PEGAR DE INFORMAÇÕES DA NOTA DE SAÍDA...
-            //     // EXEMPLO QUE ESTÁ EM UMA NOTA DE ESTORNO QUE GONZAGAO ME MANDOU -> NAO INCIDE ICMS, DEC. 13.780/12-RICMS/BA, LEI No 7.014/1996-SUBSECAO II ARTIGO 3oRESPALDA A NAO-INCIDENCIA
-            // );
-
-            // $this->corpoRequisicao['informacoesAdicionais'] = $infoAdicional;
 
             $this->enviar();
 
