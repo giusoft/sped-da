@@ -436,7 +436,7 @@ class Nfe
             $redBC = (float) ($icms['pRedBC'] ?? 0);
             $bcICMS = $vProd * (1 - $redBC / 100);
             $vICMS = $bcICMS * $aliqICMS / 100;
-            if ($icms) {
+            if ($icms && !$this->corpoRequisicao['empresa']['desativarImpostosAntigos']) {
                 $std = new \stdClass();
                 $std->item = $item;
                 $std->orig = $icms['orig'] ?? 0;
@@ -453,7 +453,7 @@ class Nfe
             $pis = $impostos['pis'] ?? [];
             $pPIS = (float)($pis['aliquota'] ?? 0.00);
             $vPIS = $vProd * $pPIS / 100;
-            if ($pis) {
+            if ($pis && !$this->corpoRequisicao['empresa']['desativarImpostosAntigos']) {
                 $std = new \stdClass();
                 $std->item = $item; // Número do item
                 $std->CST = str_pad($pis['CST'] ?? '06', 2, '0', STR_PAD_LEFT); // Código de situação tributária (ex: 01, 07)
@@ -467,7 +467,7 @@ class Nfe
             $cofins = $impostos['cofins'] ?? [];
             $pCOFINS = (float)($cofins['aliquota'] ?? 0.00);
             $vCOFINS = $vProd * $pCOFINS / 100;
-            if ($cofins) {
+            if ($cofins && !$this->corpoRequisicao['empresa']['desativarImpostosAntigos']) {
                 $std = new \stdClass();
                 $std->item = $item; // Número do item
                 $std->CST = str_pad($cofins['CST'] ?? '06', 2, '0', STR_PAD_LEFT); // Código de situação tributária (ex: 01, 07)
@@ -477,7 +477,7 @@ class Nfe
                 $nfe->tagCOFINS($std);
             }
 
-            if (!in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])) {
+            if ($this->corpoRequisicao['empresa']['usarContingenciaIbsCbs']) {
                 // IS (Imposto Seletivo)
                 $is = $impostos['is'] ?? [];
                 $vIS = (float)($is['vIS'] ?? 0);
@@ -547,7 +547,7 @@ class Nfe
 
         // Força a inclusão das Tags de Totais (IS, IBS, CBS)
         // A biblioteca pode omitir se forem zero, mas a SEFAZ exige.
-        if (!in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])) {
+        if ($this->corpoRequisicao['empresa']['usarContingenciaIbsCbs']) {
             // 1. Total de IS
             $stdISTot = new \stdClass();
             $stdISTot->vIS = number_format($totalIS, 2, '.', '');
