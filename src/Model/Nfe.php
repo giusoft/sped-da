@@ -85,6 +85,7 @@ class Nfe
                     $e->getMessage(),
                     400,
                     [
+                        'situacao' => 'Reprovada',
                         'andamento' => $retorno,
                         'xml' => base64_encode($xmlAssinado)
                     ]
@@ -130,6 +131,7 @@ class Nfe
                     $motivo,
                     400,
                     [
+                        'situacao' => 'Reprovada',
                         'mensagem' => 'Erro ao processar lote',
                         'codigoSituacaoNF' => $std->cStat,
                         'andamento' => $retorno,
@@ -154,7 +156,7 @@ class Nfe
                         $motivo,
                         400,
                         [
-                            // 'situacao' => 'Reprovada',
+                            'situacao' => 'Reprovada',
                             'mensagem' => 'Nota rejeitada',
                             'codigoSituacaoNF' => $cStat,
                             'andamento' => $retorno,
@@ -211,6 +213,7 @@ class Nfe
                         $motivo,
                         400,
                         [
+                            'situacao' => 'Reprovada',
                             'mensagem' => 'Erro ao processar lote',
                             'codigoSituacaoNF' => $std->cStat,
                             'andamento' => $retorno
@@ -218,7 +221,14 @@ class Nfe
                     );
                 }
 
-                emitirSucesso($protocolo, 200, ['andamento' => $retorno]);
+                emitirSucesso(
+                    $protocolo,
+                    200,
+                    [
+                        'situacao' => 'Aprovada',
+                        'andamento' => $retorno
+                    ]
+                );
             } else {
 
                 $motivo = 'Resposta inesperada da SEFAZ';
@@ -231,6 +241,7 @@ class Nfe
                     $motivo,
                     400,
                     [
+                        'situacao' => 'Reprovada',
                         'mensagem' => 'Erro ao processar lote',
                         'codigoSituacaoNF' => $std->cStat,
                         'andamento' => $retorno
@@ -241,7 +252,10 @@ class Nfe
             emitirErro(
                 $e->getMessage(),
                 500,
-                ['andamento' => $retorno]
+                [
+                    'situacao' => 'Reprovada',
+                    'andamento' => $retorno
+                ]
             );
         }
     }
