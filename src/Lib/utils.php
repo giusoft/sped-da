@@ -162,18 +162,15 @@ if (!function_exists('tirarPontos')) {
 
 
 if (!function_exists("desencriptar")) {
-    function desencriptar($nomeCampo) {
+    function desencriptar($senha) {
         global $AESKEY;
 
-        return 'CAST(AES_DECRYPT(UNHEX(' . $nomeCampo . '),"' . $AESKEY . '") AS CHAR(150))';
-    }
-}
-
-
-if (!function_exists("encriptar")) {
-    function encriptar($valorEncriptar) {
-        global $AESKEY;
-
-        return 'HEX(AES_ENCRYPT(' . $valorEncriptar . ',"' . $AESKEY . '"))';
+        return openssl_decrypt(
+            hex2bin($senha),     // Dados criptografados
+            'AES-128-CBC',       // Modo de operação AES-128-CBC
+            $AESKEY,             // Chave
+            OPENSSL_RAW_DATA,    // Retorna os dados crus sem qualquer codificação
+            str_repeat("\0", 16) // IV (Vetor de Inicialização)
+        );
     }
 }
