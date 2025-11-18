@@ -26,10 +26,14 @@ class Certificado
                 $conteudoCertificado = file_get_contents($caminhoCompletoCertificado);
             }
 
+            if (!isset($this->corpoRequisicao['senhaCertificado'])) {
+                emitirErro("Informe a senha do certificado", 400);
+            }
+
             $senhaCertificado = desencriptar($this->corpoRequisicao['senhaCertificado']);
 
             if (!openssl_pkcs12_read($conteudoCertificado, $dadosExtraidosCertificado, $senhaCertificado)) {
-                emitirErro("A senha digitada está incorreta", 400);
+                emitirErro("A senha informada está incorreta!", 400);
             }
 
             $certificadoX509 = openssl_x509_read($dadosExtraidosCertificado['cert']);
