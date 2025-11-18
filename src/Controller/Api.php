@@ -7,6 +7,7 @@ use NFePHP\Common\Certificate;
 use App\Model\Nfe;
 use App\Model\Danfe;
 use App\Model\Sefaz;
+use App\Model\Certificado;
 
 class Api
 {
@@ -19,7 +20,8 @@ class Api
         $this->classes = [
             'danfe' => Danfe::class,
             'sefaz' => Sefaz::class,
-            'nfe' => Nfe::class
+            'nfe' => Nfe::class,
+            'certificado' => Certificado::class
         ];
 
         $this->inicializarAmbiente();
@@ -40,7 +42,10 @@ class Api
             emitirErro("O campo 'cnpj_emitente' é obrigatório", 400);
         }
 
-        $this->buscarCertificado();
+        if (!isset($this->corpoRequisicao["certificado"])) {
+            $this->buscarCertificado();
+        }
+
         $this->chamarMetodoClasse();
 
     }
@@ -57,19 +62,12 @@ class Api
             emitirErro("Os campos da empresa não foram informados", 400);
         }
 
-        $senhaCertificado = openssl_decrypt(
-            hex2bin($this->corpoRequisicao['empresa']['senhaCertificado']),   // Dados criptografados
-            'AES-128-CBC',           // Modo de operação AES-128-CBC
-            'emiteNota',             // Chave
-            OPENSSL_RAW_DATA,        // Retorna os dados crus sem qualquer codificação
-            str_repeat("\0", 16)     // IV (Vetor de Inicialização)
-        );
+        $senhaCertificado = desencriptar($this->corpoRequisicao['empresa']['senhaCertificado']);
 
-        $certNome = "certificado.pfx";
-        $certPath = __DIR__ . "/../Certificados/{$cnpjLimpo}/{$certNome}";
+        $certPath = __DIR__ . "/../Certificados/{$cnpjLimpo}/certificado.pfx";
 
         if (!file_exists($certPath)) {
-            emitirErro("Certificado não encontrado: {$certPath}", 400);
+            emitirErro("Certificado não encontrado!", 400);
         }
 
         $certificate = Certificate::readPfx(
