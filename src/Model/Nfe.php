@@ -726,7 +726,7 @@ class Nfe
 
                 // Junta o evento enviado com a resposta recebida usando Complements
                 $xmlProtocolado = Complements::toAuthorize($xmlEvento, $response);
-                $this->salvarXMLCancelado($chave, $xmlProtocolado);
+                // $this->salvarXMLCancelado($chave, $xmlProtocolado);
 
                 $mensagem = 'Cancelamento homologado';
                 if (isset($std->retEvento->infEvento->xMotivo)) {
@@ -738,7 +738,8 @@ class Nfe
                         'success' => true,
                         'mensagem' => $mensagem,
                         'codigo' => $std->retEvento->infEvento->cStat,
-                        'protocolo' => $protocoloCancelamento
+                        'protocolo' => $protocoloCancelamento,
+                        'xml_cancelamento' => base64_encode($xmlProtocolado)
                     ],
                     200
                 );
