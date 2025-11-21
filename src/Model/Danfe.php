@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use NFePHP\NFe\Complements;
 use NFePHP\DA\NFe\Danfe as NFeDanfe;
 use NFePHP\DA\NFe\Daevento;
 use ZipArchive;
@@ -31,13 +32,14 @@ class Danfe
             }
 
             $danfe = new NFeDanfe($xml);
+            $danfe->setGerarInformacoesAutomaticas(true);
             $pdf = $danfe->render();
-            
+
             $pdfBase64 = base64_encode($pdf);
- 
+
             emitirSucesso(
-                "DANFE gerado com sucesso", 
-                200, 
+                "DANFE gerado com sucesso",
+                200,
                 ['pdf_base64' => $pdfBase64]
             );
 
@@ -110,39 +112,39 @@ class Danfe
     {
         set_time_limit(0);
         ini_set('memory_limit', '512M');
-    
+
         try {
             $cnpj = soNumeros($this->corpoRequisicao['cnpj_emitente'] ?? '');
             $documentos = $this->corpoRequisicao['documentos'] ?? [];
-            $idLote = $this->corpoRequisicao['id_lote'] ?? uniqid('lote_'); 
+            $idLote = $this->corpoRequisicao['id_lote'] ?? uniqid('lote_');
             $acao = $this->corpoRequisicao['acao'] ?? 'processar';
-            
+
             // Capture as flags
             $comPdf = isset($this->corpoRequisicao['com_pdf']) ? (bool)$this->corpoRequisicao['com_pdf'] : true;
             $comXml = isset($this->corpoRequisicao['com_xml']) ? (bool)$this->corpoRequisicao['com_xml'] : true;
-    
+
             $tempDir = sys_get_temp_dir() . "/{$idLote}";
-    
+
             if (!is_dir($tempDir)) {
                 mkdir($tempDir, 0777, true);
             }
-    
+
             // --- FASE 1: PROCESSAMENTO ---
             if ($acao === 'processar') {
                 $countSucesso = 0;
                 $countErro = 0;
-    
+
                 foreach ($documentos as $doc) {
                     $chave = $doc['chave'] ?? 'sem_chave';
                     $xmlBase64 = $doc['xml'] ?? '';
                     $tipo = $doc['tipo'] ?? 'nfe';
-    
+
                     if (empty($xmlBase64)){
                         continue;
                     }
-                    
+
                     $xmlContent = base64_decode($xmlBase64);
-                    
+
                     if (!$xmlContent) {
                         continue;
                     }
@@ -150,64 +152,64 @@ class Danfe
                     try {
                         $sufixoXml = "-nfe.xml";
                         $sufixoPdf = "-nfe.pdf";
-                        
+
                         if ($tipo === 'xml_cancelamento') {
                             $sufixoXml = "-xml_cancelamento.xml";
                         }
-    
+
                         // 1. Salva o XML SOMENTE se com_xml estiver marcado
                         if ($comXml) {
                             file_put_contents("{$tempDir}/{$chave}{$sufixoXml}", $xmlContent);
                         }
-    
+
                         // 2. Gera o PDF SOMENTE se com_pdf estiver marcado E não for xml_cancelamento
                         if ($comPdf && $tipo !== 'xml_cancelamento') {
                             $pdfContent = null;
-    
-                            if ($tipo === 'nfe') { 
+
+                            if ($tipo === 'nfe') {
                                 $danfe = new NFeDanfe($xmlContent);
                                 $pdfContent = $danfe->render();
                             }
-    
+
                             if ($pdfContent) {
                                 file_put_contents("{$tempDir}/{$chave}{$sufixoPdf}", $pdfContent);
                             }
                         }
-                        
+
                         $countSucesso++;
                     } catch (\Exception $ex) {
                         $countErro++;
                     }
                 }
-    
+
                 emitirSucesso("Lote parcial processado", 200, [
-                    'sucessos' => $countSucesso, 
+                    'sucessos' => $countSucesso,
                     'erros' => $countErro
                 ]);
-                return; 
+                return;
             }
-    
+
             // --- FASE 2: FINALIZAÇÃO (Gera ZIP e limpa temp) ---
             if ($acao === 'finalizar') {
-                
-                $baseOutputDir = __DIR__ . "/../output"; 
+
+                $baseOutputDir = __DIR__ . "/../output";
                 $userOutputDir = "{$baseOutputDir}/{$cnpj}";
-                
+
                 if (!is_dir($userOutputDir)) mkdir($userOutputDir, 0777, true);
-    
+
                 $zipFilename = "nfe" . date('Ymd_His') . ".zip";
                 $zipPath = "{$userOutputDir}/{$zipFilename}";
-    
+
                 $zip = new ZipArchive();
                 if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
                     emitirErro("Não foi possível criar o arquivo ZIP.", 500);
                 }
-    
+
                 $files = new \RecursiveIteratorIterator(
                     new \RecursiveDirectoryIterator($tempDir),
                     \RecursiveIteratorIterator::LEAVES_ONLY
                 );
-    
+
                 $countTotal = 0;
                 foreach ($files as $name => $file) {
                     if (!$file->isDir()) {
@@ -218,21 +220,67 @@ class Danfe
                     }
                 }
                 $zip->close();
-    
+
                 // Limpa temp após gerar o ZIP
                 $this->removerDiretorioRecursivo($tempDir);
-    
+
                 emitirSucesso("Lote finalizado", 200, [
                     'arquivo' => $zipFilename,
                     'caminho_relativo' => "/output/{$cnpj}/{$zipFilename}",
                     'total_processado' => $countTotal
                 ]);
             }
-    
+
         } catch (\Exception $e) {
             emitirErro($e->getMessage(), 500);
         }
     }
+
+
+    public function gerarDanfeCancelamento()
+    {
+        try {
+            if (empty($this->corpoRequisicao['xml'])) {
+                emitirErro("O campo 'xml' (contendo do XML em base64) é obrigatório.", 400);
+            }
+
+            if (empty($this->corpoRequisicao['xml_cancelamento'])) {
+                emitirErro("O campo 'xml_cancelamento' (contendo do XML em base64) é obrigatório.", 400);
+            }
+
+            if (empty($this->corpoRequisicao['chave']) || empty($this->corpoRequisicao['cnpj_emitente'])) {
+                emitirErro("Os campos 'chave' e 'cnpj_emitente' são obrigatórios (para nomear o PDF salvo).", 400);
+            }
+
+            $xmlProtocolado = base64_decode($this->corpoRequisicao['xml']);
+            if ($xmlProtocolado === false) {
+                emitirErro("O XML fornecido não é um base64 válido.", 400);
+            }
+
+            $xmlCancelamento = base64_decode($this->corpoRequisicao['xml_cancelamento']);
+            if ($xmlCancelamento === false) {
+                emitirErro("O XML fornecido não é um base64 válido.", 400);
+            }
+
+            $xml = Complements::cancelRegister($xmlProtocolado, $xmlCancelamento);
+
+            $danfe = new NFeDanfe($xml);
+            $danfe->setGerarInformacoesAutomaticas(true);
+            $pdf = $danfe->render();
+
+            $pdfBase64 = base64_encode($pdf);
+
+            emitirSucesso(
+                "DANFE gerado com sucesso",
+                200,
+                ['pdf_base64' => $pdfBase64]
+            );
+
+        } catch (\Exception $e) {
+            emitirErro($e->getMessage(), 500);
+        }
+    }
+
 
     private function removerDiretorioRecursivo($dir) {
         if (!is_dir($dir)) return;
