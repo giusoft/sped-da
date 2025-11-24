@@ -581,9 +581,72 @@ class Nfe
         $nfe->tagtotal($stdTotal);
 
         // ===== TRANSPORTE =====
+        // Modalidade do frete
         $std = new \stdClass();
-        $std->modFrete = 9; // Modalidade do frete (0 = emitente, 1 = destinatário, 2 = terceiros, 9 = sem frete)
+        $std->modFrete = $this->corpoRequisicao['transporte']['modalidadeFrete']; // Modalidade do frete (0 = emitente, 1 = destinatário, 2 = terceiros, 9 = sem frete)
         $nfe->tagtransp($std);
+    
+
+        // Dados da transportadora
+        $transp = $this->corpoRequisicao['transporte']['transportadora'];
+
+        $temCnpj = !empty($transp['cnpj']);
+        $temCpf = !empty($transp['cpf']);
+        
+        if (($temCnpj || $temCpf) && $std->modFrete <> 9) {
+            $std = new \stdClass();
+            $std->xNome = $transp['razaoSocial'] ?? '';
+            $std->IE = $transp['inscricaoEstadual'] ?? '';
+            $std->xEnder = $transp['endereco'] ?? '';
+            $std->xMun = $transp['municipio'] ?? '';
+            $std->UF = $transp['uf'] ?? '';
+            
+            if ($temCnpj) {
+                $std->CNPJ = soNumeros($transp['cnpj']);
+            } else {
+                $std->CPF = soNumeros($transp['cpf']);
+            }
+            
+            $nfe->tagtransporta($std);
+        }
+
+        
+        // Veículos
+        $veiculo = $this->corpoRequisicao['transporte']['veiculo'];
+
+        if ($veiculo['placa']) {
+            $std = new \stdClass();
+            $std->placa = $veiculo['placa'] ?? '';
+            $std->UF = $veiculo['uf'] ?? '';
+            $std->RNTC = $veiculo['rntc'] ?? '';
+            $nfe->tagveicTransp($std);
+        }
+    
+
+        // Volumes
+        $vol = $this->corpoRequisicao['transporte']['volumes'];
+
+        $qtdInformada = (int) ($vol['quantidade'] ?? 0);
+        $pesoL = (float) ($vol['pesoLiquido'] ?? 0);
+        $pesoB = (float) ($vol['pesoBruto'] ?? 0);
+
+        if ($qtdInformada > 0 || $pesoL > 0 || $pesoB > 0) {
+            
+            $std = new \stdClass();
+
+            if ($qtdInformada > 0) {
+                $std->qVol  = $qtdInformada;
+                $std->esp   = $vol['especie'] ?? '';
+                $std->marca = $vol['marca'] ?? '';
+                $std->nVol  = $vol['numeracao'] ?? '';
+            }
+
+            $std->pesoL = number_format($pesoL, 3, '.', '');
+            $std->pesoB = number_format($pesoB, 3, '.', '');
+
+            $nfe->tagvol($std);
+        }
+
 
         // ===== PAGAMENTO =====
         $std = new \stdClass();
