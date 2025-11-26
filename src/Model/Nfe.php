@@ -491,23 +491,23 @@ class Nfe
                 $nfe->tagCOFINS($std);
             }
 
-            if ($this->corpoRequisicao['empresa']['usarContingenciaIbsCbs']) {
+            if (!$this->corpoRequisicao['empresa']['usarContingenciaIbsCbs']) {
                 // IS (Imposto Seletivo)
-                $is = $impostos['is'] ?? [];
-                $vIS = (float)($is['vIS'] ?? 0);
-                if ($is) {
-                    $std = new \stdClass();
-                    $std->item = $item;
-                    $std->CSTIS = str_pad($is['CSTIS'] ?? '000', 3, '0', STR_PAD_LEFT);
-                    $std->cClassTribIS = str_pad($is['cClassTribIS'] ?? '000000', 6, '0', STR_PAD_LEFT);
-                    $std->vBCIS = number_format((float)($is['vBCIS'] ?? 0), 2, '.', '');
-                    $std->pIS = number_format((float)($is['pIS'] ?? 0), 2, '.', '');
-                    $std->vIS = number_format($vIS, 2, '.', '');
-                    $std->uTrib = $is['uTrib'] ?? 'UN';
-                    $std->qTrib = number_format((float)($is['qTrib'] ?? 0), 4, '.', '');
-                    $nfe->tagIS($std);
-                    $totalIS += $vIS;
-                }
+                // $is = $impostos['is'] ?? [];
+                // $vIS = (float)($is['vIS'] ?? 0);
+                // if ($is) {
+                //     $std = new \stdClass();
+                //     $std->item = $item;
+                //     $std->CSTIS = str_pad($is['CSTIS'] ?? '000', 3, '0', STR_PAD_LEFT);
+                //     $std->cClassTribIS = str_pad($is['cClassTribIS'] ?? '000000', 6, '0', STR_PAD_LEFT);
+                //     $std->vBCIS = number_format((float)($is['vBCIS'] ?? 0), 2, '.', '');
+                //     $std->pIS = number_format((float)($is['pIS'] ?? 0), 2, '.', '');
+                //     $std->vIS = number_format($vIS, 2, '.', '');
+                //     $std->uTrib = $is['uTrib'] ?? 'UN';
+                //     $std->qTrib = number_format((float)($is['qTrib'] ?? 0), 4, '.', '');
+                //     $nfe->tagIS($std);
+                //     $totalIS += $vIS;
+                // }
 
                 // IBS/CBS (Reforma Tributária)
                 $ibs = $impostos['ibscbs'] ?? [];
@@ -561,11 +561,11 @@ class Nfe
 
         // Força a inclusão das Tags de Totais (IS, IBS, CBS)
         // A biblioteca pode omitir se forem zero, mas a SEFAZ exige.
-        if ($this->corpoRequisicao['empresa']['usarContingenciaIbsCbs']) {
+        if (!$this->corpoRequisicao['empresa']['usarContingenciaIbsCbs']) {
             // 1. Total de IS
-            $stdISTot = new \stdClass();
-            $stdISTot->vIS = number_format($totalIS, 2, '.', '');
-            $nfe->tagISTot($stdISTot);
+            // $stdISTot = new \stdClass();
+            // $stdISTot->vIS = number_format($totalIS, 2, '.', '');
+            // $nfe->tagISTot($stdISTot);
 
             // 2. Totais de IBS/CBS
             $stdIBSCBSTot = new \stdClass();
@@ -575,7 +575,8 @@ class Nfe
             $nfe->tagIBSCBSTot($stdIBSCBSTot);
         }
 
-        $totalNota = $totalProdutos + $totalIS + $totalIBS + $totalCBS;
+        // $totalNota = $totalProdutos + $totalIS + $totalIBS + $totalCBS;
+        $totalNota = $totalProdutos + $totalIBS + $totalCBS;
         $stdTotal = new \stdClass();
         $stdTotal->vNFTot = number_format($totalNota, 2, '.', '');
         $nfe->tagtotal($stdTotal);
@@ -585,14 +586,13 @@ class Nfe
         $std = new \stdClass();
         $std->modFrete = $this->corpoRequisicao['transporte']['modalidadeFrete']; // Modalidade do frete (0 = emitente, 1 = destinatário, 2 = terceiros, 9 = sem frete)
         $nfe->tagtransp($std);
-    
 
         // Dados da transportadora
         $transp = $this->corpoRequisicao['transporte']['transportadora'];
 
         $temCnpj = !empty($transp['cnpj']);
         $temCpf = !empty($transp['cpf']);
-        
+
         if (($temCnpj || $temCpf) && $std->modFrete <> 9) {
             $std = new \stdClass();
             $std->xNome = $transp['razaoSocial'] ?? '';
@@ -600,17 +600,16 @@ class Nfe
             $std->xEnder = $transp['endereco'] ?? '';
             $std->xMun = $transp['municipio'] ?? '';
             $std->UF = $transp['uf'] ?? '';
-            
+
             if ($temCnpj) {
                 $std->CNPJ = soNumeros($transp['cnpj']);
             } else {
                 $std->CPF = soNumeros($transp['cpf']);
             }
-            
+
             $nfe->tagtransporta($std);
         }
 
-        
         // Veículos
         $veiculo = $this->corpoRequisicao['transporte']['veiculo'];
 
@@ -621,7 +620,6 @@ class Nfe
             $std->RNTC = $veiculo['rntc'] ?? '';
             $nfe->tagveicTransp($std);
         }
-    
 
         // Volumes
         $vol = $this->corpoRequisicao['transporte']['volumes'];
@@ -631,9 +629,8 @@ class Nfe
         $pesoB = (float) ($vol['pesoBruto'] ?? 0);
 
         if ($qtdInformada > 0 || $pesoL > 0 || $pesoB > 0) {
-            
-            $std = new \stdClass();
 
+            $std = new \stdClass();
             if ($qtdInformada > 0) {
                 $std->qVol  = $qtdInformada;
                 $std->esp   = $vol['especie'] ?? '';
@@ -646,7 +643,6 @@ class Nfe
 
             $nfe->tagvol($std);
         }
-
 
         // ===== PAGAMENTO =====
         $std = new \stdClass();
