@@ -491,7 +491,9 @@ class Nfe
                 $nfe->tagCOFINS($std);
             }
 
-            if (!$this->corpoRequisicao['empresa']['usarContingenciaIbsCbs']) {
+            if (!$this->corpoRequisicao['empresa']['usarContingenciaIbsCbs']
+                && !in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])
+            ) {
                 // IS (Imposto Seletivo)
                 // $is = $impostos['is'] ?? [];
                 // $vIS = (float)($is['vIS'] ?? 0);
@@ -561,7 +563,9 @@ class Nfe
 
         // Força a inclusão das Tags de Totais (IS, IBS, CBS)
         // A biblioteca pode omitir se forem zero, mas a SEFAZ exige.
-        if (!$this->corpoRequisicao['empresa']['usarContingenciaIbsCbs']) {
+        if (!$this->corpoRequisicao['empresa']['usarContingenciaIbsCbs']
+            && !in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])
+        ) {
             // 1. Total de IS
             // $stdISTot = new \stdClass();
             // $stdISTot->vIS = number_format($totalIS, 2, '.', '');
