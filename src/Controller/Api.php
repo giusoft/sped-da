@@ -42,7 +42,8 @@ class Api
             emitirErro("O campo 'cnpj_emitente' é obrigatório", 400);
         }
 
-        if (!isset($this->corpoRequisicao["certificado"])) {
+        $rota = $_GET['rota'] ?? '';
+        if (!isset($this->corpoRequisicao["certificado"]) && $rota != 'danfe') {
             $this->buscarCertificado();
         }
 
