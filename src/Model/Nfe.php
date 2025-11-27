@@ -626,22 +626,30 @@ class Nfe
         if (!$this->corpoRequisicao['empresa']['usarContingenciaIbsCbs']
             && !in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])
         ) {
-            // 1. Total de IS
-            // $stdISTot = new \stdClass();
-            // $stdISTot->vIS = number_format($totalIS, 2, '.', '');
-            // $nfe->tagISTot($stdISTot);
 
-            // 2. Totais de IBS/CBS
-            $stdIBSCBSTot = new \stdClass();
-            $stdIBSCBSTot->vBCIBSCBS = number_format($totalBC_IBSCBS, 2, '.', '');
-            $stdIBSCBSTot->gIBS_vIBS = number_format($totalIBS, 2, '.', '');
-            $stdIBSCBSTot->gCBS_vCBS = number_format($totalCBS, 2, '.', '');
-            $nfe->tagIBSCBSTot($stdIBSCBSTot);
+            if ($totalIBS > 0 || $totalCBS > 0 || $totalBC_IBSCBS > 0) {
+                // 1. Total de IS
+                // $stdISTot = new \stdClass();
+                // $stdISTot->vIS = number_format($totalIS, 2, '.', '');
+                // $nfe->tagISTot($stdISTot);
+
+                // 2. Totais de IBS/CBS
+                $stdIBSCBSTot = new \stdClass();
+                $stdIBSCBSTot->vBCIBSCBS = number_format($totalBC_IBSCBS, 2, '.', '');
+                $stdIBSCBSTot->gIBS_vIBS = number_format($totalIBS, 2, '.', '');
+                $stdIBSCBSTot->gCBS_vCBS = number_format($totalCBS, 2, '.', '');
+                $nfe->tagIBSCBSTot($stdIBSCBSTot);
+            }
         }
 
-        // $totalNota = $totalProdutos + $totalIS + $totalIBS + $totalCBS;
+        $totalIBS = $totalIBS ?? 0.00;
+        $totalCBS = $totalCBS ?? 0.00;
+
+        // $totalNota = $totalProdutos + $totalIS + $totalIBS + $totalCBS; // IS está comentado
         $totalNota = $totalProdutos + $totalIBS + $totalCBS;
+
         $stdTotal = new \stdClass();
+        // Formatação do valor total da nota
         $stdTotal->vNFTot = number_format($totalNota, 2, '.', '');
         $nfe->tagtotal($stdTotal);
 
