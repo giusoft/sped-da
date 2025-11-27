@@ -513,180 +513,110 @@ class Nfe
 
                 // IBS/CBS (Reforma Tributária)
                 $ibs = $impostos['ibscbs'] ?? [];
-                $vBC_IBSCBS = (float)($ibs['vBC'] ?? $vProd);
 
-                $gIBSUF_pAliqEfet = round((float)($ibs['gIBSUF_pAliqEfet'] ?? 0), 2);
-                $gIBSMun_pAliqEfet = round((float)($ibs['gIBSMun_pAliqEfet'] ?? 0), 2);
-                $gCBS_pAliqEfet = round((float)($ibs['gCBS_pAliqEfet'] ?? 0), 2);
-
-                $gIBSUF_vIBSUF = round($vBC_IBSCBS * $gIBSUF_pAliqEfet / 100, 2);
-                $gIBSMun_vIBSMun = round($vBC_IBSCBS * $gIBSMun_pAliqEfet / 100, 2);
-                $gCBS_vCBS = round($vBC_IBSCBS * $gCBS_pAliqEfet / 100, 2);
-
+                // Só processa se houver dados de IBS/CBS
                 if ($ibs) {
-                    $cst = str_pad($ibs['CST'] ?? '200', 3, '0', STR_PAD_LEFT);
+                    $cst = str_pad($ibs['CST'] ?? '000', 3, '0', STR_PAD_LEFT);
 
-                    $std = new \stdClass();
-                    $std->item = $item;
-                    $std->CST = $cst;
-                    $std->cClassTrib = str_pad($ibs['cClassTrib'] ?? '200003', 6, '0', STR_PAD_LEFT);
-                    $std->indDoacao = (int)($ibs['indDoacao'] ?? 0);
-                    $std->vBC = number_format($vBC_IBSCBS, 2, '.', '');
+                    $cstPadrao    = ['000', '010', '011', '200', '220', '221', '222', '510', '515', '550', '830'];
+                    $cstMonofasico = ['620'];
+                    $cstIsencao    = ['400', '410'];
+                    $cstOutros     = ['800', '810', '811', '820'];
 
-                    // IBS Estadual (UF)
-                    $std->gIBSUF_pIBSUF = number_format((float)($ibs['gIBSUF_pIBSUF'] ?? 0), 4, '.', '');
-                    $std->gIBSUF_pRedAliq = number_format((float)($ibs['gIBSUF_pRedAliq'] ?? 0), 4, '.', '');
-                    $std->gIBSUF_pAliqEfet = number_format($gIBSUF_pAliqEfet, 4, '.', '');
-                    $std->gIBSUF_vIBSUF = number_format($gIBSUF_vIBSUF, 2, '.', '');
+                    if (in_array($cst, $cstPadrao)) {
 
-                    // Campos adicionais IBS UF
-                    if (isset($ibs['gIBSUF_pDif']) && $ibs['gIBSUF_pDif'] > 0) {
-                        $std->gIBSUF_pDif = number_format((float)$ibs['gIBSUF_pDif'], 4, '.', '');
-                    }
-                    if (isset($ibs['gIBSUF_vDif']) && $ibs['gIBSUF_vDif'] > 0) {
-                        $std->gIBSUF_vDif = number_format((float)$ibs['gIBSUF_vDif'], 2, '.', '');
-                    }
-                    if (isset($ibs['gIBSUF_vDevTrib']) && $ibs['gIBSUF_vDevTrib'] > 0) {
-                        $std->gIBSUF_vDevTrib = number_format((float)$ibs['gIBSUF_vDevTrib'], 2, '.', '');
-                    }
+                        $vBC_IBSCBS = (float)($ibs['vBC'] ?? $vProd);
 
-                    // IBS Municipal
-                    $std->gIBSMun_pIBSMun = number_format((float)($ibs['gIBSMun_pIBSMun'] ?? 0), 4, '.', '');
-                    $std->gIBSMun_pRedAliq = number_format((float)($ibs['gIBSMun_pRedAliq'] ?? 0), 4, '.', '');
-                    $std->gIBSMun_pAliqEfet = number_format($gIBSMun_pAliqEfet, 4, '.', '');
-                    $std->gIBSMun_vIBSMun = number_format($gIBSMun_vIBSMun, 2, '.', '');
+                        $std = new \stdClass();
+                        $std->item = $item;
+                        $std->CST = $cst;
+                        $std->cClassTrib = str_pad($ibs['cClassTrib'] ?? '', 6, '0', STR_PAD_LEFT);
+                        $std->indDoacao = (int)($ibs['indDoacao'] ?? 0);
+                        $std->vBC = number_format($vBC_IBSCBS, 2, '.', '');
 
-                    // Campos adicionais IBS Municipal
-                    if (isset($ibs['gIBSMun_pDif']) && $ibs['gIBSMun_pDif'] > 0) {
-                        $std->gIBSMun_pDif = number_format((float)$ibs['gIBSMun_pDif'], 4, '.', '');
-                    }
-                    if (isset($ibs['gIBSMun_vDif']) && $ibs['gIBSMun_vDif'] > 0) {
-                        $std->gIBSMun_vDif = number_format((float)$ibs['gIBSMun_vDif'], 2, '.', '');
-                    }
-                    if (isset($ibs['gIBSMun_vDevTrib']) && $ibs['gIBSMun_vDevTrib'] > 0) {
-                        $std->gIBSMun_vDevTrib = number_format((float)$ibs['gIBSMun_vDevTrib'], 2, '.', '');
-                    }
+                        $std->gIBSUF_pIBSUF   = number_format((float)($ibs['gIBSUF_pIBSUF'] ?? 0), 4, '.', '');
+                        $std->gIBSUF_vIBSUF   = number_format((float)($ibs['gIBSUF_vIBSUF'] ?? 0), 2, '.', '');
+                        $std->gIBSMun_pIBSMun = number_format((float)($ibs['gIBSMun_pIBSMun'] ?? 0), 4, '.', '');
+                        $std->gIBSMun_vIBSMun = number_format((float)($ibs['gIBSMun_vIBSMun'] ?? 0), 2, '.', '');
+                        $std->gCBS_pCBS       = number_format((float)($ibs['gCBS_pCBS'] ?? 0), 4, '.', '');
+                        $std->gCBS_vCBS       = number_format((float)($ibs['gCBS_vCBS'] ?? 0), 2, '.', '');
 
-                    // CBS Federal
-                    $std->gCBS_pCBS = number_format((float)($ibs['gCBS_pCBS'] ?? 0), 4, '.', '');
-                    $std->gCBS_pRedAliq = number_format((float)($ibs['gCBS_pRedAliq'] ?? 0), 4, '.', '');
-                    $std->gCBS_pAliqEfet = number_format($gCBS_pAliqEfet, 4, '.', '');
-                    $std->gCBS_vCBS = number_format($gCBS_vCBS, 2, '.', '');
+                        if (in_array($cst, ['011', '200', '515'])) {
+                            $std->gIBSUF_pRedAliq   = number_format((float)($ibs['gIBSUF_pRedAliq'] ?? 0), 4, '.', '');
+                            $std->gIBSUF_pAliqEfet  = number_format((float)($ibs['gIBSUF_pAliqEfet'] ?? 0), 4, '.', '');
+                            $std->gIBSMun_pRedAliq  = number_format((float)($ibs['gIBSMun_pRedAliq'] ?? 0), 4, '.', '');
+                            $std->gIBSMun_pAliqEfet = number_format((float)($ibs['gIBSMun_pAliqEfet'] ?? 0), 4, '.', '');
+                            $std->gCBS_pRedAliq     = number_format((float)($ibs['gCBS_pRedAliq'] ?? 0), 4, '.', '');
+                            $std->gCBS_pAliqEfet    = number_format((float)($ibs['gCBS_pAliqEfet'] ?? 0), 4, '.', '');
+                        }
 
-                    // Campos adicionais CBS
-                    if (isset($ibs['gCBS_pDif']) && $ibs['gCBS_pDif'] > 0) {
-                        $std->gCBS_pDif = number_format((float)$ibs['gCBS_pDif'], 4, '.', '');
-                    }
-                    if (isset($ibs['gCBS_vDif']) && $ibs['gCBS_vDif'] > 0) {
-                        $std->gCBS_vDif = number_format((float)$ibs['gCBS_vDif'], 2, '.', '');
-                    }
-                    if (isset($ibs['gCBS_vDevTrib']) && $ibs['gCBS_vDevTrib'] > 0) {
-                        $std->gCBS_vDevTrib = number_format((float)$ibs['gCBS_vDevTrib'], 2, '.', '');
-                    }
+                        if ($cst === '515') {
+                            $std->gIBSUF_pDif  = number_format((float)($ibs['gIBSUF_pDif'] ?? 0), 4, '.', '');
+                            $std->gIBSUF_vDif  = number_format((float)($ibs['gIBSUF_vDif'] ?? 0), 2, '.', '');
+                            $std->gIBSMun_pDif = number_format((float)($ibs['gIBSMun_pDif'] ?? 0), 4, '.', '');
+                            $std->gIBSMun_vDif = number_format((float)($ibs['gIBSMun_vDif'] ?? 0), 2, '.', '');
+                            $std->gCBS_pDif    = number_format((float)($ibs['gCBS_pDif'] ?? 0), 4, '.', '');
+                            $std->gCBS_vDif    = number_format((float)($ibs['gCBS_vDif'] ?? 0), 2, '.', '');
+                        }
 
-                    $nfe->tagIBSCBS($std);
+                        if (!empty($ibs['gIBSUF_vDevTrib'])) {
+                            $std->gIBSUF_vDevTrib = number_format((float)$ibs['gIBSUF_vDevTrib'], 2, '.', '');
+                        }
 
-                    // ===== TAGS ESPECÍFICAS POR CST =====
+                        if (!empty($ibs['gIBSMun_vDevTrib'])) {
+                            $std->gIBSMun_vDevTrib = number_format((float)$ibs['gIBSMun_vDevTrib'], 2, '.', '');
+                        }
 
-                    // CST 222 - Redução de Base de Cálculo (tag separada)
-                    if ($cst == '222' && isset($ibs['pRedutorBC']) && $ibs['pRedutorBC'] > 0) {
-                        $stdRedBC = new \stdClass();
-                        $stdRedBC->item = $item;
-                        $stdRedBC->pRedutorBC = number_format((float)$ibs['pRedutorBC'], 4, '.', '');
-                        $nfe->tagIBSCBSRedBC($stdRedBC);
-                    }
+                        if (!empty($ibs['gCBS_vDevTrib'])) {
+                            $std->gCBS_vDevTrib = number_format((float)$ibs['gCBS_vDevTrib'], 2, '.', '');
+                        }
 
-                    // CST 620 - Tributação Monofásica (tag separada)
-                    if ($cst == '620' && (
-                        (isset($ibs['qBCMono']) && $ibs['qBCMono'] > 0) ||
-                        (isset($ibs['adRemIBS']) && $ibs['adRemIBS'] > 0) ||
-                        (isset($ibs['vIBSMono']) && $ibs['vIBSMono'] > 0) ||
-                        (isset($ibs['adRemCBS']) && $ibs['adRemCBS'] > 0) ||
-                        (isset($ibs['vCBSMono']) && $ibs['vCBSMono'] > 0)
-                    )) {
+                        $nfe->tagIBSCBS($std);
+
+                        $totalIBS += (float)($ibs['gIBSUF_vIBSUF'] ?? 0) + (float)($ibs['gIBSMun_vIBSMun'] ?? 0);
+                        $totalCBS += (float)($ibs['gCBS_vCBS'] ?? 0);
+                        $totalBC_IBSCBS += $vBC_IBSCBS;
+
+                        if ($cst == '222' && isset($ibs['pRedutorBC'])) {
+                            $stdRed = new \stdClass();
+                            $stdRed->item = $item;
+                            $stdRed->pRedutorBC = number_format((float)$ibs['pRedutorBC'], 4, '.', '');
+                            $nfe->tagIBSCBSRedBC($stdRed);
+                        }
+
+                    } elseif ($cst === '620') {
                         $stdMono = new \stdClass();
                         $stdMono->item = $item;
-
-                        if (isset($ibs['qBCMono']) && $ibs['qBCMono'] > 0) {
-                            $stdMono->qBCMono = number_format((float)$ibs['qBCMono'], 4, '.', '');
-                        }
-                        if (isset($ibs['adRemIBS']) && $ibs['adRemIBS'] > 0) {
-                            $stdMono->adRemIBS = number_format((float)$ibs['adRemIBS'], 4, '.', '');
-                        }
-                        if (isset($ibs['vIBSMono']) && $ibs['vIBSMono'] > 0) {
-                            $stdMono->vIBSMono = number_format((float)$ibs['vIBSMono'], 2, '.', '');
-                        }
-                        if (isset($ibs['adRemCBS']) && $ibs['adRemCBS'] > 0) {
-                            $stdMono->adRemCBS = number_format((float)$ibs['adRemCBS'], 4, '.', '');
-                        }
-                        if (isset($ibs['vCBSMono']) && $ibs['vCBSMono'] > 0) {
-                            $stdMono->vCBSMono = number_format((float)$ibs['vCBSMono'], 2, '.', '');
-                        }
+                        $stdMono->qBCMono   = number_format((float)($ibs['qBCMono'] ?? 0), 4, '.', '');
+                        $stdMono->adRemIBS  = number_format((float)($ibs['adRemIBS'] ?? 0), 4, '.', '');
+                        $stdMono->vIBSMono  = number_format((float)($ibs['vIBSMono'] ?? 0), 2, '.', '');
+                        $stdMono->adRemCBS  = number_format((float)($ibs['adRemCBS'] ?? 0), 4, '.', '');
+                        $stdMono->vCBSMono  = number_format((float)($ibs['vCBSMono'] ?? 0), 2, '.', '');
 
                         $nfe->tagIBSCBSMono($stdMono);
-                    }
-
-                    // CST 800 - Transferência de Crédito (tag separada)
-                    if ($cst == '800' && (
-                        (isset($ibs['vIBSTransf']) && $ibs['vIBSTransf'] > 0) ||
-                        (isset($ibs['vCBSTransf']) && $ibs['vCBSTransf'] > 0)
-                    )) {
+                        $totalIBS += (float)($ibs['vIBSMono'] ?? 0);
+                        $totalCBS += (float)($ibs['vCBSMono'] ?? 0);
+                    } elseif ($cst === '800') {
                         $stdTransf = new \stdClass();
                         $stdTransf->item = $item;
-
-                        if (isset($ibs['vIBSTransf']) && $ibs['vIBSTransf'] > 0) {
-                            $stdTransf->vIBSTransf = number_format((float)$ibs['vIBSTransf'], 2, '.', '');
-                        }
-                        if (isset($ibs['vCBSTransf']) && $ibs['vCBSTransf'] > 0) {
-                            $stdTransf->vCBSTransf = number_format((float)$ibs['vCBSTransf'], 2, '.', '');
-                        }
-
+                        $stdTransf->vIBSTransf = number_format((float)($ibs['vIBSTransf'] ?? 0), 2, '.', '');
+                        $stdTransf->vCBSTransf = number_format((float)($ibs['vCBSTransf'] ?? 0), 2, '.', '');
                         $nfe->tagIBSCBSTransf($stdTransf);
-                    }
-
-                    // CST 810 - Ajuste de IBS na ZFM (tag separada)
-                    if ($cst == '810' && (
-                        (isset($ibs['tpCredPresIBSZFM']) && !empty($ibs['tpCredPresIBSZFM'])) ||
-                        (isset($ibs['vCredPresIBSZFM']) && $ibs['vCredPresIBSZFM'] > 0)
-                    )) {
+                    } elseif ($cst === '810') {
                         $stdZFM = new \stdClass();
                         $stdZFM->item = $item;
-
-                        if (isset($ibs['tpCredPresIBSZFM']) && !empty($ibs['tpCredPresIBSZFM'])) {
-                            $stdZFM->tpCredPresIBSZFM = $ibs['tpCredPresIBSZFM'];
-                        }
-                        if (isset($ibs['vCredPresIBSZFM']) && $ibs['vCredPresIBSZFM'] > 0) {
-                            $stdZFM->vCredPresIBSZFM = number_format((float)$ibs['vCredPresIBSZFM'], 2, '.', '');
-                        }
-
+                        $stdZFM->tpCredPresIBSZFM = $ibs['tpCredPresIBSZFM'] ?? '';
+                        $stdZFM->vCredPresIBSZFM  = number_format((float)($ibs['vCredPresIBSZFM'] ?? 0), 2, '.', '');
                         $nfe->tagIBSCBSZFM($stdZFM);
-                    }
-
-                    // CST 811 - Ajustes de Competência (tag separada)
-                    if ($cst == '811' && (
-                        (isset($ibs['competApur']) && !empty($ibs['competApur'])) ||
-                        (isset($ibs['vIBSAjuste']) && $ibs['vIBSAjuste'] > 0) ||
-                        (isset($ibs['vCBSAjuste']) && $ibs['vCBSAjuste'] > 0)
-                    )) {
+                    } elseif ($cst === '811') {
                         $stdAjuste = new \stdClass();
                         $stdAjuste->item = $item;
-
-                        if (isset($ibs['competApur']) && !empty($ibs['competApur'])) {
-                            $stdAjuste->competApur = $ibs['competApur'];
-                        }
-                        if (isset($ibs['vIBSAjuste']) && $ibs['vIBSAjuste'] > 0) {
-                            $stdAjuste->vIBSAjuste = number_format((float)$ibs['vIBSAjuste'], 2, '.', '');
-                        }
-                        if (isset($ibs['vCBSAjuste']) && $ibs['vCBSAjuste'] > 0) {
-                            $stdAjuste->vCBSAjuste = number_format((float)$ibs['vCBSAjuste'], 2, '.', '');
-                        }
+                        $stdAjuste->competApur = $ibs['competApur'] ?? '';
+                        $stdAjuste->vIBSAjuste = number_format((float)($ibs['vIBSAjuste'] ?? 0), 2, '.', '');
+                        $stdAjuste->vCBSAjuste = number_format((float)($ibs['vCBSAjuste'] ?? 0), 2, '.', '');
 
                         $nfe->tagIBSCBSAjuste($stdAjuste);
                     }
-
-                    $totalIBS += $gIBSUF_vIBSUF + $gIBSMun_vIBSMun;
-                    $totalCBS += $gCBS_vCBS;
-                    $totalBC_IBSCBS += $vBC_IBSCBS;
                 }
             }
         }
