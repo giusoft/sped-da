@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Exception;
 use NFePHP\NFe\MakeDev;
 use NFePHP\NFe\Tools;
 use NFePHP\NFe\Complements;
@@ -248,7 +249,7 @@ class Nfe
                     ]
                 );
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             emitirErro(
                 $e->getMessage(),
                 500,
@@ -427,13 +428,13 @@ class Nfe
             $std->NCM = soNumeros($prod['ncm']); // Código NCM (classificação fiscal)
             $std->CFOP = $prod['cfop']; // Código Fiscal da Operação
             $std->uCom = $prod['unidade'] ?? 'UN'; // Unidade
-            $std->qCom = number_format($prod['quantidade'], 4, '.', ''); // Quantidade
-            $std->vUnCom = number_format($prod['valorUnitario'], 10, '.', ''); // Valor Unitário
-            $std->vProd = number_format($vProd, 2, '.', ''); // Valor Total
+            $std->qCom = formatarDecimal($prod['quantidade'], 4); // Quantidade
+            $std->vUnCom = formatarDecimal($prod['valorUnitario'], 10); // Valor Unitário
+            $std->vProd = formatarDecimal($vProd, 2); // Valor Total
             $std->cEANTrib = $prod['cEANTrib'] ?? 'SEM GTIN'; // Código de barras do produto para tributação
             $std->uTrib = $prod['unidade'] ?? 'UN'; // Unidade de medida para tributação
-            $std->qTrib = number_format($prod['quantidade'], 4, '.', ''); // Quantidade tributável
-            $std->vUnTrib = number_format($prod['valorUnitario'], 10, '.', ''); // Valor unitário tributável
+            $std->qTrib = formatarDecimal($prod['quantidade'], 4); // Quantidade tributável
+            $std->vUnTrib = formatarDecimal($prod['valorUnitario'], 10); // Valor unitário tributável
             $std->indTot = 1; // 1 = inclui no total da NF
             $nfe->tagprod($std);
 
@@ -458,18 +459,18 @@ class Nfe
                 
                 // Base de cálculo e alíquota (podem vir da API)
                 if (isset($icms['vBC'])) {
-                    $std->vBC = number_format($icms['vBC'], 2, '.', '');
+                    $std->vBC = formatarDecimal($icms['vBC'], 2);
                 }
                 if (isset($icms['aliquota'])) {
-                    $std->pICMS = number_format($icms['aliquota'], 2, '.', '');
+                    $std->pICMS = formatarDecimal($icms['aliquota'], 2);
                 }
                 if (isset($icms['vBC']) && isset($icms['aliquota'])) {
-                    $std->vICMS = number_format($icms['vBC'] * $icms['aliquota'] / 100, 2, '.', '');
+                    $std->vICMS = formatarDecimal($icms['vBC'] * $icms['aliquota'] / 100, 2);
                 }
                 
                 // Redução de BC
                 if (!empty($icms['pRedBC'])) {
-                    $std->pRedBC = number_format($icms['pRedBC'], 2, '.', '');
+                    $std->pRedBC = formatarDecimal($icms['pRedBC'], 2);
                 }
                 
                 // ICMS ST
@@ -477,42 +478,42 @@ class Nfe
                     $std->modBCST = (int) $icms['modBCST'];
                 }
                 if (!empty($icms['pMVAST'])) {
-                    $std->pMVAST = number_format($icms['pMVAST'], 2, '.', '');
+                    $std->pMVAST = formatarDecimal($icms['pMVAST'], 2);
                 }
                 if (!empty($icms['pRedBCST'])) {
-                    $std->pRedBCST = number_format($icms['pRedBCST'], 2, '.', '');
+                    $std->pRedBCST = formatarDecimal($icms['pRedBCST'], 2);
                 }
                 if (!empty($icms['vBCST'])) {
-                    $std->vBCST = number_format($icms['vBCST'], 2, '.', '');
+                    $std->vBCST = formatarDecimal($icms['vBCST'], 2);
                 }
                 if (!empty($icms['pICMSST'])) {
-                    $std->pICMSST = number_format($icms['pICMSST'], 2, '.', '');
+                    $std->pICMSST = formatarDecimal($icms['pICMSST'], 2);
                 }
                 if (!empty($icms['vICMSST'])) {
-                    $std->vICMSST = number_format($icms['vICMSST'], 2, '.', '');
+                    $std->vICMSST = formatarDecimal($icms['vICMSST'], 2);
                 }
                 if (!empty($icms['vICMSSTRet'])) {
-                    $std->vICMSSTRet = number_format($icms['vICMSSTRet'], 2, '.', '');
+                    $std->vICMSSTRet = formatarDecimal($icms['vICMSSTRet'], 2);
                 }
                 
                 // FCP
                 if (!empty($icms['vBCFCP'])) {
-                    $std->vBCFCP = number_format($icms['vBCFCP'], 2, '.', '');
+                    $std->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
                 }
                 if (!empty($icms['pFCP'])) {
-                    $std->pFCP = number_format($icms['pFCP'], 2, '.', '');
+                    $std->pFCP = formatarDecimal($icms['pFCP'], 2);
                 }
                 if (!empty($icms['vBCFCPST'])) {
-                    $std->vBCFCPST = number_format($icms['vBCFCPST'], 2, '.', '');
+                    $std->vBCFCPST = formatarDecimal($icms['vBCFCPST'], 2);
                 }
                 if (!empty($icms['pFCPST'])) {
-                    $std->pFCPST = number_format($icms['pFCPST'], 2, '.', '');
+                    $std->pFCPST = formatarDecimal($icms['pFCPST'], 2);
                 }
-                
+
                 $nfe->tagICMS($std);
             }
 
-            // IPI 
+            // IPI
             $ipi = $impostos['ipi'] ?? [];
             if (!empty($ipi['CST'])) {
                 $std = new \stdClass();
@@ -522,9 +523,9 @@ class Nfe
 
                 // Grupos de CST tributados (00, 49, 50, 99)
                 if (in_array($std->CST, ['00', '49', '50', '99'])) {
-                    $std->vBC = number_format($vProd, 2, '.', '');
-                    $std->pIPI = number_format((float)$ipi['aliquota'], 2, '.', '');
-                    $std->vIPI = number_format($vProd * ((float)$ipi['aliquota'] / 100), 2, '.', '');
+                    $std->vBC = formatarDecimal($vProd, 2);
+                    $std->pIPI = formatarDecimal((float)$ipi['aliquota'], 2);
+                    $std->vIPI = formatarDecimal($vProd * ((float)$ipi['aliquota'] / 100), 2);
                 }
                 
                 $nfe->tagIPI($std);
@@ -540,16 +541,16 @@ class Nfe
 
                 // GRUPO PISAliq: Operação Tributável (CST 01 e 02) [cite: 1050]
                 if (in_array($std->CST, ['01', '02'])) {
-                    $std->vBC = number_format($vProd, 2, '.', '');
-                    $std->pPIS = number_format((float)$pis['aliquota'], 2, '.', '');
-                    $std->vPIS = number_format($vProd * ((float)$pis['aliquota'] / 100), 2, '.', '');
+                    $std->vBC = formatarDecimal($vProd, 2);
+                    $std->pPIS = formatarDecimal($pis['aliquota'], 2);
+                    $std->vPIS = formatarDecimal($vProd * ((float)$pis['aliquota'] / 100), 2);
                     $nfe->tagPIS($std);
                 }
                 // GRUPO PISQtde: Tributação por Quantidade (CST 03) [cite: 1051]
                 elseif ($std->CST == '03') {
-                     $std->qBCProd = number_format($prod['quantidade'], 4, '.', '');
-                     $std->vAliqProd = number_format((float)$pis['aliquota'], 4, '.', '');
-                     $std->vPIS = number_format($prod['quantidade'] * $pis['aliquota'], 2, '.', '');
+                     $std->qBCProd = formatarDecimal($prod['quantidade'], 4);
+                     $std->vAliqProd = formatarDecimal((float)$pis['aliquota'], 4);
+                     $std->vPIS = formatarDecimal($prod['quantidade'] * $pis['aliquota'], 2);
                      $nfe->tagPIS($std);
                 }
                 // GRUPO PISNT: Não Tributado (CST 04, 05, 06, 07, 08, 09) [cite: 1051]
@@ -559,9 +560,9 @@ class Nfe
                 // GRUPO PISOutr: Outras Operações (CST 49 a 99) [cite: 1051]
                 else {
                     if ((float)$pis['aliquota'] > 0) {
-                        $std->vBC = number_format($vProd, 2, '.', '');
-                        $std->pPIS = number_format((float)$pis['aliquota'], 2, '.', '');
-                        $std->vPIS = number_format($vProd * ((float)$pis['aliquota'] / 100), 2, '.', '');
+                        $std->vBC = formatarDecimal($vProd, 2);
+                        $std->pPIS = formatarDecimal((float)$pis['aliquota'], 2);
+                        $std->vPIS = formatarDecimal($vProd * ((float)$pis['aliquota'] / 100), 2);
                     } else {
                         $std->vBC = '0.00';
                         $std->pPIS = '0.00';
@@ -580,16 +581,16 @@ class Nfe
 
                 // GRUPO COFINSAliq: Operação Tributável (CST 01 e 02) [cite: 1053]
                 if (in_array($std->CST, ['01', '02'])) {
-                    $std->vBC = number_format($vProd, 2, '.', '');
-                    $std->pCOFINS = number_format((float)$cofins['aliquota'], 2, '.', '');
-                    $std->vCOFINS = number_format($vProd * ((float)$cofins['aliquota'] / 100), 2, '.', '');
+                    $std->vBC = formatarDecimal($vProd, 2);
+                    $std->pCOFINS = formatarDecimal($cofins['aliquota'], 2);
+                    $std->vCOFINS = formatarDecimal($vProd * ((float)$cofins['aliquota'] / 100), 2);
                     $nfe->tagCOFINS($std);
                 }
                 // GRUPO COFINSQtde: Tributação por Quantidade (CST 03) [cite: 1054]
                 elseif ($std->CST == '03') {
-                     $std->qBCProd = number_format($prod['quantidade'], 4, '.', '');
-                     $std->vAliqProd = number_format((float)$cofins['aliquota'], 4, '.', '');
-                     $std->vCOFINS = number_format($prod['quantidade'] * $cofins['aliquota'], 2, '.', '');
+                     $std->qBCProd = formatarDecimal($prod['quantidade'], 4);
+                     $std->vAliqProd = formatarDecimal($cofins['aliquota'], 4);
+                     $std->vCOFINS = formatarDecimal($prod['quantidade'] * $cofins['aliquota'], 2);
                      $nfe->tagCOFINS($std);
                 }
                 // GRUPO COFINSNT: Não Tributado (CST 04, 05, 06, 07, 08, 09) [cite: 1054]
@@ -599,9 +600,9 @@ class Nfe
                 // GRUPO COFINSOutr: Outras Operações (CST 49 a 99) [cite: 1054]
                 else {
                     if ((float)$cofins['aliquota'] > 0) {
-                        $std->vBC = number_format($vProd, 2, '.', '');
-                        $std->pCOFINS = number_format((float)$cofins['aliquota'], 2, '.', '');
-                        $std->vCOFINS = number_format($vProd * ((float)$cofins['aliquota'] / 100), 2, '.', '');
+                        $std->vBC = formatarDecimal($vProd, 2);
+                        $std->pCOFINS = formatarDecimal($cofins['aliquota'], 2);
+                        $std->vCOFINS = formatarDecimal($vProd * ((float)$cofins['aliquota'] / 100), 2);
                     } else {
                         $std->vBC = '0.00';
                         $std->pCOFINS = '0.00';
@@ -622,11 +623,11 @@ class Nfe
                 //     $std->item = $item;
                 //     $std->CSTIS = str_pad($is['CSTIS'] ?? '000', 3, '0', STR_PAD_LEFT);
                 //     $std->cClassTribIS = str_pad($is['cClassTribIS'] ?? '000000', 6, '0', STR_PAD_LEFT);
-                //     $std->vBCIS = number_format((float)($is['vBCIS'] ?? 0), 2, '.', '');
-                //     $std->pIS = number_format((float)($is['pIS'] ?? 0), 2, '.', '');
-                //     $std->vIS = number_format($vIS, 2, '.', '');
+                //     $std->vBCIS = formatarDecimal(($is['vBCIS'] ?? 0), 2);
+                //     $std->pIS = formatarDecimal(($is['pIS'] ?? 0), 2);
+                //     $std->vIS = formatarDecimal($vIS, 2);
                 //     $std->uTrib = $is['uTrib'] ?? 'UN';
-                //     $std->qTrib = number_format((float)($is['qTrib'] ?? 0), 4, '.', '');
+                //     $std->qTrib = formatarDecimal(($is['qTrib'] ?? 0), 4);
                 //     $nfe->tagIS($std);
                 //     $totalIS += $vIS;
                 // }
@@ -652,43 +653,43 @@ class Nfe
                        $std->CST = $cst;
                        $std->cClassTrib = str_pad($ibs['cClassTrib'] ?? '', 6, '0', STR_PAD_LEFT);
                        $std->indDoacao = (int)($ibs['indDoacao'] ?? 0);
-                       $std->vBC = number_format($vBC_IBSCBS, 2, '.', '');
+                       $std->vBC = formatarDecimal($vBC_IBSCBS, 2);
 
-                       $std->gIBSUF_pIBSUF   = number_format((float)($ibs['gIBSUF_pIBSUF'] ?? 0), 4, '.', '');
-                       $std->gIBSUF_vIBSUF   = number_format((float)($ibs['gIBSUF_vIBSUF'] ?? 0), 2, '.', '');
-                       $std->gIBSMun_pIBSMun = number_format((float)($ibs['gIBSMun_pIBSMun'] ?? 0), 4, '.', '');
-                       $std->gIBSMun_vIBSMun = number_format((float)($ibs['gIBSMun_vIBSMun'] ?? 0), 2, '.', '');
-                       $std->gCBS_pCBS       = number_format((float)($ibs['gCBS_pCBS'] ?? 0), 4, '.', '');
-                       $std->gCBS_vCBS       = number_format((float)($ibs['gCBS_vCBS'] ?? 0), 2, '.', '');
+                       $std->gIBSUF_pIBSUF   = formatarDecimal(($ibs['gIBSUF_pIBSUF'] ?? 0), 4);
+                       $std->gIBSUF_vIBSUF   = formatarDecimal(($ibs['gIBSUF_vIBSUF'] ?? 0), 2);
+                       $std->gIBSMun_pIBSMun = formatarDecimal(($ibs['gIBSMun_pIBSMun'] ?? 0), 4);
+                       $std->gIBSMun_vIBSMun = formatarDecimal(($ibs['gIBSMun_vIBSMun'] ?? 0), 2);
+                       $std->gCBS_pCBS       = formatarDecimal(($ibs['gCBS_pCBS'] ?? 0), 4);
+                       $std->gCBS_vCBS       = formatarDecimal(($ibs['gCBS_vCBS'] ?? 0), 2);
 
                        if (in_array($cst, ['011', '200', '515'])) {
-                           $std->gIBSUF_pRedAliq   = number_format((float)($ibs['gIBSUF_pRedAliq'] ?? 0), 4, '.', '');
-                           $std->gIBSUF_pAliqEfet  = number_format((float)($ibs['gIBSUF_pAliqEfet'] ?? 0), 4, '.', '');
-                           $std->gIBSMun_pRedAliq  = number_format((float)($ibs['gIBSMun_pRedAliq'] ?? 0), 4, '.', '');
-                           $std->gIBSMun_pAliqEfet = number_format((float)($ibs['gIBSMun_pAliqEfet'] ?? 0), 4, '.', '');
-                           $std->gCBS_pRedAliq     = number_format((float)($ibs['gCBS_pRedAliq'] ?? 0), 4, '.', '');
-                           $std->gCBS_pAliqEfet    = number_format((float)($ibs['gCBS_pAliqEfet'] ?? 0), 4, '.', '');
+                           $std->gIBSUF_pRedAliq   = formatarDecimal(($ibs['gIBSUF_pRedAliq'] ?? 0), 4);
+                           $std->gIBSUF_pAliqEfet  = formatarDecimal(($ibs['gIBSUF_pAliqEfet'] ?? 0), 4);
+                           $std->gIBSMun_pRedAliq  = formatarDecimal(($ibs['gIBSMun_pRedAliq'] ?? 0), 4);
+                           $std->gIBSMun_pAliqEfet = formatarDecimal(($ibs['gIBSMun_pAliqEfet'] ?? 0), 4);
+                           $std->gCBS_pRedAliq     = formatarDecimal(($ibs['gCBS_pRedAliq'] ?? 0), 4);
+                           $std->gCBS_pAliqEfet    = formatarDecimal(($ibs['gCBS_pAliqEfet'] ?? 0), 4);
                        }
 
                        if ($cst === '515') {
-                           $std->gIBSUF_pDif  = number_format((float)($ibs['gIBSUF_pDif'] ?? 0), 4, '.', '');
-                           $std->gIBSUF_vDif  = number_format((float)($ibs['gIBSUF_vDif'] ?? 0), 2, '.', '');
-                           $std->gIBSMun_pDif = number_format((float)($ibs['gIBSMun_pDif'] ?? 0), 4, '.', '');
-                           $std->gIBSMun_vDif = number_format((float)($ibs['gIBSMun_vDif'] ?? 0), 2, '.', '');
-                           $std->gCBS_pDif    = number_format((float)($ibs['gCBS_pDif'] ?? 0), 4, '.', '');
-                           $std->gCBS_vDif    = number_format((float)($ibs['gCBS_vDif'] ?? 0), 2, '.', '');
+                           $std->gIBSUF_pDif  = formatarDecimal(($ibs['gIBSUF_pDif'] ?? 0), 4);
+                           $std->gIBSUF_vDif  = formatarDecimal(($ibs['gIBSUF_vDif'] ?? 0), 2);
+                           $std->gIBSMun_pDif = formatarDecimal(($ibs['gIBSMun_pDif'] ?? 0), 4);
+                           $std->gIBSMun_vDif = formatarDecimal(($ibs['gIBSMun_vDif'] ?? 0), 2);
+                           $std->gCBS_pDif    = formatarDecimal(($ibs['gCBS_pDif'] ?? 0), 4);
+                           $std->gCBS_vDif    = formatarDecimal(($ibs['gCBS_vDif'] ?? 0), 2);
                        }
 
                        if (!empty($ibs['gIBSUF_vDevTrib'])) {
-                           $std->gIBSUF_vDevTrib = number_format((float)$ibs['gIBSUF_vDevTrib'], 2, '.', '');
+                           $std->gIBSUF_vDevTrib = formatarDecimal($ibs['gIBSUF_vDevTrib'], 2);
                        }
 
                        if (!empty($ibs['gIBSMun_vDevTrib'])) {
-                           $std->gIBSMun_vDevTrib = number_format((float)$ibs['gIBSMun_vDevTrib'], 2, '.', '');
+                           $std->gIBSMun_vDevTrib = formatarDecimal($ibs['gIBSMun_vDevTrib'], 2);
                        }
 
                        if (!empty($ibs['gCBS_vDevTrib'])) {
-                           $std->gCBS_vDevTrib = number_format((float)$ibs['gCBS_vDevTrib'], 2, '.', '');
+                           $std->gCBS_vDevTrib = formatarDecimal($ibs['gCBS_vDevTrib'], 2);
                        }
 
                        $nfe->tagIBSCBS($std);
@@ -700,18 +701,18 @@ class Nfe
                        if ($cst == '222' && isset($ibs['pRedutorBC'])) {
                            $stdRed = new \stdClass();
                            $stdRed->item = $item;
-                           $stdRed->pRedutorBC = number_format((float)$ibs['pRedutorBC'], 4, '.', '');
+                           $stdRed->pRedutorBC = formatarDecimal($ibs['pRedutorBC'], 4);
                            $nfe->tagIBSCBSRedBC($stdRed);
                        }
 
                    } elseif ($cst === '620') {
                        $stdMono = new \stdClass();
                        $stdMono->item = $item;
-                       $stdMono->qBCMono   = number_format((float)($ibs['qBCMono'] ?? 0), 4, '.', '');
-                       $stdMono->adRemIBS  = number_format((float)($ibs['adRemIBS'] ?? 0), 4, '.', '');
-                       $stdMono->vIBSMono  = number_format((float)($ibs['vIBSMono'] ?? 0), 2, '.', '');
-                       $stdMono->adRemCBS  = number_format((float)($ibs['adRemCBS'] ?? 0), 4, '.', '');
-                       $stdMono->vCBSMono  = number_format((float)($ibs['vCBSMono'] ?? 0), 2, '.', '');
+                       $stdMono->qBCMono   = formatarDecimal(($ibs['qBCMono'] ?? 0), 4);
+                       $stdMono->adRemIBS  = formatarDecimal(($ibs['adRemIBS'] ?? 0), 4);
+                       $stdMono->vIBSMono  = formatarDecimal(($ibs['vIBSMono'] ?? 0), 2);
+                       $stdMono->adRemCBS  = formatarDecimal(($ibs['adRemCBS'] ?? 0), 4);
+                       $stdMono->vCBSMono  = formatarDecimal(($ibs['vCBSMono'] ?? 0), 2);
 
                        $nfe->tagIBSCBSMono($stdMono);
                        $totalIBS += (float)($ibs['vIBSMono'] ?? 0);
@@ -719,21 +720,21 @@ class Nfe
                    } elseif ($cst === '800') {
                        $stdTransf = new \stdClass();
                        $stdTransf->item = $item;
-                       $stdTransf->vIBSTransf = number_format((float)($ibs['vIBSTransf'] ?? 0), 2, '.', '');
-                       $stdTransf->vCBSTransf = number_format((float)($ibs['vCBSTransf'] ?? 0), 2, '.', '');
+                       $stdTransf->vIBSTransf = formatarDecimal(($ibs['vIBSTransf'] ?? 0), 2);
+                       $stdTransf->vCBSTransf = formatarDecimal(($ibs['vCBSTransf'] ?? 0), 2);
                        $nfe->tagIBSCBSTransf($stdTransf);
                    } elseif ($cst === '810') {
                        $stdZFM = new \stdClass();
                        $stdZFM->item = $item;
                        $stdZFM->tpCredPresIBSZFM = $ibs['tpCredPresIBSZFM'] ?? '';
-                       $stdZFM->vCredPresIBSZFM  = number_format((float)($ibs['vCredPresIBSZFM'] ?? 0), 2, '.', '');
+                       $stdZFM->vCredPresIBSZFM  = formatarDecimal(($ibs['vCredPresIBSZFM'] ?? 0), 2);
                        $nfe->tagIBSCBSZFM($stdZFM);
                    } elseif ($cst === '811') {
                        $stdAjuste = new \stdClass();
                        $stdAjuste->item = $item;
                        $stdAjuste->competApur = $ibs['competApur'] ?? '';
-                       $stdAjuste->vIBSAjuste = number_format((float)($ibs['vIBSAjuste'] ?? 0), 2, '.', '');
-                       $stdAjuste->vCBSAjuste = number_format((float)($ibs['vCBSAjuste'] ?? 0), 2, '.', '');
+                       $stdAjuste->vIBSAjuste = formatarDecimal(($ibs['vIBSAjuste'] ?? 0), 2);
+                       $stdAjuste->vCBSAjuste = formatarDecimal(($ibs['vCBSAjuste'] ?? 0), 2);
 
                        $nfe->tagIBSCBSAjuste($stdAjuste);
                    }
@@ -750,14 +751,14 @@ class Nfe
            if ($totalIBS > 0 || $totalCBS > 0 || $totalBC_IBSCBS > 0) {
                // 1. Total de IS
                // $stdISTot = new \stdClass();
-               // $stdISTot->vIS = number_format($totalIS, 2, '.', '');
+               // $stdISTot->vIS = formatarDecimal($totalIS, 2);
                // $nfe->tagISTot($stdISTot);
 
                // 2. Totais de IBS/CBS
                $stdIBSCBSTot = new \stdClass();
-               $stdIBSCBSTot->vBCIBSCBS = number_format($totalBC_IBSCBS, 2, '.', '');
-               $stdIBSCBSTot->gIBS_vIBS = number_format($totalIBS, 2, '.', '');
-               $stdIBSCBSTot->gCBS_vCBS = number_format($totalCBS, 2, '.', '');
+               $stdIBSCBSTot->vBCIBSCBS = formatarDecimal($totalBC_IBSCBS, 2);
+               $stdIBSCBSTot->gIBS_vIBS = formatarDecimal($totalIBS, 2);
+               $stdIBSCBSTot->gCBS_vCBS = formatarDecimal($totalCBS, 2);
                $nfe->tagIBSCBSTot($stdIBSCBSTot);
            }
        }
@@ -770,7 +771,7 @@ class Nfe
 
        $stdTotal = new \stdClass();
        // Formatação do valor total da nota
-       $stdTotal->vNFTot = number_format($totalNota, 2, '.', '');
+       $stdTotal->vNFTot = formatarDecimal($totalNota, 2);
        $nfe->tagtotal($stdTotal);
 
         // ===== TRANSPORTE =====
@@ -830,8 +831,8 @@ class Nfe
                 $std->nVol  = $vol['numeracao'] ?? '';
             }
 
-            $std->pesoL = number_format($pesoL, 3, '.', '');
-            $std->pesoB = number_format($pesoB, 3, '.', '');
+            $std->pesoL = formatarDecimal($pesoL, 3);
+            $std->pesoB = formatarDecimal($pesoB, 3);
 
             $nfe->tagvol($std);
         }
@@ -852,7 +853,7 @@ class Nfe
         } else {
             // 1 = NF-e Normal (Venda)
             $std->tPag = '01'; // Tipo de pagamento (01 = dinheiro, 02 = cheque, 03 = cartão, 15 = PIX)
-            $std->vPag = number_format($totalProdutos, 2, '.', ''); // Valor pago pelo cliente
+            $std->vPag = formatarDecimal($totalProdutos, 2); // Valor pago pelo cliente
         }
 
         $nfe->tagdetPag($std);
@@ -920,7 +921,7 @@ class Nfe
                 'codigo' => $codigoSituacaoNF
             ];
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return [
                 'success' => false,
                 'erro' => $e->getMessage(),
@@ -1008,7 +1009,7 @@ class Nfe
                 emitirErro($motivo, 400, $codigo);
             }
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             emitirErro($e->getMessage(), 500);
         }
     }
@@ -1094,7 +1095,7 @@ class Nfe
                 );
             }
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             emitirErro($e->getMessage(), 500);
         }
     }
@@ -1166,7 +1167,7 @@ class Nfe
                 ]
             );
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             emitirErro($e->getMessage(), 500);
         }
     }
@@ -1215,7 +1216,7 @@ class Nfe
                 200
             );
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             emitirErro($e->getMessage(), 500);
         }
     }
@@ -1253,7 +1254,7 @@ class Nfe
 
             $this->enviar();
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             emitirErro($e->getMessage(), 500);
         }
     }
@@ -1276,7 +1277,7 @@ class Nfe
                 'motivo' => $std->protNFe->infProt->xMotivo ?? 'Não consultada'
             ];
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Se falhar a consulta, permite o estorno (pode estar offline)
             return [
                 'autorizada' => true,
