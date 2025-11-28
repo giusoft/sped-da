@@ -162,7 +162,8 @@ if (!function_exists('tirarPontos')) {
 
 
 if (!function_exists("desencriptar")) {
-    function desencriptar($senha) {
+    function desencriptar($senha)
+    {
         global $AESKEY;
 
         return openssl_decrypt(
@@ -172,5 +173,13 @@ if (!function_exists("desencriptar")) {
             OPENSSL_RAW_DATA,    // Retorna os dados crus sem qualquer codificação
             str_repeat("\0", 16) // IV (Vetor de Inicialização)
         );
+    }
+}
+
+
+if (!function_exists("formatarDecimal")) {
+    function formatarDecimal($valor, $casas = 2)
+    {
+        return number_format((float) $valor, $casas, '.', '');
     }
 }
