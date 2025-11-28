@@ -192,7 +192,7 @@ class Danfe
             // --- FASE 2: FINALIZAÇÃO (Gera ZIP e limpa temp) ---
             if ($acao === 'finalizar') {
 
-                $baseOutputDir = __DIR__ . "/../output";
+                $baseOutputDir = __DIR__ . "/../storage/output";
                 $userOutputDir = "{$baseOutputDir}/{$cnpj}";
 
                 if (!is_dir($userOutputDir)) mkdir($userOutputDir, 0777, true);
@@ -226,7 +226,7 @@ class Danfe
 
                 emitirSucesso("Lote finalizado", 200, [
                     'arquivo' => $zipFilename,
-                    'caminho_relativo' => "/output/{$cnpj}/{$zipFilename}",
+                    'caminho_relativo' => "/storage/output/{$cnpj}/{$zipFilename}",
                     'total_processado' => $countTotal
                 ]);
             }
