@@ -396,6 +396,7 @@ class Nfe
         $std = new \stdClass();
         $std->xNome = $cli['nome']; // Nome / razão social
         $std->IE = $cli['ie'];
+        $std->indIEDest = (int) $cli['indIEDest'];
 
         if (!empty($cli['cnpj'])) {
             $std->CNPJ = soNumeros($cli['cnpj']); // Documento do destinatário
@@ -404,8 +405,6 @@ class Nfe
                 $std->CPF = soNumeros($cli['cpf']);   // Documento do destinatário
             }
         }
-
-        $std->indIEDest = 9; // (Vai vir nos dados do cliente) // Indicador IE destinatário (1 = Contribuinte, 2 = Isento, 9 = Não contribuinte)
         $nfe->tagdest($std);
 
         $std = new \stdClass();
@@ -422,10 +421,10 @@ class Nfe
 
         // ===== PRODUTOS =====
         $totalProdutos = 0;
-        $totalIS = 0;
-        $totalIBS = 0;
-        $totalCBS = 0;
-        $totalBC_IBSCBS = 0;
+        $totalIs = 0;
+        $totalIbs = 0;
+        $totalCbs = 0;
+        $totalBaseCalculoIbsCbs = 0;
 
         foreach ($this->corpoRequisicao['produtos'] as $i => $prod) {
             $item = $i + 1;
@@ -466,12 +465,12 @@ class Nfe
             if ($icms && !$this->corpoRequisicao['empresa']['desativarImpostosAntigos']) {
                 $std = new \stdClass();
                 $std->item = $item;
-                
+
                 // Dados básicos do ICMS (sempre presentes)
                 $std->orig = (int) ($icms['orig'] ?? 0);
                 $std->CST = str_pad($icms['CST'] ?? '00', 2, '0', STR_PAD_LEFT);
                 $std->modBC = (int) ($icms['modBC'] ?? 3);
-                
+
                 // Base de cálculo e alíquota (podem vir da API)
                 if (isset($icms['vBC'])) {
                     $std->vBC = formatarDecimal($icms['vBC'], 2);
@@ -482,12 +481,12 @@ class Nfe
                 if (isset($icms['vBC']) && isset($icms['aliquota'])) {
                     $std->vICMS = formatarDecimal($icms['vBC'] * $icms['aliquota'] / 100, 2);
                 }
-                
+
                 // Redução de BC
                 if (!empty($icms['pRedBC'])) {
                     $std->pRedBC = formatarDecimal($icms['pRedBC'], 2);
                 }
-                
+
                 // ICMS ST
                 if (!empty($icms['modBCST'])) {
                     $std->modBCST = (int) $icms['modBCST'];
@@ -510,7 +509,7 @@ class Nfe
                 if (!empty($icms['vICMSSTRet'])) {
                     $std->vICMSSTRet = formatarDecimal($icms['vICMSSTRet'], 2);
                 }
-                
+
                 // FCP
                 if (!empty($icms['vBCFCP'])) {
                     $std->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
@@ -542,10 +541,10 @@ class Nfe
                     $std->pIPI = formatarDecimal((float)$ipi['aliquota'], 2);
                     $std->vIPI = formatarDecimal($vProd * ((float)$ipi['aliquota'] / 100), 2);
                 }
-                
+
                 $nfe->tagIPI($std);
             }
-            
+
 
             // ===== PIS =====
             $pis = $impostos['pis'] ?? [];
@@ -644,7 +643,7 @@ class Nfe
                 //     $std->uTrib = $is['uTrib'] ?? 'UN';
                 //     $std->qTrib = formatarDecimal(($is['qTrib'] ?? 0), 4);
                 //     $nfe->tagIS($std);
-                //     $totalIS += $vIS;
+                //     $totalIs += $vIS;
                 // }
 
                // IBS/CBS (Reforma Tributária)
@@ -661,14 +660,14 @@ class Nfe
 
                    if (in_array($cst, $cstPadrao)) {
 
-                       $vBC_IBSCBS = (float)($ibs['vBC'] ?? $vProd);
+                       $valorBaseCalculoIbsCbs = (float)($ibs['vBC'] ?? $vProd);
 
                        $std = new \stdClass();
                        $std->item = $item;
                        $std->CST = $cst;
                        $std->cClassTrib = str_pad($ibs['cClassTrib'] ?? '', 6, '0', STR_PAD_LEFT);
                        $std->indDoacao = (int)($ibs['indDoacao'] ?? 0);
-                       $std->vBC = formatarDecimal($vBC_IBSCBS, 2);
+                       $std->vBC = formatarDecimal($valorBaseCalculoIbsCbs, 2);
 
                        $std->gIBSUF_pIBSUF   = formatarDecimal(($ibs['gIBSUF_pIBSUF'] ?? 0), 4);
                        $std->gIBSUF_vIBSUF   = formatarDecimal(($ibs['gIBSUF_vIBSUF'] ?? 0), 2);
@@ -709,9 +708,9 @@ class Nfe
 
                        $nfe->tagIBSCBS($std);
 
-                       $totalIBS += (float)($ibs['gIBSUF_vIBSUF'] ?? 0) + (float)($ibs['gIBSMun_vIBSMun'] ?? 0);
-                       $totalCBS += (float)($ibs['gCBS_vCBS'] ?? 0);
-                       $totalBC_IBSCBS += $vBC_IBSCBS;
+                       $totalIbs += (float)($ibs['gIBSUF_vIBSUF'] ?? 0) + (float)($ibs['gIBSMun_vIBSMun'] ?? 0);
+                       $totalCbs += (float)($ibs['gCBS_vCBS'] ?? 0);
+                       $totalBaseCalculoIbsCbs += $valorBaseCalculoIbsCbs;
 
                        if ($cst == '222' && isset($ibs['pRedutorBC'])) {
                            $stdRed = new \stdClass();
@@ -730,8 +729,8 @@ class Nfe
                        $stdMono->vCBSMono  = formatarDecimal(($ibs['vCBSMono'] ?? 0), 2);
 
                        $nfe->tagIBSCBSMono($stdMono);
-                       $totalIBS += (float)($ibs['vIBSMono'] ?? 0);
-                       $totalCBS += (float)($ibs['vCBSMono'] ?? 0);
+                       $totalIbs += (float)($ibs['vIBSMono'] ?? 0);
+                       $totalCbs += (float)($ibs['vCBSMono'] ?? 0);
                    } elseif ($cst === '800') {
                        $stdTransf = new \stdClass();
                        $stdTransf->item = $item;
@@ -763,26 +762,26 @@ class Nfe
            && !in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])
        ) {
 
-           if ($totalIBS > 0 || $totalCBS > 0 || $totalBC_IBSCBS > 0) {
+           if ($totalIbs > 0 || $totalCbs > 0 || $totalBaseCalculoIbsCbs > 0) {
                // 1. Total de IS
                // $stdISTot = new \stdClass();
-               // $stdISTot->vIS = formatarDecimal($totalIS, 2);
+               // $stdISTot->vIS = formatarDecimal($totalIs, 2);
                // $nfe->tagISTot($stdISTot);
 
                // 2. Totais de IBS/CBS
-               $stdIBSCBSTot = new \stdClass();
-               $stdIBSCBSTot->vBCIBSCBS = formatarDecimal($totalBC_IBSCBS, 2);
-               $stdIBSCBSTot->gIBS_vIBS = formatarDecimal($totalIBS, 2);
-               $stdIBSCBSTot->gCBS_vCBS = formatarDecimal($totalCBS, 2);
-               $nfe->tagIBSCBSTot($stdIBSCBSTot);
+               $stdTotalIbsCbs = new \stdClass();
+               $stdTotalIbsCbs->vBCIBSCBS = formatarDecimal($totalBaseCalculoIbsCbs, 2);
+               $stdTotalIbsCbs->gIBS_vIBS = formatarDecimal($totalIbs, 2);
+               $stdTotalIbsCbs->gCBS_vCBS = formatarDecimal($totalCbs, 2);
+               $nfe->tagIBSCBSTot($stdTotalIbsCbs);
            }
        }
 
-       $totalIBS = $totalIBS ?? 0.00;
-       $totalCBS = $totalCBS ?? 0.00;
+       $totalIbs = $totalIbs ?? 0.00;
+       $totalCbs = $totalCbs ?? 0.00;
 
-       // $totalNota = $totalProdutos + $totalIS + $totalIBS + $totalCBS; // IS está comentado
-       $totalNota = $totalProdutos + $totalIBS + $totalCBS;
+       // $totalNota = $totalProdutos + $totalIs + $totalIbs + $totalCbs; // IS está comentado
+       $totalNota = $totalProdutos + $totalIbs + $totalCbs;
 
        $stdTotal = new \stdClass();
        // Formatação do valor total da nota
