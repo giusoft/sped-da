@@ -344,7 +344,7 @@ class Nfe
 
         $std->indPres = 1; // Indicador de presença do comprador (0 = Não se aplica, 1 = Presencial, 2 = Internet, 3 = Teleatendimento)
         $std->procEmi = 0; // Processo de emissão (0 = Emissão pelo próprio contribuinte, 1 = Avulsa Fisco, 2 = Avulsa contrib. com certificado, 3 = Aplicativo do Fisco)
-        $std->verProc = 'API GNotas 1.0'; // Versão do aplicativo emissor
+        $std->verProc = 'API EmiteNota 1.0'; // Versão do aplicativo emissor
         $nfe->tagide($std);
 
         if (!empty($this->corpoRequisicao['chaveEstorno'])) {
@@ -890,9 +890,6 @@ class Nfe
 
                     $xmlProtocolado = Complements::toAuthorize($xmlAssinado, $response);
 
-                    // Salva XML
-                    $this->salvarXML($chave, $xmlProtocolado);
-
                     $mensagem = "Autorizada";
                     if (isset($std->protNFe->infProt->xMotivo)) {
                         $mensagem = $std->protNFe->infProt->xMotivo;
@@ -977,7 +974,6 @@ class Nfe
 
                 // Junta o evento enviado com a resposta recebida usando Complements
                 $xmlProtocolado = Complements::toAuthorize($xmlEvento, $response);
-                // $this->salvarXMLCancelado($chave, $xmlProtocolado);
 
                 $mensagem = 'Cancelamento homologado';
                 if (isset($std->retEvento->infEvento->xMotivo)) {
@@ -1058,8 +1054,6 @@ class Nfe
                 if (isset($std->infInut->nProt)) {
                     $protocolo =  $std->infInut->nProt;
                 }
-
-                $this->salvarXMLInutilizado($std->infInut, $response);
 
                 $motivo = 'Inutilização homologada';
                 if (isset($std->infInut->xMotivo)) {
@@ -1155,7 +1149,6 @@ class Nfe
             // 3. JUNTA OS DOIS XMLs (Requisição + Resposta)
             $xmlProtocolado = Complements::toAuthorize($xmlEvento, $response);
 
-            // $this->salvarXMLCCe($chave, $xmlProtocolado, $nSeqEvento);
 
             $dataEvento = null;
             if (isset($std->retEvento->infEvento->dhRegEvento)) {
@@ -1292,78 +1285,4 @@ class Nfe
             ];
         }
     }
-
-
-    ### SALVAR NO BANCO DE DADOS ###
-    public function salvarXMLInutilizado($infInut, $xml)
-    {
-        $cnpjLimpo = soNumeros($this->corpoRequisicao['cnpj_emitente']);
-        $dir = __DIR__ . "/../storage/notas/{$cnpjLimpo}/inutilizadas";
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-
-        $ano = date('Y');
-        if (isset($infInut->ano)) {
-            $ano = $infInut->ano;
-        }
-
-        $serie = 'NA';
-        if (isset($infInut->serie)) {
-            $serie = $infInut->serie;
-        }
-
-        $nIni = 'NA';
-        if (isset($infInut->nNFIni)) {
-            $nIni = $infInut->nNFIni;
-        }
-
-        $nFin = 'NA';
-        if (isset($infInut->nNFFin)) {
-            $nFin = $infInut->nNFFin;
-        }
-
-        $nomeArquivo = "{$ano}-{$serie}-{$nIni}-{$nFin}-inut.xml";
-
-        file_put_contents("{$dir}/{$nomeArquivo}", $xml);
-    }
-
-
-    ### SALVAR NO BANCO DE DADOS ###
-    public function salvarXML($chave, $xml)
-    {
-        $cnpjLimpo = soNumeros($this->corpoRequisicao['cnpj_emitente']);
-        $dir = __DIR__ . "/../storage/notas/{$cnpjLimpo}/autorizadas";
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-        file_put_contents("{$dir}/{$chave}-nfe.xml", $xml);
-    }
-
-
-    ### SALVAR NO BANCO DE DADOS ###
-    public function salvarXMLCancelado($chave, $xml)
-    {
-        $cnpjLimpo = soNumeros($this->corpoRequisicao['cnpj_emitente']);
-        $dir = __DIR__ . "/../storage/notas/{$cnpjLimpo}/canceladas";
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-        $nomeArquivo = str_replace('-nfe', '', $chave) . '-canc.xml';
-        file_put_contents("{$dir}/{$nomeArquivo}", $xml);
-    }
-
-    ### SALVAR NO BANCO DE DADOS ###
-    public function salvarXMLCCe($chave, $xml, $sequencia)
-    {
-        $cnpjLimpo = preg_replace('/[^0-9]/', '', $this->corpoRequisicao['cnpj_emitente']);
-        $dir = __DIR__ . "/../storage/notas/{$cnpjLimpo}/cce";
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-
-        $nomeArquivo = str_replace('-nfe', '', $chave) . "-cce-{$sequencia}.xml";
-        file_put_contents("{$dir}/{$nomeArquivo}", $xml);
-    }
-
 }
