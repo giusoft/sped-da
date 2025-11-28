@@ -5,6 +5,9 @@ namespace App\Model;
 use NFePHP\NFe\Tools;
 use NFePHP\NFe\Common\Standardize;
 
+date_default_timezone_set('America/Bahia');
+
+
 class Sefaz
 {
     private $tools;
@@ -20,45 +23,21 @@ class Sefaz
     public function consultarStatusSefaz()
     {
         try {
-
             $response = $this->tools->sefazStatus();
 
             $stdCl = new Standardize($response);
             $std = $stdCl->toStd();
 
-            $cStat = null;
-            if ($std->cStat) {
-                $cStat = $std->cStat;
-            }
-
-            $xMotivo = 'Resposta desconhecida';
-            if ($std->xMotivo) {
-                $xMotivo = $std->xMotivo;
-            }
-
-            $ambiente = 'Homologação';
-            if ($std->tpAmb == 1 || $this->corpoRequisicao['tpAmb'] == 1) {
-                $ambiente = 'Produção';
-            }
-
-            $codigoUf = $this->corpoRequisicao['siglaUF'];
-            if ($std->cUF) {
-                $codigoUf = $std->cUF;
-            }
-
-            $tempoMedio = null;
-            if (isset($std->tMed)) {
-                $tempoMedio = $std->tMed;
-            }
+            $ehProducao = ($std->tpAmb ?? 0) == 1 || ($this->corpoRequisicao['tpAmb'] ?? 0) == 1;
 
             emitirSucesso([
-                'operacional' => ($cStat == 107),
-                'status_code' => $cStat,
-                'motivo' => $xMotivo,
-                'ambiente' => $ambiente,
-                'uf' => $codigoUf,
-                'data_hora_consulta' => $std->dhRecbto,
-                'tempo_medio_ms' => $tempoMedio
+                'operacional'        => ($std->cStat ?? 0) == 107,
+                'status_code'        => $std->cStat ?? null,
+                'motivo'             => $std->xMotivo ?? 'Resposta desconhecida',
+                'ambiente'           => $ehProducao ? 'Produção' : 'Homologação',
+                'uf'                 => $std->cUF ?? $this->corpoRequisicao['siglaUF'],
+                'data_hora_consulta' => date('d/m/Y H:i:s'),
+                'tempo_medio_ms'     => $std->tMed ?? null
             ], 200);
 
         } catch (\Exception $e) {
