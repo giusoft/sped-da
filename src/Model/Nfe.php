@@ -40,6 +40,16 @@ class Nfe
         $this->default['cnjpAutorizadoSefaz'] = '13937073000156';
         $this->default['codigoPais'] = 1058; // Código do Brasil = 1058
         $this->default['modoContingencia'] = [6, 7];
+        $this->default['ufs_svc_rs'] = [
+            '13', // AM - Amazonas
+            '29', // BA - Bahia
+            '52', // GO - Goiás
+            '21', // MA - Maranhão
+            '50', // MS - Mato Grosso do Sul
+            '51', // MT - Mato Grosso
+            '26', // PE - Pernambuco
+            '41', // PR - Paraná
+        ];
     }
 
 
@@ -49,11 +59,15 @@ class Nfe
 
             $retorno = 'XML submetido com sucesso para processamento';
             if (in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])) {
+
+                $cUF = $this->corpoRequisicao['empresa']['cUF'];
+                $tipoContingencia = in_array($cUF, $this->default['ufs_svc_rs']) ? 'SVCRS' : 'SVCAN';
+
                 $dadosContingencia = json_encode([
                     "motive" => "SEFAZ fora do AR", // Temos que passar o motivo que entrou em Contingencia
                     "timestamp" => strtotime($this->corpoRequisicao['dataHoraContingencia']),
                     "tpEmis" => $this->corpoRequisicao['modoOperacao'],
-                    "type" => "SVCRS" // Pegar esse dado dinamicamente
+                    "type" => $tipoContingencia
                 ]);
 
                 $this->tools->contingency = new Contingency($dadosContingencia);
