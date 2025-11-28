@@ -15,8 +15,10 @@ class Certificado
     {
         $cnpjLimpo = soNumeros($this->corpoRequisicao['cnpj_emitente']);
 
-        $diretorioCertificados = __DIR__ . "/../Certificados/{$cnpjLimpo}/";
+        $diretorioCertificados = __DIR__ . "/../storage/certificados/{$cnpjLimpo}/";
         $caminhoCompletoCertificado = $diretorioCertificados . "certificado.pfx";
+
+        var_dump($diretorioCertificados); exit;
 
         if (file_exists($caminhoCompletoCertificado) || $this->corpoRequisicao['certificado']) {
             // Certificado
@@ -73,8 +75,8 @@ class Certificado
 
         // Definir diretórios
         $cnpjAtual = soNumeros($this->corpoRequisicao['cnpj_emitente']);
-        $diretorioCerts = __DIR__ . "/../Certificados/{$cnpjAtual}/";
-        $diretorioAntigos = $diretorioCerts . "CertificadosAntigos/";
+        $diretorioCerts = __DIR__ . "/../storage/certificados/{$cnpjAtual}/";
+        $diretorioAntigos = $diretorioCerts . "certificadosAntigos/";
 
         // Criar diretórios se não existirem
         if (!is_dir($diretorioCerts)) {

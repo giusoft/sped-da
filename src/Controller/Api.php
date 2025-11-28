@@ -65,7 +65,7 @@ class Api
 
         $senhaCertificado = desencriptar($this->corpoRequisicao['empresa']['senhaCertificado']);
 
-        $certPath = __DIR__ . "/../Certificados/{$cnpjLimpo}/certificado.pfx";
+        $certPath = __DIR__ . "/../storage/certificados/{$cnpjLimpo}/certificado.pfx";
 
         if (!file_exists($certPath)) {
             emitirErro("Certificado não encontrado!", 400);
