@@ -949,11 +949,11 @@ class Nfe
             }
 
             if (!$chave || !$protocolo || !$justificativa) {
-                emitirErro("Os campos: chave, protocolo e justificativa sao obrigatorios", 400);
+                emitirErro("Os campos: chave, protocolo e justificativa são obrigatórios", 400);
             }
 
             if (strlen($justificativa) < 15) {
-                emitirErro("A justificativa deve ter no minimo 15 caracteres", 400);
+                emitirErro("A justificativa deve ter no mínimo 15 caracteres", 400);
             }
 
             // Envia o cancelamento e captura tanto a requisição quanto a resposta
@@ -1024,7 +1024,7 @@ class Nfe
                 || !isset($this->corpoRequisicao['numero_final'])
                 || !isset($this->corpoRequisicao['justificativa'])
             ) {
-                emitirErro('Os campos: cnpj_emitente, serie, numero_inicial, numero_final e justificativa sao obrigatorios', 400);
+                emitirErro('Os campos: cnpj_emitente, serie, numero_inicial, numero_final e justificativa são obrigatórios', 400);
                 return;
             }
 
@@ -1115,12 +1115,12 @@ class Nfe
             }
 
             if (!$chave || !$correcao) {
-                emitirErro("Os campos: chave e correcao sao obrigatorios", 400);
+                emitirErro("Os campos: chave e correção são obrigatórios", 400);
                 return;
             }
 
             if (strlen($correcao) < 15) {
-                emitirErro("A correcao deve ter no minimo 15 caracteres", 400);
+                emitirErro("A correçao deve ter no mínimo 15 caracteres", 400);
 
             }
 
@@ -1182,7 +1182,7 @@ class Nfe
             }
 
             if (!$chave || strlen($chave) != 44) {
-                emitirErro("Chave de acesso valida eh obrigatoria", 400);
+                emitirErro("Chave de acesso válida é obrigatória", 400);
             }
 
             $response = $this->tools->sefazConsultaChave($chave);
