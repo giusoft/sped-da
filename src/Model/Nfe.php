@@ -28,6 +28,7 @@ class Nfe
     public function carregarDadosDefault()
     {
         $this->default['versao'] = '4.00';
+        $this->default['versaoLayoutNFe'] = 'PL_010_V1.30';
         $this->default['modelo'] = 55;
         $this->default['dataEmissao'] = date('Y-m-d\TH:i:sP');
         $this->default['dataSaidaEntrada'] = date('Y-m-d\TH:i:sP');
@@ -278,7 +279,7 @@ class Nfe
 
     public function montarXML()
     {
-        $nfe = new MakeDev('PL_010_V1.30');
+        $nfe = new MakeDev($this->default['versaoLayoutNFe']);
 
         // ===== IDENTIFICAÇÃO DA NFe =====
         $std = new \stdClass();
