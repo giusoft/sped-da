@@ -4,7 +4,7 @@
 
 empresa="$1"
 caminhoCompleto="$2"
-container="gnotas_app"
+container="emitenota_app"
 
 # --- Validações ---
 

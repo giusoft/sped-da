@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: gnotas_app
+    container_name: emitenota_app
     restart: unless-stopped
     volumes:
       # Mapeia o projeto INTEIRO para o workdir do container
@@ -12,12 +12,12 @@ services:
       # Mantemos o volume anônimo para a pasta vendor para evitar sobrescrever
       - /var/www/html/vendor
     networks:
-      - gnotas_network
+      - emitenota_network
 
   # Serviço Apache
   webserver:
     image: httpd:2.4
-    container_name: gnotas_webserver_apache
+    container_name: emitenota_webserver_apache
     restart: unless-stopped
     ports:
       - "8080:80"
@@ -28,8 +28,8 @@ services:
     depends_on:
       - app
     networks:
-      - gnotas_network
+      - emitenota_network
 
 networks:
-  gnotas_network:
+  emitenota_network:
     driver: bridge

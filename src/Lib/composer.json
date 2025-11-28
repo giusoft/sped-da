@@ -1,5 +1,5 @@
 {
-  "name": "seu-vendor/gnotas-api",
+  "name": "seu-vendor/emitenota-api",
   "description": "API para emissão de notas fiscais utilizando NFePHP.",
   "type": "project",
   "require": {
