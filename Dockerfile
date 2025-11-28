@@ -57,5 +57,14 @@ RUN chown -R www-data:www-data /var/www/html
 # [cite_start]Expõe a porta padrão do PHP-FPM [cite: 4]
 EXPOSE 9000
 
+# Configuração de Fuso Horário
+ENV TZ=America/Bahia
+
+# 1. Configura o Linux (Debian)
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# 2. Configura o PHP (cria um ini personalizado)
+RUN printf '[PHP]\ndate.timezone = "%s"\n' "$TZ" > /usr/local/etc/php/conf.d/tzone.ini
+
 # [cite_start]Inicia o PHP-FPM [cite: 4]
 CMD ["php-fpm"]
