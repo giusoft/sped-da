@@ -18,8 +18,6 @@ class Certificado
         $diretorioCertificados = __DIR__ . "/../storage/certificados/{$cnpjLimpo}/";
         $caminhoCompletoCertificado = $diretorioCertificados . "certificado.pfx";
 
-        var_dump($diretorioCertificados); exit;
-
         if (file_exists($caminhoCompletoCertificado) || $this->corpoRequisicao['certificado']) {
             // Certificado
             if ($this->corpoRequisicao['certificado']) {
