@@ -32,15 +32,15 @@ class Danfe
             if ($xml === false) {
                 emitirErro("O XML fornecido não é um base64 válido.", 400);
             }
-            
+
             $danfe = new NFeDanfe($xml);
             $danfe->setGerarInformacoesAutomaticas(true);
-            
+
             $espacos = str_repeat(chr(160), 260);
             $creditos = $espacos . 'Giusoft Tecnologia www.giusoft.com.br';
-            
+
             $danfe->creditsIntegratorFooter($creditos, false);
-            
+
             $logotipo = $this->getLogotipo($this->corpoRequisicao['cnpj_emitente']);
             $pdf = $danfe->render($logotipo);
 
@@ -65,19 +65,19 @@ class Danfe
             if (empty($this->corpoRequisicao['xml'])) {
                 $erros[] = "O campo 'xml' (contendo o XML em base64) é obrigatório.";
             }
-            
+
             if (empty($this->corpoRequisicao['chave'])) {
                 $erros[] = "O campo 'chave' é obrigatório.";
             }
-            
+
             if (empty($this->corpoRequisicao['sequencia'])) {
                 $erros[] = "O campo 'sequencia' é obrigatório.";
             }
-            
+
             if (empty($this->corpoRequisicao['cnpj_emitente'])) {
                 $erros[] = "O campo 'cnpj_emitente' é obrigatório (necessário para nomear o PDF salvo).";
             }
-            
+
             if (!empty($erros)) {
                 emitirErro(implode("\n", $erros), 400);
                 return;
@@ -107,8 +107,8 @@ class Danfe
             $pdf = $daEvento->render($logotipo);
 
             emitirSucesso(
-                "DANFE CC-e gerado com sucesso", 
-                200, 
+                "DANFE CC-e gerado com sucesso",
+                200,
                 ['pdf_base64' => base64_encode($pdf)]
             );
 
@@ -277,14 +277,19 @@ class Danfe
 
             $danfe = new NFeDanfe($xml);
             $danfe->setGerarInformacoesAutomaticas(true);
-            
+
+            $espacos = str_repeat(chr(160), 260);
+            $creditos = $espacos . 'Giusoft Tecnologia www.giusoft.com.br';
+
+            $danfe->creditsIntegratorFooter($creditos, false);
+
             $logotipo = $this->getLogotipo($this->corpoRequisicao['cnpj_emitente']);
             $pdf = $danfe->render($logotipo);
 
             $pdfBase64 = base64_encode($pdf);
 
             emitirSucesso(
-                "DANFE gerado com sucesso",
+                "DANFE de cancelamento gerado com sucesso",
                 200,
                 ['pdf_base64' => $pdfBase64]
             );
