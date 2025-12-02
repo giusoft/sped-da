@@ -795,7 +795,8 @@ class Nfe
         $totalCbs = $totalCbs ?? 0.00;
 
         // $totalNota = $totalProdutos + $totalIs + $totalIbs + $totalCbs; // IS está comentado
-        $totalNota = $totalProdutos + $totalIbs + $totalCbs;
+        // $totalNota = $totalProdutos + $totalIbs + $totalCbs; // Comentado porque se não me engano em 2026 esse valor não vai ser acrescentado ao valor total da nota
+        $totalNota = $totalProdutos;
 
         $stdTotal = new \stdClass();
         // Formatação do valor total da nota
