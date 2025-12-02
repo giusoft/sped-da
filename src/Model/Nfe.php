@@ -652,183 +652,183 @@ class Nfe
                 $ibs = $impostos['ibscbs'] ?? [];
 
                 // Só processa se houver dados de IBS/CBS
-                if (!$this->corpoRequisicao['empresa']['usarContingenciaIbsCbs']
+            if (!$this->corpoRequisicao['empresa']['usarContingenciaIbsCbs']
                 && !in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])
-                ) {
-                    // IS (Imposto Seletivo)
-                    // $is = $impostos['is'] ?? [];
-                    // $vIS = (float)($is['vIS'] ?? 0);
-                    // if ($is) {
-                    //     $std = new \stdClass();
-                    //     $std->item = $item;
-                    //     $std->CSTIS = str_pad($is['CSTIS'] ?? '000', 3, '0', STR_PAD_LEFT);
-                    //     $std->cClassTribIS = str_pad($is['cClassTribIS'] ?? '000000', 6, '0', STR_PAD_LEFT);
-                    //     $std->vBCIS = formatarDecimal(($is['vBCIS'] ?? 0), 2);
-                    //     $std->pIS = formatarDecimal(($is['pIS'] ?? 0), 2);
-                    //     $std->vIS = formatarDecimal($vIS, 2);
-                    //     $std->uTrib = $is['uTrib'] ?? 'UN';
-                    //     $std->qTrib = formatarDecimal(($is['qTrib'] ?? 0), 4);
-                    //     $nfe->tagIS($std);
-                    //     $totalIs += $vIS;
-                    // }
+            ) {
+                // IS (Imposto Seletivo)
+                // $is = $impostos['is'] ?? [];
+                // $vIS = (float)($is['vIS'] ?? 0);
+                // if ($is) {
+                //     $std = new \stdClass();
+                //     $std->item = $item;
+                //     $std->CSTIS = str_pad($is['CSTIS'] ?? '000', 3, '0', STR_PAD_LEFT);
+                //     $std->cClassTribIS = str_pad($is['cClassTribIS'] ?? '000000', 6, '0', STR_PAD_LEFT);
+                //     $std->vBCIS = formatarDecimal(($is['vBCIS'] ?? 0), 2);
+                //     $std->pIS = formatarDecimal(($is['pIS'] ?? 0), 2);
+                //     $std->vIS = formatarDecimal($vIS, 2);
+                //     $std->uTrib = $is['uTrib'] ?? 'UN';
+                //     $std->qTrib = formatarDecimal(($is['qTrib'] ?? 0), 4);
+                //     $nfe->tagIS($std);
+                //     $totalIs += $vIS;
+                // }
 
-                    // IBS/CBS (Reforma Tributária)
-                    $ibs = $impostos['ibscbs'] ?? [];
+               // IBS/CBS (Reforma Tributária)
+               $ibs = $impostos['ibscbs'] ?? [];
 
-                    // Só processa se houver dados de IBS/CBS
-                    if ($ibs) {
-                        $cst = str_pad($ibs['CST'] ?? '000', 3, '0', STR_PAD_LEFT);
+               // Só processa se houver dados de IBS/CBS
+               if ($ibs) {
+                   $cst = str_pad($ibs['CST'] ?? '000', 3, '0', STR_PAD_LEFT);
 
-                        $cstPadrao = ['000', '010', '011', '200', '220', '221', '222', '510', '515', '550', '830'];
+                    $cstPadrao = ['000', '010', '011', '200', '220', '221', '222', '510', '515', '550', '830'];
 
-                        if (in_array($cst, $cstPadrao)) {
+                   if (in_array($cst, $cstPadrao)) {
 
-                            $valorBaseCalculoIbsCbs = (float)($ibs['vBC'] ?? $vProd);
+                       $valorBaseCalculoIbsCbs = (float)($ibs['vBC'] ?? $vProd);
 
-                            $std = new \stdClass();
-                            $std->item = $item;
-                            $std->CST = $cst;
-                            $std->cClassTrib = str_pad($ibs['cClassTrib'] ?? '', 6, '0', STR_PAD_LEFT);
-                            $std->indDoacao = (int)($ibs['indDoacao'] ?? 0);
-                            $std->vBC = formatarDecimal($valorBaseCalculoIbsCbs, 2);
+                       $std = new \stdClass();
+                       $std->item = $item;
+                       $std->CST = $cst;
+                       $std->cClassTrib = str_pad($ibs['cClassTrib'] ?? '', 6, '0', STR_PAD_LEFT);
+                       $std->indDoacao = (int)($ibs['indDoacao'] ?? 0);
+                       $std->vBC = formatarDecimal($valorBaseCalculoIbsCbs, 2);
 
-                            $std->gIBSUF_pIBSUF   = formatarDecimal(($ibs['gIBSUF_pIBSUF'] ?? 0), 4);
-                            $std->gIBSUF_vIBSUF   = formatarDecimal(($ibs['gIBSUF_vIBSUF'] ?? 0), 2);
-                            $std->gIBSMun_pIBSMun = formatarDecimal(($ibs['gIBSMun_pIBSMun'] ?? 0), 4);
-                            $std->gIBSMun_vIBSMun = formatarDecimal(($ibs['gIBSMun_vIBSMun'] ?? 0), 2);
-                            $std->gCBS_pCBS       = formatarDecimal(($ibs['gCBS_pCBS'] ?? 0), 4);
-                            $std->gCBS_vCBS       = formatarDecimal(($ibs['gCBS_vCBS'] ?? 0), 2);
+                       $std->gIBSUF_pIBSUF   = formatarDecimal(($ibs['gIBSUF_pIBSUF'] ?? 0), 4);
+                       $std->gIBSUF_vIBSUF   = formatarDecimal(($ibs['gIBSUF_vIBSUF'] ?? 0), 2);
+                       $std->gIBSMun_pIBSMun = formatarDecimal(($ibs['gIBSMun_pIBSMun'] ?? 0), 4);
+                       $std->gIBSMun_vIBSMun = formatarDecimal(($ibs['gIBSMun_vIBSMun'] ?? 0), 2);
+                       $std->gCBS_pCBS       = formatarDecimal(($ibs['gCBS_pCBS'] ?? 0), 4);
+                       $std->gCBS_vCBS       = formatarDecimal(($ibs['gCBS_vCBS'] ?? 0), 2);
 
-                            if (in_array($cst, ['011', '200', '515'])) {
-                                $std->gIBSUF_pRedAliq   = formatarDecimal(($ibs['gIBSUF_pRedAliq'] ?? 0), 4);
-                                $std->gIBSUF_pAliqEfet  = formatarDecimal(($ibs['gIBSUF_pAliqEfet'] ?? 0), 4);
-                                $std->gIBSMun_pRedAliq  = formatarDecimal(($ibs['gIBSMun_pRedAliq'] ?? 0), 4);
-                                $std->gIBSMun_pAliqEfet = formatarDecimal(($ibs['gIBSMun_pAliqEfet'] ?? 0), 4);
-                                $std->gCBS_pRedAliq     = formatarDecimal(($ibs['gCBS_pRedAliq'] ?? 0), 4);
-                                $std->gCBS_pAliqEfet    = formatarDecimal(($ibs['gCBS_pAliqEfet'] ?? 0), 4);
-                            }
+                       if (in_array($cst, ['011', '200', '515'])) {
+                           $std->gIBSUF_pRedAliq   = formatarDecimal(($ibs['gIBSUF_pRedAliq'] ?? 0), 4);
+                           $std->gIBSUF_pAliqEfet  = formatarDecimal(($ibs['gIBSUF_pAliqEfet'] ?? 0), 4);
+                           $std->gIBSMun_pRedAliq  = formatarDecimal(($ibs['gIBSMun_pRedAliq'] ?? 0), 4);
+                           $std->gIBSMun_pAliqEfet = formatarDecimal(($ibs['gIBSMun_pAliqEfet'] ?? 0), 4);
+                           $std->gCBS_pRedAliq     = formatarDecimal(($ibs['gCBS_pRedAliq'] ?? 0), 4);
+                           $std->gCBS_pAliqEfet    = formatarDecimal(($ibs['gCBS_pAliqEfet'] ?? 0), 4);
+                       }
 
-                            if ($cst === '515') {
-                                $std->gIBSUF_pDif  = formatarDecimal(($ibs['gIBSUF_pDif'] ?? 0), 4);
-                                $std->gIBSUF_vDif  = formatarDecimal(($ibs['gIBSUF_vDif'] ?? 0), 2);
-                                $std->gIBSMun_pDif = formatarDecimal(($ibs['gIBSMun_pDif'] ?? 0), 4);
-                                $std->gIBSMun_vDif = formatarDecimal(($ibs['gIBSMun_vDif'] ?? 0), 2);
-                                $std->gCBS_pDif    = formatarDecimal(($ibs['gCBS_pDif'] ?? 0), 4);
-                                $std->gCBS_vDif    = formatarDecimal(($ibs['gCBS_vDif'] ?? 0), 2);
-                            }
+                       if ($cst === '515') {
+                           $std->gIBSUF_pDif  = formatarDecimal(($ibs['gIBSUF_pDif'] ?? 0), 4);
+                           $std->gIBSUF_vDif  = formatarDecimal(($ibs['gIBSUF_vDif'] ?? 0), 2);
+                           $std->gIBSMun_pDif = formatarDecimal(($ibs['gIBSMun_pDif'] ?? 0), 4);
+                           $std->gIBSMun_vDif = formatarDecimal(($ibs['gIBSMun_vDif'] ?? 0), 2);
+                           $std->gCBS_pDif    = formatarDecimal(($ibs['gCBS_pDif'] ?? 0), 4);
+                           $std->gCBS_vDif    = formatarDecimal(($ibs['gCBS_vDif'] ?? 0), 2);
+                       }
 
-                            if (!empty($ibs['gIBSUF_vDevTrib'])) {
-                                $std->gIBSUF_vDevTrib = formatarDecimal($ibs['gIBSUF_vDevTrib'], 2);
-                            }
+                       if (!empty($ibs['gIBSUF_vDevTrib'])) {
+                           $std->gIBSUF_vDevTrib = formatarDecimal($ibs['gIBSUF_vDevTrib'], 2);
+                       }
 
-                            if (!empty($ibs['gIBSMun_vDevTrib'])) {
-                                $std->gIBSMun_vDevTrib = formatarDecimal($ibs['gIBSMun_vDevTrib'], 2);
-                            }
+                       if (!empty($ibs['gIBSMun_vDevTrib'])) {
+                           $std->gIBSMun_vDevTrib = formatarDecimal($ibs['gIBSMun_vDevTrib'], 2);
+                       }
 
-                            if (!empty($ibs['gCBS_vDevTrib'])) {
-                                $std->gCBS_vDevTrib = formatarDecimal($ibs['gCBS_vDevTrib'], 2);
-                            }
+                       if (!empty($ibs['gCBS_vDevTrib'])) {
+                           $std->gCBS_vDevTrib = formatarDecimal($ibs['gCBS_vDevTrib'], 2);
+                       }
 
-                            $nfe->tagIBSCBS($std);
+                       $nfe->tagIBSCBS($std);
 
-                            $totalIbs += (float)($ibs['gIBSUF_vIBSUF'] ?? 0) + (float)($ibs['gIBSMun_vIBSMun'] ?? 0);
-                            $totalCbs += (float)($ibs['gCBS_vCBS'] ?? 0);
-                            $totalBaseCalculoIbsCbs += $valorBaseCalculoIbsCbs;
+                       $totalIbs += (float)($ibs['gIBSUF_vIBSUF'] ?? 0) + (float)($ibs['gIBSMun_vIBSMun'] ?? 0);
+                       $totalCbs += (float)($ibs['gCBS_vCBS'] ?? 0);
+                       $totalBaseCalculoIbsCbs += $valorBaseCalculoIbsCbs;
 
-                            if ($cst === '550' && !empty($ibs['CSTReg'])) {
-                                    $stdReg = new \stdClass();
-                                    $stdReg->item = $item;
-                                    $stdReg->CSTReg = str_pad($ibs['CSTReg'], 3, '0', STR_PAD_LEFT);
-                                    $stdReg->cClassTribReg = str_pad($ibs['cClassTribReg'], 6, '0', STR_PAD_LEFT);
-                                    $stdReg->pAliqEfetRegIBSUF = formatarDecimal($ibs['pAliqEfetRegIBSUF'], 4);
-                                    $stdReg->vTribRegIBSUF = formatarDecimal($ibs['vTribRegIBSUF'], 2);
-                                    $stdReg->pAliqEfetRegIBSMun = formatarDecimal($ibs['pAliqEfetRegIBSMun'], 4);
-                                    $stdReg->vTribRegIBSMun = formatarDecimal($ibs['vTribRegIBSMun'], 2);
-                                    $stdReg->pAliqEfetRegCBS = formatarDecimal($ibs['pAliqEfetRegCBS'], 4);
-                                    $stdReg->vTribRegCBS = formatarDecimal($ibs['vTribRegCBS'], 2);
-                                    $nfe->tagIBSCBSTribRegular($stdReg);
-                                }
+                        if ($cst === '550' && !empty($ibs['CSTReg'])) {
+                                $stdReg = new \stdClass();
+                                $stdReg->item = $item;
+                                $stdReg->CSTReg = str_pad($ibs['CSTReg'], 3, '0', STR_PAD_LEFT);
+                                $stdReg->cClassTribReg = str_pad($ibs['cClassTribReg'], 6, '0', STR_PAD_LEFT);
+                                $stdReg->pAliqEfetRegIBSUF = formatarDecimal($ibs['pAliqEfetRegIBSUF'], 4);
+                                $stdReg->vTribRegIBSUF = formatarDecimal($ibs['vTribRegIBSUF'], 2);
+                                $stdReg->pAliqEfetRegIBSMun = formatarDecimal($ibs['pAliqEfetRegIBSMun'], 4);
+                                $stdReg->vTribRegIBSMun = formatarDecimal($ibs['vTribRegIBSMun'], 2);
+                                $stdReg->pAliqEfetRegCBS = formatarDecimal($ibs['pAliqEfetRegCBS'], 4);
+                                $stdReg->vTribRegCBS = formatarDecimal($ibs['vTribRegCBS'], 2);
+                                $nfe->tagIBSCBSTribRegular($stdReg);
+                       }
 
-                        } elseif ($cst === '620') {
-                            // Tributação Monofásica
-                            $stdMono = new \stdClass();
-                            $stdMono->item = $item;
-                            $stdMono->qBCMono   = formatarDecimal(($ibs['qBCMono'] ?? 0), 4);
-                            $stdMono->adRemIBS  = formatarDecimal(($ibs['adRemIBS'] ?? 0), 4);
-                            $stdMono->vIBSMono  = formatarDecimal(($ibs['vIBSMono'] ?? 0), 2);
-                            $stdMono->adRemCBS  = formatarDecimal(($ibs['adRemCBS'] ?? 0), 4);
-                            $stdMono->vCBSMono  = formatarDecimal(($ibs['vCBSMono'] ?? 0), 2);
-                            $stdMono->vTotIBSMonoItem = formatarDecimal(($ibs['vTotIBSMonoItem'] ?? $ibs['vIBSMono'] ?? 0), 2);
-                            $stdMono->vTotCBSMonoItem = formatarDecimal(($ibs['vTotCBSMonoItem'] ?? $ibs['vCBSMono'] ?? 0), 2);
+                   } elseif ($cst === '620') {
+                        // Tributação Monofásica
+                       $stdMono = new \stdClass();
+                       $stdMono->item = $item;
+                       $stdMono->qBCMono   = formatarDecimal(($ibs['qBCMono'] ?? 0), 4);
+                       $stdMono->adRemIBS  = formatarDecimal(($ibs['adRemIBS'] ?? 0), 4);
+                       $stdMono->vIBSMono  = formatarDecimal(($ibs['vIBSMono'] ?? 0), 2);
+                       $stdMono->adRemCBS  = formatarDecimal(($ibs['adRemCBS'] ?? 0), 4);
+                       $stdMono->vCBSMono  = formatarDecimal(($ibs['vCBSMono'] ?? 0), 2);
+                        $stdMono->vTotIBSMonoItem = formatarDecimal(($ibs['vTotIBSMonoItem'] ?? $ibs['vIBSMono'] ?? 0), 2);
+                        $stdMono->vTotCBSMonoItem = formatarDecimal(($ibs['vTotCBSMonoItem'] ?? $ibs['vCBSMono'] ?? 0), 2);
 
-                            $nfe->tagIBSCBSMono($stdMono);
-                            $totalIbs += (float)($stdMono->vTotIBSMonoItem ?? 0);
-                            $totalCbs += (float)($stdMono->vTotCBSMonoItem ?? 0);
+                       $nfe->tagIBSCBSMono($stdMono);
+                        $totalIbs += (float)($stdMono->vTotIBSMonoItem ?? 0);
+                        $totalCbs += (float)($stdMono->vTotCBSMonoItem ?? 0);
 
-                        } elseif ($cst === '800') {
-                            // Transferência de Crédito
-                            $stdTransf = new \stdClass();
-                            $stdTransf->item = $item;
-                            $stdTransf->vIBS = formatarDecimal(($ibs['vIBS'] ?? 0), 2);
-                            $stdTransf->vCBS = formatarDecimal(($ibs['vCBS'] ?? 0), 2);
-                            $nfe->taggTransfCred($stdTransf);
+                   } elseif ($cst === '800') {
+                        // Transferência de Crédito
+                       $stdTransf = new \stdClass();
+                       $stdTransf->item = $item;
+                        $stdTransf->vIBS = formatarDecimal(($ibs['vIBS'] ?? 0), 2);
+                        $stdTransf->vCBS = formatarDecimal(($ibs['vCBS'] ?? 0), 2);
+                        $nfe->taggTransfCred($stdTransf);
 
-                        } elseif ($cst === '810') {
-                            // Crédito Presumido ZFM
-                            $stdZFM = new \stdClass();
-                            $stdZFM->item = $item;
-                            $stdZFM->competApur = $ibs['competApur'];
-                            $stdZFM->tpCredPresIBSZFM = $ibs['tpCredPresIBSZFM'] ?? '0';
-                            $stdZFM->vCredPresIBSZFM  = formatarDecimal(($ibs['vCredPresIBSZFM'] ?? 0), 2);
-                            $nfe->taggCredPresIBSZFM($stdZFM);
+                   } elseif ($cst === '810') {
+                        // Crédito Presumido ZFM
+                       $stdZFM = new \stdClass();
+                       $stdZFM->item = $item;
+                        $stdZFM->competApur = $ibs['competApur'];
+                        $stdZFM->tpCredPresIBSZFM = $ibs['tpCredPresIBSZFM'] ?? '0';
+                       $stdZFM->vCredPresIBSZFM  = formatarDecimal(($ibs['vCredPresIBSZFM'] ?? 0), 2);
+                        $nfe->taggCredPresIBSZFM($stdZFM);
 
-                        } elseif ($cst === '811') {
-                            // Ajuste de Competência
-                            $stdAjuste = new \stdClass();
-                            $stdAjuste->item = $item;
-                            $stdAjuste->competApur = $ibs['competApur'];
-                            $stdAjuste->vIBS = formatarDecimal(($ibs['vIBSAjuste'] ?? 0), 2);
-                            $stdAjuste->vCBS = formatarDecimal(($ibs['vCBSAjuste'] ?? 0), 2);
+                   } elseif ($cst === '811') {
+                        // Ajuste de Competência
+                       $stdAjuste = new \stdClass();
+                       $stdAjuste->item = $item;
+                        $stdAjuste->competApur = $ibs['competApur'];
+                        $stdAjuste->vIBS = formatarDecimal(($ibs['vIBSAjuste'] ?? 0), 2);
+                        $stdAjuste->vCBS = formatarDecimal(($ibs['vCBSAjuste'] ?? 0), 2);
 
-                            $nfe->taggAjusteCompet($stdAjuste);
+                        $nfe->taggAjusteCompet($stdAjuste);
                         }
-                    }
-                }
-            }
-        }
+                   }
+               }
+           }
+       }
 
-        // Força a inclusão das Tags de Totais (IS, IBS, CBS)
-        // A biblioteca pode omitir se forem zero, mas a SEFAZ exige.
-        if (!$this->corpoRequisicao['empresa']['usarContingenciaIbsCbs']
-            && !in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])
-        ) {
+       // Força a inclusão das Tags de Totais (IS, IBS, CBS)
+       // A biblioteca pode omitir se forem zero, mas a SEFAZ exige.
+       if (!$this->corpoRequisicao['empresa']['usarContingenciaIbsCbs']
+           && !in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])
+       ) {
 
-            if ($totalIbs > 0 || $totalCbs > 0 || $totalBaseCalculoIbsCbs > 0) {
-                // 1. Total de IS
-                // $stdISTot = new \stdClass();
-                // $stdISTot->vIS = formatarDecimal($totalIs, 2);
-                // $nfe->tagISTot($stdISTot);
+           if ($totalIbs > 0 || $totalCbs > 0 || $totalBaseCalculoIbsCbs > 0) {
+               // 1. Total de IS
+               // $stdISTot = new \stdClass();
+               // $stdISTot->vIS = formatarDecimal($totalIs, 2);
+               // $nfe->tagISTot($stdISTot);
 
-                // 2. Totais de IBS/CBS
-                $stdTotalIbsCbs = new \stdClass();
-                $stdTotalIbsCbs->vBCIBSCBS = formatarDecimal($totalBaseCalculoIbsCbs, 2);
-                $stdTotalIbsCbs->gIBS_vIBS = formatarDecimal($totalIbs, 2);
-                $stdTotalIbsCbs->gCBS_vCBS = formatarDecimal($totalCbs, 2);
-                $nfe->tagIBSCBSTot($stdTotalIbsCbs);
-            }
-        }
+               // 2. Totais de IBS/CBS
+               $stdTotalIbsCbs = new \stdClass();
+               $stdTotalIbsCbs->vBCIBSCBS = formatarDecimal($totalBaseCalculoIbsCbs, 2);
+               $stdTotalIbsCbs->gIBS_vIBS = formatarDecimal($totalIbs, 2);
+               $stdTotalIbsCbs->gCBS_vCBS = formatarDecimal($totalCbs, 2);
+               $nfe->tagIBSCBSTot($stdTotalIbsCbs);
+           }
+       }
 
-        $totalIbs = $totalIbs ?? 0.00;
-        $totalCbs = $totalCbs ?? 0.00;
+       $totalIbs = $totalIbs ?? 0.00;
+       $totalCbs = $totalCbs ?? 0.00;
 
-        // $totalNota = $totalProdutos + $totalIs + $totalIbs + $totalCbs; // IS está comentado
+       // $totalNota = $totalProdutos + $totalIs + $totalIbs + $totalCbs; // IS está comentado
         // $totalNota = $totalProdutos + $totalIbs + $totalCbs; // Comentado porque se não me engano em 2026 esse valor não vai ser acrescentado ao valor total da nota
         $totalNota = $totalProdutos;
 
-        $stdTotal = new \stdClass();
-        // Formatação do valor total da nota
-        $stdTotal->vNFTot = formatarDecimal($totalNota, 2);
-        $nfe->tagtotal($stdTotal);
+       $stdTotal = new \stdClass();
+       // Formatação do valor total da nota
+       $stdTotal->vNFTot = formatarDecimal($totalNota, 2);
+       $nfe->tagtotal($stdTotal);
 
         // ===== TRANSPORTE =====
         // Modalidade do frete
@@ -916,8 +916,8 @@ class Nfe
 
         // ===== INFORMAÇÕES ADICIONAIS =====
         $std = new \stdClass();
-        $std->infCpl = $this->corpoRequisicao['informacoesAdicionais'] ??
-            'DOCUMENTO EMITIDO SOB O NOVO REGIME TRIBUTARIO (IBS/CBS/IS)';
+        $std->infCpl = $this->corpoRequisicao['informacoesContribuinte'];
+        $std->infAdFisco = $this->corpoRequisicao['informacoesAdicionais'];
         $nfe->taginfAdic($std);
 
         // ===== AUTORIZAÇÃO XML (OBRIGATÓRIO PARA BA) =====
