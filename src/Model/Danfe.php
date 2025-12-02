@@ -7,6 +7,8 @@ use NFePHP\DA\NFe\Danfe as NFeDanfe;
 use NFePHP\DA\NFe\Daevento;
 use ZipArchive;
 
+date_default_timezone_set('America/Bahia');
+
 class Danfe
 {
     private $corpoRequisicao;
@@ -30,10 +32,17 @@ class Danfe
             if ($xml === false) {
                 emitirErro("O XML fornecido não é um base64 válido.", 400);
             }
-
+            
             $danfe = new NFeDanfe($xml);
             $danfe->setGerarInformacoesAutomaticas(true);
-            $pdf = $danfe->render();
+            
+            $espacos = str_repeat(chr(160), 260);
+            $creditos = $espacos . 'Giusoft Tecnologia www.giusoft.com.br';
+            
+            $danfe->creditsIntegratorFooter($creditos, false);
+            
+            $logotipo = $this->getLogotipo($this->corpoRequisicao['cnpj_emitente']);
+            $pdf = $danfe->render($logotipo);
 
             $pdfBase64 = base64_encode($pdf);
 
@@ -94,7 +103,8 @@ class Danfe
 
             $daEvento->creditsIntegratorFooter($creditos, false);
 
-            $pdf = $daEvento->render();
+            $logotipo = $this->getLogotipo($this->corpoRequisicao['cnpj_emitente']);
+            $pdf = $daEvento->render($logotipo);
 
             emitirSucesso(
                 "DANFE CC-e gerado com sucesso", 
@@ -168,7 +178,8 @@ class Danfe
 
                             if ($tipo === 'nfe') {
                                 $danfe = new NFeDanfe($xmlContent);
-                                $pdfContent = $danfe->render();
+                                $logotipo = $this->getLogotipo($this->corpoRequisicao['cnpj_emitente']);
+                                $pdfContent = $danfe->render($logotipo);
                             }
 
                             if ($pdfContent) {
@@ -266,7 +277,9 @@ class Danfe
 
             $danfe = new NFeDanfe($xml);
             $danfe->setGerarInformacoesAutomaticas(true);
-            $pdf = $danfe->render();
+            
+            $logotipo = $this->getLogotipo($this->corpoRequisicao['cnpj_emitente']);
+            $pdf = $danfe->render($logotipo);
 
             $pdfBase64 = base64_encode($pdf);
 
@@ -289,5 +302,25 @@ class Danfe
             (is_dir("$dir/$file")) ? $this->removerDiretorioRecursivo("$dir/$file") : unlink("$dir/$file");
         }
         return rmdir($dir);
+    }
+
+
+    private function getLogotipo($cnpj)
+    {
+        $cnpjLimpo = preg_replace('/[^0-9]/', '', $cnpj);
+
+        $diretorioLogos = __DIR__ . '/../storage/logos/';
+
+        $caminhoJpg = $diretorioLogos . $cnpjLimpo . '.jpg';
+        if (file_exists($caminhoJpg)) {
+            return $caminhoJpg;
+        }
+
+        $caminhoPng = $diretorioLogos . $cnpjLimpo . '.png';
+        if (file_exists($caminhoPng)) {
+            return $caminhoPng;
+        }
+
+        return null;
     }
 }
