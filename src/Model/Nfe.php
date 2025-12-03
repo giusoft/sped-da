@@ -548,49 +548,39 @@ class Nfe
             }
 
 
-            // ===== PIS ===== (ADD desativarImpostosAntigos)
+            // ===== PIS =====
             $pis = $impostos['pis'] ?? [];
-            if (!empty($pis['CST'])) {
+            if (!empty($pis['CST']) && !$this->corpoRequisicao['empresa']['desativarImpostosAntigos']) {
                 $std = new \stdClass();
                 $std->item = $item;
-                $std->CST = str_pad($pis['CST'], 2, '0', STR_PAD_LEFT);
+                $std->CST = str_pad(trim($pis['CST'] ?? ''), 2, '0', STR_PAD_LEFT);
 
-                // GRUPO PISAliq: Operação Tributável (CST 01 e 02) [cite: 1050]
+                // GRUPO PISAliq: Operação Tributável com Alíquota Percentual (CST 01 e 02)
                 if (in_array($std->CST, ['01', '02'])) {
                     $std->vBC = formatarDecimal($vProd, 2);
-                    $std->pPIS = formatarDecimal($pis['aliquota'], 2);
+                    $std->pPIS = formatarDecimal($pis['aliquota'], 4);
                     $std->vPIS = formatarDecimal($vProd * ((float)$pis['aliquota'] / 100), 2);
                     $nfe->tagPIS($std);
-                }
-                // GRUPO PISQtde: Tributação por Quantidade (CST 03) [cite: 1051]
-                elseif ($std->CST == '03') {
-                     $std->qBCProd = formatarDecimal($prod['quantidade'], 4);
-                     $std->vAliqProd = formatarDecimal((float)$pis['aliquota'], 4);
-                     $std->vPIS = formatarDecimal($prod['quantidade'] * $pis['aliquota'], 2);
-                     $nfe->tagPIS($std);
-                }
-                // GRUPO PISNT: Não Tributado (CST 04, 05, 06, 07, 08, 09) [cite: 1051]
-                elseif (in_array($std->CST, ['04', '05', '06', '07', '08', '09'])) {
+                } elseif ($std->CST == '03') { // GRUPO PISQtde: Tributação por Quantidade (CST 03)
+                    $std->qBCProd = formatarDecimal($prod['quantidade'], 4);
+                    $std->vAliqProd = formatarDecimal((float) $pis['aliquota'], 4);
+                    $std->vPIS = formatarDecimal($prod['quantidade'] * $pis['aliquota'], 2);
                     $nfe->tagPIS($std);
-                }
-                // GRUPO PISOutr: Outras Operações (CST 49 a 99) [cite: 1051]
-                else {
-                    if ((float)$pis['aliquota'] > 0) {
+                } elseif (in_array($std->CST, ['04', '05', '06', '07', '08', '09'])) { // GRUPO PISNT: Não Tributado (CST 04 a 09)
+                    $nfe->tagPIS($std);
+                } elseif ($std->CST >= '49' && $std->CST <= '99') { // GRUPO PISOutr: Outras Operações (CST 49 a 99)
+                    if ((float) $pis['aliquota'] > 0) {
                         $std->vBC = formatarDecimal($vProd, 2);
-                        $std->pPIS = formatarDecimal((float)$pis['aliquota'], 2);
+                        $std->pPIS = formatarDecimal($pis['aliquota'], 4);
                         $std->vPIS = formatarDecimal($vProd * ((float)$pis['aliquota'] / 100), 2);
-                    } else {
-                        $std->vBC = '0.00';
-                        $std->pPIS = '0.00';
-                        $std->vPIS = '0.00';
                     }
-                    $nfe->tagPIS($std); // Direciona para tagPISOutr
+                    $nfe->tagPIS($std);
                 }
             }
 
             // COFINS (ADD desativarImpostosAntigos)
             $cofins = $impostos['cofins'] ?? [];
-            if (!empty($cofins['CST'])) {
+            if (!empty($cofins['CST']) && !$this->corpoRequisicao['empresa']['desativarImpostosAntigos']) {
                 $std = new \stdClass();
                 $std->item = $item;
                 $std->CST = str_pad($cofins['CST'], 2, '0', STR_PAD_LEFT);
