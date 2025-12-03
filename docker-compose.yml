@@ -1,3 +1,5 @@
+version: '3'
+
 services:
   app:
     build:
@@ -10,6 +12,17 @@ services:
     volumes:
       - .:/var/www/html
       - /var/www/html/vendor
+    networks:
+      - emitenota_network
+
+  tunnel:
+    # Conector da Cloudflare
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflare_nfe_tunnel
+    restart: always
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=eyJhIjoiOTg0ZmJlNDkwZmVkNjNhZjE4ZDcxYWI5OWE5MTQyMWUiLCJ0IjoiZjg4NmQ1YjktYjNlMi00NTIyLWE4ZDEtNjFjODM4NTgzNDIxIiwicyI6Ik1EUmtNR1E0Wm1ZdE56ZGtaaTAwTm1Nd0xUa3lNR1F0TVRVNU1Ua3hPV1prTldReSJ9
     networks:
       - emitenota_network
 
