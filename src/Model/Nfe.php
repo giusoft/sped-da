@@ -595,34 +595,24 @@ class Nfe
                 $std->item = $item;
                 $std->CST = str_pad($cofins['CST'], 2, '0', STR_PAD_LEFT);
 
-                // GRUPO COFINSAliq: Operação Tributável (CST 01 e 02) [cite: 1053]
+                // GRUPO COFINSAliq: Operação Tributável com Alíquota Percentual (CST 01 e 02)
                 if (in_array($std->CST, ['01', '02'])) {
                     $std->vBC = formatarDecimal($vProd, 2);
-                    $std->pCOFINS = formatarDecimal($cofins['aliquota'], 2);
+                    $std->pCOFINS = formatarDecimal($cofins['aliquota'], 4);
                     $std->vCOFINS = formatarDecimal($vProd * ((float)$cofins['aliquota'] / 100), 2);
                     $nfe->tagCOFINS($std);
-                }
-                // GRUPO COFINSQtde: Tributação por Quantidade (CST 03) [cite: 1054]
-                elseif ($std->CST == '03') {
-                     $std->qBCProd = formatarDecimal($prod['quantidade'], 4);
-                     $std->vAliqProd = formatarDecimal($cofins['aliquota'], 4);
-                     $std->vCOFINS = formatarDecimal($prod['quantidade'] * $cofins['aliquota'], 2);
-                     $nfe->tagCOFINS($std);
-                }
-                // GRUPO COFINSNT: Não Tributado (CST 04, 05, 06, 07, 08, 09) [cite: 1054]
-                elseif (in_array($std->CST, ['04', '05', '06', '07', '08', '09'])) {
+                } elseif ($std->CST == '03') { // GRUPO COFINSQtde: Tributação por Quantidade (CST 03)
+                    $std->qBCProd = formatarDecimal($prod['quantidade'], 4);
+                    $std->vAliqProd = formatarDecimal($cofins['aliquota'], 4);
+                    $std->vCOFINS = formatarDecimal($prod['quantidade'] * $cofins['aliquota'], 2);
                     $nfe->tagCOFINS($std);
-                }
-                // GRUPO COFINSOutr: Outras Operações (CST 49 a 99) [cite: 1054]
-                else {
+                } elseif (in_array($std->CST, ['04', '05', '06', '07', '08', '09'])) { // GRUPO COFINSNT: Não Tributado (CST 04 a 09)
+                    $nfe->tagCOFINS($std);
+                } elseif ($std->CST >= '49' && $std->CST <= '99') { // GRUPO COFINSOutr: Outras Operações (CST 49 a 99)
                     if ((float)$cofins['aliquota'] > 0) {
                         $std->vBC = formatarDecimal($vProd, 2);
                         $std->pCOFINS = formatarDecimal($cofins['aliquota'], 2);
                         $std->vCOFINS = formatarDecimal($vProd * ((float)$cofins['aliquota'] / 100), 2);
-                    } else {
-                        $std->vBC = '0.00';
-                        $std->pCOFINS = '0.00';
-                        $std->vCOFINS = '0.00';
                     }
                     $nfe->tagCOFINS($std);
                 }
