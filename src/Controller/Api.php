@@ -63,6 +63,10 @@ class Api
             emitirErro("Os campos da empresa não foram informados", 400);
         }
 
+        if (!$this->corpoRequisicao['empresa']['senhaCertificado']) {
+            emitirErro("Este CNPJ não possui certificado configurado! Verifique o cadastro!", 400);
+        }
+
         $senhaCertificado = desencriptar($this->corpoRequisicao['empresa']['senhaCertificado']);
 
         $certPath = __DIR__ . "/../storage/certificados/{$cnpjLimpo}/certificado.pfx";
