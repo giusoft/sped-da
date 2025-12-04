@@ -7,11 +7,11 @@ use NFePHP\Common\Certificate;
 use App\Model\Nfe;
 use App\Model\Danfe;
 use App\Model\Sefaz;
+use App\Model\Certificado;
 
 class Api
 {
     public $corpoRequisicao;
-    public $config;
     public $tools;
     public $classes;
 
@@ -20,7 +20,8 @@ class Api
         $this->classes = [
             'danfe' => Danfe::class,
             'sefaz' => Sefaz::class,
-            'nfe' => Nfe::class
+            'nfe' => Nfe::class,
+            'certificado' => Certificado::class
         ];
 
         $this->inicializarAmbiente();
@@ -41,7 +42,11 @@ class Api
             emitirErro("O campo 'cnpj_emitente' é obrigatório", 400);
         }
 
-        $this->buscarCertificado();
+        $rota = $_GET['rota'] ?? '';
+        if (!isset($this->corpoRequisicao["certificado"]) && $rota != 'danfe') {
+            $this->buscarCertificado();
+        }
+
         $this->chamarMetodoClasse();
 
     }
@@ -54,35 +59,43 @@ class Api
             emitirErro("CNPJ inválido: {$this->corpoRequisicao['cnpj_emitente']}", 400);
         }
 
-        $configPath = __DIR__ . "/../Config/empresas/{$cnpjLimpo}.json";
-
-        if (!file_exists($configPath)) {
-            emitirErro("Arquivo de configuração não encontrado para o CNPJ: {$cnpjLimpo}", 400);
+        if (!isset($this->corpoRequisicao['empresa'])) {
+            emitirErro("Os campos da empresa não foram informados", 400);
         }
-        $configJson = file_get_contents($configPath);
-        $this->config = json_decode($configJson, true);
 
-        $certNome = "certificado.pfx";
-        $certSenha = $this->config['senhaCertificado'];
-        $certPath = __DIR__ . "/../Certificados/{$cnpjLimpo}/{$certNome}";
+        if (!$this->corpoRequisicao['empresa']['senhaCertificado']) {
+            emitirErro("Este CNPJ não possui certificado configurado! Verifique o cadastro!", 400);
+        }
+
+        $senhaCertificado = desencriptar($this->corpoRequisicao['empresa']['senhaCertificado']);
+
+        $certPath = __DIR__ . "/../storage/certificados/{$cnpjLimpo}/certificado.pfx";
+
         if (!file_exists($certPath)) {
-            emitirErro("Arquivo de certificado não encontrado: {$certPath}", 400);
+            emitirErro("Certificado não encontrado!", 400);
         }
 
         $certificate = Certificate::readPfx(
             file_get_contents($certPath),
-            $certSenha
+            $senhaCertificado
         );
 
-        $this->tools = new Tools(json_encode($this->config), $certificate);
+        $this->tools = new Tools(json_encode($this->corpoRequisicao['empresa']), $certificate);
         $this->tools->model('55');
     }
 
 
     public function chamarMetodoClasse()
     {
-        $rota = $_GET['rota'] ?? null;
-        $recurso = $_GET['recurso'] ?? null;
+        $rota = null;
+        if (isset($_GET['rota'])) {
+            $rota = $_GET['rota'];
+        }
+
+        $recurso = null;
+        if (isset($_GET['recurso'])) {
+            $recurso = $_GET['recurso'];
+        }
 
         if (!$rota || !$recurso) {
             emitirErro("Os parâmetros 'rota' e 'recurso' são obrigatórios na URL (ex: index.php?rota=nfe&recurso=enviar)", 400);
