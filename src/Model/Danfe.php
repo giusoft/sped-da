@@ -41,7 +41,7 @@ class Danfe
 
             $danfe->creditsIntegratorFooter($creditos, false);
 
-            $logotipo = $this->getLogotipo($this->corpoRequisicao['cnpj_emitente']);
+            $logotipo = $this->obterCaminhoLogo($this->corpoRequisicao['cnpj_emitente']);
             $pdf = $danfe->render($logotipo);
 
             $pdfBase64 = base64_encode($pdf);
@@ -103,7 +103,7 @@ class Danfe
 
             $daEvento->creditsIntegratorFooter($creditos, false);
 
-            $logotipo = $this->getLogotipo($this->corpoRequisicao['cnpj_emitente']);
+            $logotipo = $this->obterCaminhoLogo($this->corpoRequisicao['cnpj_emitente']);
             $pdf = $daEvento->render($logotipo);
 
             emitirSucesso(
@@ -178,7 +178,7 @@ class Danfe
 
                             if ($tipo === 'nfe') {
                                 $danfe = new NFeDanfe($xmlContent);
-                                $logotipo = $this->getLogotipo($this->corpoRequisicao['cnpj_emitente']);
+                                $logotipo = $this->obterCaminhoLogo($this->corpoRequisicao['cnpj_emitente']);
                                 $pdfContent = $danfe->render($logotipo);
                             }
 
@@ -283,7 +283,7 @@ class Danfe
 
             $danfe->creditsIntegratorFooter($creditos, false);
 
-            $logotipo = $this->getLogotipo($this->corpoRequisicao['cnpj_emitente']);
+            $logotipo = $this->obterCaminhoLogo($this->corpoRequisicao['cnpj_emitente']);
             $pdf = $danfe->render($logotipo);
 
             $pdfBase64 = base64_encode($pdf);
@@ -300,7 +300,7 @@ class Danfe
     }
 
 
-    private function removerDiretorioRecursivo($dir) {
+    public function removerDiretorioRecursivo($dir) {
         if (!is_dir($dir)) return;
         $files = array_diff(scandir($dir), array('.','..'));
         foreach ($files as $file) {
@@ -310,18 +310,18 @@ class Danfe
     }
 
 
-    private function getLogotipo($cnpj)
+    public function obterCaminhoLogo($cnpj)
     {
         $cnpjLimpo = preg_replace('/[^0-9]/', '', $cnpj);
 
-        $diretorioLogos = __DIR__ . '/../storage/logos/';
+        $diretorioLogos = __DIR__ . '/../storage/logos/'.$cnpjLimpo.'/';
 
-        $caminhoJpg = $diretorioLogos . $cnpjLimpo . '.jpg';
+        $caminhoJpg = $diretorioLogos . 'logo.jpg';
         if (file_exists($caminhoJpg)) {
             return $caminhoJpg;
         }
 
-        $caminhoPng = $diretorioLogos . $cnpjLimpo . '.png';
+        $caminhoPng = $diretorioLogos . 'logo.png';
         if (file_exists($caminhoPng)) {
             return $caminhoPng;
         }
