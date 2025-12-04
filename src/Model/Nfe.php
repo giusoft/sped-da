@@ -2,24 +2,26 @@
 
 namespace App\Model;
 
+use Exception;
 use NFePHP\NFe\MakeDev;
 use NFePHP\NFe\Tools;
 use NFePHP\NFe\Complements;
+use NFePHP\NFe\Factories\Contingency;
 use NFePHP\NFe\Common\Standardize;
 use NFePHP\Common\Certificate;
 use NFePHP\Common\Validator;
 
+date_default_timezone_set('America/Bahia');
+
 class Nfe
 {
     private $corpoRequisicao;
-    private $config;
     private $tools;
     private $default;
 
     public function __construct($dados)
     {
         $this->corpoRequisicao = $dados->corpoRequisicao;
-        $this->config = $dados->config;
         $this->tools = $dados->tools;
         $this->carregarDadosDefault();
     }
@@ -28,44 +30,109 @@ class Nfe
     public function carregarDadosDefault()
     {
         $this->default['versao'] = '4.00';
+        $this->default['versaoLayoutNFe'] = 'PL_010_V1.30';
         $this->default['modelo'] = 55;
         $this->default['dataEmissao'] = date('Y-m-d\TH:i:sP');
         $this->default['dataSaidaEntrada'] = date('Y-m-d\TH:i:sP');
         $this->default['serie'] = 1;
         $this->default['cNF'] = sprintf('%08d', rand(1, 99999999));
-        $this->default['tpNF'] = 1;
+        $this->default['tpNF'] = 1; // Tipo de Operação (Entrada = 0 | Saída = 1)
         $this->default['tipoImpressao'] = 1;
         $this->default['tipoEmissao'] = 1;
-        $this->default['finalidadeEmissao'] = 1;
+        $this->default['finNFe'] = 1;
         $this->default['cnjpAutorizadoSefaz'] = '13937073000156';
         $this->default['codigoPais'] = 1058; // Código do Brasil = 1058
+        $this->default['modoContingencia'] = [6, 7];
+        $this->default['ufs_svc_rs'] = [
+            '13', // AM - Amazonas
+            '29', // BA - Bahia
+            '52', // GO - Goiás
+            '21', // MA - Maranhão
+            '50', // MS - Mato Grosso do Sul
+            '51', // MT - Mato Grosso
+            '26', // PE - Pernambuco
+            '41', // PR - Paraná
+        ];
     }
 
 
     public function enviar()
     {
         try {
-            // 1. MONTA O XML
+
+            $retorno = 'XML submetido com sucesso para processamento';
+            if (in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])) {
+
+                $cUF = $this->corpoRequisicao['empresa']['cUF'];
+                $tipoContingencia = in_array($cUF, $this->default['ufs_svc_rs']) ? 'SVCRS' : 'SVCAN';
+
+                $dadosContingencia = json_encode([
+                    "motive" => "SEFAZ fora do AR", // Temos que passar o motivo que entrou em Contingencia
+                    "timestamp" => strtotime($this->corpoRequisicao['dataHoraContingencia']),
+                    "tpEmis" => $this->corpoRequisicao['modoOperacao'],
+                    "type" => $tipoContingencia
+                ]);
+
+                $this->tools->contingency = new Contingency($dadosContingencia);
+            }
+
+            $retorno .= '| ' . [
+                1 => 'Emissão normal',
+                2 => 'Contingência FS-IA',
+                3 => 'Contingência SCAN',
+                4 => 'Contingência DPEC',
+                5 => 'Contingência FS-DA',
+                6 => 'Contingência SVC-AN',
+                7 => 'Contingência SVC-RS'
+            ][$this->corpoRequisicao['modoOperacao']] . '  ativado';
+
+            //MONTAR XML
             $xmlMontado = $this->montarXML($this->corpoRequisicao);
+            $retorno .= '|Estrutura do XML criada com sucesso';
 
-            ### DAR RETORNO QUE ELE FOI GERADO ###
-            // 2. ASSINA O XML (já faz validação automática)
+            //ASSINAR XML
             $xmlAssinado = $this->tools->signNFe($xmlMontado);
+            $retorno .= '|XML assinado digitalmente com sucesso';
 
+            //VALIDAR XML
             $xsd = __DIR__ . "/../Lib/sped-nfe/schemes/PL_010_V1.30/nfe_v4.00.xsd";
-            $erroxsd = null;
             try {
                 Validator::isValid($xmlAssinado, $xsd);
             } catch (ValidatorException $e) {
-                emitirErro($e->getMessage(), 400);
+                emitirErro(
+                    $e->getMessage(),
+                    400,
+                    [
+                        'situacao' => 'Reprovada',
+                        'andamento' => $retorno,
+                        'xml' => base64_encode($xmlAssinado)
+                    ]
+                );
             }
 
-            ### DAR UM RETORNO PRO JS QUE O XML FOI ASSINADO ###
+            $retorno .= '|XML validado e pronto para envio a SEFAZ';
+
             // 3. ENVIA PARA SEFAZ (modo síncrono - indSinc=1)
             $idLote = str_pad(time(), 15, '0', STR_PAD_LEFT);
 
+            $xmlsRetornados = array();
             // ESSE PARAMETRO 1 DEVE SER PEGO DO BD (O modo deve ser passado pelo banco de dados)
-            $response = $this->tools->sefazEnviaLote([$xmlAssinado], $idLote, 1); // 1 = modo síncrono
+            // O método sefazEnviaLote ajusta automaticamente o XML para contingência e retorna os XMLs ajustados em $xmlsRetornados
+            $retorno .= '|Enviando XML para a SEFAZ';
+            $response = $this->tools->sefazEnviaLote(
+                [$xmlAssinado],
+                $idLote,
+                1, // modo síncrono
+                false,
+                $xmlsRetornados
+            );
+
+            $retorno .= '|O XML foi enviado com sucesso para a SEFAZ';
+
+            // IMPORTANTE: Se foi contingência, usar o XML retornado ajustado
+            if (!empty($xmlsRetornados)) {
+                $xmlAssinado = $xmlsRetornados[0];
+            }
 
             // 4. PROCESSA RESPOSTA
             $stdCl = new Standardize();
@@ -81,8 +148,13 @@ class Nfe
                 emitirErro(
                     $motivo,
                     400,
-                    'Erro ao processar lote',
-                    ['codigoSituacaoNF' => $std->cStat]
+                    [
+                        'situacao' => 'Reprovada',
+                        'mensagem' => 'Erro ao processar lote',
+                        'codigoSituacaoNF' => $std->cStat,
+                        'andamento' => $retorno,
+                        'xml' => base64_encode($xmlAssinado)
+                    ]
                 );
             }
 
@@ -101,8 +173,13 @@ class Nfe
                     emitirErro(
                         $motivo,
                         400,
-                        'Nota rejeitada',
-                        ['codigoSituacaoNF' => $cStat]
+                        [
+                            'situacao' => 'Reprovada',
+                            'mensagem' => 'Nota rejeitada',
+                            'codigoSituacaoNF' => $cStat,
+                            'andamento' => $retorno,
+                            'xml' => base64_encode($xmlAssinado)
+                        ]
                     );
                 }
 
@@ -112,27 +189,29 @@ class Nfe
 
                 $xmlProtocolado = Complements::toAuthorize($xmlAssinado, $response);
 
-                // Salva XML
-                $this->salvarXML($chave, $xmlProtocolado);
-
                 $motivo = 'Autorizada';
-                if (isset($std->protNFe->infProt->xMotivo)){
+                if (isset($std->protNFe->infProt->xMotivo)) {
                     $motivo = $std->protNFe->infProt->xMotivo;
                 }
 
                 $dataHoraRecebimento = null;
                 if (isset($std->protNFe->infProt->dhRecbto)) {
                     $dataHoraRecebimento = $std->protNFe->infProt->dhRecbto;
+
+                    $data = new \DateTime($dataHoraRecebimento);
+                    $dataHoraRecebimento = $data->format('Y-m-d H:i:s');
                 }
 
                 emitirSucesso(
                     $motivo,
                     200,
                     [
+                        'situacao' => 'Aprovada',
                         'chave' => $chave,
                         'protocolo' => $protocolo,
                         'codigoSituacaoNF' => $cStat,
-                        'dhRecbto' => $dataHoraRecebimento,
+                        'dataHoraRecebimento' => $dataHoraRecebimento,
+                        'andamento' => $retorno,
                         'xml' => base64_encode($xmlProtocolado)
                     ]
                 );
@@ -151,12 +230,23 @@ class Nfe
                     emitirErro(
                         $motivo,
                         400,
-                        'Erro ao processar lote',
-                        ['codigoSituacaoNF' => $std->cStat]
+                        [
+                            'situacao' => 'Reprovada',
+                            'mensagem' => 'Erro ao processar lote',
+                            'codigoSituacaoNF' => $std->cStat,
+                            'andamento' => $retorno
+                        ]
                     );
                 }
 
-                emitirSucesso($protocolo, 200);
+                emitirSucesso(
+                    $protocolo,
+                    200,
+                    [
+                        'situacao' => 'Aprovada',
+                        'andamento' => $retorno
+                    ]
+                );
             } else {
 
                 $motivo = 'Resposta inesperada da SEFAZ';
@@ -168,14 +258,22 @@ class Nfe
                 emitirErro(
                     $motivo,
                     400,
-                    'Erro ao processar lote',
-                    ['codigoSituacaoNF' => $std->cStat]
+                    [
+                        'situacao' => 'Reprovada',
+                        'mensagem' => 'Erro ao processar lote',
+                        'codigoSituacaoNF' => $std->cStat,
+                        'andamento' => $retorno
+                    ]
                 );
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             emitirErro(
                 $e->getMessage(),
-                500
+                500,
+                [
+                    'situacao' => 'Reprovada',
+                    'andamento' => $retorno
+                ]
             );
         }
     }
@@ -183,15 +281,15 @@ class Nfe
 
     public function montarXML()
     {
-        $nfe = new MakeDev('PL_010_V1.30');
+        $nfe = new MakeDev($this->default['versaoLayoutNFe']);
 
         // ===== IDENTIFICAÇÃO DA NFe =====
         $std = new \stdClass();
-        $std->versao = $this->default['versao'];
+        $std->versao = $this->corpoRequisicao['empresa']['versao'];
         $nfe->taginfNFe($std);
 
         $std = new \stdClass();
-        $std->cUF = $this->config['cUF']; // Código da UF (Unidade da Federação) do emitente
+        $std->cUF = $this->corpoRequisicao['empresa']['cUF']; // Código da UF (Unidade da Federação) do emitente
         $std->cNF = $this->default['cNF']; // Código numérico da nota
         $std->natOp = $this->corpoRequisicao['naturezaOperacao']; // Natureza da operação
         $std->mod = $this->default['modelo']; // Modelo do documento (55 = NF-e (modelo eletrônico), 65 = NFC-e)
@@ -201,16 +299,17 @@ class Nfe
             $std->serie = $this->corpoRequisicao['serie'];
         }
 
-        $std->nNF = $this->corpoRequisicao['numero']; // Número da nota fiscal
-        $std->dhEmi = $this->default['dataEmissao']; // Data/hora de emissão
+        $std->nNF = $this->corpoRequisicao['numeroNota'];   // Número da nota fiscal
+        $std->dhEmi = $this->default['dataEmissao'];    // Data/hora de emissão
         $std->dhSaiEnt = $this->default['dataEmissao']; // Data/hora de saída ou entrada (Opcional — geralmente usada em operações com circulação de mercadoria)
+
         $std->tpNF = $this->default['tpNF'];
         if (isset($this->corpoRequisicao['tipoOperacao'])) {
             $std->tpNF = $this->corpoRequisicao['tipoOperacao']; // Tipo da NF (0 = Entrada, 1 = Saída)
         }
 
         // Define idDest baseado na UF do destinatário
-        $ufEmitente = $this->config['siglaUF'];
+        $ufEmitente = $this->corpoRequisicao['empresa']['siglaUF'];
         $ufDestinatario = $this->corpoRequisicao['cliente']['uf'];
 
         $paisDestinatario = $this->default['codigoPais'];
@@ -218,23 +317,42 @@ class Nfe
             $paisDestinatario = $this->corpoRequisicao['cliente']['cPais'];
         }
 
-        if ($paisDestinatario != 1058) {
-            $std->idDest = 3; // Exterior
-        } elseif ($ufEmitente === $ufDestinatario) {
-            $std->idDest = 1; // Operação interna
+        if (!isset($this->corpoRequisicao['idDest'])) {
+            if ($paisDestinatario != 1058) {
+                $std->idDest = 3; // Exterior
+            } elseif ($ufEmitente === $ufDestinatario) {
+                $std->idDest = 1; // Operação interna
+            } else {
+                $std->idDest = 2; // Operação interestadual
+            }
         } else {
-            $std->idDest = 2; // Operação interestadual
+            $std->idDest = $this->corpoRequisicao['idDest'];
         }
 
-        $std->cMunFG = $this->config['cmun'];               // Código do município de ocorrência do fato gerador
-        $std->tpImp = $this->default['tipoImpressao'];      // Tipo de impressão do DANFE (1 = Retrato, 2 = Paisagem);
-        $std->tpEmis = $this->default['tipoImpressao'];     // Tipo de emissão da NF-e (1 = Normal, 2 = Contingência FS-IA, 3 = SCAN, 4 = DPEC, 5 = FS-DA, 6 = SVC-AN, 7 = SVC-RS, 9 = off-line)
-        // $std->cDV = 0;                                   // Dígito verificador da chave da NF-e;
-        $std->tpAmb = $this->config['tpAmb'];               // Tipo de ambiente (1 = PRODUÇÃO, 2 = HOMOLOGAÇÃO)
-        $std->finNFe = $this->default['finalidadeEmissao']; // Finalidade de emissão (1 = Normal, 2 = Complementar, 3 = Ajuste, 4 = Devolução)
-        $std->indFinal = 1;                                 // Consumidor final (0 = Não, 1 = Sim)
+        $std->cMunFG = $this->corpoRequisicao['empresa']['cmun']; // Código do município de ocorrência do fato gerador
+        $std->tpImp = $this->default['tipoImpressao']; // Tipo de impressão do DANFE (1 = Retrato, 2 = Paisagem);
 
-        if (in_array($std->finNFe, [2, 3, 6])) {
+        $std->tpEmis = $this->default['tipoEmissao']; // Tipo de emissão da NF-e (1 = Normal, 2 = Contingência FS-IA, 3 = SCAN, 4 = DPEC, 5 = FS-DA, 6 = SVC-AN, 7 = SVC-RS, 9 = off-line)
+        if (!empty($this->corpoRequisicao['modoOperacao'])) {
+            $std->tpEmis = $this->corpoRequisicao['modoOperacao'];
+        }
+
+        if (in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])) {
+            $std->xJust = "Sefaz fora do ar"; // Aqui tem que ver a necessidade de passar o dado de fora ou não
+            $std->dhCont = $this->corpoRequisicao['dataHoraContingencia'];
+        }
+
+        // $std->cDV = 0; // Dígito verificador da chave da NF-e;
+        $std->tpAmb = $this->corpoRequisicao['empresa']['tpAmb']; // Tipo de ambiente (1 = PRODUÇÃO, 2 = HOMOLOGAÇÃO)
+
+        $std->finNFe = $this->default['finNFe']; // Finalidade de emissão (1 = Normal, 2 = Complementar, 3 = Ajuste, 4 = Devolução)
+        if (isset($this->corpoRequisicao['finNFe'])) {
+            $std->finNFe = $this->corpoRequisicao['finNFe'];
+        }
+
+        $std->indFinal = 1; // Consumidor final (0 = Não, 1 = Sim)
+
+        if (in_array($std->finNFe, [6])) {
             $std->tpNFDebito = '01';
         }
 
@@ -242,51 +360,53 @@ class Nfe
             $std->tpNFCredito = '01';
         }
 
-        $std->indPres = 1;                                  // Indicador de presença do comprador (0 = Não se aplica, 1 = Presencial, 2 = Internet, 3 = Teleatendimento)
-        $std->procEmi = 0;                                  // Processo de emissão (0 = Emissão pelo próprio contribuinte, 1 = Avulsa Fisco, 2 = Avulsa contrib. com certificado, 3 = Aplicativo do Fisco)
-        $std->verProc = 'API GNotas 1.0';                   // Versão do aplicativo emissor
+        $std->indPres = 1; // Indicador de presença do comprador (0 = Não se aplica, 1 = Presencial, 2 = Internet, 3 = Teleatendimento)
+        $std->procEmi = 0; // Processo de emissão (0 = Emissão pelo próprio contribuinte, 1 = Avulsa Fisco, 2 = Avulsa contrib. com certificado, 3 = Aplicativo do Fisco)
+        $std->verProc = 'API EmiteNota 1.0'; // Versão do aplicativo emissor
         $nfe->tagide($std);
 
-        if (!empty($this->corpoRequisicao['chaveReferenciada'])) {
+        if (!empty($this->corpoRequisicao['chaveEstorno'])) {
             $stdRef = new \stdClass();
-            $stdRef->refNFe = $this->corpoRequisicao['chaveReferenciada'];
+            $stdRef->refNFe = $this->corpoRequisicao['chaveEstorno'];
             $nfe->tagrefNFe($stdRef);
         }
 
         // ===== EMITENTE =====
         $std = new \stdClass();
-        $std->xNome = $this->config['razaosocial'];         // Razão social / nome do emitente
-        $std->xFant = $this->config['razaosocial'];         // Nome fantasia (Opcional)
-        $std->IE = $this->config['ie'];                     // Inscrição estadual (Obrigatória (exceto isento))
-        $std->CRT = $this->config['regime'];                // Regime tributário (No nosso caso passamos sempre 3)
-        $std->CNPJ = soNumeros($this->config['cnpj']);      // Documento do emitente (Apenas um deve ser informado CNPJ || CPF) - Ver com thiago
+        $std->xNome = $this->corpoRequisicao['empresa']['razaosocial'];         // Razão social / nome do emitente
+        $std->xFant = $this->corpoRequisicao['empresa']['razaosocial'];         // Nome fantasia (Opcional)
+        $std->IE = $this->corpoRequisicao['empresa']['ie'];                     // Inscrição estadual (Obrigatória (exceto isento))
+        $std->CRT = $this->corpoRequisicao['empresa']['regime'];                // Regime tributário (No nosso caso passamos sempre 3)
+        $std->CNPJ = soNumeros($this->corpoRequisicao['empresa']['cnpj']);      // Documento do emitente (Apenas um deve ser informado CNPJ || CPF) - Ver com thiago
         $nfe->tagemit($std);
 
         $std = new \stdClass();
-        $std->xLgr = $this->config['logradouro'];           // Logradouro (rua)
-        $std->nro = $this->config['numero'];                // Número
-        $std->xBairro = $this->config['bairro'];            // Bairro
-        $std->cMun = $this->config['cmun'];                 // Código IBGE do município
-        $std->xMun = $this->config['xmun'];                 // Nome do município
-        $std->UF = $this->config['siglaUF'];                // Sigla do estado
-        $std->CEP = soNumeros($this->config['cep']);        // Código postal
-        $std->cPais = $this->config['cPais'];               // Código do país
-        $std->xPais = $this->config['xPais'];               // Nome do país
-        $std->fone = soNumeros($this->config['fone']);      // Telefone do Emitente
+        $std->xLgr = $this->corpoRequisicao['empresa']['logradouro'];           // Logradouro (rua)
+        $std->nro = $this->corpoRequisicao['empresa']['numero'];                // Número
+        $std->xBairro = $this->corpoRequisicao['empresa']['bairro'];            // Bairro
+        $std->cMun = $this->corpoRequisicao['empresa']['cmun'];                 // Código IBGE do município
+        $std->xMun = $this->corpoRequisicao['empresa']['xmun'];                 // Nome do município
+        $std->UF = $this->corpoRequisicao['empresa']['siglaUF'];                // Sigla do estado
+        $std->CEP = soNumeros($this->corpoRequisicao['empresa']['cep']);        // Código postal
+        $std->cPais = $this->corpoRequisicao['empresa']['cPais'];               // Código do país
+        $std->xPais = $this->corpoRequisicao['empresa']['xPais'];               // Nome do país
+        $std->fone = soNumeros($this->corpoRequisicao['empresa']['fone']);      // Telefone do Emitente
         $nfe->tagenderEmit($std);
 
         // ===== DESTINATÁRIO =====
         $cli = $this->corpoRequisicao['cliente'];
         $std = new \stdClass();
         $std->xNome = $cli['nome']; // Nome / razão social
+        $std->IE = $cli['ie'];
+        $std->indIEDest = (int) $cli['indIEDest'];
 
         if (!empty($cli['cnpj'])) {
             $std->CNPJ = soNumeros($cli['cnpj']); // Documento do destinatário
         } else {
-            $std->CPF = soNumeros($cli['cpf']);   // Documento do destinatário
+            if (isset($cli['cpf'])) {
+                $std->CPF = soNumeros($cli['cpf']);   // Documento do destinatário
+            }
         }
-
-        $std->indIEDest = 9; // (Vai vir nos dados do cliente) // Indicador IE destinatário (1 = Contribuinte, 2 = Isento, 9 = Não contribuinte)
         $nfe->tagdest($std);
 
         $std = new \stdClass();
@@ -297,16 +417,16 @@ class Nfe
         $std->xMun = $cli['municipio'];       // Município
         $std->UF = $cli['uf'];                // UF
         $std->CEP = soNumeros($cli['cep']);   // CEP
-        $std->cPais = $this->config['cPais']; // Código do país (Vai vir nos dados do cliente)
-        $std->xPais = $this->config['xPais']; // Nome do país (Vai vir nos dados do cliente)
+        $std->cPais = $this->corpoRequisicao['empresa']['cPais']; // Código do país (Vai vir nos dados do cliente)
+        $std->xPais = $this->corpoRequisicao['empresa']['xPais']; // Nome do país (Vai vir nos dados do cliente)
         $nfe->tagenderDest($std);
 
         // ===== PRODUTOS =====
         $totalProdutos = 0;
-        $totalIS = 0;
-        $totalIBS = 0;
-        $totalCBS = 0;
-        $totalBC_IBSCBS = 0;
+        $totalIs = 0;
+        $totalIbs = 0;
+        $totalCbs = 0;
+        $totalBaseCalculoIbsCbs = 0;
 
         foreach ($this->corpoRequisicao['produtos'] as $i => $prod) {
             $item = $i + 1;
@@ -324,13 +444,13 @@ class Nfe
             $std->NCM = soNumeros($prod['ncm']); // Código NCM (classificação fiscal)
             $std->CFOP = $prod['cfop']; // Código Fiscal da Operação
             $std->uCom = $prod['unidade'] ?? 'UN'; // Unidade
-            $std->qCom = number_format($prod['quantidade'], 4, '.', ''); // Quantidade
-            $std->vUnCom = number_format($prod['valorUnitario'], 10, '.', ''); // Valor Unitário
-            $std->vProd = number_format($vProd, 2, '.', ''); // Valor Total
+            $std->qCom = formatarDecimal($prod['quantidade'], 4); // Quantidade
+            $std->vUnCom = formatarDecimal($prod['valorUnitario'], 10); // Valor Unitário
+            $std->vProd = formatarDecimal($vProd, 2); // Valor Total
             $std->cEANTrib = $prod['cEANTrib'] ?? 'SEM GTIN'; // Código de barras do produto para tributação
             $std->uTrib = $prod['unidade'] ?? 'UN'; // Unidade de medida para tributação
-            $std->qTrib = number_format($prod['quantidade'], 4, '.', ''); // Quantidade tributável
-            $std->vUnTrib = number_format($prod['valorUnitario'], 10, '.', ''); // Valor unitário tributável
+            $std->qTrib = formatarDecimal($prod['quantidade'], 4); // Quantidade tributável
+            $std->vUnTrib = formatarDecimal($prod['valorUnitario'], 10); // Valor unitário tributável
             $std->indTot = 1; // 1 = inclui no total da NF
             $nfe->tagprod($std);
 
@@ -343,148 +463,401 @@ class Nfe
 
             // ICMS
             $icms = $impostos['icms'] ?? [];
-            $aliqICMS = (float)($icms['aliquota'] ?? 18);
-            $redBC = (float)($icms['pRedBC'] ?? 0);
-            $bcICMS = $vProd * (1 - $redBC / 100);
-            $vICMS = $bcICMS * $aliqICMS / 100;
-            if ($icms) {
+
+            if ($icms && !$this->corpoRequisicao['empresa']['desativarImpostosAntigos']) {
                 $std = new \stdClass();
                 $std->item = $item;
-                $std->orig = $icms['orig'] ?? 0;
+
+                // Dados básicos do ICMS (sempre presentes)
+                $std->orig = (int) ($icms['orig'] ?? 0);
                 $std->CST = str_pad($icms['CST'] ?? '00', 2, '0', STR_PAD_LEFT);
-                $std->modBC = 3;
-                $std->vBC = number_format($bcICMS, 2, '.', '');
-                $std->pICMS = number_format($aliqICMS, 2, '.', '');
-                $std->vICMS = number_format($vICMS, 2, '.', '');
-                $std->pRedBC = ($redBC > 0) ? number_format($redBC, 2, '.', '') : null;
+                $std->modBC = (int) ($icms['modBC'] ?? 3);
+
+                // Base de cálculo e alíquota (podem vir da API)
+                if (isset($icms['vBC'])) {
+                    $std->vBC = formatarDecimal($icms['vBC'], 2);
+                }
+                if (isset($icms['aliquota'])) {
+                    $std->pICMS = formatarDecimal($icms['aliquota'], 2);
+                }
+                if (isset($icms['vBC']) && isset($icms['aliquota'])) {
+                    $std->vICMS = formatarDecimal($icms['vBC'] * $icms['aliquota'] / 100, 2);
+                }
+
+                // Redução de BC
+                if (!empty($icms['pRedBC'])) {
+                    $std->pRedBC = formatarDecimal($icms['pRedBC'], 2);
+                }
+
+                // ICMS ST
+                if (!empty($icms['modBCST'])) {
+                    $std->modBCST = (int) $icms['modBCST'];
+                }
+                if (!empty($icms['pMVAST'])) {
+                    $std->pMVAST = formatarDecimal($icms['pMVAST'], 2);
+                }
+                if (!empty($icms['pRedBCST'])) {
+                    $std->pRedBCST = formatarDecimal($icms['pRedBCST'], 2);
+                }
+                if (!empty($icms['vBCST'])) {
+                    $std->vBCST = formatarDecimal($icms['vBCST'], 2);
+                }
+                if (!empty($icms['pICMSST'])) {
+                    $std->pICMSST = formatarDecimal($icms['pICMSST'], 2);
+                }
+                if (!empty($icms['vICMSST'])) {
+                    $std->vICMSST = formatarDecimal($icms['vICMSST'], 2);
+                }
+                if (!empty($icms['vICMSSTRet'])) {
+                    $std->vICMSSTRet = formatarDecimal($icms['vICMSSTRet'], 2);
+                }
+
+                // FCP
+                if (!empty($icms['vBCFCP'])) {
+                    $std->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
+                }
+                if (!empty($icms['pFCP'])) {
+                    $std->pFCP = formatarDecimal($icms['pFCP'], 2);
+                }
+                if (!empty($icms['vBCFCPST'])) {
+                    $std->vBCFCPST = formatarDecimal($icms['vBCFCPST'], 2);
+                }
+                if (!empty($icms['pFCPST'])) {
+                    $std->pFCPST = formatarDecimal($icms['pFCPST'], 2);
+                }
+
                 $nfe->tagICMS($std);
             }
 
-            // PIS
-            $pis = $impostos['pis'] ?? [];
-            $pPIS = (float)($pis['aliquota'] ?? 0.00);
-            $vPIS = $vProd * $pPIS / 100;
-            if ($pis) {
-                $std = new \stdClass();
-                $std->item = $item; // Número do item
-                $std->CST = str_pad($pis['CST'] ?? '06', 2, '0', STR_PAD_LEFT); // Código de situação tributária (ex: 01, 07)
-                $std->vBC = number_format($vProd, 2, '.', '');
-                $std->pPIS = number_format($pPIS, 4, '.', '');
-                $std->vPIS = number_format($vPIS, 2, '.', '');
-                $nfe->tagPIS($std);
-            }
-
-            // COFINS
-            $cofins = $impostos['cofins'] ?? [];
-            $pCOFINS = (float)($cofins['aliquota'] ?? 0.00);
-            $vCOFINS = $vProd * $pCOFINS / 100;
-            if ($cofins) {
-                $std = new \stdClass();
-                $std->item = $item; // Número do item
-                $std->CST = str_pad($cofins['CST'] ?? '06', 2, '0', STR_PAD_LEFT); // Código de situação tributária (ex: 01, 07)
-                $std->vBC = number_format($vProd, 2, '.', '');
-                $std->pCOFINS = number_format($pCOFINS, 4, '.', '');
-                $std->vCOFINS = number_format($vCOFINS, 2, '.', '');
-                $nfe->tagCOFINS($std);
-            }
-
-            // IS (Imposto Seletivo)
-            $is = $impostos['is'] ?? [];
-            $vIS = (float)($is['vIS'] ?? 0);
-            if ($is) {
+            // IPI (ADD desativarImpostosAntigos)
+            $ipi = $impostos['ipi'] ?? [];
+            if (!empty($ipi['CST'])) {
                 $std = new \stdClass();
                 $std->item = $item;
-                $std->CSTIS = str_pad($is['CSTIS'] ?? '000', 3, '0', STR_PAD_LEFT);
-                $std->cClassTribIS = str_pad($is['cClassTribIS'] ?? '000000', 6, '0', STR_PAD_LEFT);
-                $std->vBCIS = number_format((float)($is['vBCIS'] ?? 0), 2, '.', '');
-                $std->pIS = number_format((float)($is['pIS'] ?? 0), 2, '.', '');
-                $std->vIS = number_format($vIS, 2, '.', '');
-                $std->uTrib = $is['uTrib'] ?? 'UN';
-                $std->qTrib = number_format((float)($is['qTrib'] ?? 0), 4, '.', '');
-                $nfe->tagIS($std);
-                $totalIS += $vIS;
+                $std->cEnq = $ipi['cEnq'];
+                $std->CST = str_pad($ipi['CST'], 2, '0', STR_PAD_LEFT);
+
+                // Grupos de CST tributados (00, 49, 50, 99)
+                if (in_array($std->CST, ['00', '49', '50', '99'])) {
+                    $std->vBC = formatarDecimal($vProd, 2);
+                    $std->pIPI = formatarDecimal((float)$ipi['aliquota'], 2);
+                    $std->vIPI = formatarDecimal($vProd * ((float)$ipi['aliquota'] / 100), 2);
+                }
+
+                $nfe->tagIPI($std);
+            }
+
+
+            // ===== PIS =====
+            $pis = $impostos['pis'] ?? [];
+            if (!empty($pis['CST']) && !$this->corpoRequisicao['empresa']['desativarImpostosAntigos']) {
+                $std = new \stdClass();
+                $std->item = $item;
+                $std->CST = str_pad(trim($pis['CST'] ?? ''), 2, '0', STR_PAD_LEFT);
+
+                // GRUPO PISAliq: Operação Tributável com Alíquota Percentual (CST 01 e 02)
+                if (in_array($std->CST, ['01', '02'])) {
+                    $std->vBC = formatarDecimal($vProd, 2);
+                    $std->pPIS = formatarDecimal($pis['aliquota'], 4);
+                    $std->vPIS = formatarDecimal($vProd * ((float)$pis['aliquota'] / 100), 2);
+                    $nfe->tagPIS($std);
+                } elseif ($std->CST == '03') { // GRUPO PISQtde: Tributação por Quantidade (CST 03)
+                    $std->qBCProd = formatarDecimal($prod['quantidade'], 4);
+                    $std->vAliqProd = formatarDecimal((float) $pis['aliquota'], 4);
+                    $std->vPIS = formatarDecimal($prod['quantidade'] * $pis['aliquota'], 2);
+                    $nfe->tagPIS($std);
+                } elseif (in_array($std->CST, ['04', '05', '06', '07', '08', '09'])) { // GRUPO PISNT: Não Tributado (CST 04 a 09)
+                    $nfe->tagPIS($std);
+                } elseif ($std->CST >= '49' && $std->CST <= '99') { // GRUPO PISOutr: Outras Operações (CST 49 a 99)
+                    if ((float) $pis['aliquota'] > 0) {
+                        $std->vBC = formatarDecimal($vProd, 2);
+                        $std->pPIS = formatarDecimal($pis['aliquota'], 4);
+                        $std->vPIS = formatarDecimal($vProd * ((float)$pis['aliquota'] / 100), 2);
+                    }
+                    $nfe->tagPIS($std);
+                }
+            }
+
+            // COFINS (ADD desativarImpostosAntigos)
+            $cofins = $impostos['cofins'] ?? [];
+            if (!empty($cofins['CST']) && !$this->corpoRequisicao['empresa']['desativarImpostosAntigos']) {
+                $std = new \stdClass();
+                $std->item = $item;
+                $std->CST = str_pad($cofins['CST'], 2, '0', STR_PAD_LEFT);
+
+                // GRUPO COFINSAliq: Operação Tributável com Alíquota Percentual (CST 01 e 02)
+                if (in_array($std->CST, ['01', '02'])) {
+                    $std->vBC = formatarDecimal($vProd, 2);
+                    $std->pCOFINS = formatarDecimal($cofins['aliquota'], 4);
+                    $std->vCOFINS = formatarDecimal($vProd * ((float)$cofins['aliquota'] / 100), 2);
+                    $nfe->tagCOFINS($std);
+                } elseif ($std->CST == '03') { // GRUPO COFINSQtde: Tributação por Quantidade (CST 03)
+                    $std->qBCProd = formatarDecimal($prod['quantidade'], 4);
+                    $std->vAliqProd = formatarDecimal($cofins['aliquota'], 4);
+                    $std->vCOFINS = formatarDecimal($prod['quantidade'] * $cofins['aliquota'], 2);
+                    $nfe->tagCOFINS($std);
+                } elseif (in_array($std->CST, ['04', '05', '06', '07', '08', '09'])) { // GRUPO COFINSNT: Não Tributado (CST 04 a 09)
+                    $nfe->tagCOFINS($std);
+                } elseif ($std->CST >= '49' && $std->CST <= '99') { // GRUPO COFINSOutr: Outras Operações (CST 49 a 99)
+                    if ((float)$cofins['aliquota'] > 0) {
+                        $std->vBC = formatarDecimal($vProd, 2);
+                        $std->pCOFINS = formatarDecimal($cofins['aliquota'], 2);
+                        $std->vCOFINS = formatarDecimal($vProd * ((float)$cofins['aliquota'] / 100), 2);
+                    }
+                    $nfe->tagCOFINS($std);
+                }
             }
 
             // IBS/CBS (Reforma Tributária)
             $ibs = $impostos['ibscbs'] ?? [];
-            $vBC_IBSCBS = (float)($ibs['vBC'] ?? $vProd);
 
-            if ((int)date('Y') >= 2026) {
-                $ibs['gCBS_pAliqEfet'] = 0.9;
-            }
+            // Só processa se houver dados de IBS/CBS
+            if (!$this->corpoRequisicao['empresa']['usarContingenciaIbsCbs']
+                && !in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])
+            ) {
+                // IS (Imposto Seletivo)
+                // $is = $impostos['is'] ?? [];
+                // $vIS = (float)($is['vIS'] ?? 0);
+                // if ($is) {
+                //     $std = new \stdClass();
+                //     $std->item = $item;
+                //     $std->CSTIS = str_pad($is['CSTIS'] ?? '000', 3, '0', STR_PAD_LEFT);
+                //     $std->cClassTribIS = str_pad($is['cClassTribIS'] ?? '000000', 6, '0', STR_PAD_LEFT);
+                //     $std->vBCIS = formatarDecimal(($is['vBCIS'] ?? 0), 2);
+                //     $std->pIS = formatarDecimal(($is['pIS'] ?? 0), 2);
+                //     $std->vIS = formatarDecimal($vIS, 2);
+                //     $std->uTrib = $is['uTrib'] ?? 'UN';
+                //     $std->qTrib = formatarDecimal(($is['qTrib'] ?? 0), 4);
+                //     $nfe->tagIS($std);
+                //     $totalIs += $vIS;
+                // }
 
-            $gIBSUF_pAliqEfet = round((float)($ibs['gIBSUF_pAliqEfet'] ?? 0), 2);
-            $gIBSMun_pAliqEfet = round((float)($ibs['gIBSMun_pAliqEfet'] ?? 0), 2);
-            $gCBS_pAliqEfet = round((float)($ibs['gCBS_pAliqEfet'] ?? 0), 2);
+                // IBS/CBS (Reforma Tributária)
+                $ibs = $impostos['ibscbs'] ?? [];
 
-            $gIBSUF_vIBSUF = round($vBC_IBSCBS * $gIBSUF_pAliqEfet / 100, 2);
-            $gIBSMun_vIBSMun = round($vBC_IBSCBS * $gIBSMun_pAliqEfet / 100, 2);
-            $gCBS_vCBS = round($vBC_IBSCBS * $gCBS_pAliqEfet / 100, 2);
+                // Só processa se houver dados de IBS/CBS
+                if ($ibs) {
+                    $cst = str_pad($ibs['CST'] ?? '000', 3, '0', STR_PAD_LEFT);
 
-            if ($ibs) {
-                $std = new \stdClass();
-                $std->item = $item;
-                $std->CST = str_pad($ibs['CST'] ?? '200', 3, '0', STR_PAD_LEFT);
-                $std->cClassTrib = str_pad($ibs['cClassTrib'] ?? '200003', 6, '0', STR_PAD_LEFT);
-                $std->indDoacao = (int)($ibs['indDoacao'] ?? 0);
-                $std->vBC = number_format($vBC_IBSCBS, 2, '.', '');
+                    $cstPadrao = ['000', '010', '011', '200', '220', '221', '222', '510', '515', '550', '830'];
 
-                // IBS Estadual
-                $std->gIBSUF_pIBSUF = number_format((float)($ibs['gIBSUF_pIBSUF'] ?? 0), 4, '.', '');
-                $std->gIBSUF_pRedAliq = number_format((float)($ibs['gIBSUF_pRedAliq'] ?? 0), 4, '.', '');
-                $std->gIBSUF_pAliqEfet = number_format($gIBSUF_pAliqEfet, 4, '.', '');
-                $std->gIBSUF_vIBSUF = number_format($gIBSUF_vIBSUF, 2, '.', '');
+                    if (in_array($cst, $cstPadrao)) {
 
-                // IBS Municipal
-                $std->gIBSMun_pIBSMun = number_format((float)($ibs['gIBSMun_pIBSMun'] ?? 0), 4, '.', '');
-                $std->gIBSMun_pRedAliq = number_format((float)($ibs['gIBSMun_pRedAliq'] ?? 0), 4, '.', '');
-                $std->gIBSMun_pAliqEfet = number_format($gIBSMun_pAliqEfet, 4, '.', '');
-                $std->gIBSMun_vIBSMun = number_format($gIBSMun_vIBSMun, 2, '.', '');
+                        $valorBaseCalculoIbsCbs = (float)($ibs['vBC'] ?? $vProd);
 
-                // CBS Federal
-                $std->gCBS_pCBS = number_format((float)($ibs['gCBS_pCBS'] ?? 0), 4, '.', '');
-                $std->gCBS_pRedAliq = number_format((float)($ibs['gCBS_pRedAliq'] ?? 0), 4, '.', '');
-                $std->gCBS_pAliqEfet = number_format($gCBS_pAliqEfet, 4, '.', '');
-                $std->gCBS_vCBS = number_format($gCBS_vCBS, 2, '.', '');
-                $nfe->tagIBSCBS($std);
+                        $std = new \stdClass();
+                        $std->item = $item;
+                        $std->CST = $cst;
+                        $std->cClassTrib = str_pad($ibs['cClassTrib'] ?? '', 6, '0', STR_PAD_LEFT);
+                        $std->indDoacao = (int)($ibs['indDoacao'] ?? 0);
+                        $std->vBC = formatarDecimal($valorBaseCalculoIbsCbs, 2);
 
-                $totalIBS += $gIBSUF_vIBSUF + $gIBSMun_vIBSMun;
-                $totalCBS += $gCBS_vCBS;
-                $totalBC_IBSCBS += $vBC_IBSCBS;
+                        $std->gIBSUF_pIBSUF   = formatarDecimal(($ibs['gIBSUF_pIBSUF'] ?? 0), 4);
+                        $std->gIBSUF_vIBSUF   = formatarDecimal(($ibs['gIBSUF_vIBSUF'] ?? 0), 2);
+                        $std->gIBSMun_pIBSMun = formatarDecimal(($ibs['gIBSMun_pIBSMun'] ?? 0), 4);
+                        $std->gIBSMun_vIBSMun = formatarDecimal(($ibs['gIBSMun_vIBSMun'] ?? 0), 2);
+                        $std->gCBS_pCBS       = formatarDecimal(($ibs['gCBS_pCBS'] ?? 0), 4);
+                        $std->gCBS_vCBS       = formatarDecimal(($ibs['gCBS_vCBS'] ?? 0), 2);
+
+                        if (in_array($cst, ['011', '200', '515'])) {
+                            $std->gIBSUF_pRedAliq   = formatarDecimal(($ibs['gIBSUF_pRedAliq'] ?? 0), 4);
+                            $std->gIBSUF_pAliqEfet  = formatarDecimal(($ibs['gIBSUF_pAliqEfet'] ?? 0), 4);
+                            $std->gIBSMun_pRedAliq  = formatarDecimal(($ibs['gIBSMun_pRedAliq'] ?? 0), 4);
+                            $std->gIBSMun_pAliqEfet = formatarDecimal(($ibs['gIBSMun_pAliqEfet'] ?? 0), 4);
+                            $std->gCBS_pRedAliq     = formatarDecimal(($ibs['gCBS_pRedAliq'] ?? 0), 4);
+                            $std->gCBS_pAliqEfet    = formatarDecimal(($ibs['gCBS_pAliqEfet'] ?? 0), 4);
+                        }
+
+                        if ($cst === '515') {
+                            $std->gIBSUF_pDif  = formatarDecimal(($ibs['gIBSUF_pDif'] ?? 0), 4);
+                            $std->gIBSUF_vDif  = formatarDecimal(($ibs['gIBSUF_vDif'] ?? 0), 2);
+                            $std->gIBSMun_pDif = formatarDecimal(($ibs['gIBSMun_pDif'] ?? 0), 4);
+                            $std->gIBSMun_vDif = formatarDecimal(($ibs['gIBSMun_vDif'] ?? 0), 2);
+                            $std->gCBS_pDif    = formatarDecimal(($ibs['gCBS_pDif'] ?? 0), 4);
+                            $std->gCBS_vDif    = formatarDecimal(($ibs['gCBS_vDif'] ?? 0), 2);
+                        }
+
+                        if (!empty($ibs['gIBSUF_vDevTrib'])) {
+                            $std->gIBSUF_vDevTrib = formatarDecimal($ibs['gIBSUF_vDevTrib'], 2);
+                        }
+
+                        if (!empty($ibs['gIBSMun_vDevTrib'])) {
+                            $std->gIBSMun_vDevTrib = formatarDecimal($ibs['gIBSMun_vDevTrib'], 2);
+                        }
+
+                        if (!empty($ibs['gCBS_vDevTrib'])) {
+                            $std->gCBS_vDevTrib = formatarDecimal($ibs['gCBS_vDevTrib'], 2);
+                        }
+
+                        $nfe->tagIBSCBS($std);
+
+                        $totalIbs += (float)($ibs['gIBSUF_vIBSUF'] ?? 0) + (float)($ibs['gIBSMun_vIBSMun'] ?? 0);
+                        $totalCbs += (float)($ibs['gCBS_vCBS'] ?? 0);
+                        $totalBaseCalculoIbsCbs += $valorBaseCalculoIbsCbs;
+
+                        if ($cst === '550' && !empty($ibs['CSTReg'])) {
+                                $stdReg = new \stdClass();
+                                $stdReg->item = $item;
+                                $stdReg->CSTReg = str_pad($ibs['CSTReg'], 3, '0', STR_PAD_LEFT);
+                                $stdReg->cClassTribReg = str_pad($ibs['cClassTribReg'], 6, '0', STR_PAD_LEFT);
+                                $stdReg->pAliqEfetRegIBSUF = formatarDecimal($ibs['pAliqEfetRegIBSUF'], 4);
+                                $stdReg->vTribRegIBSUF = formatarDecimal($ibs['vTribRegIBSUF'], 2);
+                                $stdReg->pAliqEfetRegIBSMun = formatarDecimal($ibs['pAliqEfetRegIBSMun'], 4);
+                                $stdReg->vTribRegIBSMun = formatarDecimal($ibs['vTribRegIBSMun'], 2);
+                                $stdReg->pAliqEfetRegCBS = formatarDecimal($ibs['pAliqEfetRegCBS'], 4);
+                                $stdReg->vTribRegCBS = formatarDecimal($ibs['vTribRegCBS'], 2);
+                                $nfe->tagIBSCBSTribRegular($stdReg);
+                            }
+
+                    } elseif ($cst === '620') {
+                        // Tributação Monofásica
+                        $stdMono = new \stdClass();
+                        $stdMono->item = $item;
+                        $stdMono->qBCMono   = formatarDecimal(($ibs['qBCMono'] ?? 0), 4);
+                        $stdMono->adRemIBS  = formatarDecimal(($ibs['adRemIBS'] ?? 0), 4);
+                        $stdMono->vIBSMono  = formatarDecimal(($ibs['vIBSMono'] ?? 0), 2);
+                        $stdMono->adRemCBS  = formatarDecimal(($ibs['adRemCBS'] ?? 0), 4);
+                        $stdMono->vCBSMono  = formatarDecimal(($ibs['vCBSMono'] ?? 0), 2);
+                        $stdMono->vTotIBSMonoItem = formatarDecimal(($ibs['vTotIBSMonoItem'] ?? $ibs['vIBSMono'] ?? 0), 2);
+                        $stdMono->vTotCBSMonoItem = formatarDecimal(($ibs['vTotCBSMonoItem'] ?? $ibs['vCBSMono'] ?? 0), 2);
+
+                        $nfe->tagIBSCBSMono($stdMono);
+                        $totalIbs += (float)($stdMono->vTotIBSMonoItem ?? 0);
+                        $totalCbs += (float)($stdMono->vTotCBSMonoItem ?? 0);
+
+                    } elseif ($cst === '800') {
+                        // Transferência de Crédito
+                        $stdTransf = new \stdClass();
+                        $stdTransf->item = $item;
+                        $stdTransf->vIBS = formatarDecimal(($ibs['vIBS'] ?? 0), 2);
+                        $stdTransf->vCBS = formatarDecimal(($ibs['vCBS'] ?? 0), 2);
+                        $nfe->taggTransfCred($stdTransf);
+
+                    } elseif ($cst === '810') {
+                        // Crédito Presumido ZFM
+                        $stdZFM = new \stdClass();
+                        $stdZFM->item = $item;
+                        $stdZFM->competApur = $ibs['competApur'];
+                        $stdZFM->tpCredPresIBSZFM = $ibs['tpCredPresIBSZFM'] ?? '0';
+                        $stdZFM->vCredPresIBSZFM  = formatarDecimal(($ibs['vCredPresIBSZFM'] ?? 0), 2);
+                        $nfe->taggCredPresIBSZFM($stdZFM);
+
+                    } elseif ($cst === '811') {
+                        // Ajuste de Competência
+                        $stdAjuste = new \stdClass();
+                        $stdAjuste->item = $item;
+                        $stdAjuste->competApur = $ibs['competApur'];
+                        $stdAjuste->vIBS = formatarDecimal(($ibs['vIBSAjuste'] ?? 0), 2);
+                        $stdAjuste->vCBS = formatarDecimal(($ibs['vCBSAjuste'] ?? 0), 2);
+
+                        $nfe->taggAjusteCompet($stdAjuste);
+                    }
+                }
             }
         }
 
         // Força a inclusão das Tags de Totais (IS, IBS, CBS)
         // A biblioteca pode omitir se forem zero, mas a SEFAZ exige.
+        if (!$this->corpoRequisicao['empresa']['usarContingenciaIbsCbs']
+            && !in_array($this->corpoRequisicao['modoOperacao'], $this->default['modoContingencia'])
+        ) {
 
-        // 1. Total de IS
-        $stdISTot = new \stdClass();
-        $stdISTot->vIS = number_format($totalIS, 2, '.', '');
-        $nfe->tagISTot($stdISTot);
+            if ($totalIbs > 0 || $totalCbs > 0 || $totalBaseCalculoIbsCbs > 0) {
+                // 1. Total de IS
+                // $stdISTot = new \stdClass();
+                // $stdISTot->vIS = formatarDecimal($totalIs, 2);
+                // $nfe->tagISTot($stdISTot);
 
-        // 2. Totais de IBS/CBS
-        $stdIBSCBSTot = new \stdClass();
-        $stdIBSCBSTot->vBCIBSCBS = number_format($totalBC_IBSCBS, 2, '.', '');
-        $stdIBSCBSTot->gIBS_vIBS = number_format($totalIBS, 2, '.', '');
-        $stdIBSCBSTot->gCBS_vCBS = number_format($totalCBS, 2, '.', '');
-        $nfe->tagIBSCBSTot($stdIBSCBSTot);
+                // 2. Totais de IBS/CBS
+                $stdTotalIbsCbs = new \stdClass();
+                $stdTotalIbsCbs->vBCIBSCBS = formatarDecimal($totalBaseCalculoIbsCbs, 2);
+                $stdTotalIbsCbs->gIBS_vIBS = formatarDecimal($totalIbs, 2);
+                $stdTotalIbsCbs->gCBS_vCBS = formatarDecimal($totalCbs, 2);
+                $nfe->tagIBSCBSTot($stdTotalIbsCbs);
+            }
+        }
 
-        $totalNota = $totalProdutos + $totalIS + $totalIBS + $totalCBS;
+        $totalIbs = $totalIbs ?? 0.00;
+        $totalCbs = $totalCbs ?? 0.00;
+
+        // $totalNota = $totalProdutos + $totalIs + $totalIbs + $totalCbs; // IS está comentado
+        // $totalNota = $totalProdutos + $totalIbs + $totalCbs; // Comentado porque se não me engano em 2026 esse valor não vai ser acrescentado ao valor total da nota
+        $totalNota = $totalProdutos;
+
         $stdTotal = new \stdClass();
-        $stdTotal->vNFTot = number_format($totalNota, 2, '.', '');
+        // Formatação do valor total da nota
+        $stdTotal->vNFTot = formatarDecimal($totalNota, 2);
         $nfe->tagtotal($stdTotal);
 
         // ===== TRANSPORTE =====
+        // Modalidade do frete
         $std = new \stdClass();
-        $std->modFrete = 9; // Modalidade do frete (0 = emitente, 1 = destinatário, 2 = terceiros, 9 = sem frete)
+        $std->modFrete = $this->corpoRequisicao['transporte']['modalidadeFrete']; // Modalidade do frete (0 = emitente, 1 = destinatário, 2 = terceiros, 9 = sem frete)
         $nfe->tagtransp($std);
+
+        // Dados da transportadora
+        $transp = $this->corpoRequisicao['transporte']['transportadora'];
+
+        $temCnpj = !empty($transp['cnpj']);
+        $temCpf = !empty($transp['cpf']);
+
+        if (($temCnpj || $temCpf) && $std->modFrete <> 9) {
+            $std = new \stdClass();
+            $std->xNome = $transp['razaoSocial'] ?? '';
+            $std->IE = $transp['inscricaoEstadual'] ?? '';
+            $std->xEnder = $transp['endereco'] ?? '';
+            $std->xMun = $transp['municipio'] ?? '';
+            $std->UF = $transp['uf'] ?? '';
+
+            if ($temCnpj) {
+                $std->CNPJ = soNumeros($transp['cnpj']);
+            } else {
+                $std->CPF = soNumeros($transp['cpf']);
+            }
+
+            $nfe->tagtransporta($std);
+        }
+
+        // Veículos
+        $veiculo = $this->corpoRequisicao['transporte']['veiculo'];
+
+        if ($veiculo['placa']) {
+            $std = new \stdClass();
+            $std->placa = $veiculo['placa'] ?? '';
+            $std->UF = $veiculo['uf'] ?? '';
+            $std->RNTC = $veiculo['rntc'] ?? '';
+            $nfe->tagveicTransp($std);
+        }
+
+        // Volumes
+        $vol = $this->corpoRequisicao['transporte']['volumes'];
+
+        $qtdInformada = (int) ($vol['quantidade'] ?? 0);
+        $pesoL = (float) ($vol['pesoLiquido'] ?? 0);
+        $pesoB = (float) ($vol['pesoBruto'] ?? 0);
+
+        if ($qtdInformada > 0 || $pesoL > 0 || $pesoB > 0) {
+
+            $std = new \stdClass();
+            if ($qtdInformada > 0) {
+                $std->qVol  = $qtdInformada;
+                $std->esp   = $vol['especie'] ?? '';
+                $std->marca = $vol['marca'] ?? '';
+                $std->nVol  = $vol['numeracao'] ?? '';
+            }
+
+            $std->pesoL = formatarDecimal($pesoL, 3);
+            $std->pesoB = formatarDecimal($pesoB, 3);
+
+            $nfe->tagvol($std);
+        }
 
         // ===== PAGAMENTO =====
         $std = new \stdClass();
         $std->vTroco = 0.00;
         $nfe->tagpag($std);
 
-        $finalidade = $this->corpoRequisicao['finalidadeEmissao'] ?? 1; // 1 = NF-e Normal por padrão
+        $finalidade = $this->corpoRequisicao['finNFe'] ?? 1; // 1 = NF-e Normal por padrão
 
         $std = new \stdClass();
         if (in_array($finalidade, [3, 4])) {
@@ -495,15 +868,15 @@ class Nfe
         } else {
             // 1 = NF-e Normal (Venda)
             $std->tPag = '01'; // Tipo de pagamento (01 = dinheiro, 02 = cheque, 03 = cartão, 15 = PIX)
-            $std->vPag = number_format($totalProdutos, 2, '.', ''); // Valor pago pelo cliente
+            $std->vPag = formatarDecimal($totalProdutos, 2); // Valor pago pelo cliente
         }
 
         $nfe->tagdetPag($std);
 
         // ===== INFORMAÇÕES ADICIONAIS =====
         $std = new \stdClass();
-        $std->infCpl = $this->corpoRequisicao['informacoesAdicionais'] ??
-            'DOCUMENTO EMITIDO SOB O NOVO REGIME TRIBUTARIO (IBS/CBS/IS)';
+        $std->infCpl = $this->corpoRequisicao['informacoesContribuinte'];
+        $std->infAdFisco = $this->corpoRequisicao['informacoesAdicionais'];
         $nfe->taginfAdic($std);
 
         // ===== AUTORIZAÇÃO XML (OBRIGATÓRIO PARA BA) =====
@@ -520,63 +893,79 @@ class Nfe
     {
         try {
             $response = $this->tools->sefazConsultaRecibo($recibo);
-
+    
             $stdCl = new Standardize();
             $std = $stdCl->toStd($response);
-
+    
             if (isset($std->protNFe->infProt)) {
                 $cStat = $std->protNFe->infProt->cStat;
-
+    
                 if (in_array($cStat, [100, 150])) {
                     $protocolo = $std->protNFe->infProt->nProt;
                     $chave = $std->protNFe->infProt->chNFe;
-
+    
                     $xmlProtocolado = Complements::toAuthorize($xmlAssinado, $response);
-
-                    // Salva XML
-                    $this->salvarXML($chave, $xmlProtocolado);
-
+    
                     $mensagem = "Autorizada";
                     if (isset($std->protNFe->infProt->xMotivo)) {
                         $mensagem = $std->protNFe->infProt->xMotivo;
                     }
-
-                    return [
-                        'success' => true,
-                        'chave' => $chave,
-                        'protocolo' => $protocolo,
-                        'mensagem' => $mensagem,
-                        'xml' => base64_encode($xmlProtocolado)
-                    ];
+    
+                    $dataHoraRecebimento = null;
+                    if (isset($std->protNFe->infProt->dhRecbto)) {
+                        $dataHoraRecebimento = $std->protNFe->infProt->dhRecbto;
+    
+                        $data = new \DateTime($dataHoraRecebimento);
+                        $dataHoraRecebimento = $data->format('Y-m-d H:i:s');
+                    }
+    
+                    emitirSucesso(
+                        $mensagem,
+                        200,
+                        [
+                            'situacao' => 'Aprovada',
+                            'chave' => $chave,
+                            'protocolo' => $protocolo,
+                            'codigoSituacaoNF' => $cStat,
+                            'dataHoraRecebimento' => $dataHoraRecebimento,
+                            'xml' => base64_encode($xmlProtocolado)
+                        ]
+                    );
                 }
             }
+            
             $motivo = 'Erro desconhecido';
             if (isset($std->xMotivo)) {
                 $motivo = $std->xMotivo;
             }
-
+    
             $codigoSituacaoNF = 'N/A';
             if (isset($std->cStat)) {
                 $codigoSituacaoNF = $std->cStat;
             }
-
-            return [
-                'success' => false,
-                'erro' =>  $motivo,
-                'codigo' => $codigoSituacaoNF
-            ];
-
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'erro' => $e->getMessage(),
-                'codigo' => 'EXCEPTION'
-            ];
+    
+            emitirErro(
+                $motivo,
+                400,
+                [
+                    'situacao' => 'Reprovada',
+                    'codigoSituacaoNF' => $codigoSituacaoNF
+                ]
+            );
+    
+        } catch (Exception $e) {
+            emitirErro(
+                $e->getMessage(),
+                500,
+                [
+                    'situacao' => 'Reprovada'
+                ]
+            );
         }
     }
 
 
-    public function cancelarNFe()
+    public function cancelar()
     {
         try {
             $chave = '';
@@ -595,11 +984,11 @@ class Nfe
             }
 
             if (!$chave || !$protocolo || !$justificativa) {
-                emitirErro("Os campos: chave, protocolo e justificativa sao obrigatorios", 400);
+                emitirErro("Os campos: chave, protocolo e justificativa são obrigatórios", 400);
             }
 
             if (strlen($justificativa) < 15) {
-                emitirErro("A justificativa deve ter no minimo 15 caracteres", 400);
+                emitirErro("A justificativa deve ter no mínimo 15 caracteres", 400);
             }
 
             // Envia o cancelamento e captura tanto a requisição quanto a resposta
@@ -620,7 +1009,6 @@ class Nfe
 
                 // Junta o evento enviado com a resposta recebida usando Complements
                 $xmlProtocolado = Complements::toAuthorize($xmlEvento, $response);
-                $this->salvarXMLCancelado($chave, $xmlProtocolado);
 
                 $mensagem = 'Cancelamento homologado';
                 if (isset($std->retEvento->infEvento->xMotivo)) {
@@ -632,7 +1020,8 @@ class Nfe
                         'success' => true,
                         'mensagem' => $mensagem,
                         'codigo' => $std->retEvento->infEvento->cStat,
-                        'protocolo' => $protocoloCancelamento
+                        'protocolo' => $protocoloCancelamento,
+                        'xml_cancelamento' => base64_encode($xmlProtocolado)
                     ],
                     200
                 );
@@ -654,13 +1043,13 @@ class Nfe
                 emitirErro($motivo, 400, $codigo);
             }
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             emitirErro($e->getMessage(), 500);
         }
     }
 
 
-    public function inutilizarNFe()
+    public function inutilizar()
     {
         try {
 
@@ -670,7 +1059,7 @@ class Nfe
                 || !isset($this->corpoRequisicao['numero_final'])
                 || !isset($this->corpoRequisicao['justificativa'])
             ) {
-                emitirErro('Os campos: cnpj_emitente, serie, numero_inicial, numero_final e justificativa sao obrigatorios', 400);
+                emitirErro('Os campos: cnpj_emitente, serie, numero_inicial, numero_final e justificativa são obrigatórios', 400);
                 return;
             }
 
@@ -700,8 +1089,6 @@ class Nfe
                 if (isset($std->infInut->nProt)) {
                     $protocolo =  $std->infInut->nProt;
                 }
-
-                $this->salvarXMLInutilizado($std->infInut, $response);
 
                 $motivo = 'Inutilização homologada';
                 if (isset($std->infInut->xMotivo)) {
@@ -742,7 +1129,7 @@ class Nfe
                 );
             }
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             emitirErro($e->getMessage(), 500);
         }
     }
@@ -763,12 +1150,12 @@ class Nfe
             }
 
             if (!$chave || !$correcao) {
-                emitirErro("Os campos: chave e correcao sao obrigatorios", 400);
+                emitirErro("Os campos: chave e correção são obrigatórios", 400);
                 return;
             }
 
             if (strlen($correcao) < 15) {
-                emitirErro("A correcao deve ter no minimo 15 caracteres", 400);
+                emitirErro("A correçao deve ter no mínimo 15 caracteres", 400);
 
             }
 
@@ -797,7 +1184,6 @@ class Nfe
             // 3. JUNTA OS DOIS XMLs (Requisição + Resposta)
             $xmlProtocolado = Complements::toAuthorize($xmlEvento, $response);
 
-            $this->salvarXMLCCe($chave, $xmlProtocolado, $nSeqEvento);
 
             $dataEvento = null;
             if (isset($std->retEvento->infEvento->dhRegEvento)) {
@@ -810,17 +1196,18 @@ class Nfe
                 [
                     'protocolo' => $protocolo,
                     'sequencia' => $nSeqEvento,
-                    'data_evento' => $dataEvento
+                    'data_evento' => $dataEvento,
+                    'xml' => base64_encode($xmlProtocolado)
                 ]
             );
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             emitirErro($e->getMessage(), 500);
         }
     }
 
 
-    public function consultarNFe()
+    public function consultar()
     {
         try {
 
@@ -830,7 +1217,7 @@ class Nfe
             }
 
             if (!$chave || strlen($chave) != 44) {
-                emitirErro("Chave de acesso valida eh obrigatoria", 400);
+                emitirErro("Chave de acesso válida é obrigatória", 400);
             }
 
             $response = $this->tools->sefazConsultaChave($chave);
@@ -863,83 +1250,45 @@ class Nfe
                 200
             );
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             emitirErro($e->getMessage(), 500);
         }
     }
 
 
-    public function estornarNFe()
+    public function estornar()
     {
         try {
-            $dadosEstorno = $this->corpoRequisicao;
 
             // 1. VALIDAÇÕES OBRIGATÓRIAS
             if (
-                !isset($dadosEstorno['chaveReferenciada']) ||
-                !isset($dadosEstorno['produtos']) ||
-                !isset($dadosEstorno['numero']) ||
-                !isset($dadosEstorno['cliente'])
+                !isset($this->corpoRequisicao['chaveEstorno']) ||
+                !isset($this->corpoRequisicao['produtos']) ||
+                !isset($this->corpoRequisicao['numeroNota']) ||
+                !isset($this->corpoRequisicao['cliente'])
             ) {
                 emitirErro(
-                    "Para estorno, os campos 'chaveReferenciada', 'numero', 'cliente' e 'produtos' são obrigatórios.",
+                    "Para estorno, os campos 'chaveEstorno', 'numeroNota', 'cliente' e 'produtos' são obrigatórios.",
                     400
                 );
             }
 
-            if (strlen($dadosEstorno['chaveReferenciada']) != 44) {
+            if (strlen($this->corpoRequisicao['chaveEstorno']) != 44) {
                 emitirErro("A chave referenciada deve ter 44 dígitos.", 400);
             }
 
             // (OPCIONAL, MAS É BOM QUE EVITA ERROS, VAMOS VER SE VAI PRECISAR...)
-            $consultaOriginal = $this->consultarNotaOriginal($dadosEstorno['chaveReferenciada']);
+            $consultaOriginal = $this->consultarNotaOriginal($this->corpoRequisicao['chaveEstorno']);
             if (!$consultaOriginal['autorizada']) {
                 emitirErro(
-                    "A NF-e original (chave: {$dadosEstorno['chaveReferenciada']}) não está autorizada. Estorno não permitido.",
+                    "A NF-e original (chave: {$this->corpoRequisicao['chaveEstorno']}) não está autorizada. Estorno não permitido.",
                     400
                 );
             }
 
-            $this->corpoRequisicao['tipoOperacao'] = 0; // ENTRADA
-            $this->corpoRequisicao['finalidadeEmissao'] = 3; // AJUSTE
-            $this->corpoRequisicao['naturezaOperacao'] = '999 - ESTORNO DE NFE NAO CANCELADA NO PRAZO LEGAL'; // ESTÁ ASSIM EM UM PDF DE ESTORNO ENVIADO POR GONZAGAO
-
-            // VALIDA PRODUTOS (TALVEZ ISSO NÃO PRECISE, IREMOS PASSAR DE LÁ DO WMS (VAMOS PEGAR TODOS ITENS DE LÁ) )
-            foreach ($this->corpoRequisicao['produtos'] as &$prod) {
-                $prod['cfop'] = '1905';
-
-                // Valida quantidade
-                if (!isset($prod['quantidade']) || $prod['quantidade'] <= 0) {
-                    emitirErro("Produto com quantidade inválida ou não informada.", 400);
-                }
-
-                // Valida valor unitário
-                if (!isset($prod['valorUnitario']) || $prod['valorUnitario'] <= 0) {
-                    emitirErro("Produto com valor unitário inválido ou não informado.", 400);
-                }
-
-                // Define impostos padrões se não informados
-                // (Isso já cobre a lógica que estava duplicada)
-                if (empty($prod['impostos'])) {
-                    $prod['impostos'] = [
-                        'icms' => ['CST' => '41', 'orig' => 0], // Não tributado
-                        'pis' => ['CST' => '49'], // Outras operações
-                        'cofins' => ['CST' => '49'] // Outras operações
-                    ];
-                }
-            }
-            unset($prod);
-
-            // $infoAdicional = sprintf(
-            //     // AQUI DENTRO VAI PEGAR DE INFORMAÇÕES DA NOTA DE SAÍDA...
-            //     // EXEMPLO QUE ESTÁ EM UMA NOTA DE ESTORNO QUE GONZAGAO ME MANDOU -> NAO INCIDE ICMS, DEC. 13.780/12-RICMS/BA, LEI No 7.014/1996-SUBSECAO II ARTIGO 3oRESPALDA A NAO-INCIDENCIA
-            // );
-
-            // $this->corpoRequisicao['informacoesAdicionais'] = $infoAdicional;
-
             $this->enviar();
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             emitirErro($e->getMessage(), 500);
         }
     }
@@ -962,7 +1311,7 @@ class Nfe
                 'motivo' => $std->protNFe->infProt->xMotivo ?? 'Não consultada'
             ];
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Se falhar a consulta, permite o estorno (pode estar offline)
             return [
                 'autorizada' => true,
@@ -971,78 +1320,4 @@ class Nfe
             ];
         }
     }
-
-
-    ### SALVAR NO BANCO DE DADOS ###
-    public function salvarXMLInutilizado($infInut, $xml)
-    {
-        $cnpjLimpo = soNumeros($this->config['cnpj']);
-        $dir = __DIR__ . "/../storage/notas/{$cnpjLimpo}/inutilizadas";
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-
-        $ano = date('Y');
-        if (isset($infInut->ano)) {
-            $ano = $infInut->ano;
-        }
-
-        $serie = 'NA';
-        if (isset($infInut->serie)) {
-            $serie = $infInut->serie;
-        }
-
-        $nIni = 'NA';
-        if (isset($infInut->nNFIni)) {
-            $nIni = $infInut->nNFIni;
-        }
-
-        $nFin = 'NA';
-        if (isset($infInut->nNFFin)) {
-            $nFin = $infInut->nNFFin;
-        }
-
-        $nomeArquivo = "{$ano}-{$serie}-{$nIni}-{$nFin}-inut.xml";
-
-        file_put_contents("{$dir}/{$nomeArquivo}", $xml);
-    }
-
-
-    ### SALVAR NO BANCO DE DADOS ###
-    public function salvarXML($chave, $xml)
-    {
-        $cnpjLimpo = soNumeros($this->config['cnpj']);
-        $dir = __DIR__ . "/../storage/notas/{$cnpjLimpo}/autorizadas";
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-        file_put_contents("{$dir}/{$chave}-nfe.xml", $xml);
-    }
-
-
-    ### SALVAR NO BANCO DE DADOS ###
-    public function salvarXMLCancelado($chave, $xml)
-    {
-        $cnpjLimpo = soNumeros($this->config['cnpj']);
-        $dir = __DIR__ . "/../storage/notas/{$cnpjLimpo}/canceladas";
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-        $nomeArquivo = str_replace('-nfe', '', $chave) . '-canc.xml';
-        file_put_contents("{$dir}/{$nomeArquivo}", $xml);
-    }
-
-    ### SALVAR NO BANCO DE DADOS ###
-    public function salvarXMLCCe($chave, $xml, $sequencia)
-    {
-        $cnpjLimpo = preg_replace('/[^0-9]/', '', $this->config['cnpj']);
-        $dir = __DIR__ . "/../storage/notas/{$cnpjLimpo}/cce";
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-
-        $nomeArquivo = str_replace('-nfe', '', $chave) . "-cce-{$sequencia}.xml";
-        file_put_contents("{$dir}/{$nomeArquivo}", $xml);
-    }
-
 }

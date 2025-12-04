@@ -1,4 +1,64 @@
 <?php
+$AESKEY = "emiteNota";
+
+if (!function_exists('gCleanField')) {
+    function gCleanField($valor)
+    {
+        if (is_array($valor)) {
+            foreach ($valor as $key => $val) {
+                $valor[$key] = gCleanField($val);
+            }
+            return $valor;
+        }
+
+        if (!is_string($valor)) {
+            return $valor;
+        }
+
+        if (!check_utf8($valor)) {
+            $valor = utf8_encode($valor);
+        }
+
+        $valor = str_replace("'", "‘", $valor);
+        $valor = str_replace('"', '“', $valor);
+        $valor = trim($valor);
+
+        return $valor;
+    }
+}
+
+
+if (!function_exists('check_utf8')) {
+    function check_utf8($str)
+    {
+        if (!is_string($str)) {
+            return true;
+        }
+
+        $len = strlen($str);
+        for ($i = 0; $i < $len; $i++) {
+            $c = ord($str[$i]);
+
+            if ($c <= 128) continue;
+
+            if ($c > 247) return false;
+            elseif ($c > 239) $bytes = 4;
+            elseif ($c > 223) $bytes = 3;
+            elseif ($c > 191) $bytes = 2;
+            else return false;
+
+            if (($i + $bytes) > $len) return false;
+
+            while (--$bytes > 0) {
+                $b = ord($str[++$i]);
+                if ($b < 128 || $b > 191) return false;
+            }
+        }
+
+        return true;
+    }
+}
+
 
 if (!function_exists('emitirErro')) {
     function emitirErro($mensagem, $codigoHttp = 400, $dadosExtras = [])
@@ -28,7 +88,7 @@ if (!function_exists('emitirSucesso')) {
         ];
 
         if ($dados) {
-            $resposta['dados'] = $dados;
+            $resposta['detalhes'] = $dados;
         }
 
         finalizarRequisicao($resposta, $codigoHttp);
@@ -97,5 +157,29 @@ if (!function_exists('tirarPontos')) {
     function tirarPontos($dados)
     {
         return(str_replace('/', '', str_replace(")", "", str_replace("(", "", str_replace(" ", "", str_replace(".", "", str_replace("-", "", $dados)))))));
+    }
+}
+
+
+if (!function_exists("desencriptar")) {
+    function desencriptar($senha)
+    {
+        global $AESKEY;
+
+        return openssl_decrypt(
+            hex2bin($senha),     // Dados criptografados
+            'AES-128-CBC',       // Modo de operação AES-128-CBC
+            $AESKEY,             // Chave
+            OPENSSL_RAW_DATA,    // Retorna os dados crus sem qualquer codificação
+            str_repeat("\0", 16) // IV (Vetor de Inicialização)
+        );
+    }
+}
+
+
+if (!function_exists("formatarDecimal")) {
+    function formatarDecimal($valor, $casas = 2)
+    {
+        return number_format((float) $valor, $casas, '.', '');
     }
 }
