@@ -709,6 +709,15 @@ class Nfe
                             $nfe->tagIBSCBSTribRegular($stdReg);
                         }
 
+                    } elseif ($cst === '410') {
+                        // Imunidade e não incidência
+                        $std = new \stdClass();
+                        $std->item = $item;
+                        $std->CST = $cst;
+                        $std->cClassTrib = str_pad($ibs['cClassTrib'] ?? '', 6, '0', STR_PAD_LEFT);
+                        $nfe->tagIBSCBS($std);
+
+                        // Alguns cClassTrib específicos do CST 410 podem exigir crédito presumido
                     } elseif ($cst === '620') {
                         // Tributação Monofásica
                         $stdMono = new \stdClass();
@@ -727,6 +736,13 @@ class Nfe
 
                     } elseif ($cst === '800') {
                         // Transferência de Crédito
+                        $std = new \stdClass();
+                        $std->item = $item;
+                        $std->CST = $cst;
+                        $std->cClassTrib = str_pad($ibs['cClassTrib'] ?? '', 6, '0', STR_PAD_LEFT);
+
+                        $nfe->tagIBSCBS($std);
+
                         $stdTransf = new \stdClass();
                         $stdTransf->item = $item;
                         $stdTransf->vIBS = formatarDecimal(($ibs['vIBS'] ?? 0), 2);
@@ -735,15 +751,29 @@ class Nfe
 
                     } elseif ($cst === '810') {
                         // Crédito Presumido ZFM
+                        $std = new \stdClass();
+                        $std->item = $item;
+                        $std->CST = $cst;
+                        $std->cClassTrib = str_pad($ibs['cClassTrib'] ?? '', 6, '0', STR_PAD_LEFT);
+
+                        $nfe->tagIBSCBS($std);
+
                         $stdZFM = new \stdClass();
                         $stdZFM->item = $item;
                         $stdZFM->competApur = $ibs['competApur'];
                         $stdZFM->tpCredPresIBSZFM = $ibs['tpCredPresIBSZFM'] ?? '0';
-                        $stdZFM->vCredPresIBSZFM  = formatarDecimal(($ibs['vCredPresIBSZFM'] ?? 0), 2);
+                        $stdZFM->vCredPresIBSZFM = formatarDecimal(($ibs['vCredPresIBSZFM'] ?? 0), 2);
                         $nfe->taggCredPresIBSZFM($stdZFM);
 
                     } elseif ($cst === '811') {
                         // Ajuste de Competência
+                        $std = new \stdClass();
+                        $std->item = $item;
+                        $std->CST = $cst;
+                        $std->cClassTrib = str_pad($ibs['cClassTrib'] ?? '', 6, '0', STR_PAD_LEFT);
+
+                        $nfe->tagIBSCBS($std);
+
                         $stdAjuste = new \stdClass();
                         $stdAjuste->item = $item;
                         $stdAjuste->competApur = $ibs['competApur'];
