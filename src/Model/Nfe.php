@@ -639,7 +639,7 @@ class Nfe
                 if ($ibs) {
                     $cst = str_pad($ibs['CST'] ?? '000', 3, '0', STR_PAD_LEFT);
 
-                    $cstPadrao = ['000', '010', '011', '200', '220', '221', '222', '510', '515', '550', '830'];
+                    $cstPadrao = ['000', '200', '220', '221', '222', '510', '515', '550', '830'];
 
                     if (in_array($cst, $cstPadrao)) {
 
@@ -695,19 +695,19 @@ class Nfe
                         $totalCbs += (float)($ibs['gCBS_vCBS'] ?? 0);
                         $totalBaseCalculoIbsCbs += $valorBaseCalculoIbsCbs;
 
-                        if ($cst === '550' && !empty($ibs['CSTReg'])) {
-                                $stdReg = new \stdClass();
-                                $stdReg->item = $item;
-                                $stdReg->CSTReg = str_pad($ibs['CSTReg'], 3, '0', STR_PAD_LEFT);
-                                $stdReg->cClassTribReg = str_pad($ibs['cClassTribReg'], 6, '0', STR_PAD_LEFT);
-                                $stdReg->pAliqEfetRegIBSUF = formatarDecimal($ibs['pAliqEfetRegIBSUF'], 4);
-                                $stdReg->vTribRegIBSUF = formatarDecimal($ibs['vTribRegIBSUF'], 2);
-                                $stdReg->pAliqEfetRegIBSMun = formatarDecimal($ibs['pAliqEfetRegIBSMun'], 4);
-                                $stdReg->vTribRegIBSMun = formatarDecimal($ibs['vTribRegIBSMun'], 2);
-                                $stdReg->pAliqEfetRegCBS = formatarDecimal($ibs['pAliqEfetRegCBS'], 4);
-                                $stdReg->vTribRegCBS = formatarDecimal($ibs['vTribRegCBS'], 2);
-                                $nfe->tagIBSCBSTribRegular($stdReg);
-                            }
+                        if ($cst === '550' && !empty($ibs['CST'])) {
+                            $stdReg = new \stdClass();
+                            $stdReg->item = $item;
+                            $stdReg->CSTReg = str_pad($ibs['CST'], 3, '0', STR_PAD_LEFT);
+                            $stdReg->cClassTribReg = str_pad($ibs['cClassTrib'], 6, '0', STR_PAD_LEFT);
+                            $stdReg->pAliqEfetRegIBSUF = formatarDecimal($ibs['gIBSUF_pAliqEfet'], 4);
+                            $stdReg->vTribRegIBSUF = formatarDecimal($ibs['gIBSUF_vDevTrib'], 2);
+                            $stdReg->pAliqEfetRegIBSMun = formatarDecimal($ibs['gIBSMun_pAliqEfet'], 4);
+                            $stdReg->vTribRegIBSMun = formatarDecimal($ibs['gIBSMun_vDevTrib'], 2);
+                            $stdReg->pAliqEfetRegCBS = formatarDecimal($ibs['gCBS_pAliqEfet'], 4);
+                            $stdReg->vTribRegCBS = formatarDecimal($ibs['gCBS_vDevTrib'], 2);
+                            $nfe->tagIBSCBSTribRegular($stdReg);
+                        }
 
                     } elseif ($cst === '620') {
                         // Tributação Monofásica
