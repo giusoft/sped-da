@@ -639,7 +639,7 @@ class Nfe
                 if ($ibs) {
                     $cst = str_pad($ibs['CST'] ?? '000', 3, '0', STR_PAD_LEFT);
 
-                    $cstPadrao = ['000', '010', '011', '200', '220', '221', '222', '510', '515', '550', '830'];
+                    $cstPadrao = ['000', '200', '220', '221', '222', '510', '515', '550', '830'];
 
                     if (in_array($cst, $cstPadrao)) {
 
@@ -695,20 +695,29 @@ class Nfe
                         $totalCbs += (float)($ibs['gCBS_vCBS'] ?? 0);
                         $totalBaseCalculoIbsCbs += $valorBaseCalculoIbsCbs;
 
-                        if ($cst === '550' && !empty($ibs['CSTReg'])) {
-                                $stdReg = new \stdClass();
-                                $stdReg->item = $item;
-                                $stdReg->CSTReg = str_pad($ibs['CSTReg'], 3, '0', STR_PAD_LEFT);
-                                $stdReg->cClassTribReg = str_pad($ibs['cClassTribReg'], 6, '0', STR_PAD_LEFT);
-                                $stdReg->pAliqEfetRegIBSUF = formatarDecimal($ibs['pAliqEfetRegIBSUF'], 4);
-                                $stdReg->vTribRegIBSUF = formatarDecimal($ibs['vTribRegIBSUF'], 2);
-                                $stdReg->pAliqEfetRegIBSMun = formatarDecimal($ibs['pAliqEfetRegIBSMun'], 4);
-                                $stdReg->vTribRegIBSMun = formatarDecimal($ibs['vTribRegIBSMun'], 2);
-                                $stdReg->pAliqEfetRegCBS = formatarDecimal($ibs['pAliqEfetRegCBS'], 4);
-                                $stdReg->vTribRegCBS = formatarDecimal($ibs['vTribRegCBS'], 2);
-                                $nfe->tagIBSCBSTribRegular($stdReg);
-                            }
+                        if ($cst === '550' && !empty($ibs['CST'])) {
+                            $stdReg = new \stdClass();
+                            $stdReg->item = $item;
+                            $stdReg->CSTReg = str_pad($ibs['CST'], 3, '0', STR_PAD_LEFT);
+                            $stdReg->cClassTribReg = str_pad($ibs['cClassTrib'], 6, '0', STR_PAD_LEFT);
+                            $stdReg->pAliqEfetRegIBSUF = formatarDecimal($ibs['gIBSUF_pAliqEfet'], 4);
+                            $stdReg->vTribRegIBSUF = formatarDecimal($ibs['gIBSUF_vDevTrib'], 2);
+                            $stdReg->pAliqEfetRegIBSMun = formatarDecimal($ibs['gIBSMun_pAliqEfet'], 4);
+                            $stdReg->vTribRegIBSMun = formatarDecimal($ibs['gIBSMun_vDevTrib'], 2);
+                            $stdReg->pAliqEfetRegCBS = formatarDecimal($ibs['gCBS_pAliqEfet'], 4);
+                            $stdReg->vTribRegCBS = formatarDecimal($ibs['gCBS_vDevTrib'], 2);
+                            $nfe->tagIBSCBSTribRegular($stdReg);
+                        }
 
+                    } elseif ($cst === '410') {
+                        // Imunidade e não incidência
+                        $std = new \stdClass();
+                        $std->item = $item;
+                        $std->CST = $cst;
+                        $std->cClassTrib = str_pad($ibs['cClassTrib'] ?? '', 6, '0', STR_PAD_LEFT);
+                        $nfe->tagIBSCBS($std);
+
+                        // Alguns cClassTrib específicos do CST 410 podem exigir crédito presumido
                     } elseif ($cst === '620') {
                         // Tributação Monofásica
                         $stdMono = new \stdClass();
@@ -727,6 +736,13 @@ class Nfe
 
                     } elseif ($cst === '800') {
                         // Transferência de Crédito
+                        $std = new \stdClass();
+                        $std->item = $item;
+                        $std->CST = $cst;
+                        $std->cClassTrib = str_pad($ibs['cClassTrib'] ?? '', 6, '0', STR_PAD_LEFT);
+
+                        $nfe->tagIBSCBS($std);
+
                         $stdTransf = new \stdClass();
                         $stdTransf->item = $item;
                         $stdTransf->vIBS = formatarDecimal(($ibs['vIBS'] ?? 0), 2);
@@ -735,15 +751,29 @@ class Nfe
 
                     } elseif ($cst === '810') {
                         // Crédito Presumido ZFM
+                        $std = new \stdClass();
+                        $std->item = $item;
+                        $std->CST = $cst;
+                        $std->cClassTrib = str_pad($ibs['cClassTrib'] ?? '', 6, '0', STR_PAD_LEFT);
+
+                        $nfe->tagIBSCBS($std);
+
                         $stdZFM = new \stdClass();
                         $stdZFM->item = $item;
                         $stdZFM->competApur = $ibs['competApur'];
                         $stdZFM->tpCredPresIBSZFM = $ibs['tpCredPresIBSZFM'] ?? '0';
-                        $stdZFM->vCredPresIBSZFM  = formatarDecimal(($ibs['vCredPresIBSZFM'] ?? 0), 2);
+                        $stdZFM->vCredPresIBSZFM = formatarDecimal(($ibs['vCredPresIBSZFM'] ?? 0), 2);
                         $nfe->taggCredPresIBSZFM($stdZFM);
 
                     } elseif ($cst === '811') {
                         // Ajuste de Competência
+                        $std = new \stdClass();
+                        $std->item = $item;
+                        $std->CST = $cst;
+                        $std->cClassTrib = str_pad($ibs['cClassTrib'] ?? '', 6, '0', STR_PAD_LEFT);
+
+                        $nfe->tagIBSCBS($std);
+
                         $stdAjuste = new \stdClass();
                         $stdAjuste->item = $item;
                         $stdAjuste->competApur = $ibs['competApur'];
@@ -1096,13 +1126,13 @@ class Nfe
                 }
 
                 emitirSucesso(
+                    $motivo,
+                    200,
                     [
-                        'mensagem' => $motivo,
                         'codigo' => $std->infInut->cStat,
                         'protocolo' => $protocolo,
                         'xml' => base64_encode($response) // A resposta já é o XML protocolado
                     ],
-                    200
                 );
             } else {
 
@@ -1121,11 +1151,11 @@ class Nfe
                 }
 
                 emitirErro(
+                    $motivo,
+                    400,
                     [
-                        'erro' => $motivo,
                         'codigo' => $codigo
                     ]
-                    , 400
                 );
             }
 
