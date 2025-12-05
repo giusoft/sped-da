@@ -1096,13 +1096,13 @@ class Nfe
                 }
 
                 emitirSucesso(
+                    $motivo,
+                    200,
                     [
-                        'mensagem' => $motivo,
                         'codigo' => $std->infInut->cStat,
                         'protocolo' => $protocolo,
                         'xml' => base64_encode($response) // A resposta já é o XML protocolado
                     ],
-                    200
                 );
             } else {
 
@@ -1121,11 +1121,11 @@ class Nfe
                 }
 
                 emitirErro(
+                    $motivo,
+                    400,
                     [
-                        'erro' => $motivo,
                         'codigo' => $codigo
                     ]
-                    , 400
                 );
             }
 
