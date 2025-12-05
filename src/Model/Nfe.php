@@ -463,70 +463,251 @@ class Nfe
 
             // ICMS
             $icms = $impostos['icms'] ?? [];
-
             if ($icms && !$this->corpoRequisicao['empresa']['desativarImpostosAntigos']) {
-                $std = new \stdClass();
-                $std->item = $item;
+                $icmsTag = new \stdClass();
 
-                // Dados básicos do ICMS (sempre presentes)
-                $std->orig = (int) ($icms['orig'] ?? 0);
-                $std->CST = str_pad($icms['CST'] ?? '00', 2, '0', STR_PAD_LEFT);
-                $std->modBC = (int) ($icms['modBC'] ?? 3);
+                $cst = str_pad($icms['CST'] ?? '00', 2, '0', STR_PAD_LEFT);
+                $icmsTag->item = $item;
+                $icmsTag->orig = (int) ($icms['orig'] ?? 0);
+                $icmsTag->CST = $cst;
 
-                // Base de cálculo e alíquota (podem vir da API)
-                if (isset($icms['vBC'])) {
-                    $std->vBC = formatarDecimal($icms['vBC'], 2);
-                }
-                if (isset($icms['aliquota'])) {
-                    $std->pICMS = formatarDecimal($icms['aliquota'], 2);
-                }
-                if (isset($icms['vBC']) && isset($icms['aliquota'])) {
-                    $std->vICMS = formatarDecimal($icms['vBC'] * $icms['aliquota'] / 100, 2);
+                if ($cst === '00') {
+                    // Tributada integralmente - Grupo ICMS00
+                    $icmsTag->modBC = (int) ($icms['modBC'] ?? 3);
+                    if (isset($icms['vBC']) && isset($icms['aliquota'])) {
+                        $icmsTag->vBC = formatarDecimal($icms['vBC'], 2);
+                        $icmsTag->pICMS = formatarDecimal($icms['aliquota'], 2);
+                        $icmsTag->vICMS = formatarDecimal($icms['vBC'] * $icms['aliquota'] / 100, 2);
+                    }
+
+                    // FCP (opcional) - Tags do FCP normal
+                    if (isset($icms['vBCFCP']) && isset($icms['pFCP'])) {
+                        $icmsTag->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
+                        $icmsTag->pFCP = formatarDecimal($icms['pFCP'], 2);
+                        $icmsTag->vFCP = formatarDecimal($icms['vBCFCP'] * $icms['pFCP'] / 100, 2);
+                    }
+
+                } elseif ($cst === '10') {
+                    // Tributada e com cobrança do ICMS por substituição tributária - Grupo ICMS10
+                    $icmsTag->modBC = (int) ($icms['modBC'] ?? 3);
+                    if (isset($icms['vBC']) && isset($icms['aliquota'])) {
+                        $icmsTag->vBC = formatarDecimal($icms['vBC'], 2);
+                        $icmsTag->pICMS = formatarDecimal($icms['aliquota'], 2);
+                        $icmsTag->vICMS = formatarDecimal($icms['vBC'] * $icms['aliquota'] / 100, 2);
+                    }
+
+                    // ICMS ST
+                    $icmsTag->modBCST = (int) ($icms['modBCST'] ?? 4);
+                    if (isset($icms['pMVAST'])) {
+                        $icmsTag->pMVAST = formatarDecimal($icms['pMVAST'], 2);
+                    }
+                    if (isset($icms['pRedBCST'])) {
+                        $icmsTag->pRedBCST = formatarDecimal($icms['pRedBCST'], 2);
+                    }
+                    if (isset($icms['vBCST']) && isset($icms['pICMSST'])) {
+                        $icmsTag->vBCST = formatarDecimal($icms['vBCST'], 2);
+                        $icmsTag->pICMSST = formatarDecimal($icms['pICMSST'], 2);
+                        $icmsTag->vICMSST = formatarDecimal($icms['vICMSST'] ?? ($icms['vBCST'] * $icms['pICMSST'] / 100), 2);
+                    }
+
+                    // FCP (opcional) - Tags do FCP normal e FCP ST
+                    if (isset($icms['vBCFCP']) && isset($icms['pFCP'])) {
+                        $icmsTag->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
+                        $icmsTag->pFCP = formatarDecimal($icms['pFCP'], 2);
+                        $icmsTag->vFCP = formatarDecimal($icms['vBCFCP'] * $icms['pFCP'] / 100, 2);
+                    }
+                    if (isset($icms['vBCFCPST']) && isset($icms['pFCPST'])) {
+                        $icmsTag->vBCFCPST = formatarDecimal($icms['vBCFCPST'], 2);
+                        $icmsTag->pFCPST = formatarDecimal($icms['pFCPST'], 2);
+                        $icmsTag->vFCPST = formatarDecimal($icms['vBCFCPST'] * $icms['pFCPST'] / 100, 2);
+                    }
+
+
+                } elseif ($cst === '20') {
+                    // Com redução de base de cálculo - Grupo ICMS20
+                    $icmsTag->modBC = (int) ($icms['modBC'] ?? 3);
+                    if (isset($icms['pRedBC'])) {
+                        $icmsTag->pRedBC = formatarDecimal($icms['pRedBC'], 2);
+                    }
+                    if (isset($icms['vBC']) && isset($icms['aliquota'])) {
+                        $icmsTag->vBC = formatarDecimal($icms['vBC'], 2);
+                        $icmsTag->pICMS = formatarDecimal($icms['aliquota'], 2);
+                        $icmsTag->vICMS = formatarDecimal($icms['vBC'] * $icms['aliquota'] / 100, 2);
+                    }
+
+                    // FCP (opcional) - Tags do FCP normal
+                    if (isset($icms['vBCFCP']) && isset($icms['pFCP'])) {
+                        $icmsTag->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
+                        $icmsTag->pFCP = formatarDecimal($icms['pFCP'], 2);
+                        $icmsTag->vFCP = formatarDecimal($icms['vBCFCP'] * $icms['pFCP'] / 100, 2);
+                    }
+
+                } elseif ($cst === '30') {
+                    // Isenta ou Não Tributada com cobrança do ICMS por substituição tributária - Grupo ICMS30
+                    $icmsTag->modBCST = (int) ($icms['modBCST'] ?? 4);
+                    if (isset($icms['pMVAST'])) {
+                        $icmsTag->pMVAST = formatarDecimal($icms['pMVAST'], 2);
+                    }
+
+                    if (isset($icms['pRedBCST'])) {
+                        $icmsTag->pRedBCST = formatarDecimal($icms['pRedBCST'], 2);
+                    }
+
+                    if (isset($icms['vBCST']) && isset($icms['pICMSST'])) {
+                        $icmsTag->vBCST = formatarDecimal($icms['vBCST'], 2);
+                        $icmsTag->pICMSST = formatarDecimal($icms['pICMSST'], 2);
+                        $icmsTag->vICMSST = formatarDecimal($icms['vICMSST'] ?? ($icms['vBCST'] * $icms['pICMSST'] / 100), 2);
+                    }
+
+                    // FCP ST (opcional) - Tags do FCP ST
+                    if (isset($icms['vBCFCPST']) && isset($icms['pFCPST'])) {
+                        $icmsTag->vBCFCPST = formatarDecimal($icms['vBCFCPST'], 2);
+                        $icmsTag->pFCPST = formatarDecimal($icms['pFCPST'], 2);
+                        $icmsTag->vFCPST = formatarDecimal($icms['vBCFCPST'] * $icms['pFCPST'] / 100, 2);
+                    }
+
+                } elseif ($cst === '40' || $cst === '41' || $cst === '50') {
+                    // Isenta, Não tributada ou Suspensão - Grupo ICMS40/41/50
+                    if (isset($icms['vICMSDeson'])) {
+                        $icmsTag->vICMSDeson = formatarDecimal($icms['vICMSDeson'], 2);
+                    }
+
+                    if (isset($icms['motDesICMS'])) {
+                        $icmsTag->motDesICMS = (int) $icms['motDesICMS'];
+                    }
+
+                } elseif ($cst === '51') {
+                    // Diferimento - Grupo ICMS51
+                    $icmsTag->modBC = (int) ($icms['modBC'] ?? 3);
+                    if (isset($icms['pRedBC'])) {
+                        $icmsTag->pRedBC = formatarDecimal($icms['pRedBC'], 2);
+                    }
+
+                    if (isset($icms['vBC'])) {
+                        $icmsTag->vBC = formatarDecimal($icms['vBC'], 2);
+                    }
+                    if (isset($icms['aliquota'])) {
+                        $icmsTag->pICMS = formatarDecimal($icms['aliquota'], 2);
+                    }
+
+                    if (isset($icms['vBC']) && isset($icms['aliquota'])) {
+                        $icmsTag->vICMS = formatarDecimal($icms['vICMS'] ?? ($icms['vBC'] * $icms['aliquota'] / 100), 2);
+                    }
+
+                    if (isset($icms['vICMSOp'])) {
+                        $icmsTag->vICMSOp = formatarDecimal($icms['vICMSOp'], 2);
+                    }
+                    if (isset($icms['pDif'])) {
+                        $icmsTag->pDif = formatarDecimal($icms['pDif'], 2);
+                    }
+                    if (isset($icms['vICMSDif'])) {
+                        $icmsTag->vICMSDif = formatarDecimal($icms['vICMSDif'], 2);
+                    }
+
+                    if (isset($icms['vBCFCP']) && isset($icms['pFCP'])) {
+                        $icmsTag->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
+                        $icmsTag->pFCP = formatarDecimal($icms['pFCP'], 2);
+                        $icmsTag->vFCP = formatarDecimal($icms['vBCFCP'] * $icms['pFCP'] / 100, 2);
+                    }
+
+                } elseif ($cst === '60') {
+                    // ICMS cobrado anteriormente por substituição tributária - Grupo ICMS60
+                    $icmsTag->vBCSTRet = formatarDecimal($icms['vBCSTRet'] ?? 0, 2);
+                    $icmsTag->pST = formatarDecimal($icms['pST'] ?? 0, 2); 
+                    $icmsTag->vICMSSTRet = formatarDecimal($icms['vICMSSTRet'] ?? 0, 2);
+
+                    if (isset($icms['vBCFCPSTRet']) && isset($icms['pFCPSTRet'])) {
+                        $icmsTag->vBCFCPSTRet = formatarDecimal($icms['vBCFCPSTRet'], 2);
+                        $icmsTag->pFCPSTRet = formatarDecimal($icms['pFCPSTRet'], 2);
+
+                        $icmsTag->vFCPSTRet = formatarDecimal($icms['vFCPSTRet'] ?? ($icms['vBCFCPSTRet'] * $icms['pFCPSTRet'] / 100), 2);
+                    }
+
+                } elseif ($cst === '70') {
+                    // Com redução de base de cálculo e cobrança do ICMS por substituição tributária - Grupo ICMS70
+                    $icmsTag->modBC = (int) ($icms['modBC'] ?? 3);
+                    if (isset($icms['pRedBC'])) {
+                        $icmsTag->pRedBC = formatarDecimal($icms['pRedBC'], 2);
+                    }
+                    if (isset($icms['vBC']) && isset($icms['aliquota'])) {
+                        $icmsTag->vBC = formatarDecimal($icms['vBC'], 2);
+                        $icmsTag->pICMS = formatarDecimal($icms['aliquota'], 2);
+                        $icmsTag->vICMS = formatarDecimal($icms['vBC'] * $icms['aliquota'] / 100, 2);
+                    }
+
+                    $icmsTag->modBCST = (int) ($icms['modBCST'] ?? 4);
+                    if (isset($icms['pMVAST'])) {
+                        $icmsTag->pMVAST = formatarDecimal($icms['pMVAST'], 2);
+                    }
+                    if (isset($icms['pRedBCST'])) {
+                        $icmsTag->pRedBCST = formatarDecimal($icms['pRedBCST'], 2);
+                    }
+                    if (isset($icms['vBCST']) && isset($icms['pICMSST'])) {
+                        $icmsTag->vBCST = formatarDecimal($icms['vBCST'], 2);
+                        $icmsTag->pICMSST = formatarDecimal($icms['pICMSST'], 2);
+                        $icmsTag->vICMSST = formatarDecimal($icms['vICMSST'] ?? ($icms['vBCST'] * $icms['pICMSST'] / 100), 2);
+                    }
+
+                    // FCP (opcional) - Tags do FCP normal e FCP ST
+                    if (isset($icms['vBCFCP']) && isset($icms['pFCP'])) {
+                        $icmsTag->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
+                        $icmsTag->pFCP = formatarDecimal($icms['pFCP'], 2);
+                        $icmsTag->vFCP = formatarDecimal($icms['vBCFCP'] * $icms['pFCP'] / 100, 2);
+                    }
+                    if (isset($icms['vBCFCPST']) && isset($icms['pFCPST'])) {
+                        $icmsTag->vBCFCPST = formatarDecimal($icms['vBCFCPST'], 2);
+                        $icmsTag->pFCPST = formatarDecimal($icms['pFCPST'], 2);
+                        $icmsTag->vFCPST = formatarDecimal($icms['vBCFCPST'] * $icms['pFCPST'] / 100, 2);
+                    }
+
+                } elseif ($cst === '90') {
+                    // Outras - Grupo ICMS90 (Preenchido de forma robusta)
+                    $icmsTag->modBC = (int) ($icms['modBC'] ?? 3);
+                    if (isset($icms['pRedBC'])) {
+                        $icmsTag->pRedBC = formatarDecimal($icms['pRedBC'], 2);
+                    }
+                    if (isset($icms['vBC']) && isset($icms['aliquota'])) {
+                        $icmsTag->vBC = formatarDecimal($icms['vBC'], 2);
+                        $icmsTag->pICMS = formatarDecimal($icms['aliquota'], 2);
+                        $icmsTag->vICMS = formatarDecimal($icms['vBC'] * $icms['aliquota'] / 100, 2);
+                    }
+
+                    // ICMS ST
+                    $icmsTag->modBCST = (int) ($icms['modBCST'] ?? 4);
+                    if (isset($icms['pMVAST'])) {
+                        $icmsTag->pMVAST = formatarDecimal($icms['pMVAST'], 2);
+                    }
+                    if (isset($icms['pRedBCST'])) {
+                        $icmsTag->pRedBCST = formatarDecimal($icms['pRedBCST'], 2);
+                    }
+                    if (isset($icms['vBCST']) && isset($icms['pICMSST'])) {
+                        $icmsTag->vBCST = formatarDecimal($icms['vBCST'], 2);
+                        $icmsTag->pICMSST = formatarDecimal($icms['pICMSST'], 2);
+                        $icmsTag->vICMSST = formatarDecimal($icms['vICMSST'] ?? ($icms['vBCST'] * $icms['pICMSST'] / 100), 2);
+                    }
+
+                    // Desoneração
+                    if (isset($icms['vICMSDeson'])) {
+                        $icmsTag->vICMSDeson = formatarDecimal($icms['vICMSDeson'], 2);
+                    }
+                    if (isset($icms['motDesICMS'])) {
+                        $icmsTag->motDesICMS = (int) $icms['motDesICMS'];
+                    }
+
+                    // FCP (opcional) - FCP normal e FCP ST
+                    if (isset($icms['vBCFCP']) && isset($icms['pFCP'])) {
+                        $icmsTag->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
+                        $icmsTag->pFCP = formatarDecimal($icms['pFCP'], 2);
+                        $icmsTag->vFCP = formatarDecimal($icms['vBCFCP'] * $icms['pFCP'] / 100, 2);
+                    }
+                    if (isset($icms['vBCFCPST']) && isset($icms['pFCPST'])) {
+                        $icmsTag->vBCFCPST = formatarDecimal($icms['vBCFCPST'], 2);
+                        $icmsTag->pFCPST = formatarDecimal($icms['pFCPST'], 2);
+                        $icmsTag->vFCPST = formatarDecimal($icms['vBCFCPST'] * $icms['pFCPST'] / 100, 2);
+                    }
                 }
 
-                // Redução de BC
-                if (!empty($icms['pRedBC'])) {
-                    $std->pRedBC = formatarDecimal($icms['pRedBC'], 2);
-                }
-
-                // ICMS ST
-                if (!empty($icms['modBCST'])) {
-                    $std->modBCST = (int) $icms['modBCST'];
-                }
-                if (!empty($icms['pMVAST'])) {
-                    $std->pMVAST = formatarDecimal($icms['pMVAST'], 2);
-                }
-                if (!empty($icms['pRedBCST'])) {
-                    $std->pRedBCST = formatarDecimal($icms['pRedBCST'], 2);
-                }
-                if (!empty($icms['vBCST'])) {
-                    $std->vBCST = formatarDecimal($icms['vBCST'], 2);
-                }
-                if (!empty($icms['pICMSST'])) {
-                    $std->pICMSST = formatarDecimal($icms['pICMSST'], 2);
-                }
-                if (!empty($icms['vICMSST'])) {
-                    $std->vICMSST = formatarDecimal($icms['vICMSST'], 2);
-                }
-                if (!empty($icms['vICMSSTRet'])) {
-                    $std->vICMSSTRet = formatarDecimal($icms['vICMSSTRet'], 2);
-                }
-
-                // FCP
-                if (!empty($icms['vBCFCP'])) {
-                    $std->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
-                }
-                if (!empty($icms['pFCP'])) {
-                    $std->pFCP = formatarDecimal($icms['pFCP'], 2);
-                }
-                if (!empty($icms['vBCFCPST'])) {
-                    $std->vBCFCPST = formatarDecimal($icms['vBCFCPST'], 2);
-                }
-                if (!empty($icms['pFCPST'])) {
-                    $std->pFCPST = formatarDecimal($icms['pFCPST'], 2);
-                }
-
-                $nfe->tagICMS($std);
+                $nfe->tagICMS($icmsTag);
             }
 
             // IPI (ADD desativarImpostosAntigos)
