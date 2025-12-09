@@ -1186,14 +1186,15 @@ class Nfe
 
             if (strlen($correcao) < 15) {
                 emitirErro("A correçao deve ter no mínimo 15 caracteres", 400);
-
             }
 
-            $nSeqEvento = 1; // Sequência do evento (1 para primeira CC-e)
-            if (isset($this->corpoRequisicao['sequencia'])) {
-                $nSeqEvento = $this->corpoRequisicao['sequencia'];
+            if (!isset($this->corpoRequisicao['sequencia'])) {
+                emitirErro("O campo 'sequencia' é obrigatório", 400);
+                return;
             }
-
+            
+            $nSeqEvento = (int) $this->corpoRequisicao['sequencia'];
+            
             $response = $this->tools->sefazCCe($chave, $correcao, $nSeqEvento);
 
             $xmlEvento = $this->tools->lastRequest;
