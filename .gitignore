@@ -1,1 +1,4 @@
 src/Lib/vendor/
+src/storage/log/*
+
+!src/storage/log/.gitkeep
