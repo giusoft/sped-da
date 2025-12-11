@@ -896,9 +896,9 @@ class Nfe
             $std->tPag = '90'; // 90 = Sem Pagamento
             $std->vPag = 0.00; // Valor do pagamento é zero
         } else {
-            // 1 = NF-e Normal (Venda)
-            $std->tPag = '01'; // Tipo de pagamento (01 = dinheiro, 02 = cheque, 03 = cartão, 15 = PIX)
-            $std->vPag = formatarDecimal($totalProdutos, 2); // Valor pago pelo cliente
+            $std->tPag = str_pad($this->corpoRequisicao['tPag'], 2, '0', STR_PAD_LEFT);
+            $std->vPag = formatarDecimal($this->corpoRequisicao['vPag'], 2);
+
         }
 
         $nfe->tagdetPag($std);
