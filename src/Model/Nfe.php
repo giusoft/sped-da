@@ -890,16 +890,8 @@ class Nfe
         $finalidade = $this->corpoRequisicao['finNFe'] ?? 1; // 1 = NF-e Normal por padrão
 
         $std = new \stdClass();
-        if (in_array($finalidade, [3, 4])) {
-            // 3 = NF-e de Ajuste
-            // 4 = NF-e de Devolução/Estorno
-            $std->tPag = '90'; // 90 = Sem Pagamento
-            $std->vPag = 0.00; // Valor do pagamento é zero
-        } else {
-            $std->tPag = str_pad($this->corpoRequisicao['tPag'], 2, '0', STR_PAD_LEFT);
-            $std->vPag = formatarDecimal($this->corpoRequisicao['vPag'], 2);
-
-        }
+        $std->tPag = str_pad($this->corpoRequisicao['tPag'], 2, '0', STR_PAD_LEFT);
+        $std->vPag = formatarDecimal($this->corpoRequisicao['vPag'], 2);
 
         $nfe->tagdetPag($std);
 
