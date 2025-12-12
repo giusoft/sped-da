@@ -116,9 +116,6 @@ class Danfe
 
     public function gerarDanfeEmLote()
     {
-        set_time_limit(0);
-        ini_set('memory_limit', '512M');
-
         try {
             $cnpj = soNumeros($this->corpoRequisicao['cnpj_emitente'] ?? '');
             $documentos = $this->corpoRequisicao['documentos'] ?? [];
