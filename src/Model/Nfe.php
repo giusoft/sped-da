@@ -1361,12 +1361,12 @@ class Nfe
                 emitirErro("A correçao deve ter no mínimo 15 caracteres", 400);
             }
 
-            if (!isset($this->corpoRequisicao['sequencia'])) {
-                emitirErro("O campo 'sequencia' é obrigatório", 400);
+            if (!isset($this->corpoRequisicao['sequencial'])) {
+                emitirErro("O campo 'sequencial' é obrigatório", 400);
                 return;
             }
             
-            $nSeqEvento = (int) $this->corpoRequisicao['sequencia'];
+            $nSeqEvento = (int) $this->corpoRequisicao['sequencial'];
             
             $response = $this->tools->sefazCCe($chave, $correcao, $nSeqEvento);
 
@@ -1399,7 +1399,7 @@ class Nfe
                 200,
                 [
                     'protocolo' => $protocolo,
-                    'sequencia' => $nSeqEvento,
+                    'sequencial' => $nSeqEvento,
                     'data_evento' => $dataEvento,
                     'xml' => base64_encode($xmlProtocolado)
                 ]
