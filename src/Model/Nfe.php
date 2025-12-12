@@ -1071,16 +1071,8 @@ class Nfe
         $finalidade = $this->corpoRequisicao['finNFe'] ?? 1; // 1 = NF-e Normal por padrão
 
         $std = new \stdClass();
-        if (in_array($finalidade, [3, 4])) {
-            // 3 = NF-e de Ajuste
-            // 4 = NF-e de Devolução/Estorno
-            $std->tPag = '90'; // 90 = Sem Pagamento
-            $std->vPag = 0.00; // Valor do pagamento é zero
-        } else {
-            // 1 = NF-e Normal (Venda)
-            $std->tPag = '01'; // Tipo de pagamento (01 = dinheiro, 02 = cheque, 03 = cartão, 15 = PIX)
-            $std->vPag = formatarDecimal($totalProdutos, 2); // Valor pago pelo cliente
-        }
+        $std->tPag = str_pad($this->corpoRequisicao['tPag'], 2, '0', STR_PAD_LEFT);
+        $std->vPag = formatarDecimal($this->corpoRequisicao['vPag'], 2);
 
         $nfe->tagdetPag($std);
 
@@ -1367,14 +1359,15 @@ class Nfe
 
             if (strlen($correcao) < 15) {
                 emitirErro("A correçao deve ter no mínimo 15 caracteres", 400);
-
             }
 
-            $nSeqEvento = 1; // Sequência do evento (1 para primeira CC-e)
-            if (isset($this->corpoRequisicao['sequencia'])) {
-                $nSeqEvento = $this->corpoRequisicao['sequencia'];
+            if (!isset($this->corpoRequisicao['sequencia'])) {
+                emitirErro("O campo 'sequencia' é obrigatório", 400);
+                return;
             }
-
+            
+            $nSeqEvento = (int) $this->corpoRequisicao['sequencia'];
+            
             $response = $this->tools->sefazCCe($chave, $correcao, $nSeqEvento);
 
             $xmlEvento = $this->tools->lastRequest;
