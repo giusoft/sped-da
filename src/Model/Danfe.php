@@ -70,10 +70,6 @@ class Danfe
                 $erros[] = "O campo 'chave' é obrigatório.";
             }
 
-            if (empty($this->corpoRequisicao['sequencia'])) {
-                $erros[] = "O campo 'sequencia' é obrigatório.";
-            }
-
             if (empty($this->corpoRequisicao['cnpj_emitente'])) {
                 $erros[] = "O campo 'cnpj_emitente' é obrigatório (necessário para nomear o PDF salvo).";
             }

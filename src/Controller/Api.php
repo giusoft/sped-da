@@ -31,7 +31,29 @@ class Api
 
     public function inicializarAmbiente()
     {
-        $this->corpoRequisicao = json_decode(file_get_contents('php://input'), true);
+        $conteudo = file_get_contents('php://input');
+
+        $this->corpoRequisicao = json_decode($conteudo, true);
+
+        $this->gravarLog($conteudo);  
+    }
+
+
+    public function gravarLog($conteudo)
+    {
+        $arquivoLog = __DIR__ . '/../storage/log/emitenota.log';
+
+        if (!file_exists($arquivoLog)) { 
+            return; 
+        }
+
+        $data = date('Y-m-d H:i:s');
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '-';
+        $uri = $_SERVER['REQUEST_URI'] ?? '-';
+        
+        $texto = "[$data] IP: $ip | URI: $uri\nPAYLOAD: $conteudo\n" . str_repeat("-", 50) . "\n";
+
+        file_put_contents($arquivoLog, $texto, FILE_APPEND);
     }
 
 
