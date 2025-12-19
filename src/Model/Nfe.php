@@ -464,6 +464,13 @@ class Nfe
             $std->indTot = 1; // 1 = inclui no total da NF
             $nfe->tagprod($std);
 
+            if((int) $prod['nfEntrada'] > 0) {
+                $std = new \stdClass();
+                $std->item = $item;
+                $std->infAdProd = "NF de cobertura: " . (int) $prod['nfEntrada'] . '/' . (int) $prod['serieEntrada'];
+                $nfe->taginfAdProd($std);
+            }
+
             // TAG IMPOSTO (container principal)
             $std = new \stdClass();
             $std->item = $item; // Número do item
