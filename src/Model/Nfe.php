@@ -421,7 +421,7 @@ class Nfe
         $std->xPais = $this->corpoRequisicao['empresa']['xPais']; // Nome do país (Vai vir nos dados do cliente)
         $nfe->tagenderDest($std);
 
-         if ($this->default['ufs_svc_rs'] == 26) {
+         if ($this->corpoRequisicao['empresa']['cUF'] == 26) {
             // ===== RESPONSAVEL TECNICO =====
             $std = new \stdClass();
             $std->CNPJ = '01108339000179';
