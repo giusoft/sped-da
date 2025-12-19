@@ -1065,7 +1065,9 @@ class Nfe
 
         // ===== PAGAMENTO =====
         $std = new \stdClass();
-        $std->vTroco = 0.00;
+        if ($this->corpoRequisicao['tPag'] != 90) {
+            $std->vTroco = max($this->corpoRequisicao['vPag'] - $totalNota, 0);
+        }
         $nfe->tagpag($std);
 
         $finalidade = $this->corpoRequisicao['finNFe'] ?? 1; // 1 = NF-e Normal por padrão
@@ -1073,6 +1075,10 @@ class Nfe
         $std = new \stdClass();
         $std->tPag = str_pad($this->corpoRequisicao['tPag'], 2, '0', STR_PAD_LEFT);
         $std->vPag = formatarDecimal($this->corpoRequisicao['vPag'], 2);
+
+        if ($this->corpoRequisicao['tPag'] == 99) {
+            $std->xPag = $this->corpoRequisicao['xPag'] ?? 'Outros';
+        }
 
         $nfe->tagdetPag($std);
 
