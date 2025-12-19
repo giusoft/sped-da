@@ -462,6 +462,11 @@ class Nfe
             $std->qTrib = formatarDecimal($prod['quantidade'], 4); // Quantidade tributável
             $std->vUnTrib = formatarDecimal($prod['valorUnitario'], 10); // Valor unitário tributável
             $std->indTot = 1; // 1 = inclui no total da NF
+
+            if (isset($prod['numeroCliente']) && !empty($prod['numeroCliente']) && !is_null($prod['numeroCliente'])) {
+                $std->xPed = $prod['numeroCliente'];
+            }
+
             $nfe->tagprod($std);
 
             if((int) $prod['nfEntrada'] > 0) {
