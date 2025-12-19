@@ -481,11 +481,11 @@ class Nfe
                     }
 
                     // FCP (opcional) - Tags do FCP normal
-                    if (isset($icms['vBCFCP']) && isset($icms['pFCP'])) {
-                        $icmsTag->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
-                        $icmsTag->pFCP = formatarDecimal($icms['pFCP'], 2);
-                        $icmsTag->vFCP = formatarDecimal($icms['vBCFCP'] * $icms['pFCP'] / 100, 2);
-                    }
+                    // if (isset($icms['vBCFCP']) && isset($icms['pFCP'])) {
+                    //     $icmsTag->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
+                    //     $icmsTag->pFCP = formatarDecimal($icms['pFCP'], 2);
+                    //     $icmsTag->vFCP = formatarDecimal($icms['vBCFCP'] * $icms['pFCP'] / 100, 2);
+                    // }
 
                 } elseif ($cst === '10') {
                     // Tributada e com cobrança do ICMS por substituição tributária - Grupo ICMS10
@@ -511,17 +511,16 @@ class Nfe
                     }
 
                     // FCP (opcional) - Tags do FCP normal e FCP ST
-                    if (isset($icms['vBCFCP']) && isset($icms['pFCP'])) {
-                        $icmsTag->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
-                        $icmsTag->pFCP = formatarDecimal($icms['pFCP'], 2);
-                        $icmsTag->vFCP = formatarDecimal($icms['vBCFCP'] * $icms['pFCP'] / 100, 2);
-                    }
-                    if (isset($icms['vBCFCPST']) && isset($icms['pFCPST'])) {
-                        $icmsTag->vBCFCPST = formatarDecimal($icms['vBCFCPST'], 2);
-                        $icmsTag->pFCPST = formatarDecimal($icms['pFCPST'], 2);
-                        $icmsTag->vFCPST = formatarDecimal($icms['vBCFCPST'] * $icms['pFCPST'] / 100, 2);
-                    }
-
+                    // if (isset($icms['vBCFCP']) && isset($icms['pFCP'])) {
+                    //     $icmsTag->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
+                    //     $icmsTag->pFCP = formatarDecimal($icms['pFCP'], 2);
+                    //     $icmsTag->vFCP = formatarDecimal($icms['vBCFCP'] * $icms['pFCP'] / 100, 2);
+                    // }
+                    // if (isset($icms['vBCFCPST']) && isset($icms['pFCPST'])) {
+                    //     $icmsTag->vBCFCPST = formatarDecimal($icms['vBCFCPST'], 2);
+                    //     $icmsTag->pFCPST = formatarDecimal($icms['pFCPST'], 2);
+                    //     $icmsTag->vFCPST = formatarDecimal($icms['vBCFCPST'] * $icms['pFCPST'] / 100, 2);
+                    // }
 
                 } elseif ($cst === '20') {
                     // Com redução de base de cálculo - Grupo ICMS20
@@ -536,11 +535,11 @@ class Nfe
                     }
 
                     // FCP (opcional) - Tags do FCP normal
-                    if (isset($icms['vBCFCP']) && isset($icms['pFCP'])) {
-                        $icmsTag->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
-                        $icmsTag->pFCP = formatarDecimal($icms['pFCP'], 2);
-                        $icmsTag->vFCP = formatarDecimal($icms['vBCFCP'] * $icms['pFCP'] / 100, 2);
-                    }
+                    // if (isset($icms['vBCFCP']) && isset($icms['pFCP'])) {
+                    //     $icmsTag->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
+                    //     $icmsTag->pFCP = formatarDecimal($icms['pFCP'], 2);
+                    //     $icmsTag->vFCP = formatarDecimal($icms['vBCFCP'] * $icms['pFCP'] / 100, 2);
+                    // }
 
                 } elseif ($cst === '30') {
                     // Isenta ou Não Tributada com cobrança do ICMS por substituição tributária - Grupo ICMS30
@@ -560,11 +559,11 @@ class Nfe
                     }
 
                     // FCP ST (opcional) - Tags do FCP ST
-                    if (isset($icms['vBCFCPST']) && isset($icms['pFCPST'])) {
-                        $icmsTag->vBCFCPST = formatarDecimal($icms['vBCFCPST'], 2);
-                        $icmsTag->pFCPST = formatarDecimal($icms['pFCPST'], 2);
-                        $icmsTag->vFCPST = formatarDecimal($icms['vBCFCPST'] * $icms['pFCPST'] / 100, 2);
-                    }
+                    // if (isset($icms['vBCFCPST']) && isset($icms['pFCPST'])) {
+                    //     $icmsTag->vBCFCPST = formatarDecimal($icms['vBCFCPST'], 2);
+                    //     $icmsTag->pFCPST = formatarDecimal($icms['pFCPST'], 2);
+                    //     $icmsTag->vFCPST = formatarDecimal($icms['vBCFCPST'] * $icms['pFCPST'] / 100, 2);
+                    // }
 
                 } elseif ($cst === '40' || $cst === '41' || $cst === '50') {
                     // Isenta, Não tributada ou Suspensão - Grupo ICMS40/41/50
@@ -604,11 +603,11 @@ class Nfe
                         $icmsTag->vICMSDif = formatarDecimal($icms['vICMSDif'], 2);
                     }
 
-                    if (isset($icms['vBCFCP']) && isset($icms['pFCP'])) {
-                        $icmsTag->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
-                        $icmsTag->pFCP = formatarDecimal($icms['pFCP'], 2);
-                        $icmsTag->vFCP = formatarDecimal($icms['vBCFCP'] * $icms['pFCP'] / 100, 2);
-                    }
+                    // if (isset($icms['vBCFCP']) && isset($icms['pFCP'])) {
+                    //     $icmsTag->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
+                    //     $icmsTag->pFCP = formatarDecimal($icms['pFCP'], 2);
+                    //     $icmsTag->vFCP = formatarDecimal($icms['vBCFCP'] * $icms['pFCP'] / 100, 2);
+                    // }
 
                 } elseif ($cst === '60') {
                     // ICMS cobrado anteriormente por substituição tributária - Grupo ICMS60
@@ -616,12 +615,12 @@ class Nfe
                     $icmsTag->pST = formatarDecimal($icms['pST'] ?? 0, 2); 
                     $icmsTag->vICMSSTRet = formatarDecimal($icms['vICMSSTRet'] ?? 0, 2);
 
-                    if (isset($icms['vBCFCPSTRet']) && isset($icms['pFCPSTRet'])) {
-                        $icmsTag->vBCFCPSTRet = formatarDecimal($icms['vBCFCPSTRet'], 2);
-                        $icmsTag->pFCPSTRet = formatarDecimal($icms['pFCPSTRet'], 2);
+                    // if (isset($icms['vBCFCPSTRet']) && isset($icms['pFCPSTRet'])) {
+                    //     $icmsTag->vBCFCPSTRet = formatarDecimal($icms['vBCFCPSTRet'], 2);
+                    //     $icmsTag->pFCPSTRet = formatarDecimal($icms['pFCPSTRet'], 2);
 
-                        $icmsTag->vFCPSTRet = formatarDecimal($icms['vFCPSTRet'] ?? ($icms['vBCFCPSTRet'] * $icms['pFCPSTRet'] / 100), 2);
-                    }
+                    //     $icmsTag->vFCPSTRet = formatarDecimal($icms['vFCPSTRet'] ?? ($icms['vBCFCPSTRet'] * $icms['pFCPSTRet'] / 100), 2);
+                    // }
 
                 } elseif ($cst === '70') {
                     // Com redução de base de cálculo e cobrança do ICMS por substituição tributária - Grupo ICMS70
@@ -649,16 +648,16 @@ class Nfe
                     }
 
                     // FCP (opcional) - Tags do FCP normal e FCP ST
-                    if (isset($icms['vBCFCP']) && isset($icms['pFCP'])) {
-                        $icmsTag->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
-                        $icmsTag->pFCP = formatarDecimal($icms['pFCP'], 2);
-                        $icmsTag->vFCP = formatarDecimal($icms['vBCFCP'] * $icms['pFCP'] / 100, 2);
-                    }
-                    if (isset($icms['vBCFCPST']) && isset($icms['pFCPST'])) {
-                        $icmsTag->vBCFCPST = formatarDecimal($icms['vBCFCPST'], 2);
-                        $icmsTag->pFCPST = formatarDecimal($icms['pFCPST'], 2);
-                        $icmsTag->vFCPST = formatarDecimal($icms['vBCFCPST'] * $icms['pFCPST'] / 100, 2);
-                    }
+                    // if (isset($icms['vBCFCP']) && isset($icms['pFCP'])) {
+                    //     $icmsTag->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
+                    //     $icmsTag->pFCP = formatarDecimal($icms['pFCP'], 2);
+                    //     $icmsTag->vFCP = formatarDecimal($icms['vBCFCP'] * $icms['pFCP'] / 100, 2);
+                    // }
+                    // if (isset($icms['vBCFCPST']) && isset($icms['pFCPST'])) {
+                    //     $icmsTag->vBCFCPST = formatarDecimal($icms['vBCFCPST'], 2);
+                    //     $icmsTag->pFCPST = formatarDecimal($icms['pFCPST'], 2);
+                    //     $icmsTag->vFCPST = formatarDecimal($icms['vBCFCPST'] * $icms['pFCPST'] / 100, 2);
+                    // }
 
                 } elseif ($cst === '90') {
                     // Outras - Grupo ICMS90 (Preenchido de forma robusta)
@@ -695,16 +694,16 @@ class Nfe
                     }
 
                     // FCP (opcional) - FCP normal e FCP ST
-                    if (isset($icms['vBCFCP']) && isset($icms['pFCP'])) {
-                        $icmsTag->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
-                        $icmsTag->pFCP = formatarDecimal($icms['pFCP'], 2);
-                        $icmsTag->vFCP = formatarDecimal($icms['vBCFCP'] * $icms['pFCP'] / 100, 2);
-                    }
-                    if (isset($icms['vBCFCPST']) && isset($icms['pFCPST'])) {
-                        $icmsTag->vBCFCPST = formatarDecimal($icms['vBCFCPST'], 2);
-                        $icmsTag->pFCPST = formatarDecimal($icms['pFCPST'], 2);
-                        $icmsTag->vFCPST = formatarDecimal($icms['vBCFCPST'] * $icms['pFCPST'] / 100, 2);
-                    }
+                    // if (isset($icms['vBCFCP']) && isset($icms['pFCP'])) {
+                    //     $icmsTag->vBCFCP = formatarDecimal($icms['vBCFCP'], 2);
+                    //     $icmsTag->pFCP = formatarDecimal($icms['pFCP'], 2);
+                    //     $icmsTag->vFCP = formatarDecimal($icms['vBCFCP'] * $icms['pFCP'] / 100, 2);
+                    // }
+                    // if (isset($icms['vBCFCPST']) && isset($icms['pFCPST'])) {
+                    //     $icmsTag->vBCFCPST = formatarDecimal($icms['vBCFCPST'], 2);
+                    //     $icmsTag->pFCPST = formatarDecimal($icms['pFCPST'], 2);
+                    //     $icmsTag->vFCPST = formatarDecimal($icms['vBCFCPST'] * $icms['pFCPST'] / 100, 2);
+                    // }
                 }
 
                 $nfe->tagICMS($icmsTag);
