@@ -420,7 +420,7 @@ class Nfe
         $std->cPais = $this->corpoRequisicao['empresa']['cPais']; // Código do país (Vai vir nos dados do cliente)
         $std->xPais = $this->corpoRequisicao['empresa']['xPais']; // Nome do país (Vai vir nos dados do cliente)
         $nfe->tagenderDest($std);
-
+        /*
         // ===== RESPONSAVEL TECNICO =====
         $std = new stdClass();
         $std->CNPJ = '01108339000179';
@@ -430,7 +430,7 @@ class Nfe
         // $std->CSRT = 'G8063VRTNDMO886SFNK5LDUDEI24XJ22YIPO'; //Código de Segurança do Responsável Técnico
         // $std->idCSRT = '01'; //Identificador do CSRT
         $nfe->taginfRespTec($std);
-
+            */
         // ===== PRODUTOS =====
         $totalProdutos = 0;
         $totalIs = 0;
