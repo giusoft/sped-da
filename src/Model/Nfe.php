@@ -771,9 +771,9 @@ class Nfe
                 } elseif (in_array($std->CST, ['04', '05', '06', '07', '08', '09'])) { // GRUPO PISNT: Não Tributado (CST 04 a 09)
                     $nfe->tagPIS($std);
                 } elseif ($std->CST >= '49' && $std->CST <= '99') { // GRUPO PISOutr: Outras Operações (CST 49 a 99)
-                    $std->vBC = formatarDecimal($vProd, 2);
-                    $std->pPIS = formatarDecimal($pis['aliquota'], 4);
-                    $std->vPIS = formatarDecimal($vProd * ((float)$pis['aliquota'] / 100), 2);
+                    $std->vBC = formatarDecimal($vProd, 2) ?? 0;
+                    $std->pPIS = formatarDecimal($pis['aliquota'], 4) ?? 0;
+                    $std->vPIS = formatarDecimal($vProd * ((float)$pis['aliquota'] / 100), 2) ?? 0;
 
                     $nfe->tagPIS($std);
                 }
@@ -800,9 +800,9 @@ class Nfe
                 } elseif (in_array($std->CST, ['04', '05', '06', '07', '08', '09'])) { // GRUPO COFINSNT: Não Tributado (CST 04 a 09)
                     $nfe->tagCOFINS($std);
                 } elseif ($std->CST >= '49' && $std->CST <= '99') { // GRUPO COFINSOutr: Outras Operações (CST 49 a 99)
-                    $std->vBC = formatarDecimal($vProd, 2);
-                    $std->pCOFINS = formatarDecimal($cofins['aliquota'], 2);
-                    $std->vCOFINS = formatarDecimal($vProd * ((float)$cofins['aliquota'] / 100), 2);
+                    $std->vBC = formatarDecimal($vProd, 2) ?? 0;
+                    $std->pCOFINS = formatarDecimal($cofins['aliquota'], 2) ?? 0;
+                    $std->vCOFINS = formatarDecimal($vProd * ((float)$cofins['aliquota'] / 100), 2) ?? 0;
 
                     $nfe->tagCOFINS($std);
                 }
