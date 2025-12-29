@@ -775,7 +775,12 @@ class Nfe
                         $std->vBC = formatarDecimal($vProd, 2);
                         $std->pPIS = formatarDecimal($pis['aliquota'], 4);
                         $std->vPIS = formatarDecimal($vProd * ((float)$pis['aliquota'] / 100), 2);
+                    } else {
+                        $std->vBC  = '0.00';
+                        $std->pPIS = '0.0000';
+                        $std->vPIS = '0.00';
                     }
+
                     $nfe->tagPIS($std);
                 }
             }
@@ -805,7 +810,12 @@ class Nfe
                         $std->vBC = formatarDecimal($vProd, 2);
                         $std->pCOFINS = formatarDecimal($cofins['aliquota'], 2);
                         $std->vCOFINS = formatarDecimal($vProd * ((float)$cofins['aliquota'] / 100), 2);
+                    } else {
+                        $std->vBC = '0.00';
+                        $std->pCOFINS = '0.0000';
+                        $std->vCOFINS = '0.00';
                     }
+
                     $nfe->tagCOFINS($std);
                 }
             }
