@@ -97,7 +97,7 @@ class Nfe
 
             //VALIDAR XML
             try {
-                $resp = Validator::isValid($xmlAssinado, $this->default['xsd']);
+                Validator::isValid($xmlAssinado, $this->default['xsd']);
             } catch (\Exception $e) {
                 emitirErro(
                     $e->getMessage(),
@@ -142,7 +142,7 @@ class Nfe
             if (isset($std->cStat) && !in_array($std->cStat, [100, 103, 104])) {
                 $motivo = 'Erro desconhecido';
                 if (isset($std->xMotivo)) {
-                    $motivo = $std->xMotivo;
+                    $motivo = "Status: " . $std->cStat . ' - ' . $std->xMotivo;
                 }
 
                 emitirErro(
@@ -166,7 +166,7 @@ class Nfe
 
                     $motivo = 'Erro desconhecido';
                     if (isset($std->protNFe->infProt->xMotivo)) {
-                        $motivo = $std->protNFe->infProt->xMotivo;
+                        $motivo = "Status: " . $cStat . ' - ' . $std->protNFe->infProt->xMotivo;
                     }
 
                     // Nota rejeitada
