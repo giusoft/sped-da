@@ -43,6 +43,7 @@ class Nfe
         $this->default['cnjpAutorizadoSefaz'] = '13937073000156';
         $this->default['codigoPais'] = 1058; // Código do Brasil = 1058
         $this->default['modoContingencia'] = [6, 7];
+        $this->default['xsd'] = __DIR__ . "/../Lib/sped-nfe/schemes/PL_010_V1.30/nfe_v4.00.xsd";
         $this->default['ufs_svc_rs'] = [
             '13', // AM - Amazonas
             '29', // BA - Bahia
@@ -95,10 +96,9 @@ class Nfe
             $retorno .= '|XML assinado digitalmente com sucesso';
 
             //VALIDAR XML
-            $xsd = __DIR__ . "/../Lib/sped-nfe/schemes/PL_010_V1.30/nfe_v4.00.xsd";
             try {
-                Validator::isValid($xmlAssinado, $xsd);
-            } catch (ValidatorException $e) {
+                Validator::isValid($xmlAssinado, $this->default['xsd']);
+            } catch (\Exception $e) {
                 emitirErro(
                     $e->getMessage(),
                     400,
@@ -142,7 +142,7 @@ class Nfe
             if (isset($std->cStat) && !in_array($std->cStat, [100, 103, 104])) {
                 $motivo = 'Erro desconhecido';
                 if (isset($std->xMotivo)) {
-                    $motivo = $std->xMotivo;
+                    $motivo = "Status: " . $std->cStat . ' - ' . $std->xMotivo;
                 }
 
                 emitirErro(
@@ -166,7 +166,7 @@ class Nfe
 
                     $motivo = 'Erro desconhecido';
                     if (isset($std->protNFe->infProt->xMotivo)) {
-                        $motivo = $std->protNFe->infProt->xMotivo;
+                        $motivo = "Status: " . $cStat . ' - ' . $std->protNFe->infProt->xMotivo;
                     }
 
                     // Nota rejeitada
@@ -771,15 +771,9 @@ class Nfe
                 } elseif (in_array($std->CST, ['04', '05', '06', '07', '08', '09'])) { // GRUPO PISNT: Não Tributado (CST 04 a 09)
                     $nfe->tagPIS($std);
                 } elseif ($std->CST >= '49' && $std->CST <= '99') { // GRUPO PISOutr: Outras Operações (CST 49 a 99)
-                    if ((float) $pis['aliquota'] > 0) {
-                        $std->vBC = formatarDecimal($vProd, 2);
-                        $std->pPIS = formatarDecimal($pis['aliquota'], 4);
-                        $std->vPIS = formatarDecimal($vProd * ((float)$pis['aliquota'] / 100), 2);
-                    } else {
-                        $std->vBC  = '0.00';
-                        $std->pPIS = '0.0000';
-                        $std->vPIS = '0.00';
-                    }
+                    $std->vBC = formatarDecimal($vProd, 2) ?? 0;
+                    $std->pPIS = formatarDecimal($pis['aliquota'], 4) ?? 0;
+                    $std->vPIS = formatarDecimal($vProd * ((float)$pis['aliquota'] / 100), 2) ?? 0;
 
                     $nfe->tagPIS($std);
                 }
@@ -806,15 +800,9 @@ class Nfe
                 } elseif (in_array($std->CST, ['04', '05', '06', '07', '08', '09'])) { // GRUPO COFINSNT: Não Tributado (CST 04 a 09)
                     $nfe->tagCOFINS($std);
                 } elseif ($std->CST >= '49' && $std->CST <= '99') { // GRUPO COFINSOutr: Outras Operações (CST 49 a 99)
-                    if ((float)$cofins['aliquota'] > 0) {
-                        $std->vBC = formatarDecimal($vProd, 2);
-                        $std->pCOFINS = formatarDecimal($cofins['aliquota'], 2);
-                        $std->vCOFINS = formatarDecimal($vProd * ((float)$cofins['aliquota'] / 100), 2);
-                    } else {
-                        $std->vBC = '0.00';
-                        $std->pCOFINS = '0.0000';
-                        $std->vCOFINS = '0.00';
-                    }
+                    $std->vBC = formatarDecimal($vProd, 2) ?? 0;
+                    $std->pCOFINS = formatarDecimal($cofins['aliquota'], 2) ?? 0;
+                    $std->vCOFINS = formatarDecimal($vProd * ((float)$cofins['aliquota'] / 100), 2) ?? 0;
 
                     $nfe->tagCOFINS($std);
                 }
