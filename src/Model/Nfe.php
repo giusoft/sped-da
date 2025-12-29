@@ -96,10 +96,11 @@ class Nfe
             $retorno .= '|XML assinado digitalmente com sucesso';
 
             //VALIDAR XML
-            $validacao = Validator::isValid($xmlAssinado, $this->default['xsd']);
-            if ($validacao !== true) {
+            try {
+                $resp = Validator::isValid($xmlAssinado, $this->default['xsd']);
+            } catch (\Exception $e) {
                 emitirErro(
-                    $validacao,
+                    $e->getMessage(),
                     400,
                     [
                         'situacao' => 'Reprovada',
