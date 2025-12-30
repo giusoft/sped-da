@@ -180,6 +180,6 @@ if (!function_exists("desencriptar")) {
 if (!function_exists("formatarDecimal")) {
     function formatarDecimal($valor, $casas = 2)
     {
-        return number_format((float) $valor, $casas, '.', '');
+        return number_format((float) ($valor ?? 0), $casas, '.', '');
     }
 }
