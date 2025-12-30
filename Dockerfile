@@ -8,6 +8,11 @@ RUN apt-get update && apt-get install -y \
     libfreetype6-dev libcurl4-openssl-dev libonig-dev libssl-dev libgmp-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# HABILITA OPENSSL LEGACY (CERTIFICADOS A1 ANTIGOS)
+RUN sed -i '1i openssl_conf = openssl_init' /usr/lib/ssl/openssl.cnf && \
+printf "\n[openssl_init]\nproviders = provider_sect\n\n[provider_sect]\ndefault = default_sect\nlegacy = legacy_sect\n\n[default_sect]\nactivate = 1\n\n[legacy_sect]\nactivate = 1\n" >> /usr/lib/ssl/openssl.cnf
+
+
 # Instala extensões PHP
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
