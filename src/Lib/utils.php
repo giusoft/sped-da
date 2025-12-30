@@ -180,6 +180,48 @@ if (!function_exists("desencriptar")) {
 if (!function_exists("formatarDecimal")) {
     function formatarDecimal($valor, $casas = 2)
     {
-        return number_format((float) $valor, $casas, '.', '');
+        return number_format((float) ($valor ?? 0), $casas, '.', '');
+    }
+}
+
+
+if (!function_exists("buscarErroSSL")) {
+    function buscarErroSSL()
+    {
+        $error = '<br> Ocorreu o seguinte erro: ';
+        while ($msg = openssl_error_string()) {
+            $error .= "($msg)";
+        }
+
+        return $error;
+    }
+}
+
+
+if (!function_exists("traduzirErroCertificado")) {
+    function traduzirErroCertificado(string $erroTecnico): string
+    {
+        $erroTecnico = strtolower($erroTecnico);
+
+        if (
+            strpos($erroTecnico, 'mac verify failure') !== false ||
+            strpos($erroTecnico, 'bad decrypt') !== false
+        ) {
+            return 'A senha do certificado digital está incorreta.';
+        }
+
+        if (strpos($erroTecnico, 'digital envelope routines::unsupported') !== false) {
+            return 'O certificado digital é incompatível com o ambiente atual.';
+        }
+
+        if (strpos($erroTecnico, 'unsupported') !== false) {
+            return 'O certificado digital utiliza criptografia não suportada.';
+        }
+
+        if (strpos($erroTecnico, 'no start line') !== false) {
+            return 'O arquivo do certificado é inválido ou está corrompido.';
+        }
+
+        return 'Não foi possível validar o certificado digital. Verifique o arquivo e a senha informados.';
     }
 }
