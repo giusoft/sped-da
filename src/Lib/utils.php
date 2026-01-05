@@ -1,5 +1,4 @@
 <?php
-$AESKEY = "emiteNota";
 
 if (!function_exists('gCleanField')) {
     function gCleanField($valor)
@@ -162,16 +161,14 @@ if (!function_exists('tirarPontos')) {
 
 
 if (!function_exists("desencriptar")) {
-    function desencriptar($senha)
+    function desencriptar($senha, $chave)
     {
-        global $AESKEY;
-
         return openssl_decrypt(
-            hex2bin($senha),     // Dados criptografados
-            'AES-128-CBC',       // Modo de operação AES-128-CBC
-            $AESKEY,             // Chave
-            OPENSSL_RAW_DATA,    // Retorna os dados crus sem qualquer codificação
-            str_repeat("\0", 16) // IV (Vetor de Inicialização)
+            hex2bin($senha),        // Dados criptografados
+            'AES-128-CBC',          // Modo de operação AES-128-CBC
+            $chave ?: 'emiteNota',  // Chave
+            OPENSSL_RAW_DATA,       // Retorna os dados crus sem qualquer codificação
+            str_repeat("\0", 16)    // IV (Vetor de Inicialização)
         );
     }
 }
@@ -207,21 +204,21 @@ if (!function_exists("traduzirErroCertificado")) {
             strpos($erroTecnico, 'mac verify failure') !== false ||
             strpos($erroTecnico, 'bad decrypt') !== false
         ) {
-            return 'A senha do certificado digital está incorreta.';
+            return 'Verifique a senha do certificado';
         }
 
         if (strpos($erroTecnico, 'digital envelope routines::unsupported') !== false) {
-            return 'O certificado digital é incompatível com o ambiente atual.';
+            return 'Este certificado digital não é compatível com o sistema. (Certificado emitido em formato legado)';
         }
 
         if (strpos($erroTecnico, 'unsupported') !== false) {
-            return 'O certificado digital utiliza criptografia não suportada.';
+            return 'O certificado digital utiliza um padrão de segurança não muito antigo. (Certificado emitido em formato legado)';
         }
 
         if (strpos($erroTecnico, 'no start line') !== false) {
-            return 'O arquivo do certificado é inválido ou está corrompido.';
+            return 'O arquivo do certificado está inválido ou corrompido. Verifique se você enviou o arquivo correto (.pfx ou .p12)';
         }
 
-        return 'Não foi possível validar o certificado digital. Verifique o arquivo e a senha informados.';
+        return 'Não foi possível validar o certificado digital. Verifique se o arquivo e a senha estão corretos. Se o problema persistir, entre em contato com o suporte.';
     }
 }
