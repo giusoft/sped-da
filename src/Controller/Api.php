@@ -35,7 +35,7 @@ class Api
 
         $this->corpoRequisicao = json_decode($conteudo, true);
 
-        $this->gravarLog($conteudo);  
+        $this->gravarLog($conteudo);
     }
 
 
@@ -43,14 +43,14 @@ class Api
     {
         $arquivoLog = __DIR__ . '/../storage/log/emitenota.log';
 
-        if (!file_exists($arquivoLog)) { 
-            return; 
+        if (!file_exists($arquivoLog)) {
+            return;
         }
 
         $data = date('Y-m-d H:i:s');
         $ip = $_SERVER['REMOTE_ADDR'] ?? '-';
         $uri = $_SERVER['REQUEST_URI'] ?? '-';
-        
+
         $texto = "[$data] IP: $ip | URI: $uri\nPAYLOAD: $conteudo\n" . str_repeat("-", 50) . "\n";
 
         file_put_contents($arquivoLog, $texto, FILE_APPEND);
@@ -65,7 +65,7 @@ class Api
         }
 
         $rota = $_GET['rota'] ?? '';
-        if (!isset($this->corpoRequisicao["certificado"]) && $rota != 'danfe') {
+        if ($rota != 'danfe' && $rota != 'certificado') {
             $this->buscarCertificado();
         }
 
@@ -93,12 +93,16 @@ class Api
 
         $certPath = __DIR__ . "/../storage/certificados/{$cnpjLimpo}/certificado.pfx";
 
-        if (!file_exists($certPath)) {
+        if (!file_exists($certPath) && !isset($this->corpoRequisicao["certificado"])) {
             emitirErro("Certificado não encontrado!", 400);
         }
 
+        $certificadoConteudo = isset($this->corpoRequisicao["certificado"])
+            ? base64_decode($this->corpoRequisicao["certificado"])
+            : file_get_contents($certPath);
+
         $certificate = Certificate::readPfx(
-            file_get_contents($certPath),
+            $certificadoConteudo,
             $senhaCertificado
         );
 
