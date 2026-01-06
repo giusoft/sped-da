@@ -98,7 +98,7 @@ class Nfe
             //VALIDAR XML
             try {
                 Validator::isValid($xmlAssinado, $this->default['xsd']);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 emitirErro(
                     $e->getMessage(),
                     400,
@@ -365,9 +365,9 @@ class Nfe
         $std->verProc = 'API EmiteNota 1.0'; // Versão do aplicativo emissor
         $nfe->tagide($std);
 
-        if (!empty($this->corpoRequisicao['chaveEstorno'])) {
+        if (!empty($this->corpoRequisicao['refNfe'])) {
             $stdRef = new \stdClass();
-            $stdRef->refNFe = $this->corpoRequisicao['chaveEstorno'];
+            $stdRef->refNFe = $this->corpoRequisicao['refNfe'];
             $nfe->tagrefNFe($stdRef);
         }
 
@@ -1133,32 +1133,32 @@ class Nfe
     {
         try {
             $response = $this->tools->sefazConsultaRecibo($recibo);
-    
+
             $stdCl = new Standardize();
             $std = $stdCl->toStd($response);
-    
+
             if (isset($std->protNFe->infProt)) {
                 $cStat = $std->protNFe->infProt->cStat;
-    
+
                 if (in_array($cStat, [100, 150])) {
                     $protocolo = $std->protNFe->infProt->nProt;
                     $chave = $std->protNFe->infProt->chNFe;
-    
+
                     $xmlProtocolado = Complements::toAuthorize($xmlAssinado, $response);
-    
+
                     $mensagem = "Autorizada";
                     if (isset($std->protNFe->infProt->xMotivo)) {
                         $mensagem = $std->protNFe->infProt->xMotivo;
                     }
-    
+
                     $dataHoraRecebimento = null;
                     if (isset($std->protNFe->infProt->dhRecbto)) {
                         $dataHoraRecebimento = $std->protNFe->infProt->dhRecbto;
-    
+
                         $data = new \DateTime($dataHoraRecebimento);
                         $dataHoraRecebimento = $data->format('Y-m-d H:i:s');
                     }
-    
+
                     emitirSucesso(
                         $mensagem,
                         200,
@@ -1173,17 +1173,17 @@ class Nfe
                     );
                 }
             }
-            
+
             $motivo = 'Erro desconhecido';
             if (isset($std->xMotivo)) {
                 $motivo = $std->xMotivo;
             }
-    
+
             $codigoSituacaoNF = 'N/A';
             if (isset($std->cStat)) {
                 $codigoSituacaoNF = $std->cStat;
             }
-    
+
             emitirErro(
                 $motivo,
                 400,
@@ -1192,7 +1192,7 @@ class Nfe
                     'codigoSituacaoNF' => $codigoSituacaoNF
                 ]
             );
-    
+
         } catch (Exception $e) {
             emitirErro(
                 $e->getMessage(),
@@ -1501,28 +1501,26 @@ class Nfe
     {
         try {
 
-            // 1. VALIDAÇÕES OBRIGATÓRIAS
             if (
-                !isset($this->corpoRequisicao['chaveEstorno']) ||
-                !isset($this->corpoRequisicao['produtos']) ||
-                !isset($this->corpoRequisicao['numeroNota']) ||
-                !isset($this->corpoRequisicao['cliente'])
+                !isset($this->corpoRequisicao['refNfe'])
+                || !isset($this->corpoRequisicao['produtos'])
+                || !isset($this->corpoRequisicao['numeroNota'])
+                || !isset($this->corpoRequisicao['cliente'])
             ) {
                 emitirErro(
-                    "Para estorno, os campos 'chaveEstorno', 'numeroNota', 'cliente' e 'produtos' são obrigatórios.",
+                    "Para estorno, os campos 'refNfe', 'numeroNota', 'cliente' e 'produtos' são obrigatórios.",
                     400
                 );
             }
 
-            if (strlen($this->corpoRequisicao['chaveEstorno']) != 44) {
+            if (strlen($this->corpoRequisicao['refNfe']) != 44) {
                 emitirErro("A chave referenciada deve ter 44 dígitos.", 400);
             }
 
-            // (OPCIONAL, MAS É BOM QUE EVITA ERROS, VAMOS VER SE VAI PRECISAR...)
-            $consultaOriginal = $this->consultarNotaOriginal($this->corpoRequisicao['chaveEstorno']);
+            $consultaOriginal = $this->consultarNotaOriginal($this->corpoRequisicao['refNfe']);
             if (!$consultaOriginal['autorizada']) {
                 emitirErro(
-                    "A NF-e original (chave: {$this->corpoRequisicao['chaveEstorno']}) não está autorizada. Estorno não permitido.",
+                    "A NF-e original (chave: {$this->corpoRequisicao['refNfe']}) não está autorizada. Estorno não permitido.",
                     400
                 );
             }
