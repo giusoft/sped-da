@@ -66,7 +66,7 @@ class Api
 
         $rota = $_GET['rota'] ?? '';
         if ($rota != 'danfe' && $rota != 'certificado') {
-            $this->buscarCertificado();
+            $this->inicializarNFe();
         }
 
         $this->chamarMetodoClasse();
@@ -74,40 +74,55 @@ class Api
     }
 
 
-    public function buscarCertificado()
+    public function inicializarNFe()
     {
-        $cnpjLimpo = soNumeros($this->corpoRequisicao['cnpj_emitente']);
-        if (strlen($cnpjLimpo) != 14) {
-            emitirErro("CNPJ inválido: {$this->corpoRequisicao['cnpj_emitente']}", 400);
+        try {
+            $cnpjLimpo = soNumeros($this->corpoRequisicao['cnpj_emitente']);
+            if (strlen($cnpjLimpo) != 14) {
+                emitirErro("CNPJ inválido: {$this->corpoRequisicao['cnpj_emitente']}", 400);
+            }
+
+            if (!isset($this->corpoRequisicao['empresa'])) {
+                emitirErro("Os campos da empresa não foram informados", 400);
+            }
+
+            if (!$this->corpoRequisicao['empresa']['senhaCertificado']) {
+                emitirErro("Este CNPJ não possui certificado configurado! Verifique o cadastro!", 400);
+            }
+
+            $certificado = $this->carregarCertificado($cnpjLimpo);
+
+            $this->tools = new Tools(json_encode($this->corpoRequisicao['empresa']), $certificado);
+            $this->tools->model('55');
+
+        } catch (\Exception $e) {
+            error_log("Erro ao processar certificado: " . $e->getMessage());
+            emitirErro("Erro ao processar requisição", 500, $e->getMessage());
         }
+    }
 
-        if (!isset($this->corpoRequisicao['empresa'])) {
-            emitirErro("Os campos da empresa não foram informados", 400);
+
+    public function carregarCertificado(string $cnpjLimpo)
+    {
+        try {
+
+            $certPath = __DIR__ . "/../storage/certificados/{$cnpjLimpo}/certificado.pfx";
+
+            if (!file_exists($certPath) && !isset($this->corpoRequisicao["certificado"])) {
+                emitirErro("Certificado não encontrado!", 400);
+            }
+
+            $certificadoConteudo = isset($this->corpoRequisicao["certificado"])
+                ? base64_decode($this->corpoRequisicao["certificado"])
+                : file_get_contents($certPath);
+
+            $senhaCertificado = desencriptar($this->corpoRequisicao['empresa']['senhaCertificado'], $this->corpoRequisicao['empresa']['chave']);
+            return Certificate::readPfx($certificadoConteudo, $senhaCertificado);
+
+        } catch (\Exception $e) {
+            error_log("Erro ao processar certificado: " . $e->getMessage());
+            emitirErro("Erro ao processar certificado", 500, traduzirErroCertificado($e->getMessage()));
         }
-
-        if (!$this->corpoRequisicao['empresa']['senhaCertificado']) {
-            emitirErro("Este CNPJ não possui certificado configurado! Verifique o cadastro!", 400);
-        }
-
-        $senhaCertificado = desencriptar($this->corpoRequisicao['empresa']['senhaCertificado']);
-
-        $certPath = __DIR__ . "/../storage/certificados/{$cnpjLimpo}/certificado.pfx";
-
-        if (!file_exists($certPath) && !isset($this->corpoRequisicao["certificado"])) {
-            emitirErro("Certificado não encontrado!", 400);
-        }
-
-        $certificadoConteudo = isset($this->corpoRequisicao["certificado"])
-            ? base64_decode($this->corpoRequisicao["certificado"])
-            : file_get_contents($certPath);
-
-        $certificate = Certificate::readPfx(
-            $certificadoConteudo,
-            $senhaCertificado
-        );
-
-        $this->tools = new Tools(json_encode($this->corpoRequisicao['empresa']), $certificate);
-        $this->tools->model('55');
     }
 
 
