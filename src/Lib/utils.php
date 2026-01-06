@@ -161,7 +161,7 @@ if (!function_exists('tirarPontos')) {
 
 
 if (!function_exists("desencriptar")) {
-    function desencriptar($senha, $chave)
+    function desencriptar($senha, $chave = '')
     {
         return openssl_decrypt(
             hex2bin($senha),        // Dados criptografados
