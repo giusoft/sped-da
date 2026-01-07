@@ -77,7 +77,7 @@ class Api
     {
 
         if (!isset($this->corpoRequisicao['cnpj_emitente'])) {
-            emitirErro("O campo 'cnpj_emitente' é obrigatório", 400);
+            $this->emitirErro("O campo 'cnpj_emitente' é obrigatório", 400);
         }
 
         $rota = $_GET['rota'] ?? '';
@@ -95,15 +95,15 @@ class Api
         try {
             $cnpjLimpo = soNumeros($this->corpoRequisicao['cnpj_emitente']);
             if (strlen($cnpjLimpo) != 14) {
-                emitirErro("CNPJ inválido: {$this->corpoRequisicao['cnpj_emitente']}", 400);
+                $this->emitirErro("CNPJ inválido: {$this->corpoRequisicao['cnpj_emitente']}", 400);
             }
 
             if (!isset($this->corpoRequisicao['empresa'])) {
-                emitirErro("Os campos da empresa não foram informados", 400);
+                $this->emitirErro("Os campos da empresa não foram informados", 400);
             }
 
             if (!$this->corpoRequisicao['empresa']['senhaCertificado']) {
-                emitirErro("Este CNPJ não possui certificado configurado! Verifique o cadastro!", 400);
+                $this->emitirErro("Este CNPJ não possui certificado configurado! Verifique o cadastro!", 400);
             }
 
             $certificado = $this->carregarCertificado($cnpjLimpo);
@@ -113,7 +113,7 @@ class Api
 
         } catch (\Exception $e) {
             error_log("Erro ao processar certificado: " . $e->getMessage());
-            emitirErro("Erro ao processar requisição", 500, $e->getMessage());
+            $this->emitirErro("Erro ao processar requisição", 500, $e->getMessage());
         }
     }
 
@@ -125,7 +125,7 @@ class Api
             $certPath = __DIR__ . "/../storage/certificados/{$cnpjLimpo}/certificado.pfx";
 
             if (!file_exists($certPath) && !isset($this->corpoRequisicao["certificado"])) {
-                emitirErro("Certificado não encontrado!", 400);
+                $this->emitirErro("Certificado não encontrado!", 400);
             }
 
             $certificadoConteudo = isset($this->corpoRequisicao["certificado"])
@@ -137,7 +137,7 @@ class Api
 
         } catch (\Exception $e) {
             error_log("Erro ao processar certificado: " . $e->getMessage());
-            emitirErro("Erro ao processar certificado", 500, traduzirErroCertificado($e->getMessage()));
+            $this->emitirErro("Erro ao processar certificado", 500, traduzirErroCertificado($e->getMessage()));
         }
     }
 
@@ -155,20 +155,67 @@ class Api
         }
 
         if (!$rota || !$recurso) {
-            emitirErro("Os parâmetros 'rota' e 'recurso' são obrigatórios na URL (ex: index.php?rota=nfe&recurso=enviar)", 400);
+            $this->emitirErro("Os parâmetros 'rota' e 'recurso' são obrigatórios na URL (ex: index.php?rota=nfe&recurso=enviar)", 400);
         }
 
         if (!isset($this->classes[$rota]) || !class_exists($this->classes[$rota])) {
-            emitirErro("A classe '{$rota}' não foi encontrada.", 404);
+            $this->emitirErro("A classe '{$rota}' não foi encontrada.", 404);
         }
 
         $classe = new $this->classes[$rota]($this);
 
         if (!method_exists($classe, $recurso)) {
-            emitirErro("Método '{$recurso}' não encontrado na classe '{$rota}'.", 404);
+            $this->emitirErro("Método '{$recurso}' não encontrado na classe '{$rota}'.", 404);
         }
 
         return $classe->{$recurso}($this->corpoRequisicao);
+    }
+
+
+    public function emitirSucesso($mensagem = 'Operacao concluida com sucesso', $codigoHttp = 200, $dados = [])
+    {
+        $resposta = [
+            'sucesso' => true,
+            'status' => $codigoHttp,
+            'mensagem' => $mensagem,
+        ];
+
+        if ($dados) {
+            $resposta['detalhes'] = $dados;
+        }
+
+        $this->requisicaoSalvar['idPessoasCriou'] = 1;
+        $this->requisicaoSalvar['idGatilhos']     = 10;
+        $this->requisicaoSalvar['sucesso']        = 1;
+        $this->requisicaoSalvar['pendente']       = 0;
+        $this->requisicaoSalvar['recebido']       = json_encode($resposta);
+
+        $this->db->salvarRequisicao($this->corpoRequisicao, $this->requisicaoSalvar);
+
+        finalizarRequisicao($resposta, $codigoHttp);
+    }
+
+    public function emitirErro($mensagem, $codigoHttp = 400, $dadosExtras = [])
+    {
+        $resposta = [
+            'sucesso' => false,
+            'status' => $codigoHttp,
+            'mensagem' => $mensagem,
+        ];
+
+        if ($dadosExtras) {
+            $resposta['detalhes'] = $dadosExtras;
+        }
+
+        $this->requisicaoSalvar['idPessoasCriou'] = 1;
+        $this->requisicaoSalvar['idGatilhos']     = 10;
+        $this->requisicaoSalvar['sucesso']        = 0;
+        $this->requisicaoSalvar['pendente']       = 1;
+        $this->requisicaoSalvar['recebido']       = json_encode($resposta);
+
+        $this->db->salvarRequisicao($this->corpoRequisicao, $this->requisicaoSalvar);
+
+        finalizarRequisicao($resposta, $codigoHttp);
     }
 
 }
