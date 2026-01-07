@@ -11,15 +11,13 @@ class Sefaz
 {
     private $tools;
     private $corpoRequisicao;
-    private $db;
-    private $requisicaoSalvar;
+    private $api;
 
     public function __construct($dados)
     {
+        $this->api = $dados;
         $this->tools = $dados->tools;
         $this->corpoRequisicao = $dados->corpoRequisicao['empresa'];
-        $this->db = $dados->db;
-        $this->requisicaoSalvar = $dados->requisicaoSalvar;
     }
 
 
@@ -43,26 +41,10 @@ class Sefaz
             $dados['data_hora_consulta'] = date('d/m/Y H:i:s');
             $dados['tempo_medio_ms']     = $std->tMed ?? null;
 
-            $this->requisicaoSalvar['idPessoasCriou'] = 1;
-            $this->requisicaoSalvar['idGatilhos']     = 23;
-            $this->requisicaoSalvar['sucesso']        = 1;
-            $this->requisicaoSalvar['pendente']       = 0;
-            $this->requisicaoSalvar['recebido']       = json_encode($dados);
-
-            $this->db->salvarRequisicao($this->corpoRequisicao, $this->requisicaoSalvar);
-
-            emitirSucesso($dados, 200);
+            $this->api->emitirSucesso($dados, 200);
 
         } catch (\Exception $e) {
-            $this->requisicaoSalvar['idPessoasCriou']      = 1;
-            $this->requisicaoSalvar['idGatilhos']          = 23;
-            $this->requisicaoSalvar['sucesso']             = 0;
-            $this->requisicaoSalvar['pendente']            = 1;
-            $this->requisicaoSalvar['recebido']            = json_encode(['erro' => $e->getMessage()]);
-
-            $this->db->salvarRequisicao($this->corpoRequisicao, $this->requisicaoSalvar);
-
-            emitirErro($e->getMessage(), 500);
+            $this->api->emitirErro($e->getMessage(), 500);
         }
     }
 }
