@@ -5,9 +5,11 @@ namespace App\Model;
 class Certificado
 {
     private $corpoRequisicao;
+    private $api;
 
     public function __construct($dados)
     {
+        $this->api = $dados;
         $this->corpoRequisicao = $dados->corpoRequisicao;
     }
 
@@ -27,7 +29,7 @@ class Certificado
             }
 
             if (!isset($this->corpoRequisicao['senhaCertificado'])) {
-                emitirErro("Informe a senha do certificado", 400);
+                $this->api->emitirErro("Informe a senha do certificado", 400);
             }
 
             $senhaCertificado = desencriptar($this->corpoRequisicao['senhaCertificado']);
@@ -37,7 +39,7 @@ class Certificado
                 $erroTecnico = buscarErroSSL();
                 $mensagemUsuario = traduzirErroCertificado($erroTecnico);
                 error_log('[CERTIFICADO] ' . $erroTecnico);
-                emitirErro($mensagemUsuario, 400);
+                $this->api->emitirErro($mensagemUsuario, 400);
             }
 
             $certificadoX509 = openssl_x509_read($dadosExtraidosCertificado['cert']);
@@ -63,10 +65,10 @@ class Certificado
             $dataValidadeFormatada = date("d-m-Y", gmmktime(0, 0, 0, $mesValidade, $diaValidade, $anoValidade));
             $resposta['Validade'] = $dataValidadeFormatada;
 
-            emitirSucesso("Certificado válido", 200, $resposta);
+            $this->api->emitirSucesso("Certificado válido", 200, $resposta);
         }
 
-        emitirErro("Certificado não encontrado");
+        $this->api->emitirErro("Certificado não encontrado");
     }
 
 
@@ -121,11 +123,11 @@ class Certificado
                     rename($certificadoMovido['antigo'], $certificadoMovido['original']);
                 }
             }
-            emitirErro("Erro ao salvar o certificado");
+            $this->api->emitirErro("Erro ao salvar o certificado");
         }
 
         chmod($destino, 0664);
 
-        emitirSucesso("Certificado importado com sucesso");
+        $this->api->emitirSucesso("Certificado importado com sucesso");
     }
 }
