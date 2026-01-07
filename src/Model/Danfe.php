@@ -12,9 +12,11 @@ date_default_timezone_set('America/Bahia');
 class Danfe
 {
     private $corpoRequisicao;
+    private $api;
 
     public function __construct($dados)
     {
+        $this->api = $dados;
         $this->corpoRequisicao = $dados->corpoRequisicao;
     }
 
@@ -22,15 +24,15 @@ class Danfe
     {
         try {
             if (empty($this->corpoRequisicao['xml'])) {
-                emitirErro("O campo 'xml' (contendo o XML em base64) é obrigatório.", 400);
+                $this->api->emitirErro("O campo 'xml' (contendo o XML em base64) é obrigatório.", 400);
             }
             if (empty($this->corpoRequisicao['chave']) || empty($this->corpoRequisicao['cnpj_emitente'])) {
-                emitirErro("Os campos 'chave' e 'cnpj_emitente' são obrigatórios (para nomear o PDF salvo).", 400);
+                $this->api->emitirErro("Os campos 'chave' e 'cnpj_emitente' são obrigatórios (para nomear o PDF salvo).", 400);
             }
 
             $xml = base64_decode($this->corpoRequisicao['xml']);
             if ($xml === false) {
-                emitirErro("O XML fornecido não é um base64 válido.", 400);
+                $this->api->emitirErro("O XML fornecido não é um base64 válido.", 400);
             }
 
             $danfe = new NFeDanfe($xml);
@@ -46,14 +48,14 @@ class Danfe
 
             $pdfBase64 = base64_encode($pdf);
 
-            emitirSucesso(
+            $this->api->emitirSucesso(
                 "DANFE gerado com sucesso",
                 200,
                 ['pdf_base64' => $pdfBase64]
             );
 
         } catch (\Exception $e) {
-            emitirErro($e->getMessage(), 500);
+            $this->api->emitirErro($e->getMessage(), 500);
         }
     }
 
@@ -75,7 +77,7 @@ class Danfe
             }
 
             if (!empty($erros)) {
-                emitirErro(implode("\n", $erros), 400);
+                $this->api->emitirErro(implode("\n", $erros), 400);
                 return;
             }
 
@@ -102,14 +104,14 @@ class Danfe
             $logotipo = $this->obterCaminhoLogo($this->corpoRequisicao['cnpj_emitente']);
             $pdf = $daEvento->render($logotipo);
 
-            emitirSucesso(
+            $this->api->emitirSucesso(
                 "DANFE CC-e gerado com sucesso",
                 200,
                 ['pdf_base64' => base64_encode($pdf)]
             );
 
         } catch (\Exception $e) {
-            emitirErro($e->getMessage(), 500);
+            $this->api->emitirErro($e->getMessage(), 500);
         }
     }
 
@@ -186,7 +188,7 @@ class Danfe
                     }
                 }
 
-                emitirSucesso("Lote parcial processado", 200, [
+                $this->api->emitirSucesso("Lote parcial processado", 200, [
                     'sucessos' => $countSucesso,
                     'erros' => $countErro
                 ]);
@@ -206,7 +208,7 @@ class Danfe
 
                 $zip = new ZipArchive();
                 if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-                    emitirErro("Não foi possível criar o arquivo ZIP.", 500);
+                    $this->api->emitirErro("Não foi possível criar o arquivo ZIP.", 500);
                 }
 
                 $files = new \RecursiveIteratorIterator(
@@ -228,7 +230,7 @@ class Danfe
                 // Limpa temp após gerar o ZIP
                 $this->removerDiretorioRecursivo($tempDir);
 
-                emitirSucesso("Lote finalizado", 200, [
+                $this->api->emitirSucesso("Lote finalizado", 200, [
                     'arquivo' => $zipFilename,
                     'caminho_relativo' => "/storage/output/{$cnpj}/{$zipFilename}",
                     'total_processado' => $countTotal
@@ -236,7 +238,7 @@ class Danfe
             }
 
         } catch (\Exception $e) {
-            emitirErro($e->getMessage(), 500);
+            $this->api->emitirErro($e->getMessage(), 500);
         }
     }
 
@@ -245,25 +247,25 @@ class Danfe
     {
         try {
             if (empty($this->corpoRequisicao['xml'])) {
-                emitirErro("O campo 'xml' (contendo do XML em base64) é obrigatório.", 400);
+                $this->api->emitirErro("O campo 'xml' (contendo do XML em base64) é obrigatório.", 400);
             }
 
             if (empty($this->corpoRequisicao['xml_cancelamento'])) {
-                emitirErro("O campo 'xml_cancelamento' (contendo do XML em base64) é obrigatório.", 400);
+                $this->api->emitirErro("O campo 'xml_cancelamento' (contendo do XML em base64) é obrigatório.", 400);
             }
 
             if (empty($this->corpoRequisicao['chave']) || empty($this->corpoRequisicao['cnpj_emitente'])) {
-                emitirErro("Os campos 'chave' e 'cnpj_emitente' são obrigatórios (para nomear o PDF salvo).", 400);
+                $this->api->emitirErro("Os campos 'chave' e 'cnpj_emitente' são obrigatórios (para nomear o PDF salvo).", 400);
             }
 
             $xmlProtocolado = base64_decode($this->corpoRequisicao['xml']);
             if ($xmlProtocolado === false) {
-                emitirErro("O XML fornecido não é um base64 válido.", 400);
+                $this->api->emitirErro("O XML fornecido não é um base64 válido.", 400);
             }
 
             $xmlCancelamento = base64_decode($this->corpoRequisicao['xml_cancelamento']);
             if ($xmlCancelamento === false) {
-                emitirErro("O XML fornecido não é um base64 válido.", 400);
+                $this->api->emitirErro("O XML fornecido não é um base64 válido.", 400);
             }
 
             $xml = Complements::cancelRegister($xmlProtocolado, $xmlCancelamento);
@@ -281,14 +283,14 @@ class Danfe
 
             $pdfBase64 = base64_encode($pdf);
 
-            emitirSucesso(
+            $this->api->emitirSucesso(
                 "DANFE de cancelamento gerado com sucesso",
                 200,
                 ['pdf_base64' => $pdfBase64]
             );
 
         } catch (\Exception $e) {
-            emitirErro($e->getMessage(), 500);
+            $this->api->emitirErro($e->getMessage(), 500);
         }
     }
 
