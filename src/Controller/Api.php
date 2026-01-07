@@ -8,12 +8,15 @@ use App\Model\Nfe;
 use App\Model\Danfe;
 use App\Model\Sefaz;
 use App\Model\Certificado;
+use App\Model\db;
 
 class Api
 {
     public $corpoRequisicao;
     public $tools;
     public $classes;
+    public $db;
+    public $requisicaoSalvar = [];
 
     public function __construct()
     {
@@ -21,8 +24,13 @@ class Api
             'danfe' => Danfe::class,
             'sefaz' => Sefaz::class,
             'nfe' => Nfe::class,
-            'certificado' => Certificado::class
+            'certificado' => Certificado::class,
+            'db' => DB::class
         ];
+
+        $parametros = ['caminhoSetup' => '/var/www/html/setup.php'];
+
+        $this->db = new DB($parametros);
 
         $this->inicializarAmbiente();
         $this->processarRequisicao();
@@ -34,6 +42,14 @@ class Api
         $conteudo = file_get_contents('php://input');
 
         $this->corpoRequisicao = json_decode($conteudo, true);
+
+        $requisicaoSalvar = [];
+        $requisicaoSalvar['sucesso']         = 0;
+        $requisicaoSalvar['pendente']        = 1;
+        $requisicaoSalvar['recebido']        = '';
+        $requisicaoSalvar['idPessoasCriou']  = 1;
+
+        $this->requisicaoSalvar = $this->db->salvarRequisicao($this->corpoRequisicao, $requisicaoSalvar);
 
         $this->gravarLog($conteudo);
     }
@@ -116,7 +132,7 @@ class Api
                 ? base64_decode($this->corpoRequisicao["certificado"])
                 : file_get_contents($certPath);
 
-            $senhaCertificado = desencriptar($this->corpoRequisicao['empresa']['senhaCertificado'], $this->corpoRequisicao['empresa']['chave']);
+            $senhaCertificado = desencriptar($this->corpoRequisicao['empresa']['senhaCertificado'], $this->corpoRequisicao['empresa']['chave'] ?? '');
             return Certificate::readPfx($certificadoConteudo, $senhaCertificado);
 
         } catch (\Exception $e) {
