@@ -7,8 +7,8 @@ services:
       dockerfile: Dockerfile
     container_name: emitenota_app
     restart: unless-stopped
-    ports:
-      - "2083:2083"
+#    ports:
+#      - "2083:2083"
     volumes:
       - .:/var/www/html
       - /var/www/html/vendor
@@ -22,7 +22,8 @@ services:
     restart: always
     command: tunnel run
     environment:
-      - TUNNEL_TOKEN=eyJhIjoiOTg0ZmJlNDkwZmVkNjNhZjE4ZDcxYWI5OWE5MTQyMWUiLCJ0IjoiZjg4NmQ1YjktYjNlMi00NTIyLWE4ZDEtNjFjODM4NTgzNDIxIiwicyI6Ik1EUmtNR1E0Wm1ZdE56ZGtaaTAwTm1Nd0xUa3lNR1F0TVRVNU1Ua3hPV1prTldReSJ9
+
+      - TUNNEL_TOKEN=eyJhIjoiOTg0ZmJlNDkwZmVkNjNhZjE4ZDcxYWI5OWE5MTQyMWUiLCJ0IjoiOWNiYjVkNjUtMWI3ZC00MzYwLTg4MDktNzIxNmM0NjY1NDY4IiwicyI6Ill6Z3lOVEJpTjJVdFkyTmxOeTAwTlRZekxXSTRNamN0TnpSbE9UVXdPV05rWm1FNCJ9
     networks:
       - emitenota_network
 
