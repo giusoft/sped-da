@@ -59,40 +59,40 @@ if (!function_exists('check_utf8')) {
 }
 
 
-if (!function_exists('emitirErro')) {
-    function emitirErro($mensagem, $codigoHttp = 400, $dadosExtras = [])
-    {
-        $resposta = [
-            'sucesso' => false,
-            'status' => $codigoHttp,
-            'mensagem' => $mensagem,
-        ];
+// if (!function_exists('emitirErro')) {
+//     function emitirErro($mensagem, $codigoHttp = 400, $dadosExtras = [])
+//     {
+//         $resposta = [
+//             'sucesso' => false,
+//             'status' => $codigoHttp,
+//             'mensagem' => $mensagem,
+//         ];
 
-        if ($dadosExtras) {
-            $resposta['detalhes'] = $dadosExtras;
-        }
+//         if ($dadosExtras) {
+//             $resposta['detalhes'] = $dadosExtras;
+//         }
 
-        finalizarRequisicao($resposta, $codigoHttp);
-    }
-}
+//         finalizarRequisicao($resposta, $codigoHttp);
+//     }
+// }
 
 
-if (!function_exists('emitirSucesso')) {
-    function emitirSucesso($mensagem = 'Operacao concluida com sucesso', $codigoHttp = 200, $dados = [])
-    {
-        $resposta = [
-            'sucesso' => true,
-            'status' => $codigoHttp,
-            'mensagem' => $mensagem,
-        ];
+// if (!function_exists('emitirSucesso')) {
+//     function emitirSucesso($mensagem = 'Operacao concluida com sucesso', $codigoHttp = 200, $dados = [])
+//     {
+//         $resposta = [
+//             'sucesso' => true,
+//             'status' => $codigoHttp,
+//             'mensagem' => $mensagem,
+//         ];
 
-        if ($dados) {
-            $resposta['detalhes'] = $dados;
-        }
+//         if ($dados) {
+//             $resposta['detalhes'] = $dados;
+//         }
 
-        finalizarRequisicao($resposta, $codigoHttp);
-    }
-}
+//         finalizarRequisicao($resposta, $codigoHttp);
+//     }
+// }
 
 
 if (!function_exists('finalizarRequisicao')) {
