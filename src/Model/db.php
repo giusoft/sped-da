@@ -457,7 +457,7 @@ class DB
             $atributos[] = " {$atributo} = '" . $valor . "' ";
         }
 
-        $sql = "UPDATE " . TABLE_API . " SET"
+        $sql = "UPDATE " . $nomeTabela . " SET"
             . implode(', ', $atributos)
             . " WHERE id = " . $id;
         $this->executarQuery($sql);
