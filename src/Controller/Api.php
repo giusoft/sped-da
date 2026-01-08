@@ -9,6 +9,7 @@ use App\Model\Danfe;
 use App\Model\Sefaz;
 use App\Model\Certificado;
 use App\Model\db;
+use App\Model\Item;
 
 class Api
 {
@@ -25,7 +26,8 @@ class Api
             'sefaz' => Sefaz::class,
             'nfe' => Nfe::class,
             'certificado' => Certificado::class,
-            'db' => DB::class
+            'db' => DB::class,
+            'item' => Item::class
         ];
 
         $parametros = ['caminhoSetup' => '/var/www/html/setup.php'];
@@ -76,12 +78,8 @@ class Api
     public function processarRequisicao()
     {
 
-        if (!isset($this->corpoRequisicao['cnpj_emitente'])) {
-            $this->emitirErro("O campo 'cnpj_emitente' é obrigatório", 400);
-        }
-
         $rota = $_GET['rota'] ?? '';
-        if ($rota != 'danfe' && $rota != 'certificado') {
+        if ($rota == 'nfe' || $rota == 'sefaz') {
             $this->inicializarNFe();
         }
 
@@ -93,17 +91,16 @@ class Api
     public function inicializarNFe()
     {
         try {
+
+            $this->validarCamposObrigatorios($this->corpoRequisicao, array('cnpj_emitente', 'empresa'));
+
             $cnpjLimpo = soNumeros($this->corpoRequisicao['cnpj_emitente']);
             if (strlen($cnpjLimpo) != 14) {
                 $this->emitirErro("CNPJ inválido: {$this->corpoRequisicao['cnpj_emitente']}", 400);
             }
 
-            if (!isset($this->corpoRequisicao['empresa'])) {
-                $this->emitirErro("Os campos da empresa não foram informados", 400);
-            }
-
             if (!$this->corpoRequisicao['empresa']['senhaCertificado']) {
-                $this->emitirErro("Este CNPJ não possui certificado configurado! Verifique o cadastro!", 400);
+                $this->emitirErro("Campo obrigatorio 'senhaCertificado' nao informado.", 400);
             }
 
             $certificado = $this->carregarCertificado($cnpjLimpo);
@@ -169,6 +166,16 @@ class Api
         }
 
         return $classe->{$recurso}($this->corpoRequisicao);
+    }
+
+
+    public function validarCamposObrigatorios($params, $campos)
+    {
+        foreach ($campos as $campo) {
+            if (!$params[$campo]) {
+                $this->emitirErro("Campo obrigatorio '{$campo}' nao informado.");
+            }
+        }
     }
 
 
