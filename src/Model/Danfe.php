@@ -23,12 +23,8 @@ class Danfe
     public function gerarDanfe()
     {
         try {
-            if (empty($this->corpoRequisicao['xml'])) {
-                $this->api->emitirErro("O campo 'xml' (contendo o XML em base64) é obrigatório.", 400);
-            }
-            if (empty($this->corpoRequisicao['chave']) || empty($this->corpoRequisicao['cnpj_emitente'])) {
-                $this->api->emitirErro("Os campos 'chave' e 'cnpj_emitente' são obrigatórios (para nomear o PDF salvo).", 400);
-            }
+
+            $this->api->validarCamposObrigatorios($this->corpoRequisicao, ['xml', 'chave', 'cnpj_emitente']);
 
             $xml = base64_decode($this->corpoRequisicao['xml']);
             if ($xml === false) {
@@ -64,22 +60,8 @@ class Danfe
     {
         try {
             $erros = [];
-            if (empty($this->corpoRequisicao['xml'])) {
-                $erros[] = "O campo 'xml' (contendo o XML em base64) é obrigatório.";
-            }
 
-            if (empty($this->corpoRequisicao['chave'])) {
-                $erros[] = "O campo 'chave' é obrigatório.";
-            }
-
-            if (empty($this->corpoRequisicao['cnpj_emitente'])) {
-                $erros[] = "O campo 'cnpj_emitente' é obrigatório (necessário para nomear o PDF salvo).";
-            }
-
-            if (!empty($erros)) {
-                $this->api->emitirErro(implode("\n", $erros), 400);
-                return;
-            }
+            $this->api->validarCamposObrigatorios($this->corpoRequisicao, ['xml', 'chave', 'cnpj_emitente']);
 
             $xml = base64_decode($this->corpoRequisicao['xml']);
 
@@ -246,17 +228,8 @@ class Danfe
     public function gerarDanfeCancelamento()
     {
         try {
-            if (empty($this->corpoRequisicao['xml'])) {
-                $this->api->emitirErro("O campo 'xml' (contendo do XML em base64) é obrigatório.", 400);
-            }
 
-            if (empty($this->corpoRequisicao['xml_cancelamento'])) {
-                $this->api->emitirErro("O campo 'xml_cancelamento' (contendo do XML em base64) é obrigatório.", 400);
-            }
-
-            if (empty($this->corpoRequisicao['chave']) || empty($this->corpoRequisicao['cnpj_emitente'])) {
-                $this->api->emitirErro("Os campos 'chave' e 'cnpj_emitente' são obrigatórios (para nomear o PDF salvo).", 400);
-            }
+            $this->api->validarCamposObrigatorios($this->corpoRequisicao, ['xml', 'xml_cancelamento', 'chave', 'cnpj_emitente']);
 
             $xmlProtocolado = base64_decode($this->corpoRequisicao['xml']);
             if ($xmlProtocolado === false) {
