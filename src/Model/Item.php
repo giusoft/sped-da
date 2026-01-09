@@ -16,7 +16,7 @@ class Item
 
     public function cadastrar($args)
     {
-        if (!$args['item']) {
+        if (!isset($args['item'])) {
             $this->api->emitirErro('Estrutura de dados nao reconhecida para esta rota');
         }
 
@@ -42,8 +42,8 @@ class Item
         $dados = [];
         $dados['ncm']                     = substr($mtz['ncm'], 0, 10);
         $dados['nome']                    = substr($mtz['descricao'], 0, 149);
-        $dados['apto']                    = (int) $mtz['apto'] ?? 0;
-		$dados['ativo']                   = (int) $mtz['ativo'] ?? 0;
+        $dados['apto']                    = (int) ($mtz['apto'] ?? 0);
+        $dados['ativo']                   = (int) ($mtz['ativo'] ?? 0);
         $dados['codigo']                  = substr($mtz['codigo'], 0, 19);
         $dados['altura']                  = (float) substr($mtz['altura'], 0, 14);
         $dados['largura']                 = (float) substr($mtz['largura'], 0, 14);
@@ -67,12 +67,14 @@ class Item
 
     public function editar($args)
     {
-        if (!$args['item']) {
+        if (!isset($args['item'])) {
             $this->api->emitirErro('Estrutura de dados nao reconhecida para esta rota');
         }
 
         $item = $args['item'];
-        $itemSku = $args['item']['sku'];
+        if (isset($args['item']['sku'])) {
+            $itemSku = $args['item']['sku'];
+        }
 
         $this->api->validarCamposObrigatorios($item, [
             'id',
@@ -129,30 +131,30 @@ class Item
 
     public function excluir($args)
     {
-        if (!$args['item']) {
+        if (!isset($args['item'])) {
             $this->api->emitirErro('Estrutura de dados nao reconhecida para esta rota');
         }
 
         $mtz = $args['item'];
 
-        if ((!$mtz['codigo'] && !$mtz['codigoBarras']) && !$mtz['id']) {
+        if ((!isset($mtz['codigo']) && !isset($mtz['codigoBarras'])) && !$mtz['id']) {
             $this->api->emitirErro('As chaves codigo ou codigoBarras devem ser informadas');
         }
 
         $where = [];
         $whereSku = [];
 
-        if ($mtz['id']) {
+        if (isset($mtz['id'])) {
             $where[] = "(id = '" . gCleanField($mtz['id']) . "')";
-            $whereSku[] = "(id_itens = '" . gCleanField($mtz['id']) . "')"; // FK para itens_skus
+            $whereSku[] = "(id_itens = '" . gCleanField($mtz['id']) . "')";
         }
 
-        if ($mtz['codigo']) {
+        if (isset($mtz['codigo'])) {
             $where[] = "(codigo = '" . gCleanField($mtz['codigo']) . "')";
             $whereSku[] = "(codigo = '" . gCleanField($mtz['codigo']) . "')";
         }
 
-        if ($mtz['codigoBarras']) {
+        if (isset($mtz['codigoBarras'])) {
             $where[] = "(codigo_barras = '" . gCleanField($mtz['codigoBarras']) . "')";
             $whereSku[] = "(codigo_barras = '" . gCleanField($mtz['codigoBarras']) . "')";
         }
@@ -172,19 +174,19 @@ class Item
         $sql = "UPDATE itens_skus SET {$atualizar} WHERE {$whereSku}";
         $this->db->executarQuery($sql);
 
-        $this->api->emitirSucesso("Item excluido com sucesso", 200, $retorno);
+        $this->api->emitirSucesso("Item excluido com sucesso", 200);
     }
 
 
     public function listar($args)
     {
-        if (!$args['item']) {
+        if (!isset($args['item'])) {
             $this->api->emitirErro('Estrutura de dados nao reconhecida para esta rota');
         }
 
         $mtz = $args['item'];
 
-        if (!($mtz['codigo'] || $mtz['codigoBarras'])) {
+        if ((!isset($mtz['codigo']) && !isset($mtz['codigoBarras'])) && !$mtz['id']) {
             $this->api->emitirErro('As chaves codigo ou codigoBarras devem ser informadas');
         }
 
@@ -193,11 +195,15 @@ class Item
         $where = [];
         $where[] = "(I.id_pessoas_proprietario = 1)"; ### Ver de onde vamos pegar esse id do cliente
 
-        if ($mtz['codigo']) {
+        if (isset($mtz['id'])) {
+            $where[] = "(SK.id = '" . gCleanField($mtz['id']) . "')";
+        }
+
+        if (isset($mtz['codigo'])) {
             $where[] = "(SK.codigo = '" . gCleanField($mtz['codigo']) . "')";
         }
 
-        if ($mtz['codigoBarras']) {
+        if (isset($mtz['codigoBarras'])) {
             $where[] = "(SK.codigo_barras = '" . gCleanField($mtz['codigoBarras']) . "')";
         }
 
@@ -211,9 +217,6 @@ class Item
             $where[] = "(UN.id = " . $rs[0]['id'] . ")";
         }
 
-        if ($mtz['id']) {
-            $where[] = "(SK.id = '" . gCleanField($mtz['id']) . "')";
-        }
         $where = implode(" AND ", $where);
 
         $sql = "SELECT
