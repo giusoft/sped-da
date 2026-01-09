@@ -1210,31 +1210,15 @@ class Nfe
     public function cancelar()
     {
         try {
-            $chave = '';
-            if (isset($this->corpoRequisicao['chave'])) {
-                $chave = $this->corpoRequisicao['chave'];
-            }
 
-            $protocolo = '';
-            if (isset($this->corpoRequisicao['protocolo'])) {
-                $protocolo = $this->corpoRequisicao['protocolo'];
-            }
+            $this->api->validarCamposObrigatorios($this->corpoRequisicao, ['chave', 'protocolo', 'justificativa']);
 
-            $justificativa = '';
-            if (isset($this->corpoRequisicao['justificativa'])) {
-                $justificativa = $this->corpoRequisicao['justificativa'];
-            }
-
-            if (!$chave || !$protocolo || !$justificativa) {
-                $this->api->emitirErro("Os campos: chave, protocolo e justificativa são obrigatórios", 400);
-            }
-
-            if (strlen($justificativa) < 15) {
+            if (strlen($this->corpoRequisicao['justificativa']) < 15) {
                 $this->api->emitirErro("A justificativa deve ter no mínimo 15 caracteres", 400);
             }
 
             // Envia o cancelamento e captura tanto a requisição quanto a resposta
-            $response = $this->tools->sefazCancela($chave, $justificativa, $protocolo);
+            $response = $this->tools->sefazCancela($this->corpoRequisicao['chave'], $this->corpoRequisicao['justificativa'], $this->corpoRequisicao['protocolo']);
 
             // Pega o XML do evento que foi enviado (está disponível após o envio)
             $xmlEvento = $this->tools->lastRequest;
@@ -1295,15 +1279,7 @@ class Nfe
     {
         try {
 
-            if (
-                !isset($this->corpoRequisicao['serie'])
-                || !isset($this->corpoRequisicao['numero_inicial'])
-                || !isset($this->corpoRequisicao['numero_final'])
-                || !isset($this->corpoRequisicao['justificativa'])
-            ) {
-                $this->api->emitirErro('Os campos: cnpj_emitente, serie, numero_inicial, numero_final e justificativa são obrigatórios', 400);
-                return;
-            }
+            $this->api->validarCamposObrigatorios($this->corpoRequisicao, ['serie', 'numero_inicial', 'numero_final', 'justificativa']);
 
             if (strlen($this->corpoRequisicao['justificativa']) < 15) {
                 $this->api->emitirErro('A justificativa deve ter no mínimo 15 caracteres', 400);
@@ -1381,33 +1357,15 @@ class Nfe
     {
         try {
 
-            $chave = '';
-            if (isset($this->corpoRequisicao['chave'])) {
-                $chave = $this->corpoRequisicao['chave'];
-            }
+            $this->api->validarCamposObrigatorios($this->corpoRequisicao, ['chave', 'correcao', 'sequencial']);
 
-            $correcao = '';
-            if (isset($this->corpoRequisicao['correcao'])) {
-                $correcao = $this->corpoRequisicao['correcao'];
-            }
-
-            if (!$chave || !$correcao) {
-                $this->api->emitirErro("Os campos: chave e correção são obrigatórios", 400);
-                return;
-            }
-
-            if (strlen($correcao) < 15) {
+            if (strlen($this->corpoRequisicao['correcao']) < 15) {
                 $this->api->emitirErro("A correçao deve ter no mínimo 15 caracteres", 400);
-            }
-
-            if (!isset($this->corpoRequisicao['sequencial'])) {
-                $this->api->emitirErro("O campo 'sequencial' é obrigatório", 400);
-                return;
             }
 
             $nSeqEvento = (int) $this->corpoRequisicao['sequencial'];
 
-            $response = $this->tools->sefazCCe($chave, $correcao, $nSeqEvento);
+            $response = $this->tools->sefazCCe($this->corpoRequisicao['chave'], $this->corpoRequisicao['correcao'], $nSeqEvento);
 
             $xmlEvento = $this->tools->lastRequest;
 
@@ -1454,16 +1412,13 @@ class Nfe
     {
         try {
 
-            $chave = '';
-            if (isset($this->corpoRequisicao['chave'])) {
-                $chave = $this->corpoRequisicao['chave'];
-            }
+            $this->api->validarCamposObrigatorios($this->corpoRequisicao, ['chave']);
 
-            if (!$chave || strlen($chave) != 44) {
+            if (strlen($this->corpoRequisicao['chave']) != 44) {
                 $this->api->emitirErro("Chave de acesso válida é obrigatória", 400);
             }
 
-            $response = $this->tools->sefazConsultaChave($chave);
+            $response = $this->tools->sefazConsultaChave($this->corpoRequisicao['chave']);
 
             $stdCl = new Standardize();
             $std = $stdCl->toStd($response);
@@ -1503,17 +1458,7 @@ class Nfe
     {
         try {
 
-            if (
-                !isset($this->corpoRequisicao['refNfe'])
-                || !isset($this->corpoRequisicao['produtos'])
-                || !isset($this->corpoRequisicao['numeroNota'])
-                || !isset($this->corpoRequisicao['cliente'])
-            ) {
-                $this->api->emitirErro(
-                    "Para estorno, os campos 'refNfe', 'numeroNota', 'cliente' e 'produtos' são obrigatórios.",
-                    400
-                );
-            }
+            $this->api->validarCamposObrigatorios($this->corpoRequisicao, ['refNfe', 'produtos', 'numeroNota', 'cliente']);
 
             if (strlen($this->corpoRequisicao['refNfe']) != 44) {
                 $this->api->emitirErro("A chave referenciada deve ter 44 dígitos.", 400);
