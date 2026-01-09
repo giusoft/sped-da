@@ -107,7 +107,7 @@ class Item
         $dados['ativo']                   = (int) ($item['ativo'] ?? 0);
         $dados['codigo']                  = substr($item['codigo'], 0, 19);
         $dados['altura']                  = (float) substr($itemSku['altura'], 0, 14);
-        $dados['id_item']                 = (int) $item['id'];
+        $dados['id_itens']                 = (int) $item['id'];
         $dados['largura']                 = (float) substr($itemSku['largura'], 0, 14);
         $dados['unidade']                 = substr($itemSku['siglaUnidade'], 0, 2);
         $dados['descricao']               = substr($item['descricao'], 0, 254);
@@ -129,7 +129,50 @@ class Item
 
     public function excluir($args)
     {
+        if (!$args['item']) {
+            $this->api->emitirErro('Estrutura de dados nao reconhecida para esta rota');
+        }
 
+        $mtz = $args['item'];
+
+        if ((!$mtz['codigo'] && !$mtz['codigoBarras']) && !$mtz['id']) {
+            $this->api->emitirErro('As chaves codigo ou codigoBarras devem ser informadas');
+        }
+
+        $where = [];
+        $whereSku = [];
+
+        if ($mtz['id']) {
+            $where[] = "(id = '" . gCleanField($mtz['id']) . "')";
+            $whereSku[] = "(id_itens = '" . gCleanField($mtz['id']) . "')"; // FK para itens_skus
+        }
+
+        if ($mtz['codigo']) {
+            $where[] = "(codigo = '" . gCleanField($mtz['codigo']) . "')";
+            $whereSku[] = "(codigo = '" . gCleanField($mtz['codigo']) . "')";
+        }
+
+        if ($mtz['codigoBarras']) {
+            $where[] = "(codigo_barras = '" . gCleanField($mtz['codigoBarras']) . "')";
+            $whereSku[] = "(codigo_barras = '" . gCleanField($mtz['codigoBarras']) . "')";
+        }
+
+        $where = implode(" AND ", $where);
+        $whereSku = implode(" AND ", $whereSku);
+
+        $atualizar = [];
+        $atualizar[] = "ativo = 0";
+        $atualizar[] = "data_alteracao = '" . date('Y-m-d H:i:s') . "'";
+        $atualizar[] = "id_pessoas_alterou = 1";
+        $atualizar = implode(", ", $atualizar);
+
+        $sql = "UPDATE itens SET {$atualizar} WHERE {$where}";
+        $this->db->executarQuery($sql);
+
+        $sql = "UPDATE itens_skus SET {$atualizar} WHERE {$whereSku}";
+        $this->db->executarQuery($sql);
+
+        $this->api->emitirSucesso("Item excluido com sucesso", 200, $retorno);
     }
 
 
@@ -197,16 +240,16 @@ class Item
 
         $retorno = [
             'id' => $idItensSkus['id'],
-            'siglaUnidade' => $idItensSkus['sigla_unidade'],
+            'ativo' => $idItensSkus['ativo'],
             'codigo' => $idItensSkus['codigo'],
-            'altura' => $idItensSkus['altura'],
-            'largura' => $idItensSkus['largura'],
             'codigoBarras' => $idItensSkus['codigo_barras'],
-            'comprimento' => $idItensSkus['comprimento'],
             'ncm' => $idItensSkus['ncm'],
             'nome' => $idItensSkus['nome'],
             'descricao' => $idItensSkus['descricao'],
-            'ativo' => $idItensSkus['ativo']
+            'siglaUnidade' => $idItensSkus['sigla_unidade'],
+            'altura' => $idItensSkus['altura'],
+            'largura' => $idItensSkus['largura'],
+            'comprimento' => $idItensSkus['comprimento']
         ];
 
         $this->api->emitirSucesso("Item encontrado", 200, $retorno);
@@ -297,10 +340,10 @@ class Item
 		$mtz['id_pessoas_alterou'] = 1; ### Ver de onde vamos pegar esse id do cliente
 		$mtz['id_pessoas_proprietario'] = 1; ### Ver de onde vamos pegar esse id do cliente
 
-		$this->db->updateTable('itens', $mtz, $dados['id_item']);
+		$this->db->updateTable('itens', $mtz, $dados['id_itens']);
 
         return [
-            'id' => $dados['id_item'],
+            'id' => $dados['id_itens'],
             'ncm' => $dados['ncm'],
             'nome' => $dados['nome'],
             'apto' => $dados['apto'],
@@ -333,32 +376,23 @@ class Item
 		$mtz['codigo']             = $dados['codigo'];
 		$mtz['altura']             = $dados['altura'];
 		$mtz['largura']            = $dados['largura'];
-		$mtz['id_itens']           = $dados['id_item'];
+		$mtz['id_itens']           = $dados['id_itens'];
 		$mtz['id_unidades']        = $idUnidades;
 		$mtz['comprimento']        = $dados['comprimento'];
 		$mtz['codigo_barras']      = $dados['codigo_barras'];
 		$mtz['data_alteracao']     = date('Y-m-d H:i:s');
 		$mtz['id_pessoas_alterou'] = 1; ### Ver de onde vamos pegar esse id do cliente
 
-		$idItensSkus = $this->db->updateTable('itens_skus', $mtz, $dados['id_itens_skus']);
-        gD("",1);
-		if (!$idItensSkus) {
-			$this->api->emitirErro('Erro de banco de dados: Não foi possível editar os SKUs');
-		}
+		$this->db->updateTable('itens_skus', $mtz, $dados['id_itens_skus']);
 
 		return [
-            'id_itens_skus' => $dados['id_itens_skus'],
-            'id_itens'      => $dados['id_itens'],
-            'ncm'           => $dados['ncm'],
-            'nome'          => $dados['nome'],
-            'ativo'         => $dados['ativo'],
-            'altura'        => $dados['altura'],
-            'codigo'        => $dados['codigo'],
-            'largura'       => $dados['largura'],
-            'descricao'     => $dados['descricao'],
-            'comprimento'   => $dados['comprimento'],
-            'id_unidades'   => $idUnidades,
-            'codigoBarras'  => $dados['codigo_barras'],
+            'id_itens_skus'     => $dados['id_itens_skus'],
+            'ativo'             => $dados['ativo'],
+            'altura'            => $dados['altura'],
+            'largura'           => $dados['largura'],
+            'unidade'           => $dados['unidade'],
+            'comprimento'       => $dados['comprimento'],
+            'descricaoUnidade'  => $dados['descricaoUnidade'],
         ];
 	}
 
