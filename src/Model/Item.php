@@ -7,10 +7,10 @@ class Item
     private $api;
     private $db;
 
-    public function __construct($api)
+    public function __construct($args)
     {
-        $this->api = $api;
-        $this->db  = $api->db;
+        $this->api = $args;
+        $this->db  = $args->db;
     }
 
 
@@ -54,7 +54,7 @@ class Item
         $dados['descricaoUnidade']        = substr($mtz['descricaoUnidade'], 0, 29);
         $dados['id_pessoas_proprietario'] = 1; ### Ver de onde vamos pegar esse id do cliente
 
-        $detalhesSku = $this->cadastrarItem($dados, 1);
+        $detalhesSku = $this->cadastrarItem($dados);
 
         $this->api->emitirSucesso("Item cadastrado com sucesso", 200, [
             'id' => $detalhesSku['id'],
