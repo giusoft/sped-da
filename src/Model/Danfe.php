@@ -14,10 +14,10 @@ class Danfe
     private $corpoRequisicao;
     private $api;
 
-    public function __construct($dados)
+    public function __construct($args)
     {
-        $this->api = $dados;
-        $this->corpoRequisicao = $dados->corpoRequisicao;
+        $this->api = $args;
+        $this->corpoRequisicao = $args->corpoRequisicao;
     }
 
     public function gerarDanfe()
