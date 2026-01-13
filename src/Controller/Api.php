@@ -8,12 +8,16 @@ use App\Model\Nfe;
 use App\Model\Danfe;
 use App\Model\Sefaz;
 use App\Model\Certificado;
+use App\Model\db;
+use App\Model\Item;
 
 class Api
 {
     public $corpoRequisicao;
     public $tools;
     public $classes;
+    public $db;
+    public $requisicaoSalvar = [];
 
     public function __construct()
     {
@@ -21,8 +25,14 @@ class Api
             'danfe' => Danfe::class,
             'sefaz' => Sefaz::class,
             'nfe' => Nfe::class,
-            'certificado' => Certificado::class
+            'certificado' => Certificado::class,
+            'db' => DB::class,
+            'item' => Item::class
         ];
+
+        $parametros = ['caminhoSetup' => '/var/www/html/setup.php'];
+
+        $this->db = new DB($parametros);
 
         $this->inicializarAmbiente();
         $this->processarRequisicao();
@@ -35,7 +45,15 @@ class Api
 
         $this->corpoRequisicao = json_decode($conteudo, true);
 
-        $this->gravarLog($conteudo);  
+        $requisicaoSalvar = [];
+        $requisicaoSalvar['sucesso']         = 0;
+        $requisicaoSalvar['pendente']        = 1;
+        $requisicaoSalvar['recebido']        = '';
+        $requisicaoSalvar['idPessoasCriou']  = 1; ###TODO::Temos que tratar isso aqui para não ser hardcode
+
+        $this->requisicaoSalvar = $this->db->salvarRequisicao($this->corpoRequisicao, $requisicaoSalvar);
+
+        $this->gravarLog($conteudo);
     }
 
 
@@ -43,14 +61,14 @@ class Api
     {
         $arquivoLog = __DIR__ . '/../storage/log/emitenota.log';
 
-        if (!file_exists($arquivoLog)) { 
-            return; 
+        if (!file_exists($arquivoLog)) {
+            return;
         }
 
         $data = date('Y-m-d H:i:s');
         $ip = $_SERVER['REMOTE_ADDR'] ?? '-';
         $uri = $_SERVER['REQUEST_URI'] ?? '-';
-        
+
         $texto = "[$data] IP: $ip | URI: $uri\nPAYLOAD: $conteudo\n" . str_repeat("-", 50) . "\n";
 
         file_put_contents($arquivoLog, $texto, FILE_APPEND);
@@ -60,13 +78,9 @@ class Api
     public function processarRequisicao()
     {
 
-        if (!isset($this->corpoRequisicao['cnpj_emitente'])) {
-            emitirErro("O campo 'cnpj_emitente' é obrigatório", 400);
-        }
-
         $rota = $_GET['rota'] ?? '';
-        if (!isset($this->corpoRequisicao["certificado"]) && $rota != 'danfe') {
-            $this->buscarCertificado();
+        if ($rota == 'nfe' || $rota == 'sefaz') {
+            $this->inicializarNFe();
         }
 
         $this->chamarMetodoClasse();
@@ -74,36 +88,54 @@ class Api
     }
 
 
-    public function buscarCertificado()
+    public function inicializarNFe()
     {
-        $cnpjLimpo = soNumeros($this->corpoRequisicao['cnpj_emitente']);
-        if (strlen($cnpjLimpo) != 14) {
-            emitirErro("CNPJ inválido: {$this->corpoRequisicao['cnpj_emitente']}", 400);
+        try {
+
+            $this->validarCamposObrigatorios($this->corpoRequisicao, array('cnpj_emitente', 'empresa'));
+
+            $cnpjLimpo = soNumeros($this->corpoRequisicao['cnpj_emitente']);
+            if (strlen($cnpjLimpo) != 14) {
+                $this->emitirErro("CNPJ inválido: {$this->corpoRequisicao['cnpj_emitente']}", 400);
+            }
+
+            if (!$this->corpoRequisicao['empresa']['senhaCertificado']) {
+                $this->emitirErro("Campo obrigatorio 'senhaCertificado' nao informado.", 400);
+            }
+
+            $certificado = $this->carregarCertificado($cnpjLimpo);
+
+            $this->tools = new Tools(json_encode($this->corpoRequisicao['empresa']), $certificado);
+            $this->tools->model('55');
+
+        } catch (\Exception $e) {
+            error_log("Erro ao processar certificado: " . $e->getMessage());
+            $this->emitirErro("Erro ao processar requisição", 500, $e->getMessage());
         }
+    }
 
-        if (!isset($this->corpoRequisicao['empresa'])) {
-            emitirErro("Os campos da empresa não foram informados", 400);
+
+    public function carregarCertificado(string $cnpjLimpo)
+    {
+        try {
+
+            $certPath = __DIR__ . "/../storage/certificados/{$cnpjLimpo}/certificado.pfx";
+
+            if (!file_exists($certPath) && !isset($this->corpoRequisicao["certificado"])) {
+                $this->emitirErro("Certificado não encontrado!", 400);
+            }
+
+            $certificadoConteudo = isset($this->corpoRequisicao["certificado"])
+                ? base64_decode($this->corpoRequisicao["certificado"])
+                : file_get_contents($certPath);
+
+            $senhaCertificado = desencriptar($this->corpoRequisicao['empresa']['senhaCertificado'], $this->corpoRequisicao['empresa']['chave'] ?? '');
+            return Certificate::readPfx($certificadoConteudo, $senhaCertificado);
+
+        } catch (\Exception $e) {
+            error_log("Erro ao processar certificado: " . $e->getMessage());
+            $this->emitirErro("Erro ao processar certificado", 500, traduzirErroCertificado($e->getMessage()));
         }
-
-        if (!$this->corpoRequisicao['empresa']['senhaCertificado']) {
-            emitirErro("Este CNPJ não possui certificado configurado! Verifique o cadastro!", 400);
-        }
-
-        $senhaCertificado = desencriptar($this->corpoRequisicao['empresa']['senhaCertificado']);
-
-        $certPath = __DIR__ . "/../storage/certificados/{$cnpjLimpo}/certificado.pfx";
-
-        if (!file_exists($certPath)) {
-            emitirErro("Certificado não encontrado!", 400);
-        }
-
-        $certificate = Certificate::readPfx(
-            file_get_contents($certPath),
-            $senhaCertificado
-        );
-
-        $this->tools = new Tools(json_encode($this->corpoRequisicao['empresa']), $certificate);
-        $this->tools->model('55');
     }
 
 
@@ -120,20 +152,77 @@ class Api
         }
 
         if (!$rota || !$recurso) {
-            emitirErro("Os parâmetros 'rota' e 'recurso' são obrigatórios na URL (ex: index.php?rota=nfe&recurso=enviar)", 400);
+            $this->emitirErro("Os parâmetros 'rota' e 'recurso' são obrigatórios na URL (ex: index.php?rota=nfe&recurso=enviar)", 400);
         }
 
         if (!isset($this->classes[$rota]) || !class_exists($this->classes[$rota])) {
-            emitirErro("A classe '{$rota}' não foi encontrada.", 404);
+            $this->emitirErro("A classe '{$rota}' não foi encontrada.", 404);
         }
 
         $classe = new $this->classes[$rota]($this);
 
         if (!method_exists($classe, $recurso)) {
-            emitirErro("Método '{$recurso}' não encontrado na classe '{$rota}'.", 404);
+            $this->emitirErro("Método '{$recurso}' não encontrado na classe '{$rota}'.", 404);
         }
 
         return $classe->{$recurso}($this->corpoRequisicao);
+    }
+
+
+    public function validarCamposObrigatorios($params, $campos)
+    {
+        foreach ($campos as $campo) {
+            if (!isset($params[$campo])) {
+                $this->emitirErro("Campo obrigatorio '{$campo}' nao informado.");
+            }
+        }
+    }
+
+
+    public function emitirSucesso($mensagem = 'Operacao concluida com sucesso', $codigoHttp = 200, $dados = [])
+    {
+        $resposta = [
+            'sucesso' => true,
+            'status' => $codigoHttp,
+            'mensagem' => $mensagem,
+        ];
+
+        if ($dados) {
+            $resposta['detalhes'] = $dados;
+        }
+
+        $this->requisicaoSalvar['idPessoasCriou'] = 1; ###TODO::Temos que tratar isso aqui para não ser hardcode
+        $this->requisicaoSalvar['idGatilhos']     = 10; ###TODO::Temos que tratar isso aqui para não ser hardcode
+        $this->requisicaoSalvar['sucesso']        = 1;
+        $this->requisicaoSalvar['pendente']       = 0;
+        $this->requisicaoSalvar['recebido']       = json_encode($resposta);
+
+        $this->db->salvarRequisicao($this->corpoRequisicao, $this->requisicaoSalvar);
+
+        finalizarRequisicao($resposta, $codigoHttp);
+    }
+
+    public function emitirErro($mensagem, $codigoHttp = 400, $dadosExtras = [])
+    {
+        $resposta = [
+            'sucesso' => false,
+            'status' => $codigoHttp,
+            'mensagem' => $mensagem,
+        ];
+
+        if ($dadosExtras) {
+            $resposta['detalhes'] = $dadosExtras;
+        }
+
+        $this->requisicaoSalvar['idPessoasCriou'] = 1; ###TODO::Temos que tratar isso aqui para não ser hardcode
+        $this->requisicaoSalvar['idGatilhos']     = 10; ###TODO::Temos que tratar isso aqui para não ser hardcode
+        $this->requisicaoSalvar['sucesso']        = 0;
+        $this->requisicaoSalvar['pendente']       = 1;
+        $this->requisicaoSalvar['recebido']       = json_encode($resposta);
+
+        $this->db->salvarRequisicao($this->corpoRequisicao, $this->requisicaoSalvar);
+
+        finalizarRequisicao($resposta, $codigoHttp);
     }
 
 }
