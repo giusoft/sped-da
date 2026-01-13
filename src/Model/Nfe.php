@@ -18,11 +18,13 @@ class Nfe
     private $corpoRequisicao;
     private $tools;
     private $default;
+    private $api;
 
-    public function __construct($dados)
+    public function __construct($args)
     {
-        $this->corpoRequisicao = $dados->corpoRequisicao;
-        $this->tools = $dados->tools;
+        $this->api = $args;
+        $this->corpoRequisicao = $args->corpoRequisicao;
+        $this->tools = $args->tools;
         $this->carregarDadosDefault();
     }
 
@@ -98,8 +100,8 @@ class Nfe
             //VALIDAR XML
             try {
                 Validator::isValid($xmlAssinado, $this->default['xsd']);
-            } catch (\Exception $e) {
-                emitirErro(
+            } catch (Exception $e) {
+                $this->api->emitirErro(
                     $e->getMessage(),
                     400,
                     [
@@ -145,7 +147,7 @@ class Nfe
                     $motivo = "Status: " . $std->cStat . ' - ' . $std->xMotivo;
                 }
 
-                emitirErro(
+                $this->api->emitirErro(
                     $motivo,
                     400,
                     [
@@ -170,7 +172,7 @@ class Nfe
                     }
 
                     // Nota rejeitada
-                    emitirErro(
+                    $this->api->emitirErro(
                         $motivo,
                         400,
                         [
@@ -202,7 +204,7 @@ class Nfe
                     $dataHoraRecebimento = $data->format('Y-m-d H:i:s');
                 }
 
-                emitirSucesso(
+                $this->api->emitirSucesso(
                     $motivo,
                     200,
                     [
@@ -227,7 +229,7 @@ class Nfe
                 }
 
                 if ($protocolo['success'] != 200) {
-                    emitirErro(
+                    $this->api->emitirErro(
                         $motivo,
                         400,
                         [
@@ -239,7 +241,7 @@ class Nfe
                     );
                 }
 
-                emitirSucesso(
+                $this->api->emitirSucesso(
                     $protocolo,
                     200,
                     [
@@ -255,7 +257,7 @@ class Nfe
                 }
 
                 // Erro no lote
-                emitirErro(
+                $this->api->emitirErro(
                     $motivo,
                     400,
                     [
@@ -267,7 +269,7 @@ class Nfe
                 );
             }
         } catch (Exception $e) {
-            emitirErro(
+            $this->api->emitirErro(
                 $e->getMessage(),
                 500,
                 [
@@ -1133,33 +1135,33 @@ class Nfe
     {
         try {
             $response = $this->tools->sefazConsultaRecibo($recibo);
-    
+
             $stdCl = new Standardize();
             $std = $stdCl->toStd($response);
-    
+
             if (isset($std->protNFe->infProt)) {
                 $cStat = $std->protNFe->infProt->cStat;
-    
+
                 if (in_array($cStat, [100, 150])) {
                     $protocolo = $std->protNFe->infProt->nProt;
                     $chave = $std->protNFe->infProt->chNFe;
-    
+
                     $xmlProtocolado = Complements::toAuthorize($xmlAssinado, $response);
-    
+
                     $mensagem = "Autorizada";
                     if (isset($std->protNFe->infProt->xMotivo)) {
                         $mensagem = $std->protNFe->infProt->xMotivo;
                     }
-    
+
                     $dataHoraRecebimento = null;
                     if (isset($std->protNFe->infProt->dhRecbto)) {
                         $dataHoraRecebimento = $std->protNFe->infProt->dhRecbto;
-    
+
                         $data = new \DateTime($dataHoraRecebimento);
                         $dataHoraRecebimento = $data->format('Y-m-d H:i:s');
                     }
-    
-                    emitirSucesso(
+
+                    $this->api->emitirSucesso(
                         $mensagem,
                         200,
                         [
@@ -1173,18 +1175,18 @@ class Nfe
                     );
                 }
             }
-            
+
             $motivo = 'Erro desconhecido';
             if (isset($std->xMotivo)) {
                 $motivo = $std->xMotivo;
             }
-    
+
             $codigoSituacaoNF = 'N/A';
             if (isset($std->cStat)) {
                 $codigoSituacaoNF = $std->cStat;
             }
-    
-            emitirErro(
+
+            $this->api->emitirErro(
                 $motivo,
                 400,
                 [
@@ -1192,9 +1194,9 @@ class Nfe
                     'codigoSituacaoNF' => $codigoSituacaoNF
                 ]
             );
-    
+
         } catch (Exception $e) {
-            emitirErro(
+            $this->api->emitirErro(
                 $e->getMessage(),
                 500,
                 [
@@ -1208,31 +1210,15 @@ class Nfe
     public function cancelar()
     {
         try {
-            $chave = '';
-            if (isset($this->corpoRequisicao['chave'])) {
-                $chave = $this->corpoRequisicao['chave'];
-            }
 
-            $protocolo = '';
-            if (isset($this->corpoRequisicao['protocolo'])) {
-                $protocolo = $this->corpoRequisicao['protocolo'];
-            }
+            $this->api->validarCamposObrigatorios($this->corpoRequisicao, ['chave', 'protocolo', 'justificativa']);
 
-            $justificativa = '';
-            if (isset($this->corpoRequisicao['justificativa'])) {
-                $justificativa = $this->corpoRequisicao['justificativa'];
-            }
-
-            if (!$chave || !$protocolo || !$justificativa) {
-                emitirErro("Os campos: chave, protocolo e justificativa são obrigatórios", 400);
-            }
-
-            if (strlen($justificativa) < 15) {
-                emitirErro("A justificativa deve ter no mínimo 15 caracteres", 400);
+            if (strlen($this->corpoRequisicao['justificativa']) < 15) {
+                $this->api->emitirErro("A justificativa deve ter no mínimo 15 caracteres", 400);
             }
 
             // Envia o cancelamento e captura tanto a requisição quanto a resposta
-            $response = $this->tools->sefazCancela($chave, $justificativa, $protocolo);
+            $response = $this->tools->sefazCancela($this->corpoRequisicao['chave'], $this->corpoRequisicao['justificativa'], $this->corpoRequisicao['protocolo']);
 
             // Pega o XML do evento que foi enviado (está disponível após o envio)
             $xmlEvento = $this->tools->lastRequest;
@@ -1255,7 +1241,7 @@ class Nfe
                     $mensagem = $std->retEvento->infEvento->xMotivo;
                 }
 
-                emitirSucesso(
+                $this->api->emitirSucesso(
                     [
                         'success' => true,
                         'mensagem' => $mensagem,
@@ -1280,11 +1266,11 @@ class Nfe
                     $codigo = $std->cStat;
                 }
 
-                emitirErro($motivo, 400, $codigo);
+                $this->api->emitirErro($motivo, 400, $codigo);
             }
 
         } catch (Exception $e) {
-            emitirErro($e->getMessage(), 500);
+            $this->api->emitirErro($e->getMessage(), 500);
         }
     }
 
@@ -1293,22 +1279,14 @@ class Nfe
     {
         try {
 
-            if (
-                !isset($this->corpoRequisicao['serie'])
-                || !isset($this->corpoRequisicao['numero_inicial'])
-                || !isset($this->corpoRequisicao['numero_final'])
-                || !isset($this->corpoRequisicao['justificativa'])
-            ) {
-                emitirErro('Os campos: cnpj_emitente, serie, numero_inicial, numero_final e justificativa são obrigatórios', 400);
-                return;
-            }
+            $this->api->validarCamposObrigatorios($this->corpoRequisicao, ['serie', 'numero_inicial', 'numero_final', 'justificativa']);
 
             if (strlen($this->corpoRequisicao['justificativa']) < 15) {
-                emitirErro('A justificativa deve ter no mínimo 15 caracteres', 400);
+                $this->api->emitirErro('A justificativa deve ter no mínimo 15 caracteres', 400);
             }
 
             if ($this->corpoRequisicao['numero_inicial'] > $this->corpoRequisicao['numero_final']) {
-                emitirErro('O "numero_inicial" não pode ser maior que o "numero_final"', 400);
+                $this->api->emitirErro('O "numero_inicial" não pode ser maior que o "numero_final"', 400);
             }
 
             $response = $this->tools->sefazInutiliza(
@@ -1335,7 +1313,7 @@ class Nfe
                     $motivo = $std->infInut->xMotivo;
                 }
 
-                emitirSucesso(
+                $this->api->emitirSucesso(
                     $motivo,
                     200,
                     [
@@ -1360,7 +1338,7 @@ class Nfe
                     $codigo = $std->cStat;
                 }
 
-                emitirErro(
+                $this->api->emitirErro(
                     $motivo,
                     400,
                     [
@@ -1370,7 +1348,7 @@ class Nfe
             }
 
         } catch (Exception $e) {
-            emitirErro($e->getMessage(), 500);
+            $this->api->emitirErro($e->getMessage(), 500);
         }
     }
 
@@ -1379,33 +1357,15 @@ class Nfe
     {
         try {
 
-            $chave = '';
-            if (isset($this->corpoRequisicao['chave'])) {
-                $chave = $this->corpoRequisicao['chave'];
+            $this->api->validarCamposObrigatorios($this->corpoRequisicao, ['chave', 'correcao', 'sequencial']);
+
+            if (strlen($this->corpoRequisicao['correcao']) < 15) {
+                $this->api->emitirErro("A correçao deve ter no mínimo 15 caracteres", 400);
             }
 
-            $correcao = '';
-            if (isset($this->corpoRequisicao['correcao'])) {
-                $correcao = $this->corpoRequisicao['correcao'];
-            }
-
-            if (!$chave || !$correcao) {
-                emitirErro("Os campos: chave e correção são obrigatórios", 400);
-                return;
-            }
-
-            if (strlen($correcao) < 15) {
-                emitirErro("A correçao deve ter no mínimo 15 caracteres", 400);
-            }
-
-            if (!isset($this->corpoRequisicao['sequencial'])) {
-                emitirErro("O campo 'sequencial' é obrigatório", 400);
-                return;
-            }
-            
             $nSeqEvento = (int) $this->corpoRequisicao['sequencial'];
-            
-            $response = $this->tools->sefazCCe($chave, $correcao, $nSeqEvento);
+
+            $response = $this->tools->sefazCCe($this->corpoRequisicao['chave'], $this->corpoRequisicao['correcao'], $nSeqEvento);
 
             $xmlEvento = $this->tools->lastRequest;
 
@@ -1413,11 +1373,11 @@ class Nfe
             $std = $stdCl->toStd($response);
 
             if ($std->cStat != 128) { // 128 = Lote de Evento Processado
-                emitirErro($std->xMotivo, 400, ['codigo' => $std->cStat]);
+                $this->api->emitirErro($std->xMotivo, 400, ['codigo' => $std->cStat]);
             }
 
             if ($std->retEvento->infEvento->cStat != 135) { // Evento Vinculado
-                emitirErro($std->retEvento->infEvento->xMotivo, 400, ['codigo' => $std->retEvento->infEvento->cStat]);
+                $this->api->emitirErro($std->retEvento->infEvento->xMotivo, 400, ['codigo' => $std->retEvento->infEvento->cStat]);
             }
 
             $protocolo = $std->retEvento->infEvento->nProt;
@@ -1431,7 +1391,7 @@ class Nfe
                 $dataEvento = $std->retEvento->infEvento->dhRegEvento;
             }
 
-            emitirSucesso(
+            $this->api->emitirSucesso(
                 $std->retEvento->infEvento->xMotivo,
                 200,
                 [
@@ -1443,7 +1403,7 @@ class Nfe
             );
 
         } catch (Exception $e) {
-            emitirErro($e->getMessage(), 500);
+            $this->api->emitirErro($e->getMessage(), 500);
         }
     }
 
@@ -1452,16 +1412,13 @@ class Nfe
     {
         try {
 
-            $chave = '';
-            if (isset($this->corpoRequisicao['chave'])) {
-                $chave = $this->corpoRequisicao['chave'];
+            $this->api->validarCamposObrigatorios($this->corpoRequisicao, ['chave']);
+
+            if (strlen($this->corpoRequisicao['chave']) != 44) {
+                $this->api->emitirErro("Chave de acesso válida é obrigatória", 400);
             }
 
-            if (!$chave || strlen($chave) != 44) {
-                emitirErro("Chave de acesso válida é obrigatória", 400);
-            }
-
-            $response = $this->tools->sefazConsultaChave($chave);
+            $response = $this->tools->sefazConsultaChave($this->corpoRequisicao['chave']);
 
             $stdCl = new Standardize();
             $std = $stdCl->toStd($response);
@@ -1481,7 +1438,7 @@ class Nfe
                 $protocolo = $std->protNFe->infProt->nProt;
             }
 
-            emitirSucesso(
+            $this->api->emitirSucesso(
                 [
                     'situacao' => $motivo,
                     'codigo' => $codigoSituacaoNF,
@@ -1492,7 +1449,7 @@ class Nfe
             );
 
         } catch (Exception $e) {
-            emitirErro($e->getMessage(), 500);
+            $this->api->emitirErro($e->getMessage(), 500);
         }
     }
 
@@ -1501,25 +1458,15 @@ class Nfe
     {
         try {
 
-            if (
-                !isset($this->corpoRequisicao['refNfe'])
-                || !isset($this->corpoRequisicao['produtos'])
-                || !isset($this->corpoRequisicao['numeroNota'])
-                || !isset($this->corpoRequisicao['cliente'])
-            ) {
-                emitirErro(
-                    "Para estorno, os campos 'refNfe', 'numeroNota', 'cliente' e 'produtos' são obrigatórios.",
-                    400
-                );
-            }
+            $this->api->validarCamposObrigatorios($this->corpoRequisicao, ['refNfe', 'produtos', 'numeroNota', 'cliente']);
 
             if (strlen($this->corpoRequisicao['refNfe']) != 44) {
-                emitirErro("A chave referenciada deve ter 44 dígitos.", 400);
+                $this->api->emitirErro("A chave referenciada deve ter 44 dígitos.", 400);
             }
 
             $consultaOriginal = $this->consultarNotaOriginal($this->corpoRequisicao['refNfe']);
             if (!$consultaOriginal['autorizada']) {
-                emitirErro(
+                $this->api->emitirErro(
                     "A NF-e original (chave: {$this->corpoRequisicao['refNfe']}) não está autorizada. Estorno não permitido.",
                     400
                 );
@@ -1528,7 +1475,7 @@ class Nfe
             $this->enviar();
 
         } catch (Exception $e) {
-            emitirErro($e->getMessage(), 500);
+            $this->api->emitirErro($e->getMessage(), 500);
         }
     }
 
