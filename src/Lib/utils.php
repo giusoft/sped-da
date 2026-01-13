@@ -212,13 +212,13 @@ if (!function_exists("traduzirErroCertificado")) {
         }
 
         if (strpos($erroTecnico, 'unsupported') !== false) {
-            return 'O certificado digital utiliza um padrão de segurança não muito antigo. (Certificado emitido em formato legado)';
+            return 'O certificado digital utiliza um padrão de segurança muito antigo. (Certificado emitido em formato legado)';
         }
 
         if (strpos($erroTecnico, 'no start line') !== false) {
             return 'O arquivo do certificado está inválido ou corrompido. Verifique se você enviou o arquivo correto (.pfx ou .p12)';
         }
 
-        return 'Não foi possível validar o certificado digital. Verifique se o arquivo e a senha estão corretos. Se o problema persistir, entre em contato com o suporte.';
+        return 'Não foi possível validar o certificado digital. Verifique se o arquivo e a senha estão corretos.';
     }
 }

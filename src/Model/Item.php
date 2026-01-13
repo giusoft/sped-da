@@ -7,10 +7,10 @@ class Item
     private $api;
     private $db;
 
-    public function __construct($dados)
+    public function __construct($api)
     {
-        $this->api = $dados;
-        $this->db  = $dados->db;
+        $this->api = $api;
+        $this->db  = $api->db;
     }
 
 

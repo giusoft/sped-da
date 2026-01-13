@@ -168,11 +168,12 @@ class Api
         return $classe->{$recurso}($this->corpoRequisicao);
     }
 
-
+    dados hard coded devem ser pelo menos comentados
+    mapei-os com ###TODO::
     public function validarCamposObrigatorios($params, $campos)
     {
         foreach ($campos as $campo) {
-            if (!isset($params[$campo]) || empty($params[$campo])) {
+            if (!isset($params[$campo]) || empty($params[$campo])) { tirar o empty
                 $this->emitirErro("Campo obrigatorio '{$campo}' nao informado.");
             }
         }
