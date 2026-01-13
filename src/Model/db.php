@@ -21,9 +21,9 @@ class DB
 	public $nomeArquivoLog;
 
 
-	public function __construct($parametro)
+	public function __construct($args)
 	{
-		$this->parametro = $parametro;
+		$this->parametro = $args;
 
 		if (isset($this->parametro['caminhoSetup']) && $this->parametro['caminhoSetup']) {
 			$this->carregarSetup($this->parametro['caminhoSetup']);
