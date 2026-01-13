@@ -36,6 +36,10 @@ RUN sed -i 's/80/2083/g' /etc/apache2/sites-available/000-default.conf /etc/apac
 # 4. Ajusta Timeout (SEFAZ)
 RUN echo "max_execution_time = 120" > /usr/local/etc/php/conf.d/timeout.ini
 
+# 5. Salva o log de erros
+RUN echo "error_log = /var/www/html/src/storage/log/php.log" >> /usr/local/etc/php/conf.d/errors.ini \
+    && echo "log_errors = On" >> /usr/local/etc/php/conf.d/errors.ini \
+    && echo "display_errors = Off" >> /usr/local/etc/php/conf.d/errors.ini
 # -----------------------------
 
 # Composer
