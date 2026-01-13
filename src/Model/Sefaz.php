@@ -13,11 +13,11 @@ class Sefaz
     private $corpoRequisicao;
     private $api;
 
-    public function __construct($dados)
+    public function __construct($args)
     {
-        $this->api = $dados;
-        $this->tools = $dados->tools;
-        $this->corpoRequisicao = $dados->corpoRequisicao['empresa'];
+        $this->api = $args;
+        $this->tools = $args->tools;
+        $this->corpoRequisicao = $args->corpoRequisicao['empresa'];
     }
 
 
