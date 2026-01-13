@@ -20,11 +20,11 @@ class Nfe
     private $default;
     private $api;
 
-    public function __construct($dados)
+    public function __construct($args)
     {
-        $this->api = $dados;
-        $this->corpoRequisicao = $dados->corpoRequisicao;
-        $this->tools = $dados->tools;
+        $this->api = $args;
+        $this->corpoRequisicao = $args->corpoRequisicao;
+        $this->tools = $args->tools;
         $this->carregarDadosDefault();
     }
 
