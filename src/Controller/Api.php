@@ -49,7 +49,7 @@ class Api
         $requisicaoSalvar['sucesso']         = 0;
         $requisicaoSalvar['pendente']        = 1;
         $requisicaoSalvar['recebido']        = '';
-        $requisicaoSalvar['idPessoasCriou']  = 1;
+        $requisicaoSalvar['idPessoasCriou']  = 1; ###TODO::Temos que tratar isso aqui para não ser hardcode
 
         $this->requisicaoSalvar = $this->db->salvarRequisicao($this->corpoRequisicao, $requisicaoSalvar);
 
@@ -168,12 +168,11 @@ class Api
         return $classe->{$recurso}($this->corpoRequisicao);
     }
 
-    dados hard coded devem ser pelo menos comentados
-    mapei-os com ###TODO::
+
     public function validarCamposObrigatorios($params, $campos)
     {
         foreach ($campos as $campo) {
-            if (!isset($params[$campo]) || empty($params[$campo])) { tirar o empty
+            if (!isset($params[$campo])) {
                 $this->emitirErro("Campo obrigatorio '{$campo}' nao informado.");
             }
         }
@@ -192,8 +191,8 @@ class Api
             $resposta['detalhes'] = $dados;
         }
 
-        $this->requisicaoSalvar['idPessoasCriou'] = 1;
-        $this->requisicaoSalvar['idGatilhos']     = 10;
+        $this->requisicaoSalvar['idPessoasCriou'] = 1; ###TODO::Temos que tratar isso aqui para não ser hardcode
+        $this->requisicaoSalvar['idGatilhos']     = 10; ###TODO::Temos que tratar isso aqui para não ser hardcode
         $this->requisicaoSalvar['sucesso']        = 1;
         $this->requisicaoSalvar['pendente']       = 0;
         $this->requisicaoSalvar['recebido']       = json_encode($resposta);
@@ -215,8 +214,8 @@ class Api
             $resposta['detalhes'] = $dadosExtras;
         }
 
-        $this->requisicaoSalvar['idPessoasCriou'] = 1;
-        $this->requisicaoSalvar['idGatilhos']     = 10;
+        $this->requisicaoSalvar['idPessoasCriou'] = 1; ###TODO::Temos que tratar isso aqui para não ser hardcode
+        $this->requisicaoSalvar['idGatilhos']     = 10; ###TODO::Temos que tratar isso aqui para não ser hardcode
         $this->requisicaoSalvar['sucesso']        = 0;
         $this->requisicaoSalvar['pendente']       = 1;
         $this->requisicaoSalvar['recebido']       = json_encode($resposta);
