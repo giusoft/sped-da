@@ -1,0 +1,15 @@
+services:
+  app:
+    build:
+      context: ./5.0
+      dockerfile: ../Dockerfile
+    container_name: gfw_app
+    restart: unless-stopped
+    ports:
+      - "2085:2085"
+    volumes:
+      - ./5.0/:/var/www/html
+      - vendor_data:/var/www/html/vendor
+
+volumes:
+  vendor_data:

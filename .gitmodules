@@ -7,3 +7,6 @@
 [submodule "src/Lib/sped-nfe"]
 	path = src/Lib/sped-nfe
 	url = git@github.com:giusoft/sped-nfe.git
+[submodule "giusoft/gfw"]
+	path = giusoft/gfw
+	url = git@github.com:giusoft/gfw.git

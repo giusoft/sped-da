@@ -1,0 +1,28 @@
+data {
+  X=20
+}
+
+graph {
+  padding-left   = 40
+  padding-top    = 50
+  padding-right  = 50
+  padding-bottom = 20
+  border-width = 1
+  border-color = #ddd
+  area-height = 250
+  area-width = 350
+  title = Pie Graph
+}
+
+legend {
+  visible = yes
+  floating = 1
+  position = bottom right
+  padding = 10
+  data = [Item 1]
+  color = [#274E78]
+}
+pie {
+  total = 25
+  offset = 70
+}

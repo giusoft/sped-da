@@ -1,0 +1,103 @@
+/* Do not edit or override these styles! The system will likely break if you do. */
+
+div#header, div#footer, div.slide {position: absolute;}
+html>body div#header, html>body div#footer, html>body div.slide {position: fixed;}
+div.slide  { visibility: hidden;}
+#slide0 {visibility: visible;}
+div#controls {position: absolute;}
+#footer>div#controls {position: fixed;}
+.handout {display: none;}
+
+
+
+
+
+/* The following styles size, place, and layer the slide components.
+   Edit these if you want to change the overall slide layout.
+   The commented lines can be uncommented (and modified, if necessary) 
+    to help you with the rearrangement process. */
+
+div#header, div#footer, div.slide {width: 100%; top: 0; left: 0;}
+div#header {top: 0; height: 3em; z-index: 1;}
+div#footer {top: auto; bottom: 0; height: 2.5em; z-index: 5;}
+div.slide {top: 0; width: 92%; padding: 3.5em 4% 4%; z-index: 2;}
+div#controls {left: 50%; top: 0; width: 50%; height: 100%; z-index: 1;}
+#footer>div#controls {bottom: 0; top: auto; height: auto;}
+
+div#controls form {position: absolute; bottom: 0; right: 0; width: 100%;
+  margin: 0;}
+#currentSlide {position: absolute; width: 10%; left: 45%; bottom: 1em; z-index: 10;}
+html>body #currentSlide {position: fixed;}
+
+/*
+div#header {background: #FCC;}
+div#footer {background: #CCF;}
+div#controls {background: #BBD;}
+div#currentSlide {background: #FFC;}
+*/
+
+
+
+
+
+/* Following are the presentation styles -- edit away!
+   Note that the 'body' font size may have to be changed if the resolution is
+    different than expected. */
+
+body {background: #fff right top no-repeat; color: #000; font-size: 1.8em;}
+:link, :visited {text-decoration: none;}
+#controls :active {color: #d0d0d0 !important;}
+#controls :focus {outline: 1px dotted #227;}
+h1, h2, h3, h4 {font-size: 90%; margin: 0; padding: 0; font-weight: inherit;}
+ul, pre {margin: 0; line-height: 1em;}
+html, body {margin: 0; padding: 0;}
+
+code {padding: 2px 0.25em; font-weight: bold; color: #000053;}
+code.bad, code del {color: red;}
+code.old {color: silver;}
+pre {padding: 0; margin: 0.25em 0 0.5em 0.5em; color: #000053; font-size: 90%;}
+pre code {display: block;}
+img.leader {display: block; margin: 0 auto;}
+ul {margin-left: 5%; margin-right: 7%; list-style: disc;}
+li {margin-top: 0.35em; margin-right: 0; padding-left:10px;  list-style-image:url(icon.gif)}
+ul ul {line-height: 1;}
+ul ul li {margin: .2em; font-size: 85%; list-style: square;}
+
+div#header, div#footer {background: #f1f1f1 url(bg-hf.gif); color: #0e4fa3; }
+div#header {padding: 4px; border-bottom:8px solid #0e4fa3;}
+div#footer {font-size: 0.5em; font-weight: bold; padding: 1em 1em; border-top:2px solid #0e4fa3;}
+#footer h1, #footer h2 {display: block; padding: 0 1em;}
+#footer h2 {font-style: italic;}
+div.long {font-size: 0.75em;}
+.slide h1 {position: absolute; top: 0.7em; left: 87px; z-index: 1;
+  margin: 0; padding: 0.3em 0 1.0em 50px; white-space: nowrap;
+  font: bold 130%/1em Verdana, Arial, Helvetica, Sans-serif;
+  color: #2e6fc3;}
+.slide h3 {font-size: 130%;}
+h1 abbr {font-variant: small-caps;}
+
+div#controls {position: absolute; z-index: 1; left: 50%; top: 0;
+  width: 50%; height: 100%;
+  text-align: right;}
+#footer>div#controls {position: fixed; bottom: 0; padding: 1em 0;
+  top: auto; height: auto;}
+div#controls form {position: absolute; bottom: 0; right: 0; width: 100%;
+  margin: 0; padding: 0;}
+div#controls a {font-size: 2em; padding:4px; margin: 0 0.5em; 
+  border: none; color: #2e6fc3; 
+  cursor: pointer;}
+div#controls select {visibility: hidden; color: #000000;}
+div#controls div:hover select {visibility: visible;}
+
+#currentSlide {text-align: center; font-size: 0.5em; color: #f7f7f7;}
+
+#slide0 {padding-top: 3.5em; font-size: 90%;}
+#slide0 h1 {position: static; margin: 1em 0 1.33em; padding: 0;
+   font: bold 2em Verdana, Arial, Helvetica, Sans-serif; white-space: normal;
+   color: #2e6fc3; /*#000;*/ background: transparent;}
+#slide0 h3 {margin-top: 0.5em; font-size: 1.5em;}
+#slide0 h4 {margin-top: 0; font-size: 1em;}
+
+ul.urls {list-style: none; display: inline; margin: 0;}
+.urls li {display: inline; margin: 0;}
+.note {display: none;}

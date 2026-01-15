@@ -1,0 +1,29 @@
+# 748 = SICREDI
+
+tipo_registro:
+  pos: [1, 1]
+  picture: '9(01)'
+  default:  '9'
+
+identificacao_remessa:
+  pos: [2, 2]
+  picture: '9(01)'
+  default:  '1'
+
+codigo_banco:
+  pos: [3, 5]
+  picture: '9(3)'
+  default:  '748'
+
+codigo_beneficiario:
+  pos: [6, 10]
+  picture: '9(5)'
+
+brancos01:
+  pos: [11, 394]
+  picture: 'X(384)'  
+  default:  ''
+
+numero_sequencial:
+  pos: [395, 400]
+  picture: '9(06)'

@@ -1,0 +1,45 @@
+table {display:inline-table;empty-cells: show; border-collapse: collapse; border: outset 0pt;border-spacing: 0px; margin: 0px; padding: 0px ; border: 0px none}
+td {border: 0px none; overflow: hidden; border: inset 0px; border: outset 0px; border-spacing: 0px;}
+tr {height: auto; border: outset 0pt;border: inset 0px; border: outset 0px; border-spacing: 0px; empty-cells: show; }
+
+#g-body-bar-top {position: relative; background: none; display: block; text-align: right; width: 830px; margin: 0 auto; height: 20px; top: 6px; }
+#g-body-bar-bottom {background: none; display: block; text-align: center; width: 830px; margin: 0 auto; }
+#g-body-container {background: none; width: 850px; margin: 0 auto; }
+
+#g-body {background: white; width: 820px; }
+#g-body-box {display: block; background: white; width: 820px; }
+
+#g-body-shadow-left {padding: 0; background: url('../../img/bg/shadow-left.png') repeat-y right top transparent; width: 10px;}
+#g-body-shadow-right {padding: 0; background: url('../../img/bg/shadow-right.png') repeat-y left top transparent; width: 10px;}
+
+#g-body-shadow-top-left {padding: 0; background: url('../../img/bg/shadow-top-left.png') no-repeat right bottom transparent; height: 10px; width: 10px; }
+#g-body-shadow-top-right {padding: 0; background: url('../../img/bg/shadow-top-right.png') no-repeat left bottom transparent; height: 10px; width: 10px; }
+#g-body-shadow-top {padding: 0; background: url('../../img/bg/shadow-top.png') repeat-x left bottom transparent;  width: 830px; height: 10px; }
+
+#g-body-shadow-bottom-left {padding: 0; background: url('../../img/bg/shadow-bottom-left.png') no-repeat right top transparent; height: 10px; width: 10px; }
+#g-body-shadow-bottom-right {padding: 0; background: url('../../img/bg/shadow-bottom-right.png') no-repeat left top transparent; height: 10px; width: 10px; }
+#g-body-shadow-bottom {padding: 0; background: url('../../img/bg/shadow-bottom.png') repeat-x left top transparent;  width: 830px; height: 10px; }
+
+#g-top {
+	margin: 0px;
+	padding: 0px;
+}
+#g-mid {
+	margin: 0px;
+	padding: 0px;
+}
+#g-bottom {
+	margin: 0px;
+	padding: 0px;
+}
+
+#g-header {
+	margin: 0px;
+	padding: 0px;
+	height: 20px;
+}
+
+#g-footer {
+	margin: 0px;
+	padding: 0px;
+}

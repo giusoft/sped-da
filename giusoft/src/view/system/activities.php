@@ -1,0 +1,121 @@
+<?
+$html.=$o->msgTitle('Relatório de atividades');
+
+$gPage = $_REQUEST['gPage'];
+
+switch ($gPage) {
+	case 1:
+		$where=$filtros="";
+		if($data_de <> ""){
+			$where[]=" AND (date)>='".gDBDateTime($data_de).":01' ";
+			$filtros[]="de $data_de";
+		}
+		if($data_ate <> ""){
+			$where[]=" AND (date)<='".gDBDateTime($data_ate).":59' ";
+			$filtros[]="até $data_ate";
+		}
+		if($details <> ""){
+			$where[]=" AND details like '%".$details."%'";
+			$filtros[]="$details";
+		}
+		if((int) $id_gfw_users > 0){
+			$where[]=" AND id_gfw_users=$id_gfw_users ";
+			$rs=dbQuery("SELECT pessoas.nome FROM pessoas WHERE id=$id_gfw_users");
+			$filtros[]="Usuário: ".$rs[0]['nome'];
+		}
+		if((int) $id_equip > 0){
+			$where[]=" AND id_equip=$id_equip ";
+			$rs=dbQuery("SELECT equipamentos.descricao FROM equipamentos WHERE id=$id_equip");
+			$filtros[]="Equipamento: ".$rs[0]['descricao'];
+		}
+		$html.=$o->msgFilter(ucfirst(implode(" • ",$filtros)));
+		$sql="SELECT gfw_log.*,E.descricao equipamento,
+				gfw_users.nickname,
+				gfw_menus.title,
+				gfw_menus.content
+				FROM gfw_log
+				LEFT JOIN gfw_users ON gfw_users.id=gfw_log.id_gfw_users
+				LEFT JOIN gfw_menus ON gfw_menus.id=gfw_log.id_gfw_menus
+				LEFT JOIN equipamentos E ON gfw_log.id_equip=E.id
+				WHERE gfw_log.id > 0 ".implode("",$where)."
+				";
+		$rs=dbQuery($sql);
+		if($rs){
+			$mtz=array("<-Opções","<-Usuário","<-Equipamento","Data/Hora","<-Atividade","<-Detalhes");
+			$html.=$o->tableBegin("big",true);
+			$html.=$o->tableRow($mtz,"header");
+			foreach ($rs as $row) {
+				$mtz = array();
+				$mtz[]="<-".$o->button("{icon: search; caption: Detalhes; size: small; href: ".$o->page."&gPage=2&gId=".$row['id']."}");
+				$mtz[]="<-".strtoupper($row['nickname']);
+				$mtz[]="<-".($row['equipamento']);
+				$mtz[]="".gDateTime($row['date']);
+				//$mtz[]="<-".$row['title']." - ".$row['content'];
+				$mtz[]="<-".$row['title'];
+				$mtz[]="<-".$row['details'];
+				$html.=$o->tableRow($mtz,"detail");
+			}
+			$html.=$o->tableEnd();
+		}
+		else{
+			$html.=$o->msgAlert("Nenhum registro encontrado");
+		}
+	break;
+
+	case 2:
+		$sql="SELECT gfw_log.*,
+				gfw_users.nickname,
+				gfw_menus.title,
+				gfw_menus.content
+				FROM gfw_log
+				LEFT JOIN gfw_users ON gfw_users.id=gfw_log.id_gfw_users
+				LEFT JOIN gfw_menus ON gfw_menus.id=gfw_log.id_gfw_menus
+				WHERE gfw_log.id = $gId";
+		$rs = dbQuery($sql);
+		$row=$rs[0];
+		$html.=$o->tableBegin("big", true);
+		$mtz = array();
+		$mtz[]="<-Data e hora<br><b>".gDateTime($row['date'])."<br>&nbsp;</b>";
+		$mtz[]="<-Usuário<br><b>".strtoupper($row['nickname'])."<br>&nbsp;</b>";
+		$mtz[]="<-Menu<br><b>".$row['title']."<br>".$o->small($row['content'])."</b>";
+		$mtz[]="<-Detalhes<br><b>".$row['details']."</b><br>&nbsp;";
+		$html.=$o->tableRow($mtz, "header");
+		$html.=$o->tableEnd();
+
+		$html.=$o->msgSubTitle("Dados utilizados");
+		$request = unserialize(base64_decode($row['request']));
+		$html.=$o->tableBegin("big", true);
+		$mtz = array();
+		$mtz[]="->Nº";
+		$mtz[]="<-Campo";
+		$mtz[]="<-Valor";
+		$html.=$o->tableRow($mtz, "header");
+		$n = 0;
+		foreach ($request as $key=>$value)
+		{
+			if ($key<>'gId' && $key<>'gIdd' && $key<>'gPage' && $key<>'g' && $key<>'submit_default')
+			{
+				$n++;
+				$mtz = array();
+				$mtz[]="->".$n;
+				$mtz[]="<-".$key;
+				$mtz[]="<-".$value;
+				$html.=$o->tableRow($mtz, "detail");
+			}
+		}
+		$html.=$o->tableEnd();
+
+	break;
+
+	default:
+		$frm = new gForm("{columns: 2}");
+		$frm->add("{name: gPage; type: hidden; value: 1}");
+		$frm->add("{name: id_gfw_users; fieldLabel: Usuário; type: combo; value:$id; items: ".$sp['combo_funcionarios']."}");
+		$frm->add("{name: id_equip; fieldLabel: Equipamento; type: combo; items: ".$sp['combo_equipamentos']."}");
+		$frm->add("{name: data_de; fieldLabel: Data de; type: dateTime; allowBlank: true; value:'".date("d-m-y")."00:00'"."}");
+		$frm->add("{name: data_ate; fieldLabel: Data até; type: dateTime; allowBlank: true;value:'".date("d-m-y")."23:59'"." }");
+		$frm->add("{name: details; fieldLabel: Detalhes; type: text; allowBlank: true; }");
+		$html.=$frm->render($o);
+	break;
+}
+?>

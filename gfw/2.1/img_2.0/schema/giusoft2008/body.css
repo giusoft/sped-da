@@ -1,0 +1,215 @@
+body {padding: 6px; font-family: Arial,helvetica; font-size: 9pt ; background: #f5f5f5; color: black; }
+li {font-family: Arial,helvetica; font-size: 9pt }
+
+h1 {font-family: Arial,helvetica; font-size: 16px ; color: #007cc2}
+h2 {font-family: Arial,helvetica; font-size: 15px ; color: #007cc2}
+h3 {font-family: Arial,helvetica; font-size: 13px ; color: #007cc2; font-weight: bold }
+h4 {font-family: Arial,helvetica; font-size: 13px ; color: #007cc2}
+h5 {font-family: Arial,helvetica; font-size: 11px ; color: #007cc2}
+
+font {font-family: Arial,helvetica; font-size: 9pt ; color: #140181}
+font.tiny {font-family: Arial,helvetica; font-size: 8px ; color: #606060}
+font.vermelho {font-family: Arial,helvetica; font-size: 9pt ; color: #d00000}
+font.cinza {font-family: Arial,helvetica; font-size: 9pt ; color: #606060}
+font.azul {font-family: Arial,helvetica; font-size: 9pt ; color: #0000d0}
+font.verde {font-family: Arial,helvetica; font-size: 9pt ; color: #00d000}
+textarea {font-family: Arial,helvetica; font-size: 9pt ;background: #f0f0f0;}
+select {font-family: Arial,helvetica; font-size: 9pt;background: #f0f0f0;}
+
+input {font-family: Arial,helvetica; font-size: 9pt; background: #f0f0f0;}
+input.micro {font-family: Arial,helvetica; background: transparent;height: 10px; font-size: 10px}
+input[type='button'] {height: 22px; height: 22px; font-family: Arial,helvetica; background: #e0e0e0;font-size: 8pt;background-image: url(/img_2.0/botao.gif)}
+input[type='button']:hover {font-family: Arial,helvetica; font-size: 8pt;background-image: url(/img_2.0/botaos.gif)}
+input.tool {height: 22px; height: 22px; font-family: Arial,helvetica; background: #e0e0e0;font-size: 8pt;background-image: url("/gs/v6/img_2.0/botao.gif")}
+input.tool:hover {font-family: Arial,helvetica; font-size: 8pt;background-image: url("/gs/v6/img_2.0/botaos.gif")}
+input.navig {height: 22px; width:20px; font-family: Arial,helvetica; background: #e0e0e0;font-size: 8pt;background-image: url("/gs/v6/img_2.0/botao.gif")}
+input.navig:hover {width:20px; font-family: Arial,helvetica; font-size: 8pt;background-image: url("/gs/v6/img_2.0/botaos.gif")}
+input.export {height: 22px; width:36px; font-family: Arial,helvetica; background: #e0e0e0;font-size: 8pt;background-image: url("/gs/v6/img_2.0/botao.gif")}
+input.export:hover {width:36px; font-family: Arial,helvetica; font-size: 8pt;background-image: url("/gs/v6/img_2.0/botaos.gif")}
+input.image {color: transparent;background: transparent}
+
+a {text-decoration: none; font-family: Arial,helvetica; font-size: 9pt ; color: #216B90}
+a:hover {text-decoration: none; font-family: Arial,helvetica; font-size: 9pt ; color:#ff6600; background: transparent}
+a.tree {vertical-align: 30%; line-height:0.9; text-decoration: none; font-family: Arial,helvetica; font-size: 9pt ; color: black; background: transparent}
+a.tree:hover {vertical-align: 30%; line-height:0.9; text-decoration: none; font-family: Arial,helvetica; font-size: 9pt ; color:#ff6600; background: transparent}
+a.tree:active {vertical-align: 30%; line-height:0.9; text-decoration: none; font-family: Arial,helvetica; font-size: 9pt ; color:white; background: #ffff00}
+a.tree:focus {vertical-align: 30%; line-height:0.9; text-decoration: none; font-family: Arial,helvetica; font-size: 9pt ; color:white; background: #ff6600}
+a.busca {text-decoration: underline; font-family: Arial,helvetica; font-size: 12pt ; color: #216B90}
+a.busca:hover {text-decoration: none; font-family: Arial,helvetica; font-size: 12pt ; color:#ff6600; background: transparent}
+a.menu {text-decoration: none; font-family: Arial,helvetica; font-size: 9pt ; color: #216B90}
+a.menu:hover {text-decoration: none; font-family: Arial,helvetica; font-size: 9pt ; color:#ff6600; background: transparent}
+a.imagem {text-decoration: none; background:transparent; color: #216B90}
+a.imagem:hover {text-decoration: none; background:transparent; color: #ff6600}
+a.orderby {text-decoration: none; font-family: Arial,helvetica; background: #216B90; font-weight: normal; font-size: 9pt; color: white}
+a.orderby:hover {text-decoration: none; font-family: Arial,helvetica; background: #216B90; font-weight: normal; font-size: 9pt; color: #83F01C}
+a.help {text-decoration: none; font-family: Arial,helvetica; font-size: 9pt ; background:#f5f5f5; color: #216B90}
+a.help:hover {text-decoration: none; font-family: Arial,helvetica; font-size: 9pt ; background:#93D01C; color: white}
+a.tab {text-decoration: none; font-family: Arial,helvetica; font-size: 9pt ; background: transparent; color: #216B90}
+a.tab:hover {text-decoration: none; font-family: Arial,helvetica; font-size: 9pt ; background: transparent; color: #ff6600}
+
+th.cal {font-family: Arial, helvetica; font-size: 9pt; background: #505050; color: white}
+
+
+th { border: solid 1px #81aBff; padding: 1pt; padding-left: 2pt; padding-right: 2pt; font-family: Arial,helvetica; font-size: 11px ; font-weight: bold; color: white; background: #719Bf0; }
+th:last-child {}
+th:first-line {}
+
+td.subtitle {padding: 1pt; padding-left: 2pt; padding-right: 2pt; font-family: Arial,helvetica; background: #58A2E7; font-weight: bold; font-size: 11px ; color: white; border-bottom: 1px solid #DBDBDB}
+td.footer {padding: 1pt; padding-left: 2pt; padding-right: 2pt; font-family: Arial,helvetica; background: #e0e0e0;  color: #5050e2; border-bottom: 1px solid #DBDBDB}
+td.summary {padding: 1pt; padding-left: 2pt; padding-right: 2pt; font-family: Arial,helvetica; background: #e2eaff; color: #303030; border-left: 1px solid #DBDBDB; border-bottom: 1px solid #DBDBDB}
+td.summary:last-child {border-right: 1px solid #DBDBDB; }
+td.red {padding: 1pt; padding-left: 2pt; padding-right: 2pt; font-family: Arial,helvetica; background: #FF6666; font-style: italic; color: black; border-bottom: 1px solid #DBDBDB}
+td.blue {padding: 1pt; padding-left: 2pt; padding-right: 2pt; font-family: Arial,helvetica; background: #6666FF; color: black;}
+td.green {padding: 1pt; padding-left: 2pt; padding-right: 2pt; font-family: Arial,helvetica; background: #66FF66; color: black;}
+td.yellow {padding: 1pt; padding-left: 2pt; padding-right: 2pt; font-family: Arial,helvetica; background: #FFFF66; color: black;}
+td.orange {padding: 1pt; padding-left: 2pt; padding-right: 2pt; font-family: Arial,helvetica; background: #FF8800; color: black; }
+td.disable {padding: 1pt; padding-left: 2pt; padding-right: 2pt; font-family: Arial,helvetica; background: #eeeeee; color: black; border-bottom: 1px solid #DBDBDB}
+td.enable {padding: 1pt; padding-left: 2pt; padding-right: 2pt; font-family: Arial,helvetica; background: #d0d0d0; color: black; border-bottom: 1px solid #DBDBDB}
+td.total {padding: 1pt; padding-left: 2pt; padding-right: 2pt; font-family: Arial,helvetica; background: #d2daef; font-weight: bold; color: black; border-bottom: 1px solid #DBDBDB}
+td.tool {font-family: Arial,helvetica; font-size: 11px; color: black}
+td.alert {padding: 1pt; padding-left: 2pt; padding-right: 2pt; font-family: Arial,helvetica; background: #FF0000; font-weight: bold; color: white; border-bottom: 1px solid #DBDBDB}
+td.group {padding: 1pt; padding-left: 2pt; padding-right: 2pt; font-family: Arial,helvetica; background: #d5defd; color: black; font-weight: bold; border-bottom: 1px solid #DBDBDB }
+td.menu {text-decoration: none; font-family: Arial,helvetica; font-size: 11px ; color: #216B90}
+td.menu:hover {text-decoration: none; font-family: Arial,helvetica; font-size: 11px ; background:#93D01C; color: white}
+td.detail { padding: 1pt; padding-left: 2pt; padding-right: 2pt; border: solid 1px #c0c0c0; margin: 0px}
+td.single { color: black; border: none 0px transparent;}
+td.panel { text-align: center; background: #B2D0DF; color: #216B90; border: 0px none transparent; border-left: 0px none transparent}
+td.transp { background: transparent; color: #216B90; border: 0px none transparent; border-left: 0px none transparent}
+td.tab { color: #216B90; border: 0px none transparent; border-left: 0px none transparent}
+td { color: black; border: none 0px;}
+td.tabborder {
+	padding: 5px;
+	color: black; 
+	font-family: Arial,helvetica;font-size: 11px;font-style: normal;
+	border: solid 1px #a0a0a0;
+	background-color: white;
+}
+
+tbody.detail {
+  font-family: Arial,helvetica; background: white; font-size: 9pt ; color: black; 
+  border: none ;
+  text-align: left;
+}
+tbody.detail:hover {
+  font-family: Arial,helvetica; background: #ffffa0; font-size: 9pt ; color: black; 
+  border: none;
+  text-align: left;
+}
+
+table {
+        border-collapse: collapse;
+        border-spacing: 0pt;
+	empty-cells: show;
+	font-family: Arial,helvetica;font-size: 9pt;	font-style: normal;
+	border: solid 1px #c0c0c0;
+	color: black;	background-color: white;
+}
+
+table.nullborder {
+        border-collapse: collapse;
+        border-spacing: 0pt;
+	padding: 0px;
+	font-family: Arial,helvetica;	font-size: 9pt;	font-style: normal;
+	border: none 0px; 
+	background-color: transparent;
+	border-color: transparent;
+	color: black;	
+}
+td.cal {font-family: Arial, helvetica; font-size: 11px; color: white; background: #707070;}
+a.setas {font-family: Arial, helvetica; font-size: 11px; color: white; background: #707070;}
+a.setas:hover {font-family: Arial, helvetica; font-size: 11px; color: black; background: white;}
+
+
+
+table.calendar
+{
+	width: 120px; height:100px; padding: 0px 0px 0px 0px; overflow: hidden; border: 1px solid #d0d0d0;
+	font-family: Tahoma, Arial;
+	font-size: 8px;
+}
+.dias
+{
+	font-family: Tahoma, Arial;
+	font-size: 8px;
+	color: black;
+	background-color: white;
+}
+
+.num
+{
+	font-family: Tahoma, Arial;
+	font-size: 8px;
+	color: #666666;
+	background-color: white;
+}
+.num:hover
+{
+	font-family: Tahoma, Arial;
+	font-size: 8px;
+	background-color: #ff6000;
+	color: white;
+	display: block;
+}
+
+.num_sel
+{
+	font-family: Tahoma, Arial;
+	font-size: 8px;
+	color: white;
+	background-color: #666666;
+}
+.num_sel:hover
+{
+	font-family: Tahoma, Arial;
+	font-size: 8px;
+	background-color: #ff6000;
+	color: white;
+	display: block;
+}
+
+input.calcBtn {font-family: Arial, helvetica; font-size: 9px; width: 25px}
+input.calcDisplay {font-family: Arial, helvetica; font-size: 9px; width: 110px; background: #b0b0b0;}
+input.calcDo {font-family: Arial, helvetica; font-size: 9px; width: 85px}
+
+div.big {left: 3px;top: 3px;margin-right: 3px;margin-bottom: 3px;}
+div.med {width: 600px; height: auto; margin: 0px auto; }
+div.tin {width: 300px; height: auto; margin: 0px auto; }
+
+div.som {
+	width: 100%;
+	position: relative;	
+	overflow: visible;
+	left: 3px;
+	top: 0px;
+	margin: 0px 0px 0px 0px;
+	border:none;
+	background: #f0f0f0;
+	z-index:0;
+	}
+div.som2 {
+	width: auto;
+	overflow: visible;
+	position: relative;	
+	left: -1px;
+	top: -1px;
+	margin: 0px 0px 0px 0px;
+	border: none;
+	background: #d0d0d0;
+	z-index:1;
+	}
+div.bra {
+	width: auto;
+	overflow: visible;
+	position: relative;	
+	left: -3px;
+	top: -3px;
+	margin: 0px 0px 0px 0px;
+	border: solid 1px #a0a0a0;
+	background: #ffffff;
+	z-index:10;
+	}
+div.int {
+	padding: 4px;
+	overflow: auto;
+}
+

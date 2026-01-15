@@ -1,0 +1,56 @@
+* {margin: 0; padding: 0; text-align: left}
+span.g-msg-title {
+	display: block;
+	font-family: Gill Sans, Verdana;
+	font-size: 22px;
+	font-weight: bold;
+	color: #444;
+	line-height: 34px;
+	letter-spacing: -2px;
+	margin: 0;
+	padding: 0px 0px 0px 0px;
+	padding-bottom: 4px;
+}
+span.g-msg-minititle {
+	display: block;
+	font-family: Gill Sans, Verdana;
+	font-size: 10px;
+	font-weight: bold;
+	color: #606060;
+	text-transform: uppercase;
+	line-height: 14px;
+	letter-spacing: 2px;
+	padding-bottom: 4px;
+}
+span.g-msg-subtitle {
+	display: block;
+	font-size: 13px; 
+	padding-bottom: 4px;
+}
+
+span.g-msg-filter {
+	display: block;
+	font-family: Times New Roman, Times;
+	font-size: 13px; 
+	font-style: italic;
+	padding-bottom: 4px;
+}
+
+span.g-msg-normal {
+	display: inline;
+}	
+
+span.g-msg-alert {
+	display: inline;
+	color: red;
+}	
+
+span.g-msg-footer {
+	display: block;
+	font-family: Times New Roman, Times;
+	font-size: 12px; 
+	font-style: italic;
+	color: #606060;
+	padding-bottom: 4px;
+}
+

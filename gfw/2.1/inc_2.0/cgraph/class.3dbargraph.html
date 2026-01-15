@@ -1,0 +1,322 @@
+<html>
+  <head>
+    <title>Documentation: 3DBarGraph</title>
+    <style type="text/css">
+    <!--
+      body,td { font: 8pt verdana #000000; }
+      body { background: #ffffff; }
+      a { text-decoration: none; color: #0000aa; }
+      a:hover { text-decoration: underline; }
+      h1 { font-size: 12pt; letter-spacing: 2pt; }
+      hr { height: 1px; color: #dddddd; background: #dddddd; }
+      .varname { font-size: 10pt; letter-spacing: 2pt; color: #123456; font-weight: bold; }
+      .funname { font-size: 10pt; letter-spacing: 2pt; color: #123456; font-weight: bold; }
+      .vartype { color: #0000aa; font-weight: bold; }
+    //-->
+    </style>
+  </head>
+  <body>
+    <a name='top'></a>
+    <h1>Class: <b>3DBarGraph</b> (0.1)</h1>
+    Class to create 3D bar graphs.<br>
+    Credits to: <a href='mailto:a25617@alunos.det.ua.pt'>Jeph</a><br>
+    <a name='var'></a>
+    <br><u>Variables</u><br><br>
+    <a href='#var_bar_bgcolor' title="Bar background color"><span class=vartype>array</span> 3DBarGraph::bar_bgcolor</a><br>
+    <a href='#var_bar_bordercolor' title="Bar border color"><span class=vartype>array</span> 3DBarGraph::bar_bordercolor</a><br>
+    <a href='#var_bar_height' title="Bar height"><span class=vartype>int</span> 3DBarGraph::bar_height</a><br>
+    <a href='#var_bar_padding' title="Bar padding (distance to borders)"><span class=vartype>int</span> 3DBarGraph::bar_padding</a><br>
+    <a href='#var_bar_textfont' title="Bar font (x text)"><span class=vartype>int</span> 3DBarGraph::bar_textfont</a><br>
+    <a href='#var_bar_width' title="Bar width"><span class=vartype>int</span> 3DBarGraph::bar_width</a><br>
+    <a name='fun'></a>
+    <br><u>Methods</u><br><br>
+    <a href='#fun_DrawGraph' title="Draw graph
+If no file given, output will be stdout">3DBarGraph::DrawGraph (
+    $file
+    ) </a><br>
+    <a href='#fun_SetBarBackgroundColor' title="Set bar background color (RGB)">3DBarGraph::SetBarBackgroundColor (
+    $red
+    , $green
+    , $blue
+    ) </a><br>
+    <a href='#fun_SetBarBorderColor' title="Set bar border color (RGB)">3DBarGraph::SetBarBorderColor (
+    $red
+    , $green
+    , $blue
+    ) </a><br>
+    <a href='#fun_SetBarDimensions' title="Set bar dimensions (width and height)">3DBarGraph::SetBarDimensions (
+    $width
+    , $height
+    ) </a><br>
+    <a href='#fun_SetBarFont' title="Set bar text font (1 to 5 are loaded by default on GD2, if you want others, you have to load them)
+You can use these strings instead of int:
+  1=x-small
+  2=small
+  3=normal
+  4=large
+  5=x-large">3DBarGraph::SetBarFont (
+    $font
+    ) </a><br>
+    <a href='#fun_SetBarPadding' title="Set bar padding (see &lt;var=bar_padding&gt;)">3DBarGraph::SetBarPadding (
+    $padding
+    ) </a><br>
+    <hr>
+    <a name='var_bar_bgcolor'></a>
+    <table border=0 cellpadding=0 cellspacing=0 width=100%>
+      <tr>
+        <td>
+          <span class=varname>3DBarGraph::bar_bgcolor</span></a>
+        </td>
+        <td align=right>
+          <a href='#top'>^ Top</a>
+          | <a href='#var'>^ Variables</a>
+          | <a href='#fun'>^ Methods</a>
+        </td>
+      </tr>
+    </table>
+    Bar background color<br><br>
+    &nbsp; <b>Type:</b><br>
+    &nbsp; &nbsp; &nbsp; &nbsp; Array(int, int, int)<br>
+    <br>&nbsp; <b>Default:</b><br>
+    &nbsp; &nbsp; &nbsp; &nbsp; Array(69, 129, 194)<br>
+    <br>
+    <hr>
+    <a name='var_bar_bordercolor'></a>
+    <table border=0 cellpadding=0 cellspacing=0 width=100%>
+      <tr>
+        <td>
+          <span class=varname>3DBarGraph::bar_bordercolor</span></a>
+        </td>
+        <td align=right>
+          <a href='#top'>^ Top</a>
+          | <a href='#var'>^ Variables</a>
+          | <a href='#fun'>^ Methods</a>
+        </td>
+      </tr>
+    </table>
+    Bar border color<br><br>
+    &nbsp; <b>Type:</b><br>
+    &nbsp; &nbsp; &nbsp; &nbsp; Array(int, int, int)<br>
+    <br>&nbsp; <b>Default:</b><br>
+    &nbsp; &nbsp; &nbsp; &nbsp; Array(39, 78, 120)<br>
+    <br>
+    <hr>
+    <a name='var_bar_height'></a>
+    <table border=0 cellpadding=0 cellspacing=0 width=100%>
+      <tr>
+        <td>
+          <span class=varname>3DBarGraph::bar_height</span></a>
+        </td>
+        <td align=right>
+          <a href='#top'>^ Top</a>
+          | <a href='#var'>^ Variables</a>
+          | <a href='#fun'>^ Methods</a>
+        </td>
+      </tr>
+    </table>
+    Bar height<br><br>
+    &nbsp; <b>Type:</b><br>
+    &nbsp; &nbsp; &nbsp; &nbsp; int<br>
+    <br>&nbsp; <b>Default:</b><br>
+    &nbsp; &nbsp; &nbsp; &nbsp; 8<br>
+    <br>
+    <hr>
+    <a name='var_bar_padding'></a>
+    <table border=0 cellpadding=0 cellspacing=0 width=100%>
+      <tr>
+        <td>
+          <span class=varname>3DBarGraph::bar_padding</span></a>
+        </td>
+        <td align=right>
+          <a href='#top'>^ Top</a>
+          | <a href='#var'>^ Variables</a>
+          | <a href='#fun'>^ Methods</a>
+        </td>
+      </tr>
+    </table>
+    Bar padding (distance to borders)<br><br>
+    &nbsp; <b>Type:</b><br>
+    &nbsp; &nbsp; &nbsp; &nbsp; int<br>
+    <br>&nbsp; <b>Default:</b><br>
+    &nbsp; &nbsp; &nbsp; &nbsp; 5<br>
+    <br>
+    <hr>
+    <a name='var_bar_textfont'></a>
+    <table border=0 cellpadding=0 cellspacing=0 width=100%>
+      <tr>
+        <td>
+          <span class=varname>3DBarGraph::bar_textfont</span></a>
+        </td>
+        <td align=right>
+          <a href='#top'>^ Top</a>
+          | <a href='#var'>^ Variables</a>
+          | <a href='#fun'>^ Methods</a>
+        </td>
+      </tr>
+    </table>
+    Bar font (x text)<br><br>
+    &nbsp; <b>Type:</b><br>
+    &nbsp; &nbsp; &nbsp; &nbsp; int<br>
+    <br>&nbsp; <b>Default:</b><br>
+    &nbsp; &nbsp; &nbsp; &nbsp; 2<br>
+    <br>
+    <hr>
+    <a name='var_bar_width'></a>
+    <table border=0 cellpadding=0 cellspacing=0 width=100%>
+      <tr>
+        <td>
+          <span class=varname>3DBarGraph::bar_width</span></a>
+        </td>
+        <td align=right>
+          <a href='#top'>^ Top</a>
+          | <a href='#var'>^ Variables</a>
+          | <a href='#fun'>^ Methods</a>
+        </td>
+      </tr>
+    </table>
+    Bar width<br><br>
+    &nbsp; <b>Type:</b><br>
+    &nbsp; &nbsp; &nbsp; &nbsp; int<br>
+    <br>&nbsp; <b>Default:</b><br>
+    &nbsp; &nbsp; &nbsp; &nbsp; 32<br>
+    <br>
+    <hr><a name='fun_DrawGraph'></a>
+    <table border=0 cellpadding=0 cellspacing=0 width=100%>
+      <tr>
+        <td><span class=funname>3DBarGraph::DrawGraph()</span></a></td>
+        <td align=right>
+          <a href='#top'>^ Top</a>
+          | <a href='#var'>^ Variables</a>
+          | <a href='#fun'>^ Methods</a>
+        </td>
+      </tr>
+    </table>
+    Draw graph<br />
+If no file given, output will be stdout<br><br>
+    &nbsp; <b>Arguments:</b><br>
+    &nbsp; &nbsp; &nbsp; &nbsp;
+    ( <span class=vartype>int</span>
+    )
+    $file<br>
+    <br>&nbsp; <b>Default:</b><br>
+    &nbsp; &nbsp; &nbsp; &nbsp;$file = ""<br>
+    <br>
+    <hr><a name='fun_SetBarBackgroundColor'></a>
+    <table border=0 cellpadding=0 cellspacing=0 width=100%>
+      <tr>
+        <td><span class=funname>3DBarGraph::SetBarBackgroundColor()</span></a></td>
+        <td align=right>
+          <a href='#top'>^ Top</a>
+          | <a href='#var'>^ Variables</a>
+          | <a href='#fun'>^ Methods</a>
+        </td>
+      </tr>
+    </table>
+    Set bar background color (RGB)<br><br>
+    &nbsp; <b>Arguments:</b><br>
+    &nbsp; &nbsp; &nbsp; &nbsp;
+    ( <span class=vartype>int</span>
+    )
+    $red<br>
+    &nbsp; &nbsp; &nbsp; &nbsp;
+    ( <span class=vartype>int</span>
+    )
+    $green<br>
+    &nbsp; &nbsp; &nbsp; &nbsp;
+    ( <span class=vartype>int</span>
+    )
+    $blue<br>
+    <br>
+    <hr><a name='fun_SetBarBorderColor'></a>
+    <table border=0 cellpadding=0 cellspacing=0 width=100%>
+      <tr>
+        <td><span class=funname>3DBarGraph::SetBarBorderColor()</span></a></td>
+        <td align=right>
+          <a href='#top'>^ Top</a>
+          | <a href='#var'>^ Variables</a>
+          | <a href='#fun'>^ Methods</a>
+        </td>
+      </tr>
+    </table>
+    Set bar border color (RGB)<br><br>
+    &nbsp; <b>Arguments:</b><br>
+    &nbsp; &nbsp; &nbsp; &nbsp;
+    ( <span class=vartype>int</span>
+    )
+    $red<br>
+    &nbsp; &nbsp; &nbsp; &nbsp;
+    ( <span class=vartype>int</span>
+    )
+    $green<br>
+    &nbsp; &nbsp; &nbsp; &nbsp;
+    ( <span class=vartype>int</span>
+    )
+    $blue<br>
+    <br>
+    <hr><a name='fun_SetBarDimensions'></a>
+    <table border=0 cellpadding=0 cellspacing=0 width=100%>
+      <tr>
+        <td><span class=funname>3DBarGraph::SetBarDimensions()</span></a></td>
+        <td align=right>
+          <a href='#top'>^ Top</a>
+          | <a href='#var'>^ Variables</a>
+          | <a href='#fun'>^ Methods</a>
+        </td>
+      </tr>
+    </table>
+    Set bar dimensions (width and height)<br><br>
+    &nbsp; <b>Arguments:</b><br>
+    &nbsp; &nbsp; &nbsp; &nbsp;
+    ( <span class=vartype>int</span>
+    )
+    $width<br>
+    &nbsp; &nbsp; &nbsp; &nbsp;
+    ( <span class=vartype>int</span>
+    )
+    $height<br>
+    <br>
+    <hr><a name='fun_SetBarFont'></a>
+    <table border=0 cellpadding=0 cellspacing=0 width=100%>
+      <tr>
+        <td><span class=funname>3DBarGraph::SetBarFont()</span></a></td>
+        <td align=right>
+          <a href='#top'>^ Top</a>
+          | <a href='#var'>^ Variables</a>
+          | <a href='#fun'>^ Methods</a>
+        </td>
+      </tr>
+    </table>
+    Set bar text font (1 to 5 are loaded by default on GD2, if you want others, you have to load them)<br />
+You can use these strings instead of int:<br />
+&nbsp; 1=x-small<br />
+&nbsp; 2=small<br />
+&nbsp; 3=normal<br />
+&nbsp; 4=large<br />
+&nbsp; 5=x-large<br><br>
+    &nbsp; <b>Arguments:</b><br>
+    &nbsp; &nbsp; &nbsp; &nbsp;
+    ( <span class=vartype>string</span>
+    | <span class=vartype>int</span>
+    )
+    $font<br>
+    <br>
+    <hr><a name='fun_SetBarPadding'></a>
+    <table border=0 cellpadding=0 cellspacing=0 width=100%>
+      <tr>
+        <td><span class=funname>3DBarGraph::SetBarPadding()</span></a></td>
+        <td align=right>
+          <a href='#top'>^ Top</a>
+          | <a href='#var'>^ Variables</a>
+          | <a href='#fun'>^ Methods</a>
+        </td>
+      </tr>
+    </table>
+    Set bar padding (see <a href='#var_bar_padding'>bar_padding</a>)<br><br>
+    &nbsp; <b>Arguments:</b><br>
+    &nbsp; &nbsp; &nbsp; &nbsp;
+    ( <span class=vartype>int</span>
+    )
+    $padding<br>
+    <br>
+  </body>
+</html>

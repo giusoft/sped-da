@@ -1,0 +1,167 @@
+# Baseado na documentação do SICREDI
+
+#Cobrança com registro
+identificacao_detalhe:  
+  pos: [1, 1]
+  picture: '9(01)'
+  default:  '1'
+
+filler:
+  pos: [02, 13]
+  picture: '9(12)'
+  default: ''  
+
+tipo_cobranca:
+  pos: [14, 14]  
+  picture: 'X(01)'
+  default: 'A'
+  
+codigo_beneficiario:
+#codigo_pagador_beneficiario:
+  pos: [15, 19]
+  picture: '9(05)'
+  default: '0'
+
+codigo_pagador_junto_associado:
+  pos: [20, 24]
+  picture: 'X(05)'
+  default: ''
+
+boleto_dda:
+  pos: [25, 25]
+  picture: 'X(01)'
+  default: ''  
+
+filler:
+  pos: [26, 47]
+  picture: 'X(22)'
+  default: ''
+
+nosso_numero:
+  pos: [48, 62]
+  picture: '9(15)'
+  default: '0'
+
+filler:
+  pos: [63, 108]
+  picture: 'X(46)'
+  default: ''  
+
+codigo_de_ocorrencia:
+  pos: [109, 110]
+  picture: 'X(02)'
+  default: ''  
+
+
+data_ocorrecia: 
+  pos: [111, 116]
+  picture: '9(06)'
+  date_format: '%DD%MM%AA'
+
+seu_numero: 
+  pos: [117, 126]
+  picture: 'X(10)'
+  default: ''
+
+filler: 
+  pos: [127, 146]
+  picture: 'X(20)'
+  default: ''
+
+data_vencimento: 
+  pos: [147, 152]
+  picture: '9(06)'
+  date_format: '%DD%MM%AA'
+
+valor_do_titulo: 
+  pos: [153, 165]
+  picture: '9(11)V9(2)'
+  default: '0' 
+
+filler: 
+  pos: [166, 174]
+  picture: 'X(09)'
+  default: ''   
+  
+especie_documento:
+  pos: [175, 175]
+  picture: 'X(01)'
+  default: ''
+
+despesas_cobrancas: 
+  pos: [176, 188]
+  picture: 'X(13)'
+  default: '' 
+
+despesas_custas_protesto: 
+  pos: [189, 201]
+  picture: 'X(13)'
+  default: '' 
+
+filler: 
+  pos: [202, 227]
+  picture: 'X(26)'
+  default: ''
+
+valor_abatimento_concedido:
+  pos: [228, 240]
+  picture: '9(13)'
+  default: '0'
+
+valor_desconto_concedidp:
+  pos: [241, 253]
+  picture: '9(13)'
+  default: '0'
+
+valor_pago:
+  pos: [254, 266]
+  picture: '9(13)'
+  default: '0'  
+
+juros_mora:
+  pos: [267, 279]
+  picture: '9(13)'
+  default: '0'
+
+multa:
+  pos: [280, 292]
+  picture: '9(13)'
+  default: '0'
+
+filler: 
+  pos: [296, 294]
+  picture: 'X(23)'
+  default: ''
+
+somente_ocorrencia:
+  pos: [295, 295]
+  picture: 'X(01)'
+  default: ''
+
+filler: 
+  pos: [296, 318]
+  picture: 'X(23)'
+  default: ''
+
+motivo_ocorrencia: 
+  pos: [319, 328]
+  picture: 'X(10)'
+  default: ''
+
+data_prevista_lancamento:
+  pos: [329, 336]
+  picture: 'X(08)'
+  date_format: '%DD%MM%AA'
+
+filler: 
+  pos: [337, 394]
+  picture: 'X(58)'
+  default: ''
+
+numero_sequencial_registro: 
+  pos: [395, 400]
+  picture: '9(06)'
+  default: '0'  
+
+
+

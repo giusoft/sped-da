@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<data>
+	<page>
+		<header_start>
+[html]
+	[head]
+		[meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" /]
+		[meta name="keywords" content="#global.keywords#" /]
+		[meta name="description" content="#global.keywords#" /]
+		[title]#global.site#[/title]
+		</header_start>
+		<header_end>
+	[/head]
+	[body]
+		</header_end>
+		<css>
+		[style]
+			body {font-family: tahoma,helvetica; font-size: 10pt ; background: #f0f0f0; color: black}
+			li {font-family: tahoma,helvetica; font-size: 8pt }
+			th {font-family: tahoma,helvetica; font-size: 8pt ; background: #08245a; font-weight: normal; color: white}
+			td.subtitle {font-family: tahoma,helvetica; background: #a5cff7; font-size: 8pt ; color: white}
+			td.footer {font-family: tahoma,helvetica; background: #e0e0e0; font-size: 8pt ; color: #5050e2}
+			td.summary {font-family: tahoma,helvetica; font-size: 8pt ; background: #d6ebff; font-style: italic; color: black}
+			td.total {font-family: tahoma,helvetica; font-size: 8pt ; background: #7070e2; font-weight: bold; color: white}
+			td.tool {font-family: tahoma,helvetica; font-size: 8pt ; background: #a5cff7; color: #08245a}
+			td.alert {font-family: tahoma,helvetica; font-size: 8pt ; background: #FF0000; font-weight: bold; color: white}
+			td {font-family: tahoma,helvetica; background: white; font-size: 8pt ; color: black}
+			h1 {font-family: tahoma,helvetica; font-size: 16pt ; color: #08245a}
+			h2 {font-family: tahoma,helvetica; font-size: 14pt ; color: #08245a}
+			h3 {font-family: tahoma,helvetica; font-size: 12pt ; color: #08245a}
+			h4 {font-family: tahoma,helvetica; font-size: 10pt ; color: #08245a}
+			h5 {font-family: tahoma,helvetica; font-size: 8pt ; color: #08245a}
+			input {font-family: tahoma,helvetica; font-size: 8pt}
+			input.tool {font-family: tahoma,helvetica; background: #bccede;font-size: 8pt}
+			input.navig {width:24px; font-family: tahoma,helvetica; background: #bccede;font-size: 8pt}
+			input.export {width:31px; font-family: tahoma,helvetica; background: #bccede;font-size: 8pt}
+			font {font-family: tahoma,helvetica; font-size: 10pt ; color: #140181}
+			a {text-decoration: none; font-family: tahoma,helvetica; font-size: 10pt ; background:#f0f0f0; color: #FF6500}
+			a:hover {text-decoration: underlined; font-family: tahoma,helvetica; font-size: 10pt ; background:white; color: #FF6500}
+			a.menu {text-decoration: none; font-family: tahoma,helvetica; font-size: 8pt ; background:white; color: #FF6500}
+			a.menu:hover {text-decoration: none; font-family: tahoma,helvetica; font-size: 8pt ; background:#FF6500; color: white}
+			a.orderby {text-decoration: none; font-family: tahoma,helvetica; background: #08245a; font-weight: normal; font-size: 8pt; color: white}
+			a.orderby:hover {text-decoration: none; font-family: tahoma,helvetica; background: #08245a; font-weight: normal; font-size: 8pt; color: #ff6500}
+		[/style]
+		</css>
+		<footer>
+	[/body]
+[/html]
+		</footer>
+	</page>
+	<menu>
+		<topbar_start>
+[html]
+	[head]
+		[style]
+			body {font-family: tahoma,helvetica; font-size: 8pt ; background: #23238E; font-weight: bold; color: white}
+			td {font-family: tahoma,helvetica; font-size: 8pt ; color: white}
+		[/style]
+	[/head]
+	[body leftmargin=1 topmargin=1]
+		</topbar_start>
+		<topbar_end>
+	[/body]
+[/html]
+		</topbar_end>
+		<bottombar_start>
+[html]
+	[head]
+		[style]
+			body {font-family: tahoma,helvetica; font-size: 8pt ; background: #FF6666; color: white; font-weight: bold; }
+			table {font-size: 8pt ; color: white}
+			td {font-family: tahoma,helvetica; font-size: 8pt ; color: white}
+			input {font-family: tahoma,helvetica; font-size: 7pt}
+			input.sel {font-family: tahoma,helvetica; color: #ff6500; font-weight: bold; font-size: 7pt}
+			a.menu {text-decoration: none; font-family: tahoma,helvetica; font-size: 8pt ; color: white}
+			a.menu:hover {text-decoration: none; font-family: tahoma,helvetica; font-size: 8pt ; color: #23238E}
+		[/style]
+	[/head]
+	[body leftmargin=1 topmargin=1]
+		</bottombar_start>
+		<bottombar_end>
+	[/body]
+[/html]
+		</bottombar_end>
+		<menu_start>
+[html]
+	[head]
+		[style]
+			body {font-family: tahoma,helvetica; font-size: 9pt ; background: #FFFFFF; color: black}
+			select {font-family: tahoma,helvetica; font-size: 9pt}
+			input {font-family: tahoma,helvetica; font-size: 9pt}
+			input.sel {font-family: tahoma,helvetica; color: blue; font-weight: bold; font-size: 9pt}
+			a.menu {text-decoration: none; font-family: tahoma,helvetica; font-size: 9pt ; color: #000000}
+			a.menu:hover {text-decoration: none; font-family: tahoma,helvetica; font-weight: bold; font-size: 9pt ; color: #FF6500}
+			a {text-decoration: none; font-family: tahoma,helvetica; font-size: 8pt ; color: #000000}
+			a:hover {text-decoration: none; font-family: tahoma,helvetica; font-size: 8pt ; color: #000000}
+		[/style]
+	[/head]
+	[body leftmargin=1 topmargin=1]
+		</menu_start>
+		<menu_end>
+	[/body]
+[/html]
+		</menu_end>
+	</menu>
+	<table>
+		<header_noborder_free_start>
+
+		[table border='0' width='
+		</header_noborder_free_start>
+		<header_noborder_free_end>']
+		</header_noborder_free_end>
+		<header_noborder_tiny>
+
+		[table border='0' width='400' cellpadding='1' cellspacing='1' bgcolor='#23238E'][tr][td bgcolor='white'][table border='0' width='100%']
+		</header_noborder_tiny>
+		<header_noborder_medium>
+
+		[table border='0' width='80%'  cellpadding='1' cellspacing='1' bgcolor='#23238E'][tr][td bgcolor='white'][table border='0' width='100%']
+		</header_noborder_medium>
+		<header_noborder_big>
+
+		[table border='0' width='100%' cellpadding='1' cellspacing='1' bgcolor='#23238E'][tr][td bgcolor='white'][table border='0' width='100%']
+		</header_noborder_big>
+		<header_border_free_start>
+
+		[table border='0' width='
+		</header_border_free_start>
+		<header_border_free_end>' cellpadding='1' cellspacing='1' bgcolor='#23238E'][tr][td bgcolor='white'][table border='0' bgcolor='#a5cbf7' cellpadding='1' cellspacing='1' width='100%']
+		</header_border_free_end>
+		<header_border_tiny>
+
+		[table border='0' width='500' cellpadding='1' cellspacing='1' bgcolor='#23238E'][tr][td bgcolor='white'][table border='0' bgcolor='#a5cbf7' cellpadding='1' cellspacing='1' width='100%']
+		</header_border_tiny>
+		<header_border_medium>
+
+		[table border='0' width='80%' cellpadding='1' cellspacing='1' bgcolor='#23238E'][tr][td bgcolor='white'][table border='0' bgcolor='#a5cbf7' cellpadding='1' cellspacing='1' width='100%']
+		</header_border_medium>
+		<header_border_big>
+
+		[table border='0' width='100%' cellpadding='1' cellspacing='1' bgcolor='#23238E'][tr][td bgcolor='white'][table border='0' bgcolor='#a5cbf7' cellpadding='1' cellspacing='1' width='100%']
+		</header_border_big>
+		<footer>
+		[/table][/td][/tr][/table]
+
+		</footer>
+		<row_start>
+			[tr valign='top']
+		</row_start>
+		<row_end>
+			[/tr]
+		</row_end>
+		<col_start>
+				[td]
+		</col_start>
+		<col_end>
+				[/td]
+		</col_end>
+		<col_header_start>
+				[th]
+		</col_header_start>
+		<col_header_end>
+				[/th]
+		</col_header_end>
+		<col_start>
+				[td]</col_class_start>
+		<col_end>[/td]</col_end>
+	</table>
+	<images>
+		<button_tiny></button_tiny>
+		<button_medium></button_medium>
+		<button_big></button_big>
+		<dot_white></dot_white>
+		<dot_black></dot_black>
+		<dot_blue></dot_blue>
+		<dot_red></dot_red>
+		<dot_green></dot_green>
+		<dot_yellow></dot_yellow>
+		<dot_pink></dot_pink>
+		<dot_gray></dot_gray>
+		<logo_tiny></logo_tiny>
+		<logo_medium></logo_medium>
+		<logo_big></logo_big>
+		<printer></printer>
+		<pdf></pdf>
+		<doc></doc>
+		<xls></xls>
+		<txt></txt>
+		<save></save>
+		<open></open>
+		<cancel></cancel>
+		<stop></stop>
+		<error></error>
+		<view></view>
+		<email></email>
+		<move></move>
+		<copy></copy>
+		<paste></paste>
+		<cut></cut>
+	</images>
+</data>

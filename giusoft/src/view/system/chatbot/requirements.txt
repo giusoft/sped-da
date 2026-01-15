@@ -1,0 +1,11 @@
+flask
+flask-cors
+langchain
+langchain-community
+langchain-ollama
+langchain-openai
+langchain-text-splitters
+faiss-cpu
+gunicorn
+openai
+python-dotenv

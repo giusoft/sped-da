@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<data>
+	<page>
+		<header_start>
+[html]
+	[head]
+		[meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" /]
+		[meta name="keywords" content="#global.keywords#" /]
+		[meta name="description" content="#global.keywords#" /]
+		[title]#global.site#[/title]
+		</header_start>
+		<header_end>
+	[/head]
+	[body]
+		</header_end>
+		<css>
+		[style]
+			body {font-family: Verdana,helvetica; font-size: 10pt ; background: #fafafa; color: black; }
+			li {font-family: Verdana,helvetica; font-size: 8pt }
+			th {font-family: Verdana,helvetica; font-size: 8pt ; background: #3882c7; font-weight: normal; color: white}
+			td.subtitle {font-family: Verdana,helvetica; background: #58A2E7; font-size: 8pt ; color: white}
+			td.footer {font-family: Verdana,helvetica; background: #e0e0e0; font-size: 8pt ; color: #5050e2}
+			td.summary {font-family: Verdana,helvetica; font-size: 8pt ; background: #d0d0d0; font-style: italic; color: black}
+			td.total {verfont-family: Verdana,helvetica; font-size: 8pt; background: #58A2E7; font-weight: bold; color: white}
+			td.tool {font-family: Verdana,helvetica; font-size: 8pt; background: white; color: black}
+			td.alert {font-family: Verdana,helvetica; font-size: 8pt ; background: #FF0000; font-weight: bold; color: white}
+			td {font-family: Verdana,helvetica; background: white; font-size: 8pt ; color: black;	border-bottom-width: 1px;
+	border-top-style: solid;
+	border-bottom-style: solid;
+	border-top-color: #ffffff;
+	border-bottom-color: #999999;
+}
+			h1 {font-family: Verdana,helvetica; font-size: 13pt ; color: black}
+			h2 {font-family: Verdana,helvetica; font-size: 12pt ; color: black}
+			h3 {font-family: Verdana,helvetica; font-size: 10pt ; color: #3A81C1; font-weight: bold }
+			h4 {font-family: Verdana,helvetica; font-size: 10pt ; color: #3A81C1}
+			h5 {font-family: Verdana,helvetica; font-size: 8pt ; color: #3A81C1}
+			input {font-family: Verdana,helvetica; font-size: 8pt}
+			input.tool {font-family: Verdana,helvetica; background: white;font-size: 8pt}
+			input.navig {width:24px; font-family: Verdana,helvetica; background: white;font-size: 8pt}
+			input.export {width:31px; font-family: Verdana,helvetica; background: white;font-size: 8pt}
+			font {font-family: Verdana,helvetica; font-size: 10pt ; color: #140181}
+			a {text-decoration: none; font-family: Verdana,helvetica; font-size: 10pt ; background:#f0f0f0; color: #3882c7}
+			a:hover {text-decoration: underlined; font-family: Verdana,helvetica; font-size: 10pt ; background:white; color: #3882c7}
+			a.menu {text-decoration: none; font-family: Verdana,helvetica; font-size: 8pt ; background:white; color: #3882c7}
+			a.menu:hover {text-decoration: none; font-family: Verdana,helvetica; font-size: 8pt ; background:#83C01C; color: white}
+			a.orderby {text-decoration: none; font-family: Verdana,helvetica; background: #3882c7; font-weight: normal; font-size: 8pt; color: white}
+			a.orderby:hover {text-decoration: none; font-family: Verdana,helvetica; background: #3882c7; font-weight: normal; font-size: 8pt; color: #83F01C}
+			th.cal {font-family: tahoma, helvetica; font-size: 8pt; background: #505050; color: white}
+			th.dias {font-family: tahoma, helvetica; font-size: 7pt; background: #808080}
+			a.num {color: black; font-family: tahoma, helvetica; font-size: 7pt;background: #d0d0d0;}
+			a.num_sel {color: black; font-family: tahoma, helvetica; font-size: 7pt;background: #83C01C;}
+			td.num {background: #d0d0d0;}
+			td.num_sel {background: #83C01C;}
+		[/style]
+		</css>
+		<footer>
+	[/body]
+[/html]
+		</footer>
+	</page>
+	<menu>
+		<topbar_start>
+[html]
+	[head]
+		[style]
+		body {font-family: Verdana,helvetica; font-size: 8pt ; background: #3882c7; font-weight: bold; color: white}
+			td {font-family: Verdana,helvetica; font-size: 8pt ; color: white}
+		[/style]
+	[/head]
+	[body leftmargin=1 topmargin=1]
+		</topbar_start>
+		<topbar_end>
+	[/body]
+[/html]
+		</topbar_end>
+		<bottombar_start>
+[html]
+	[head]
+		[style]
+			body
+			{
+			background-color: white;
+			}
+			table {font-size: 8pt ; color: black}
+			td {font-family: Verdana,helvetica; font-size: 8pt ; color: black}
+			input {font-family: Verdana,helvetica; font-size: 7pt; border: 1px solid black;}
+			input.sel {font-family: Verdana,helvetica; color: #ff6500; font-weight: bold; font-size: 7pt; border: 1px solid black;}
+			a.xmenu {text-decoration: none; font-family: Verdana,helvetica; font-size: 8pt ; background:white; color: #83C01C}
+			a.xmenu:hover {text-decoration: none; font-family: Verdana,helvetica; font-size: 8pt ; background:#83C01C; color: white}
+			a.menu {text-decoration: none; font-family: Verdana,helvetica; font-size: 8pt ; color: #3882c7}
+			a.menu:hover {text-decoration: none; font-family: Verdana,helvetica; font-size: 8pt ; background:#83C01C; color:white }
+		[/style]
+	[/head]
+	[body leftmargin=0 topmargin=0 valign='top']</bottombar_start>
+		<bottombar_end>
+	[/body]
+[/html]
+		</bottombar_end>
+		<menu_start>
+[html]
+	[head]
+		[style]
+			body {font-family: Verdana,helvetica; font-size: 9pt ; background: white; color: black}
+			table {background: red}
+			select {font-family: Verdana,helvetica; font-size: 9pt}
+			input {font-family: Verdana,helvetica; font-size: 9pt; }
+			input.sel {font-family: Verdana,helvetica; color: blue; font-weight: bold; font-size: 9pt}
+			a.menu {text-decoration: none; font-family: Verdana,helvetica; font-size: 8pt ; color: #3882c7}
+			a.menu:hover {text-decoration: none; font-family: Verdana,helvetica; font-size: 8pt ; background:#83C01C; color:white}
+			a {text-decoration: none; font-family: Verdana,helvetica; font-size: 8pt ; color: #202020}
+			a:hover {text-decoration: none; font-family: Verdana,helvetica; font-size: 8pt ; color: #000000}
+		[/style]
+	[/head]
+	[body leftmargin=1 topmargin=1]
+		</menu_start>
+		<menu_end>
+	[/body]
+[/html]
+		</menu_end>
+	</menu>
+	<table>
+		<header_noborder_free_start>
+
+		[table border='0' width='
+		</header_noborder_free_start>
+		<header_noborder_free_end>']
+		</header_noborder_free_end>
+		<header_noborder_tiny>
+
+		[table border='0' width='400' cellpadding='1' cellspacing='1' bgcolor='#e0e0e0'][tr][td bgcolor='white'][table border='0' width='100%']
+		</header_noborder_tiny>
+		<header_noborder_medium>
+
+		[table border='0' width='80%'  cellpadding='1' cellspacing='1' bgcolor='#e0e0e0'][tr][td bgcolor='white'][table border='0' width='100%']
+		</header_noborder_medium>
+		<header_noborder_big>
+
+		[table border='0' width='100%' cellpadding='1' cellspacing='1' bgcolor='#e0e0e0'][tr][td bgcolor='white'][table border='0' width='100%']
+		</header_noborder_big>
+		<header_border_free_start>
+
+		[table border='0' width='
+		</header_border_free_start>
+		<header_border_free_end>' cellpadding='1' cellspacing='1' bgcolor='#808080'][tr][td bgcolor='white'][table border='0' bgcolor='#e0e0e0' cellpadding='1' cellspacing='1' width='100%']
+		</header_border_free_end>
+		<header_border_tiny>
+
+		[table border='0' width='500' cellpadding='1' cellspacing='1' bgcolor='#808080'][tr][td bgcolor='white'][table border='0' bgcolor='#e0e0e0' cellpadding='1' cellspacing='1' width='100%']
+		</header_border_tiny>
+		<header_border_medium>
+
+		[table border='0' width='80%' cellpadding='1' cellspacing='1' bgcolor='#808080'][tr][td bgcolor='white'][table border='0' bgcolor='#e0e0e0' cellpadding='1' cellspacing='1' width='100%']
+		</header_border_medium>
+		<header_border_big>
+
+		[table border='0' width='100%' cellpadding='1' cellspacing='1' bgcolor='#808080'][tr][td bgcolor='white'][table border='0' bgcolor='#e0e0e0' cellpadding='1' cellspacing='1' width='100%']
+		</header_border_big>
+		<footer>
+		[/table][/td][/tr][/table]
+
+		</footer>
+		<row_start>
+			[tr valign='top']
+		</row_start>
+		<row_end>
+			[/tr]
+		</row_end>
+		<col_start>
+				[td]
+		</col_start>
+		<col_end>
+				[/td]
+		</col_end>
+		<col_header_start>
+				[th]
+		</col_header_start>
+		<col_header_end>
+				[/th]
+		</col_header_end>
+		<col_start>
+				[td]</col_class_start>
+		<col_end>[/td]</col_end>
+	</table>
+	<images>
+		<button_tiny></button_tiny>
+		<button_medium></button_medium>
+		<button_big></button_big>
+		<dot_white></dot_white>
+		<dot_black></dot_black>
+		<dot_blue></dot_blue>
+		<dot_red></dot_red>
+		<dot_green></dot_green>
+		<dot_yellow></dot_yellow>
+		<dot_pink></dot_pink>
+		<dot_gray></dot_gray>
+		<logo_tiny></logo_tiny>
+		<logo_medium></logo_medium>
+		<logo_big></logo_big>
+		<printer></printer>
+		<pdf></pdf>
+		<doc></doc>
+		<xls></xls>
+		<txt></txt>
+		<save></save>
+		<open></open>
+		<cancel></cancel>
+		<stop></stop>
+		<error></error>
+		<view></view>
+		<email></email>
+		<move></move>
+		<copy></copy>
+		<paste></paste>
+		<cut></cut>
+	</images>
+</data>
