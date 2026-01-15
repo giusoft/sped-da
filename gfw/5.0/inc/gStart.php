@@ -1,4 +1,5 @@
 <?
+
 /* Constantes */
 define("gUSRID",'usrId');
 define("gUSRNAME",'usrName');
