@@ -30,9 +30,7 @@ class Api
             'item' => Item::class
         ];
 
-        $parametros = ['caminhoSetup' => '/var/www/html/setup.php'];
-
-        $this->db = new DB($parametros);
+        $this->db = new DB('');
 
         $this->inicializarAmbiente();
         $this->processarRequisicao();
