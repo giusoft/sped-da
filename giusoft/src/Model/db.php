@@ -2,10 +2,10 @@
 
 namespace App\Model;
 
-use \PDO;  // ADICIONE ESTA LINHA
-use \PDOException;  // ADICIONE ESTA LINHA
-use \DateTime;  // ADICIONE ESTA LINHA
-use \Exception;  // ADICIONE ESTA LINHA
+use \PDO;
+use \PDOException;
+use \DateTime;
+use \Exception;
 
 date_default_timezone_set('America/Bahia');
 
@@ -24,10 +24,7 @@ class DB
 	public function __construct($args)
 	{
 		$this->parametro = $args;
-
-		if (isset($this->parametro['caminhoSetup']) && $this->parametro['caminhoSetup']) {
-			$this->carregarSetup($this->parametro['caminhoSetup']);
-		}
+		$this->carregarSetup();
 
 		$this->nomeArquivoLog = "emitenota_" . ($this->setup["global.logfile"] ?? 'default.log');
 
@@ -39,7 +36,7 @@ class DB
 
 	public function carregarSetup()
 	{
-		require_once $this->parametro['caminhoSetup'];
+		require_once __DIR__ . '/../../setup.php';
 
 		$stp = trim(str_replace("\n", "", $gSETUP));
 		$mtz = explode("}", $stp);
