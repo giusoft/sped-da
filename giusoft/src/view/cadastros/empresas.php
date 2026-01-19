@@ -92,7 +92,6 @@ $agora = date('Y-m-d H:i:s');
 $persistencia = new PessoasJuridicas();
 
 switch ($gPage) {
-    // ========================================================================
 
     case INICIO:
         $html .= '<div class="hidden-print"><form class="form-inline" method="POST" action="index.php?g=empresas">';
@@ -141,7 +140,7 @@ switch ($gPage) {
                 $html .= $persistencia->pagination->render();
             }
             $html .= $o->tableBegin('big', true, true);
-            $mtz = array();
+            $mtz = [];
             $mtz[] = "<-Opções";
             $mtz[] = "<>Id";
             $mtz[] = "<>Situação";
@@ -155,12 +154,12 @@ switch ($gPage) {
             $mtz[] = "<>Transport.";
             $html .= $o->tableRow($mtz, 'header');
             foreach ($rs as $pessoa) {
-                $btns = "";
+                $btns = [];
                 $btns .= $o->button("{icon: folder-open; hint: Abrir a ficha da pessoa; size:tiny; href: " . $o->page . "&gPage=" . CAPA . "&gId=" . $pessoa['id'] . "}");
 
                 $btns .= $o->button("{style:danger; icon:trash; hint:Cancelar pessoa; size:tiny; onClick:btnAbrirModal(" . $pessoa["id"] . ");}");
 
-                $mtz = array();
+                $mtz = [];
                 $mtz[] = '<-' . $btns;
                 $mtz[] = "<>" . $pessoa["id"];
                 $mtz[] = '<>' . $pessoa['situacao'];
@@ -199,8 +198,8 @@ switch ($gPage) {
         $html .= $frm->render($o);
         break;
     case INICIO_PESQUISAR_RESULTADO:
-        $filtros = array();
-        $where = "";
+        $filtros = [];
+        $where = [];
         $pesquisaRapida = gCleanField($_REQUEST['pesquisaRapida']);
         $nome = gCleanField($_REQUEST['nome']);
         $apelido = gCleanField($_REQUEST['apelido']);
@@ -283,7 +282,7 @@ switch ($gPage) {
 
         $row = $rs[0];
         $html .= $o->tableBegin('big', true);
-        $mtz = array();
+        $mtz = [];
         $mtz[] = '<-Opções';
         $mtz[] = '<-Apelido';
         $mtz[] = '<-Nome';
@@ -298,7 +297,7 @@ switch ($gPage) {
         $html .= $o->tableRow($mtz, 'header');
 
         foreach ($rs as $row) {
-            $mtz = array();
+            $mtz = [];
             $mtz[] = '<-' . $o->button("{icon: search; caption: Abrir; size: small; href: " . $o->page . "&gPage=" . CAPA . "&gId=" . $row['id'] . "}");
             $mtz[] = '<-' . $row['apelido'];
             $mtz[] = '<-' . $row['nome'];
@@ -316,7 +315,6 @@ switch ($gPage) {
         break;
 
 
-    // ========================================================================
     case CAPA:
         $cabecalho = mostraCabecalho($gId);
         if ($cabecalho <> '') {
@@ -324,7 +322,7 @@ switch ($gPage) {
             $html .= '<div class="row">';
             $html .= '<div class="col-lg-3 col-md-3 col-sm-4 col-xl-6">';
             if (file_exists($gPathUsrFiles . '/' . $gId . '.jpg')) {
-                $html .= '<img class="img img-responsive img-thumbnail" src="files/pessoas/' . $gId . '.jpg?' . rand(1, 9999) . '">';
+                $html .= '<img class="img img-responsive img-thumbnail" src="files/pessoas/' . $gId . '.jpg?' . random_int(1, 9999) . '">';
             } else {
                 $html .= '<img class="img img-responsive img-thumbnail" src="files/pessoas/0.jpg">';
             }
@@ -336,15 +334,20 @@ switch ($gPage) {
             $html .= $o->msgSubTitle("Pendências");
             $erros = "";
 
-            $sql = "SELECT count(p.id) p, count(f.id) f, count(e.id) e
+            $sql = "SELECT
+                        count(p.id) p,
+                        count(f.id) f,
+                        count(e.id) e
 					FROM pessoas p
 					LEFT JOIN pessoas_fisicas f ON p.id=f.id_pessoas
 					LEFT JOIN pessoas_enderecos e ON p.id=e.id_pessoas
-					WHERE p.id=" . $gId;
+					WHERE p.id = " . $gId;
             $rs = dbQuery($sql);
+
             if ($rs[0]['f'] == 0) {
                 $erros[] = "Nenhum documento foi cadastrado";
             }
+
             if ($rs[0]['e'] == 0) {
                 $erros[] = "Nenhum endereço foi cadastrado";
             }
@@ -359,8 +362,8 @@ switch ($gPage) {
             } else {
                 $html .= $o->msgInfo("O cadastro está completo. Não há nenhuma pendência.");
             }
-            $html .= '</div>';
 
+            $html .= '</div>';
             $html .= '</div>';
         } else {
             $html .= $o->msgDanger("A pessoa selecionada não foi encontrada");
@@ -369,12 +372,11 @@ switch ($gPage) {
         break;
 
 
-
-    // ========================================================================
     case DADOS:
         if ($gId > 0) {
             $html .= mostraCabecalho($gId);
         }
+
         $rs = $persistencia->obtemRegistros("p.id=" . $gId)[0];
         $frm = new gForm();
         $html .= $persistencia->geraCamposDoFormulario($frm, $rs, DADOS_SALVAR);
@@ -397,6 +399,7 @@ switch ($gPage) {
         } else {
             $ok = $persistencia->modifica($_REQUEST, $gId);
         }
+
         if ($ok) {
             if (($nomeAntigo != $_REQUEST['nome']) && $_REQUEST['nome'] != '') {
                 $dadosGatilho = [
@@ -418,30 +421,32 @@ switch ($gPage) {
         }
         break;
 
-    // ========================================================================
+
     case ENDERECOS:
         $gIdEnd = intval($_REQUEST['gIdEnd']);
         $html .= mostraCabecalho($gId);
         $rs = $persistencia->obtemRegistrosEnderecos($gIdEnd);
         $gIdEnd = $rs[0]['id'];
         $frm = new gForm();
-        if (count($rs) > 0) {
+        if ($rs) {
             $frm->addButton("{title: Adicionar outro endereço; style: default; href: " . $o->page . "&gPage=" . ENDERECOS_NOVO . "&gId=" . $gId . "}");
         }
+
         $html .= $persistencia->geraCamposDoFormularioEnderecos($frm, $rs[0], ENDERECOS_SALVAR, $gIdEnd);
 
         // Mostra os endereços que já existem
         $rs = $persistencia->obtemRegistrosEnderecos();
-        if (count($rs) > 0) {
+        if ($rs) {
             if ($gIdEnd == 0) {
                 $gIdEnd = $rs[0]['id'];
             }
+
             $temMaisDeUm = (count($rs) > 1);
             if ($temMaisDeUm) {
                 $o->out($o->modal("{title: Confirme; size: small; content: Excluir este endereço?; okCaption: Excluir agora; name: confirmaExclusaoEnd; url: excluiEnd()}"), gLOC_INLINE, 999);
             }
             $html .= $o->tableBegin('big', true);
-            $mtz = array();
+            $mtz = [];
             $mtz[] = '<-Opções';
             $mtz[] = '<-Endereço';
             $mtz[] = '<-Bairro';
@@ -449,12 +454,12 @@ switch ($gPage) {
             $mtz[] = '<-CEP';
             $html .= $o->tableRow($mtz, 'header');
             foreach ($rs as $row) {
-                $mtz = array();
+                $mtz = [];
                 $btns = $o->button("{icon: pencil; hint: Alterar endereço; caption: Editar; size: small; href: " . $o->page . "&gPage=" . ENDERECOS . "&gId=" . $gId . "&gIdEnd=" . $row['id'] . "}");
                 if ($temMaisDeUm) {
                     $btns .= $o->button("{icon: trash; caption: Excluir; style: danger; size: small; openModal: confirmaExclusaoEnd; }", "javascript:gIda='" . $row['id'] . "'");
                 }
-                    //$btns.=$o->button("{icon: trash; hint: Excluir endereço; caption: Excluir; style: danger; size: small; href: ".$o->page."&gPage=28&gId=".$gId."&gIdEnd=".$row['id']."}");
+
                 $mtz[] = '<-' . $btns;
 
                 $mtz[] = '<-' . $row['endereco'] . " " . $row['numero'] . ($row['complemento'] == '' ? '' : '<br>' . $o->small($row['complemento']));
@@ -466,14 +471,17 @@ switch ($gPage) {
                 } else {
                     $html .= $o->tableRow($mtz, 'detail');
                 }
+
                 $primeiro = false;
             }
+
             $html .= $o->tableEnd();
             if ($temMaisDeUm) {
                 $o->addJavascript('gIda=0;function excluiEnd(){document.location.href="' . $o->page . "&gPage=" . ENDERECOS_EXCLUIR . "&gId=$gId&gIdEnd=" . '"+gIda;}');
             }
         }
         break;
+
 
     case ENDERECOS_SALVAR:
         $gIdEnd = intval($_REQUEST['gIdEnd']);
@@ -483,8 +491,8 @@ switch ($gPage) {
         } else {
             $ok = $persistencia->modificaEndereco($_REQUEST, $gId, $gIdEnd);
         }
-        if ($ok) {
 
+        if ($ok) {
             $persistencia->atualizarPessoasSituacao($gId);
 
             redirect($o->page . "&gPage=" . ENDERECOS . "&gId=" . $gId . "&gIdEnd=" . $gIdEnd);
@@ -492,38 +500,42 @@ switch ($gPage) {
             $html .= $o->msgDanger(implode("<br>", $persistencia->erros));
             $html .= $o->backButton;
         }
+
         break;
 
+
     case ENDERECOS_NOVO:
-        $gIdEnd = dbInsert('pessoas_enderecos', array('id_pessoas'    => $gId), true);
+        $gIdEnd = dbInsert('pessoas_enderecos', ['id_pessoas'    => $gId], true);
         redirect($o->page . "&gPage=" . ENDERECOS . "&gId=" . $gId . "&gIdEnd=" . $gIdEnd);
         break;
+
+
     case ENDERECOS_EXCLUIR:
         $sql = "DELETE FROM pessoas_enderecos WHERE id=" . intval($_REQUEST['gIdEnd']);
         dbQuery($sql);
         redirect($o->page . "&gPage=" . ENDERECOS . "&gId=" . $gId . "&gIdEnd=0");
         break;
-    // ========================================================================
+
 
     case OCORRENCIAS:
         $gIdEnd = intval($_REQUEST['gIdEnd']);
         $html .= mostraCabecalho($gId);
         $rs = $persistencia->obtemRegistrosOcorrencias($gIdEnd);
         $frm = new gForm();
-        if (count($rs) > 0) {
+        if ($rs) {
             $frm->addButton("{title: Adicionar outra ocorrência; style: default; href: " . $o->page . "&gPage=" . OCORRENCIAS_NOVA . "&gId=" . $gId . "}");
         }
         $html .= $persistencia->geraCamposDoFormularioOcorrencias($frm, $rs[0], OCORRENCIAS_SALVAR, $gIdEnd);
 
         // Mostra todas as ocorrências que já existem
         $rs = $persistencia->obtemRegistrosOcorrencias();
-        if (count($rs) > 0) {
+        if ($rs) {
             if ($gIdEnd == 0) {
                 $gIdEnd = $rs[0]['id'];
             }
             $o->out($o->modal("{title: Confirme; size: small; content: Excluir esta ocorrência?; okCaption: Excluir agora; name: confirmaExclusaoOco; url: excluiOco()}"), gLOC_INLINE, 999);
             $html .= $o->tableBegin('big', true);
-            $mtz = array();
+            $mtz = [];
             $mtz[] = '<-Opções';
             $mtz[] = '<-Data digitação';
             $mtz[] = '<-Data ocorrência';
@@ -533,14 +545,14 @@ switch ($gPage) {
             $mtz[] = '<-Pública?';
             $html .= $o->tableRow($mtz, 'header');
             foreach ($rs as $row) {
-                $mtz = array();
+                $mtz = [];
                 $btns = $o->button("{icon: pencil; hint: Alterar ocorrência; caption: Editar; size: small; href: " . $o->page . "&gPage=" . OCORRENCIAS . "&gId=" . $gId . "&gIdEnd=" . $row['id'] . "}");
                 $btns .= $o->button("{icon: trash; caption: Excluir; style: danger; size: small; openModal: confirmaExclusaoOco; }", "javascript:gIda='" . $row['id'] . "'");
                 $mtz[] = '<-' . $btns;
 
                 $mtz[] = '<-' . gDate($row['data_digitacao']);
                 $mtz[] = '<-' . gDate($row['data_ocorrencia']);
-                $mtz[] = '<-' . $o->small(nl2br($row['descricao']));
+                $mtz[] = '<-' . $o->small(nl2br((string) $row['descricao']));
                 $mtz[] = '<-' . $row['tipo_ocorrencia'];
                 $mtz[] = '<-' . $row['funcionario'];
                 $mtz[] = '<-' . gCheck($row['publica']);
@@ -549,31 +561,38 @@ switch ($gPage) {
                 } else {
                     $html .= $o->tableRow($mtz, 'detail');
                 }
+
                 $primeiro = false;
             }
+
             $html .= $o->tableEnd();
             $o->addJavascript('gIda=0;function excluiOco(){document.location.href="' . $o->page . "&gPage=" . OCORRENCIAS_CANCELAR . "&gId=$gId&gIdEnd=" . '"+gIda;}');
         }
+
         break;
+
+
     case OCORRENCIAS_SALVAR:
         $gIdEnd = intval($_REQUEST['gIdEnd']);
         $sql = "SELECT p.apelido, e.* FROM pessoas p LEFT JOIN pessoas_ocorrencias e on p.id=e.id_pessoas WHERE p.id=" . $gId;
         if ($gIdEnd > 0) {
             $sql .= " AND e.id=" . $gIdEnd;
         }
+
         $rs = dbQuery($sql);
         $row = $rs[0];
         $apelido = $row['apelido'];
 
-        $flds = array(
-            'id_pessoas'                  => $gId,
-            'id_pessoas_funcionario'     => intval($_REQUEST['id_pessoas_funcionario']),
-            'id_tipos_ocorrencias'      => intval($_REQUEST['id_tipos_ocorrencias']),
-            'descricao'                      => gCleanField($_REQUEST['descricao']),
-            'data_digitacao'                 => date("Y-m-d H:i:s"),
-            'data_ocorrencia'                => gDBDate($_REQUEST['data_ocorrencia']),
-            'publica'                        => gDBCheck($_REQUEST['publica'])
-            );
+        $flds = [
+            'id_pessoas'             => $gId,
+            'id_pessoas_funcionario' => intval($_REQUEST['id_pessoas_funcionario']),
+            'id_tipos_ocorrencias'   => intval($_REQUEST['id_tipos_ocorrencias']),
+            'descricao'              => gCleanField($_REQUEST['descricao']),
+            'data_digitacao'         => date("Y-m-d H:i:s"),
+            'data_ocorrencia'        => gDBDate($_REQUEST['data_ocorrencia']),
+            'publica'                => gDBCheck($_REQUEST['publica'])
+        ];
+
         if ($row['id'] > 0) {
             dbUpdate('pessoas_ocorrencias', $flds, $row['id']);
         } else {
@@ -585,19 +604,19 @@ switch ($gPage) {
         redirect($o->page . "&gPage=" . OCORRENCIAS . "&gId=" . $gId . "&gIdEnd=" . $gIdEnd);
         break;
 
+
     case OCORRENCIAS_NOVA:
-        $flds = array(
-            'id_pessoas'    => $gId
-        );
+        $flds = ['id_pessoas' => $gId];
         $gIdEnd = dbInsert('pessoas_ocorrencias', $flds, true);
         redirect($o->page . "&gPage=" . OCORRENCIAS . "&gId=" . $gId . "&gIdEnd=" . $gIdEnd);
         break;
+
 
     case OCORRENCIAS_CANCELAR:
         dbQuery("DELETE FROM pessoas_ocorrencias WHERE id_pessoas=$gId AND id=" . $gIdEnd);
         redirect($o->page . "&gPage=" . OCORRENCIAS . "&gId=" . $gId . "&gIdEnd=" . $gIdEnd);
         break;
-    // ========================================================================
+
 
     case ANEXOS:
         $html .= mostraCabecalho($gId);
@@ -606,11 +625,11 @@ switch ($gPage) {
 
         $frm = new gForm();
         $html .= $persistencia->geraCamposDoFormularioAnexos($frm, ANEXOS_ADICIONAR);
-        if (count($rs) > 0) {
+        if ($rs) {
             $http_usr_files .= 'anexos/';
             $o->out($o->modal("{title: Confirme; size: small; content: Remover este arquivo?; okCaption: Remover agora; name: confirmaExclusao; url: excluiItem()}"), gLOC_INLINE, 999);
             $html .= $o->tableBegin('big', true);
-            $mtz = array();
+            $mtz = [];
             $mtz[] = '<-Opções';
             $mtz[] = '<-Data';
             $mtz[] = '<-Descrição';
@@ -618,9 +637,9 @@ switch ($gPage) {
             $mtz[] = '<-Tipo de arquivo';
             $html .= $o->tableRow($mtz, 'header');
             foreach ($rs as $row) {
-                $imgName = $row['id'] . '.' . substr($row['arquivo'], strpos($row['arquivo'], '/') + 1);
+                $imgName = $row['id'] . '.' . substr((string) $row['arquivo'], strpos((string) $row['arquivo'], '/') + 1);
                 $arquivo = $http_usr_files . $imgName;
-                $mtz = array();
+                $mtz = [];
                 $btns = $o->button("{icon: folder-open; caption: Abrir; style: default; size: small; hint: Abrir este arquivo; target: _newAttach; href: " . $arquivo . "}");
                 $btns .= $o->button("{icon: trash; caption: Remover; style: danger; size: small; openModal: confirmaExclusao; }", "javascript:gIda='" . $row['id'] . "'");
                 $mtz[] = '<-' . $btns;
@@ -633,7 +652,9 @@ switch ($gPage) {
             $html .= $o->tableEnd();
             $o->addJavascript('gIda=0;function excluiItem(){document.location.href="' . $o->page . "&gPage=" . ANEXOS_REMOVER . "&gId=$gId&gIda=" . '"+gIda;}');
         }
+
         break;
+
 
     case ANEXOS_ADICIONAR:
         if ($persistencia->anexoSalvar()) {
@@ -648,6 +669,7 @@ switch ($gPage) {
 
         break;
 
+
     case ANEXOS_REMOVER:
         if ($persistencia->anexoRemover($_REQUEST['gIda'])) {
             redirect($o->page . "&gPage=" . ANEXOS . "&gId=" . $gId);
@@ -657,7 +679,6 @@ switch ($gPage) {
         }
         break;
 
-    // ========================================================================
 
     case PERMISSOES:
         $html .= mostraCabecalho($gId);
@@ -670,21 +691,22 @@ switch ($gPage) {
         $frm->addButton("{title: Excluir todas as permissões; style: danger; href: " . $o->page . "&gId=" . $gId . "&gPage=" . PERMISSOES_EXCLUIR_TODAS . "}");
         $html .= $frm->render($o);
 
-        $sql = "SELECT p.*, u.id idu
-			FROM gfw_permissions_users u
-			LEFT JOIN gfw_permissions p ON u.id_gfw_permissions=p.id
-			WHERE u.id_gfw_users=" . $gId . " ORDER BY name";
+        $sql = "SELECT
+                    p.*,
+                    u.id idu
+                FROM gfw_permissions_users u
+                LEFT JOIN gfw_permissions p ON u.id_gfw_permissions = p.id
+                WHERE u.id_gfw_users = " . $gId . " ORDER BY name";
         $rs = dbQuery($sql);
         if (count($rs) > 0) {
             $html .= $o->tableBegin("medium", true);
-            $mtz = array();
+            $mtz = [];
             $mtz[] = "<-Opções";
             $mtz[] = "<-Nome";
             $html .= $o->tableRow($mtz, "header");
             foreach ($rs as $row) {
-                $mtz = array();
+                $mtz = [];
                 $mtz[] = "<-" . $o->button("{icon: trash; title: Excluir; hint: Excluir permissão; style: danger; size: small; href: " . $o->page . "&gPage=" . PERMISSOES_EXCLUIR . "&gId=" . $gId . "&gIdu=" . $row['idu'] . "}");
-                ;
                 $mtz[] = "<-" . $row["name"];
                 $html .= $o->tableRow($mtz, "detail");
             }
@@ -692,18 +714,20 @@ switch ($gPage) {
         } else {
             $html .= $o->msgWarning("Nenhuma permissão definida para este usuário");
         }
+
         break;
 
     case PERMISSOES_ADICIONAR:
         $id_gfw_permissions = intval($_REQUEST['id_gfw_permissions']);
         $sql = "SELECT * FROM gfw_permissions_users WHERE id_gfw_users=" . $gId . " AND id_gfw_permissions=" . $id_gfw_permissions;
         $rs = dbQuery($sql);
-        if (count($rs) == 0) {
+        if (!$rs) {
             $sql = "INSERT INTO gfw_permissions_users (id_gfw_users, id_gfw_permissions) VALUES (" . $gId . "," . $id_gfw_permissions . ")";
             dbQuery($sql);
         }
         redirect($o->page . "&gPage=" . PERMISSOES . "&gId=" . $gId);
         break;
+
 
     case PERMISSOES_EXCLUIR:
         $sql = "DELETE FROM gfw_permissions_users WHERE id=" . intval($_REQUEST['gIdu']);
@@ -711,11 +735,13 @@ switch ($gPage) {
         redirect($o->page . "&gPage=" . PERMISSOES . "&gId=" . $gId);
         break;
 
+
     case PERMISSOES_EXCLUIR_TODAS:
         $sql = "DELETE FROM gfw_permissions_users WHERE id_gfw_users=" . $gId;
         dbQuery($sql);
         redirect($o->page . "&gPage=" . PERMISSOES . "&gId=" . $gId);
         break;
+
 
     case PERMISSOES_COPIAR:
         $html .= mostraCabecalho($gId);
@@ -726,20 +752,19 @@ switch ($gPage) {
         $html .= $frm->render($o);
         break;
 
+
     case PERMISSOES_COPIAR_SALVAR:
         // Primeiro remove as permissões atuais
         dbQuery("DELETE FROM gfw_permissions_users WHERE id_gfw_users=" . $gId);
         // Adiciona as permissões com base no outro usuário
         $rs = dbQuery("SELECT * FROM gfw_permissions_users WHERE id_gfw_users=" . intval($_REQUEST['id_pessoas']));
         foreach ($rs as $row) {
-            dbQuery("INSERT INTO gfw_permissions_users
-						(id_gfw_users,id_gfw_permissions) VALUES
-						($gId, " . $row['id_gfw_permissions'] . ")");
+            dbQuery("INSERT INTO gfw_permissions_users (id_gfw_users,id_gfw_permissions) VALUES ($gId, " . $row['id_gfw_permissions'] . ")");
         }
+
         redirect($o->page . "&gPage=" . PERMISSOES . "&gId=" . $gId);
         break;
 
-    // ========================================================================
 
 	case GERENCIADOR_ACCESS_POINT:
 
@@ -756,7 +781,7 @@ switch ($gPage) {
 		}
 
         if (
-            substr($EMPRESA, 0, 5) == 'logic'
+            str_starts_with((string) $EMPRESA, 'logic')
             && $classeIntegracao == 'omie'
         ) {
             $idPessoasProprietario = 1;
@@ -831,7 +856,7 @@ switch ($gPage) {
 		if (!$rs) {
 			$html .= $o->msgWarning("Nenhum momento cadastrado");
 		} else {
-			$mtz = array();
+			$mtz = [];
 			$mtz[] = "<>Opções";
 			$mtz[] = "<-HTTP";
 			$mtz[] = "<-Descrição";
@@ -852,7 +877,7 @@ switch ($gPage) {
 				. "}", "javascript:ativarDesativarMomento(" . $value['id'] . ")");
                 }
 
-				$mtz = array();
+				$mtz = [];
 				$mtz[] = '<>'.$btn;
 				$mtz[] = "<-".$value["http_verbo"];
 				$mtz[] = "<-".$value['descricao'];
@@ -1009,7 +1034,7 @@ switch ($gPage) {
         }
 
         // Se conseguiu realizar o ping acima... tenta executar o teste de autenticacao
-		if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
+		if (in_array('teste', explode("/", (string) $_SERVER['REQUEST_URI']))) {
 			$ambiente = '/teste';
 		}
 
@@ -1106,7 +1131,7 @@ switch ($gPage) {
 		$sql = "SELECT id FROM gatilhos_configuracoes WHERE id_pessoas_proprietario = '{$idPessoasProprietario}' AND classe_integracao = '{$_REQUEST['classe_integracao']}';";
 		$idGatilhosConfiguracoes = dbFastQuery($sql)[0]["id"];
 
-		$mtz = array();
+		$mtz = [];
 		$mtz['metodo'] = $_REQUEST['metodo'];
 		$mtz['http_verbo'] = $_REQUEST['http_verbo'];
 		$mtz['url_rota'] = $_REQUEST['url_rota'];
@@ -1181,7 +1206,7 @@ switch ($gPage) {
         $rs = dbQuery($sql);
 
         foreach ($rs as $row) {
-            $mtz = array();
+            $mtz = [];
             $mtz['url_rota'] = $row['url_rota'];
             $mtz['http_verbo'] = $row['http_verbo'];
             $mtz['descricao'] = $row['descricao'];
@@ -1194,7 +1219,7 @@ switch ($gPage) {
         redirect($o->page . "&gPage=" . GERENCIADOR_ACCESS_POINT . "&gId=" . $gId . "&classe_integracao=" . $_GET['classe_integracao']);
         break;
 
-	// ========================================================================
+
 	case REGISTRO_AVANCAR:
 		$sql="SELECT id FROM pessoas WHERE ".$persistencia->filtro." ORDER BY situacao DESC, nome";
 		$rs=dbQuery($sql);
@@ -1214,7 +1239,8 @@ switch ($gPage) {
 				$achou=true;
 		}
 		redirect($o->page."&gPage=".$gIdRel."&gId=".$id);
-	break;
+    	break;
+
 
     case REGISTRO_VOLTAR:
         $sql = "SELECT id FROM pessoas p WHERE " . $persistencia->filtro . " ORDER BY situacao DESC, nome";
@@ -1241,17 +1267,17 @@ switch ($gPage) {
         redirect($o->page . "&gPage=" . $gIdRel . "&gId=" . $id);
         break;
 
-    // ========================================================================
 
     case WEBCAM:
         $html .= mostraCabecalho($gId);
         $html .= $o->webcam(WEBCAM_SALVAR);
-
         break;
+
 
     case WEBCAM_SALVAR:
         $o->webcamSave($gPathUsrFiles . '/' . $gId . '.jpg');
         break;
+
 
     case ARMAZENS:
         $sql = "SELECT id,apelido FROM pessoas WHERE situacao='Ativo' AND cliente=1 ORDER BY nome";
@@ -1266,16 +1292,16 @@ switch ($gPage) {
         $frm->add("{name: gPage; type: hidden; value: " . ARMAZENS_SALVAR . "}");
         $frm->add("{name: gId; type: hidden; value: " . $gId . "}");
         $html .= $frm->render($o);
-        $sql = "SELECT armazens.descricao armazemNome,
+        $sql = "SELECT
+                    armazens.descricao armazemNome,
 					pessoas_armazens.*
 				FROM pessoas_armazens
 				INNER JOIN armazens ON armazens.id = pessoas_armazens.id_armazens
-				WHERE pessoas_armazens.id_pessoas=$gId AND cancelado=0
-				ORDER BY pessoas_armazens.cancelado ASC,armazens.descricao
-				";
+				WHERE pessoas_armazens.id_pessoas=$gId AND cancelado = 0
+				ORDER BY pessoas_armazens.cancelado ASC, armazens.descricao";
         $rs = dbQuery($sql);
         if ($rs) {
-            $mtz = array();
+            $mtz = [];
             $mtz[] = "<-Cancelar";
             $mtz[] = "<-Armazém";
             $mtz[] = "<-Informações";
@@ -1285,7 +1311,7 @@ switch ($gPage) {
                 $dados = "Criado por " . gFieldById("pessoas", $row['id_pessoas_criou'], "nome") . " - " . gDateTime($row['data_criou']);
                 $style = "detail";
 
-                $mtz = array();
+                $mtz = [];
                 if ($row['cancelado']) {
                     $style = "bg-danger";
                     $dados .= "<BR>Cancelado por " . gFieldById("pessoas", $row['id_pessoas_cancelou'], "nome") . " - " . gDateTime($row['data_cancelou']);
@@ -1302,16 +1328,17 @@ switch ($gPage) {
         }
         break;
 
+
     case ARMAZENS_SALVAR:
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $sql = "SELECT id FROM pessoas_armazens WHERE id_pessoas=$gId AND id_armazens=" . intval($_REQUEST["id_armazens"]) . " AND cancelado=0 ";
             $rs = dbQuery($sql);
             if (count($rs) > 0) {
-                $html .= $o->msgDanger("Falhas de validação: " . $o->ul(array("Não é possível adicionar o mesmo armazem")));
+                $html .= $o->msgDanger("Falhas de validação: " . $o->ul(["Não é possível adicionar o mesmo armazem"]));
                 $html .= $o->button("{icon: arrow-left; caption: Voltar; hint: Voltar; style: info; size: normal; href: " . $o->page . "&gPage=" . ARMAZENS . "&gId=" . $gId);
                 return;
             } else {
-                $mtz = array();
+                $mtz = [];
                 $mtz['id_armazens']      = $_REQUEST['id_armazens'];
                 $mtz['id_pessoas_criou'] = $usrId;
                 $mtz['id_pessoas']       = $gId;
@@ -1326,6 +1353,7 @@ switch ($gPage) {
         redirect($o->page . "&gPage=" . ARMAZENS . "&gId=" . $gId);
         break;
 
+
     case ARMAZENS_CANCELAR:
         if ((int) $gIdDel > 0) {
             $sql = "UPDATE pessoas_armazens
@@ -1339,8 +1367,9 @@ switch ($gPage) {
         redirect($o->page . "&gPage=" . ARMAZENS . "&gId=" . $gId);
         break;
 
+
     case CANCELAR:
-        $mtz = array();
+        $mtz = [];
         $mtz["id_pessoas_cancelou"] = $usrId;
         $mtz["data_cancelou"] = date('Y-m-d H:i:s');
         $mtz["situacao"] = "Cancelado";
@@ -1374,6 +1403,8 @@ switch ($gPage) {
             $html .= $o->tableEnd();
         }
         break;
+
+
     case CFOPS_SALVAR:
         $mtz = [
             'id_pessoas'    => (int) $_REQUEST['gId'],
@@ -1383,11 +1414,13 @@ switch ($gPage) {
         redirect($o->page . "&gPage=" . CFOPS . "&gId=" . $gId);
         break;
 
+
     case CFOPS_EXCLUIR:
         $sql = "DELETE FROM pessoas_cfops WHERE id=" . (int) $_REQUEST['gIdu'];
         dbQuery($sql);
         redirect($o->page . "&gPage=" . CFOPS . "&gId=" . $gId);
         break;
+
 
     case PRIORIDADES:
         $html .= mostraCabecalho($gId);
@@ -1397,7 +1430,7 @@ switch ($gPage) {
             $sql = "SELECT * FROM pessoas_prioridades_reservas WHERE id_pessoas=0 ORDER BY ordem";
             $rs = dbQuery($sql);
             foreach ($rs as $row) {
-                $mtz = array();
+                $mtz = [];
                 $mtz['id_pessoas'] = $gId;
                 $mtz['id_prioridade'] = $row['id'];
                 $mtz['ativo'] = $row['ativo'];
@@ -1414,28 +1447,31 @@ switch ($gPage) {
         } else {
             $btns = $o->button("{icon: thumbs-down; style: danger; size: small; href:" . $o->page . "&gId=$gId&gIdd=" . $rs[0]['id'] . "&gPage=" . PRIORIDADES_ATIVAR . "}");
         }
+
         $html .= $btns . "Respeitar a ordem de prioridades abaixo para reservas deste cliente";
         $html .= $o->hr();
 
         $html .= $o->tableBegin("medium", true);
-        $mtz = array();
+        $mtz = [];
         $mtz[] = "<-Opções";
         $mtz[] = "<-Prioridade";
         $html .= $o->tableRow($mtz, "header");
         $id = 0;
         foreach ($rs as $row) {
             if ($id > 0) {
-                $mtz = array();
+                $mtz = [];
                 if ($row['ativo']) {
                     $btns = $o->button("{icon: thumbs-up; style: success; size: small; href:" . $o->page . "&gId=$gId&gIdd=" . $row['id'] . "&gPage=" . PRIORIDADES_ATIVAR . "}");
                 } else {
                     $btns = $o->button("{icon: thumbs-down; style: danger; size: small; href:" . $o->page . "&gId=$gId&gIdd=" . $row['id'] . "&gPage=" . PRIORIDADES_ATIVAR . "}");
                 }
+
                 if ($id > 1) {
                     $btns .= $o->button("{icon: arrow-up; style: info; size: small; href:" . $o->page . "&gId=$gId&gIdd=" . $row['id'] . "&gPage=" . PRIORIDADES_ORDENAR . "&sinal=0}");
                 } else {
                     $btns .= $o->button("{icon: arrow-up; disabled: true; style: info; size: small; href:" . $o->page . "&gId=$gId&gIdd=" . $row['id'] . "&gPage=" . PRIORIDADES_ORDENAR . "&sinal=0}");
                 }
+
                 if ($id < count($rs) - 1) {
                     $btns .= $o->button("{icon: arrow-down; style: info; size: small; href:" . $o->page . "&gId=$gId&gIdd=" . $row['id'] . "&gPage=" . PRIORIDADES_ORDENAR . "&sinal=2}");
                 } else {
@@ -1450,6 +1486,7 @@ switch ($gPage) {
         }
         $html .= $o->tableEnd();
         break;
+
 
     case PRIORIDADES_ATIVAR:
         $sql = "SELECT
@@ -1468,6 +1505,7 @@ switch ($gPage) {
         redirect($o->page . "&gPage=" . PRIORIDADES . "&gId=" . $gId);
         break;
 
+
     case PRIORIDADES_ORDENAR:
         $gIdd = intval($_REQUEST['gIdd']);
         $sinal = intval($_REQUEST['sinal']) - 1;
@@ -1480,6 +1518,7 @@ switch ($gPage) {
                 $idDepois = $key + 1;
             }
         }
+
         $novaOrdem = 0;
         if ($sinal == -1) {
             $novaOrdem = $rs[$idAntes]['ordem'];
@@ -1487,19 +1526,21 @@ switch ($gPage) {
             gDR($sql);
             dbQuery($sql);
         }
+
         if ($sinal == 1) {
             $novaOrdem = $rs[$idDepois]['ordem'];
             $sql = "UPDATE pessoas_prioridades_reservas SET ordem=ordem-1 WHERE id=" . $rs[$idDepois]['id'];
             gDR($sql);
             dbQuery($sql);
         }
+
         if ($novaOrdem > 0) {
             $sql = "UPDATE pessoas_prioridades_reservas SET ordem=$novaOrdem WHERE id=$gIdd";
             gDR($sql);
             dbQuery($sql);
         }
-        redirect($o->page . "&gPage=" . PRIORIDADES . "&gId=" . $gId);
 
+        redirect($o->page . "&gPage=" . PRIORIDADES . "&gId=" . $gId);
         break;
 
 
@@ -1532,7 +1573,7 @@ switch ($gPage) {
             break;
         }
 
-        $flds = array();
+        $flds = [];
         $flds['faz_segunda_separacao'] = gDBCheck($_REQUEST['segunda_separacao']);
         $flds['exigir_sku_separacao'] = gDBCheck($_REQUEST['exigir_sku_separacao']);
         $flds['lote_xprod'] = gDBCheck($_REQUEST['lote_xprod']);
@@ -1561,7 +1602,7 @@ switch ($gPage) {
         $frm = new gForm("columns: 2");
         $frm->addFormMessage("<b>Importação de empresas</b>");
 
-        $comboTipoEmpresa = array();
+        $comboTipoEmpresa = [];
         $comboTipoEmpresa['cliente'] = "Cliente";
         $comboTipoEmpresa['cliente_final'] = "Cliente Final";
         $comboTipoEmpresa['fornecedor'] = "Fornecedor";
@@ -1588,7 +1629,7 @@ switch ($gPage) {
 
 
     case IMPORTACAO_SALVAR:
-        $extensao = strtolower(pathinfo($_FILES['arquivo']['name'], PATHINFO_EXTENSION));
+        $extensao = strtolower(pathinfo((string) $_FILES['arquivo']['name'], PATHINFO_EXTENSION));
         if ($extensao !== 'csv') {
             $html .= $o->msgDanger("O arquivo deve ser do tipo CSV");
             $html .= $backButton;
@@ -1605,7 +1646,7 @@ switch ($gPage) {
         }
 
         $sucesso = 0;
-        $erros = array();
+        $erros = [];
 
         $arquivoCsv = file_get_contents($arquivo);
         $linhas = explode("\n", $arquivoCsv);
@@ -1644,7 +1685,7 @@ switch ($gPage) {
                 continue;
             }
 
-            $pessoa = array(
+            $pessoa = [
                 'nome' => preg_replace("/[^a-zA-Z0-9\s]/", "", gCleanField($dados[0])),
                 'apelido' => substr(preg_replace("/[^a-zA-Z0-9\s]/", "", gCleanField($dados[0])), 0, 50),
                 'tipo' => preg_replace("/[^a-zA-Z]/", "", strtoupper($dados[2])),
@@ -1654,30 +1695,30 @@ switch ($gPage) {
                 'cliente' => $tiposEmpresaFormatados['cliente'],
                 'cliente_final' => $tiposEmpresaFormatados['cliente_final'],
                 'fornecedor' => $tiposEmpresaFormatados['fornecedor'],
-                'transportadora' => $tiposEmpresaFormatados['transportadora'],
-            );
+                'transportadora' => $tiposEmpresaFormatados['transportadora']
+            ];
 
             $idPessoa = dbInsert('pessoas', $pessoa, true);
             $arrPessoas[$linha]['idPessoas'] = $idPessoa;
 
             if ($idPessoa) {
-                $pessoaJuridica = array(
+                $pessoaJuridica = [
                     'id_pessoas' => $idPessoa,
                     'razao_social' => preg_replace("/[^a-zA-Z0-9\s]/", "", gCleanField($dados[1])),
                     'cnpj' => preg_replace("/[^0-9]/", "", gCleanField($dados[3])),
                     'insc_estadual' => preg_replace("/[^0-9]/", "", gCleanField($dados[4])),
                     'insc_municipal' => preg_replace("/[^0-9]/", "", gCleanField($dados[5])),
-                    'codigo_sistema_externo' => preg_replace("/[^0-9]/", "", gCleanField($dados[6])),
-                );
+                    'codigo_sistema_externo' => preg_replace("/[^0-9]/", "", gCleanField($dados[6]))
+                ];
                 $pessoasJuridicas[$linha] = $pessoaJuridica;
 
-                $pessoaEndereco = array(
+                $pessoaEndereco = [
                     'id_pessoas' => $idPessoa,
                     'bairro' => preg_replace("/[^a-zA-Z0-9\s]/", "", gCleanField($dados[7])),
                     'endereco' => preg_replace("/[^a-zA-Z0-9\s]/", "", gCleanField($dados[8])),
                     'numero' => preg_replace("/[^a-zA-Z0-9\s]/", "", gCleanField($dados[9])),
                     'cep' => preg_replace("/[^0-9]/", "", gCleanField($dados[10]))
-                );
+                ];
                 $pessoasEnderecos[$linha] = $pessoaEndereco;
 
                 $sucesso++;
@@ -1687,7 +1728,7 @@ switch ($gPage) {
         }
 
         if ($pessoasJuridicas) {
-            $values = array();
+            $values = [];
             foreach ($pessoasJuridicas as $linha => $dados) {
                 $values[] = "('" . implode("','", array_values($dados)) . "')";
             }
@@ -1697,7 +1738,7 @@ switch ($gPage) {
         }
 
         if ($pessoasEnderecos) {
-            $values = array();
+            $values = [];
             foreach ($pessoasEnderecos as $linha => $dados) {
                 $values[] = "('" . implode("','", array_values($dados)) . "')";
             }
@@ -1739,27 +1780,27 @@ function mostraCabecalho($gId)
     if (count($rs) > 0) {
         $row = $rs[0];
         $html .= $o->tableBegin('big', true);
-        $mtz = array();
+        $mtz = [];
         $mtz[] = '<-' . $o->small('Nome') . '<br>' . $o->label($row['idp']) . '<b>' . $row['nome'] . '</b>&nbsp;';
         $mtz[] = '<-' . $o->small('Apelido') . '<br>' . $row['apelido'] . '&nbsp;';
         $mtz[] = '<-' . $o->small('Situação') . '<br>' . $row['situacao'] . '&nbsp;';
         $html .= $o->tableRow($mtz, 'header');
 
-        $mtz = array();
+        $mtz = [];
         $mtz[] = '<-' . $o->small('Celular') . '<br>' . $row['celular'] . '&nbsp;';
         $mtz[] = '<-' . $o->small('Telefone') . '<br>' . $row['telefone'] . '&nbsp;';
         $mtz[] = '<-' . $o->small('E-mail') . '<br>' . $row['email'] . '&nbsp;';
         $html .= $o->tableRow($mtz, 'header');
 
-        $mtz = array();
-        $mtz[] = '~2<-' . $o->small('Observações') . '<br>' . nl2br(base64_decode($row['observacoes'])) . '&nbsp;';
+        $mtz = [];
+        $mtz[] = '~2<-' . $o->small('Observações') . '<br>' . nl2br(base64_decode((string) $row['observacoes'])) . '&nbsp;';
         $mtz[] = '<-' . $o->small('Data do cadastro') . '<br>' . gDateTime($row['data_cadastro']) . "&nbsp;";
         $html .= $o->tableRow($mtz, 'header');
 
         $sql = "SELECT id FROM pessoas_armazens WHERE cancelado = 0 AND id_pessoas = " . $gId . " LIMIT 1";
         $verificarPessoasArmazem = dbFastQuery($sql)[0]['id'];
 
-        $mtz = array();
+        $mtz = [];
         if ($verificarPessoasArmazem) {
             $mtz[] = '~6<>Cadastro do pessoas suficientemente completo - pode ser utilizado';
             $html .= $o->tableRow($mtz, 'success');
@@ -1803,7 +1844,8 @@ function mostraCabecalho($gId)
                 $active9 = 'true';
                 break;
         }
-        $btns = '';
+
+        $btns = [];
         $btns[] = $o->button("{active: " . $active0 . "; icon: home; style: info; hint: Capa da ficha de matrícula; href: " . $o->page . "&gPage=" . CAPA . "&gId=" . $gId . "}");
         $btns[] =
             '<div class="btn-group" role="group" aria-label="...">' .
@@ -1837,7 +1879,7 @@ function mostraCabecalho($gId)
 
 function requireAccessPoint()
 {
-    $uriParameters = explode("/", $_SERVER['REQUEST_URI']);
+    $uriParameters = explode("/", (string) $_SERVER['REQUEST_URI']);
     $empresa = $uriParameters[2];
 
     if (in_array('teste', $uriParameters)) {
