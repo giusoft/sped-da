@@ -1039,7 +1039,12 @@ function gLang($t_word)
 		if ($gLng=="") {
 			// Converte acentos em maiúscula pra minúcula
 			for ($a = 0; $a < strlen((string) $t_word); $a++) {
-				$t_word[$a] = $ac[$t_word[$a]] !== "" ? $ac[$t_word[$a]] : strtolower((string) $t_word[$a]);
+                $char = $t_word[$a];
+                if (isset($ac[$char])) {
+                    $t_word[$a] = $ac[$char];
+                } else {
+                    $t_word[$a] = strtolower((string) $char);
+                }
 			}
 
 			if (stripos((string) $t_word,".long") !== false) {
@@ -1208,9 +1213,14 @@ function gLng($t_word)
 	 * @param boolean $format Remove \n e \t ?
 	 * @return mixed $mtz Descrição da variável
 	 */
-	function cssDecode($css): array
+function cssDecode($css): array
 	{
 		$sai = [];
+
+		if (!is_string($css) && !is_numeric($css)) {
+			return $sai;
+		}
+
 		$css = html_entity_decode($css,ENT_NOQUOTES,'UTF-8');
         if (str_contains($css,"[")) {
 			$b = strpos($css,"[")+1;

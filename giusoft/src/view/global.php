@@ -177,7 +177,9 @@ function createMenu()
 				$rsi = dbQuery($sql);
 
 				$html = '';
-				$flds = '';
+                if (!is_array($flds)) {
+                    $flds = [];
+                }
 				$flds['owner'] = '';
 				$flds['title'] = gT('Menu');
 				$ultimoTipo='';
@@ -556,16 +558,25 @@ function createIndexPage($content, $fields = '')
  */
 function createPage($content, $fields, $template)
 {
-	global $o, $usrId;
-	$fields['topMenu'] = createMenu($o);
-	if ($usrId>0 && $_REQUEST['p']<> '')
-	{
-		$rs=dbFastQuery("SELECT * FROM gfw_pages WHERE keyword='".$_REQUEST['p']."'");
-		$fields['topMenu'].="<br>".botaoEditar("index.php?g=menu&gPage=1&gId=".$rs[0]['id']);
-	}
-	$fields['bottomMenu']='';
-	$fields['footer']='';
-	return($o->n.template($template, $content, $fields));
+    global $o, $usrId;
+
+    if (!is_array($fields)) {
+        $fields = [];
+    }
+
+    $fields['topMenu'] = createMenu($o);
+
+    if ($usrId > 0 && $_REQUEST['p'] <> '') {
+        $rs = dbFastQuery("SELECT * FROM gfw_pages WHERE keyword='" . $_REQUEST['p'] . "'");
+        $fields['topMenu'] .= "<br>" . botaoEditar(
+            "index.php?g=menu&gPage=1&gId=" . $rs[0]['id']
+        );
+    }
+
+    $fields['bottomMenu'] = '';
+    $fields['footer'] = '';
+
+    return $o->n.template($template, $content, $fields);
 }
 
 /**

@@ -2546,7 +2546,7 @@ if ($device === "web") {
 				 * @param type $haystack
 				 * @return type
 				 */
-				private function hasAttr(string $needle,$haystack): false
+				private function hasAttr(string $needle,$haystack)
 				{
 					return is_array($haystack) && array_key_exists($needle, $haystack);
 				}

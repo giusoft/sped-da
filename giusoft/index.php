@@ -8,7 +8,6 @@ $gIncludes = array('gPortal.php', 'gEmail.php');
 require_once 'gfw/inc/gStart.php';
 // Variáveis principais passadas via GET
 $g 			= gCleanField($_REQUEST['g']);
-echo '<pre>';var_dump(232);exit;
 $p 			= gCleanField($_REQUEST['p']);
 $usrId 		= intval($_SESSION['usrId']);
 $gPage		= intval($_REQUEST['gPage']);
@@ -21,23 +20,26 @@ $data 	= date('Y-m-d H:i:s');
 $macros	= '';
 $do 	= true;
 
-$id_armazens = (int) $_POST['id_armazens'] ?: 1; // Armazém padrão
+$id_armazens = (int) $_POST['id_armazens'] ?? 1; // Armazém padrão
 $oldDebug = $debug;
 $debug = false;
 
 // Sempre atualiza os parâmetros
 $sql="SELECT * FROM parametros";
 $rsp=dbQuery($sql);
-$gParam='';
-foreach ($rsp as $key=>$value)
-{
-	unset($value[0]);
-	unset($value[1]);
-	unset($value[2]);
-	unset($value[3]);
-	unset($value[4]);
-	unset($value[5]);
-	$gParam[$value['chave']]=$value;
+$gParam=array();
+
+if (is_array($rsp)) {
+    foreach ($rsp as $key=>$value)
+    {
+        unset($value[0]);
+        unset($value[1]);
+        unset($value[2]);
+        unset($value[3]);
+        unset($value[4]);
+        unset($value[5]);
+        $gParam[$value['chave']]=$value;
+    }
 }
 
 // Verificando se o acesso está bloqueado
@@ -98,7 +100,7 @@ if ($_SESSION['gTheme']<>'' && $gId>0){
 
 }
 // Funcionalidades específicas deste projeto
-include_once 'res/global.php';
+include_once 'src/view/global.php';
 
 if ($gLang == "en") {
 	gVar("global.dateformat", "mm-dd-yy");
@@ -228,18 +230,20 @@ if (($g == "login")) {
 				$_SESSION['usrMotorista'] = intval($rs[0]['motorista']);
 				$_SESSION['usrFornecedor'] = intval($rs[0]['fornecedor']);
 				$_SESSION['gLang'] = "pt_BR";
-				$_SESSION['key_user'] = ($rs[0]['key_user'] || $usrId == 1);
+				$_SESSION['key_user'] = (isset($rs[0]['key_user']) && $rs[0]['key_user'] || $usrId == 1);
 
 				//Armazens
-				$usrArmazens = "";
+				$usrArmazens = array();
 				$sql="SELECT id_armazens FROM pessoas_armazens WHERE id_pessoas=$usrId AND cancelado=0";
 				if($id_armazens > 0)
 					$sql.=" AND id_armazens=".(int) $id_armazens;
 				//echo $sql;exit;
 				$rsA= dbQuery($sql);
-				foreach ($rsA as $row) {
-					$usrArmazens[] = $row['id_armazens'];
-				}
+                if(is_array($rsA)) {
+                    foreach ($rsA as $row) {
+                        $usrArmazens[] = $row['id_armazens'];
+                    }
+                }
 
 				// equipamentos
 				// Operador
@@ -407,34 +411,36 @@ if ($usrId > 0) {
 
 		*/
 
-		$pag = '';
+		$pag = array();
 		// Básicos
 		$pag['index']        = "index.php";
-		$pag['profile']      = "system/profile.php";
+		$pag['profile']      = "src/view/system/profile.php";
 		$pag['logout']       = "index.php";
 
 		// Admin
-		$pag['users']        = "system/users.php";
-		$pag['translations'] = "system/translations.php";
-		$pag['pages']        = "system/pages.php";
-		$pag['menus']        = "system/menus.php";
-		$pag['links']        = "system/links.php";
-		$pag['locales']      = "system/locales.php";
-		$pag['posts']        = "system/posts.php";
-		$pag['home']         = "system/home.php";
-		$pag['messages']     = "system/messages.php";
-		$pag['permissions']  = "system/permissions.php";
-		$pag['parameters']   = "system/parameters.php";
-		$pag['activities']   = "system/activities.php";
-		$pag['tools']        = "system/tools.php";
+		$pag['users']        = "src/view/system/users.php";
+		$pag['translations'] = "src/view/system/translations.php";
+		$pag['pages']        = "src/view/system/pages.php";
+		$pag['menus']        = "src/view/system/menus.php";
+		$pag['links']        = "src/view/system/links.php";
+		$pag['locales']      = "src/view/system/locales.php";
+		$pag['posts']        = "src/view/system/posts.php";
+		$pag['home']         = "src/view/system/home.php";
+		$pag['messages']     = "src/view/system/messages.php";
+		$pag['permissions']  = "src/view/system/permissions.php";
+		$pag['parameters']   = "src/view/system/parameters.php";
+		$pag['activities']   = "src/view/system/activities.php";
+		$pag['tools']        = "src/view/system/tools.php";
 
-		if ($_REQUEST['pp'] <> '') {
+        // $html = '';
+
+		if (isset($_REQUEST['pp']) && $_REQUEST['pp'] <> '') {
 			$html.='<div class="container">';
 			$html.=gPosts($o);
 			$html.='</div>';
 		} elseif ($pag[$g] <> '') {
 			// Acessando um link
-			$link = "res/" . $pag[$g];
+			$link = "src/" . $pag[$g];
 			if($gDevice<>"mobile")
 				include ($link);
 		} elseif ($g == 'open') {

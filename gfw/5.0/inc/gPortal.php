@@ -323,13 +323,13 @@ class gPortal extends gMultiPage
 	function remember($json) {}
 
 
-	function submenu($json, $links = "")
+	function submenu($json, $links = ""): string
 	{
 		if (method_exists(get_parent_class($this), 'submenu')) {
 			return parent :: submenu($json,$links);
 		}
 
-		return;
+		return "";
 	}
 
 }

@@ -192,6 +192,8 @@ class g_Stdout
 	{
 		global $http_lib;
 
+        $sai = '';
+
 		$this->editCount++;
 		$jarr = cssDecode($json);
 		$content = '';
@@ -528,11 +530,11 @@ class g_Stdout
 		return($sai);
 	}
 
-	function chooseIcon($icon, string $iconFont="fa", $size="normal"): string|int|float|false|null
+	public static function  chooseIcon($icon, string $iconFont="fa", $size="normal"): string|int|float|false|null
 	{
 		if ($icon != '') {
 			// Compatibilidade retroativa gFW 3.0
-			$icons = '';
+			$icons = [];
 			$icons['a0001'] = 'stop';
 			$icons['a0002'] = 'ok';
 			$icons['a0003'] = 'trash';
@@ -687,7 +689,7 @@ class g_Output extends g_Stdout
 				$style = "styleIphone.css";
 			}
 
-			$i18n = strtolower(gVar('global.language'));
+			$i18n = strtolower((string) gVar('global.language'));
 			// Bootstrap é requisito fundamental - tem que estar no setup.php
 			$bootstrapPath = $http_lib . gVar("lib.bootstrap");
 			$bootstrapMin = $http_lib . gVar("lib.bootstrap") . 'css/bootstrap.min.css';
@@ -697,16 +699,19 @@ class g_Output extends g_Stdout
 
 			$parsley = $http_lib . gVar("lib.parsley");
 			$jqueryPath = $http_lib . gVar("lib.jquery");
-			if ($jarr['fakeCrop']=="on") {
+			$jqueryFakecrop = '';
+			if (isset($jarr['fakeCrop']) && $jarr['fakeCrop']=="on") {
 				$jqueryFakecrop = $http_lib . gVar("lib.jquery_fakecrop");
 			}
 
+			$jqueryFancybox = '';
 			//if ($jarr['facyBox']=="on")
 			if (gVar("lib.jquery_fancybox") != "") {
 				$jqueryFancybox = $http_lib . gVar("lib.jquery_fancybox");
 			}
 
-			if ($jarr['jCarousel']=="on") {
+			$jqueryJcarousel = '';
+			if (isset($jarr['jCarousel']) && $jarr['jCarousel']=="on") {
 				$jqueryJcarousel = $http_lib . gVar("lib.jquery_jcarousel");
 			}
 
@@ -729,7 +734,7 @@ class g_Output extends g_Stdout
 				$bootstrapThemePath = $http_lib . gVar("lib.bootstrap_themes") . $theme . '.min.css';
 			}
 
-			$this->out(tagMe('title', gVar("global.site")), gLOC_PRE);
+			$this->out(tagMe('title', (string) gVar("global.site")), gLOC_PRE);
 
 			// META --------------------
 			//$this->out('<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">',gLOC_PRE);
@@ -1660,6 +1665,10 @@ class g_Output extends g_Stdout
 			unset($param['popover']);
 		}
 
+		if (!is_array($this->pageData)) {
+			$this->pageData = [];
+		}
+
 		$this->pageData['title'] = gT($content);
 		$this->pageTitle = gT($content);
 		$help='<div class="pull-right '.$this->bootstrapTags['hidden-print'].' hiddenOnPrint">';
@@ -1929,8 +1938,9 @@ class g_Output extends g_Stdout
 	 * @param string $content Parâmetros em formato Json
 	 * @version	4.0 01-12-2013 10:50
 	 */
-	function msgDefault($content, $par = "")
+	function msgDefault($content, $par = [])
 	{
+		if (!is_array($par)) $par = [];
 		$par['class'] = 'well well-sm';
 		return(tagMe("div", gT($content), $par));
 	}
@@ -1941,8 +1951,9 @@ class g_Output extends g_Stdout
 	 * @param string $content Parâmetros em formato Json
 	 * @version	4.0 01-12-2013 10:50
 	 */
-	function msgAlert($content, $par = "")
+	function msgAlert($content, $par = [])
 	{
+		if (!is_array($par)) $par = [];
 		$par['class'] = 'alert alert-warning';
 		return(tagMe("div", gT($content), $par));
 	}
@@ -1953,8 +1964,9 @@ class g_Output extends g_Stdout
 	 * @param string $content Parâmetros em formato Json
 	 * @version	4.0 01-12-2013 10:50
 	 */
-	function msgError($content, $par = "")
+	function msgError($content, $par = [])
 	{
+		if (!is_array($par)) $par = [];
 		$par['class'] = 'alert alert-danger';
 		return(tagMe("div", gT($content), $par));
 	}
@@ -1965,8 +1977,9 @@ class g_Output extends g_Stdout
 	 * @param string $content Parâmetros em formato Json
 	 * @version	4.0 01-12-2013 10:50
 	 */
-	function msgSuccess($content, $par = "")
+	function msgSuccess($content, $par = [])
 	{
+		if (!is_array($par)) $par = [];
 		$par['class'] = 'alert alert-success';
 		return(tagMe("div", gT($content), $par));
 	}
@@ -1977,8 +1990,9 @@ class g_Output extends g_Stdout
 	 * @param string $content Parâmetros em formato Json
 	 * @version	4.0 01-12-2013 10:50
 	 */
-	function msgDanger($content, $par = "")
+	function msgDanger($content, $par = [])
 	{
+		if (!is_array($par)) $par = [];
 		$par['class'] = 'alert alert-danger';
 		return(tagMe("div", gT($content), $par));
 	}
@@ -1989,8 +2003,9 @@ class g_Output extends g_Stdout
 	 * @param string $content Parâmetros em formato Json
 	 * @version	4.0 01-12-2013 10:50
 	 */
-	function msgWarning($content, $par = "")
+	function msgWarning($content, $par = [])
 	{
+		if (!is_array($par)) $par = [];
 		$par['class'] = 'alert alert-warning';
 		return(tagMe("div", gT($content), $par));
 	}
@@ -2001,8 +2016,9 @@ class g_Output extends g_Stdout
 	 * @param string $content Parâmetros em formato Json
 	 * @version	4.0 01-12-2013 10:50
 	 */
-	function msgInfo($content, $par = "")
+	function msgInfo($content, $par = [])
 	{
+		if (!is_array($par)) $par = [];
 		$par['class'] = 'alert alert-info';
 		return(tagMe("div", gT($content), $par));
 	}
@@ -2013,8 +2029,9 @@ class g_Output extends g_Stdout
 	 * @param string $content Parâmetros em formato Json
 	 * @version	4.0 01-12-2013 10:50
 	 */
-	function msgLead($content, $par = "")
+	function msgLead($content, $par = [])
 	{
+		if (!is_array($par)) $par = [];
 		$par['class'] = 'lead';
 		return(tagMe("p", gT($content), $par));
 	}
@@ -2077,7 +2094,7 @@ class g_Output extends g_Stdout
 	 * @param string $sortable Ordenável pelos títulos das colunas?
 	 * @return type
 	 */
-	function tableBegin($size, $border = false, $striped = false, $sortable = false, $hovered = true, $responsive = true): string
+	function tableBegin($size = "big", $border = false, $striped = false, $sortable = false, $hovered = true, $responsive = true): string
 	{
 
 		$perc = "100%";
@@ -2105,9 +2122,10 @@ class g_Output extends g_Stdout
 
 		if (str_contains($size, "%")) {
 			$perc = $size;
-			$style = ' style="width: $perc"';
+			$style = ' style="width: ' . $perc . '"';
+
 		} else {
-			switch($size) {
+			switch ($size) {
 				case "big":
 					$style = ' style="width: 100%"';
 					break;
@@ -2200,7 +2218,7 @@ class g_Output extends g_Stdout
 	{
 		$sai = "";
 		$tag = 'td';
-		$parTr = '';
+		$parTr = [];
 		$onclick = "";
 
 		if (($this->tableSegment == 'thead') && ($style != 'header')) {
@@ -2326,7 +2344,7 @@ class g_Output extends g_Stdout
 			$wrap = "";
 			$align = "";
 
-			$par = '';
+			$par = [];
 
 			// Parâmetros passados via array
 			if (is_array($colMatrix[$a])) {
@@ -3120,6 +3138,7 @@ class g_Output extends g_Stdout
 	 */
 	function button($json, $js = '')
 	{
+		$sai = '';
 		$jarr = cssDecode($json);
 		$type = $jarr['type'];
 		$tag = "a"; // o padrão é "a" e não "button"
@@ -3135,7 +3154,9 @@ class g_Output extends g_Stdout
 			$caption = gT($caption);
 		}
 
-		$style = trim((string) $jarr['style']);
+		// $style = trim((string)($jarr['style'] ?? ''));
+				$style = trim((string) $jarr['style']);
+
 		if ($this->bootstrapVersao == 3) {
 			if ($style === '') {
 				$style =  'default';
