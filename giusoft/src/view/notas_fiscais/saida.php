@@ -1019,9 +1019,6 @@ if ($gId > 0) {
 
 if (
     in_array($gPage, array(
-        NFE_ENVIAR,
-        NFE_OPCOES,
-        NFE_LISTAR,
         NFE
     ))
 ) {

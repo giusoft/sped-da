@@ -1,7 +1,7 @@
 <?
-include_once "res/_classes/classes.php";
+include_once 'pagination.php';
 
-class NotasFiscais extends Persistencia{
+class NotasFiscais {
 
 	public $tipo;
 	public $inner_item=false;
@@ -2425,6 +2425,9 @@ class NotasFiscais extends Persistencia{
 
 	function obtemRegistros($orderBy = null, $where = null, $limit = "")
 	{
+
+		// echo "<pre>";
+		// var_dump(get_class_methods($this)); exit;
 		global $gParam;
 		$sql = $this->obtemQuery();
 		if (!is_null($where) && !empty($where)) {

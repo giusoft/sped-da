@@ -474,7 +474,7 @@ if ($usrId > 0) {
 					if (file_exists($arq))
 					{
 						$t = explode('/', $rs[0]['file']);
-						$classe = "src/_classes/padrao/".$t[0].".php";
+						$classe = "src/Model/".$t[1].".php";
 						if (file_exists($classe))
 						{
 							include ($classe);
