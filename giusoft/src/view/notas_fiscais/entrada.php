@@ -1,29 +1,29 @@
 <?
-define('INICIO'                                 ,0);
-define('DADOS'                                  ,1);
-define('CANCELAR_NOTA'                          ,2);
-define('PESQUISAR'                              ,10);
-define('PESQUISAR_RESULTADO'    ,11);
-define('CRIAR_ATUALIZAR'                                   ,20);
-define('SALVAR'                    ,21);
-define('EXCLUIR'                                ,30);
-define('IMPORTAR', 40);
-define('VALIDAR_IMPORTACAO', 41);
-define('IMPORTAR_MULTIPLO_CONCLUIR', 43);
-define('ITENS', 60);
-define('ITENS_SALVAR', 61);
-define('ITENS_EXCLUIR', 62);
-define('FORMULARIO_IMPORTAR_ITENS_NOTA',64);
-define('UMAS', 80);
-define('UMAS_ASSOCIAR', 81);
-define('UMAS_DISPONIVEIS_ASSOCIAR', 82);
-define('UMAS_DESASSOCIAR', 83);
-define('SUBSTITUIR_NFE', 90);
-
-define('IMPOSTOS', 100);
-
-define('TRANSFERENCIA_PROPRIETARIO_FRAGMENTADA', 110);
-define('CONFIRMACAO_TRANSFERENCIA_PROPRIETARIO_FRAGMENTADA', 120);
+define('INICIO'                                 			,0);
+define('DADOS'                                  			,1);
+define('CANCELAR_NOTA'                          			,2);
+define('PESQUISAR'                              			,10);
+define('PESQUISAR_RESULTADO'    							,11);
+define('CRIAR_ATUALIZAR'                        			,20);
+define('SALVAR'                    							,21);
+define('EXCLUIR'                                			,30);
+define('IMPORTAR'											,40);
+define('VALIDAR_IMPORTACAO'									,41);
+define('IMPORTAR_MULTIPLO_CONCLUIR'							,43);
+define('ITENS'												,60);
+define('ITENS_SALVAR'										,61);
+define('ITENS_EXCLUIR'										,62);
+define('FORMULARIO_IMPORTAR_ITENS_NOTA'						,64);
+define('UMAS'												,80);
+define('UMAS_ASSOCIAR'										,81);
+define('UMAS_DISPONIVEIS_ASSOCIAR'							,82);
+define('UMAS_DESASSOCIAR'									,83);
+define('SUBSTITUIR_NFE'										,90);
+define('IMPOSTOS'											,100);
+define('IMPOSTOS_SALVAR'									,101);
+define('TRANSFERENCIA_PROPRIETARIO_FRAGMENTADA'				, 110);
+define('CONFIRMACAO_TRANSFERENCIA_PROPRIETARIO_FRAGMENTADA'	, 120);
+define('ITENS_ATUALIZAR_CFOP_ORIGEM'						, 130);
 
 // Removendo paginação e limit quando for exportação
 if (isset($_REQUEST["gPDF"]) || isset($_REQUEST["gXLS"]) || isset($_REQUEST["gDOC"]) || isset($_REQUEST["gCSV"]))
