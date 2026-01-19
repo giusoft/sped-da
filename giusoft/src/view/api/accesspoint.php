@@ -1,4 +1,5 @@
 <?php
+
 $ambiente = '';
 if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
     $ambiente = '/teste';
