@@ -4600,7 +4600,7 @@ function templateReplace($xml, $mtz)
 * @return $html string Centro da página HTML (sem cabeçalho nem rodapé)
 * @version 4.0 24-01-2014 13:35
 */
-function template($templateFile, string $content, $fields = [], $replace = ''): string|array
+function template($templateFile, $content, $fields = [], $replace = ''): string|array
 {
 	global $gPath, $gLngs;
 	$html='';

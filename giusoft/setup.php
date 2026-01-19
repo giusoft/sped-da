@@ -13,7 +13,8 @@ if ($_SERVER['SERVER_PORT']=='8080') {
 $EMPRESA = 'giusoft';
 $AMBIENTE_TESTE = false;
 $gBASE = "emitenota/$EMPRESA";
-$gPathClasses = "/var/www/html/emitenota/" . $EMPRESA . "/src/Lib/";
+
+$gPathClasses = "/var/www/html/emitenota/" . $EMPRESA . "/src/Model/";
 
 define("NOME_CODIGO_EXTERNO","Cód.externo");
 
@@ -59,7 +60,7 @@ global
 
 database
 {
-	name: wms_$EMPRESA;
+	name: wms_logiclog;
 	transaction: true;
 	charset: utf8mb4;
 	user: web;

@@ -414,23 +414,23 @@ if ($usrId > 0) {
 		$pag = array();
 		// Básicos
 		$pag['index']        = "index.php";
-		$pag['profile']      = "src/view/system/profile.php";
+		$pag['profile']      = "view/system/profile.php";
 		$pag['logout']       = "index.php";
 
 		// Admin
-		$pag['users']        = "src/view/system/users.php";
-		$pag['translations'] = "src/view/system/translations.php";
-		$pag['pages']        = "src/view/system/pages.php";
-		$pag['menus']        = "src/view/system/menus.php";
-		$pag['links']        = "src/view/system/links.php";
-		$pag['locales']      = "src/view/system/locales.php";
-		$pag['posts']        = "src/view/system/posts.php";
-		$pag['home']         = "src/view/system/home.php";
-		$pag['messages']     = "src/view/system/messages.php";
-		$pag['permissions']  = "src/view/system/permissions.php";
-		$pag['parameters']   = "src/view/system/parameters.php";
-		$pag['activities']   = "src/view/system/activities.php";
-		$pag['tools']        = "src/view/system/tools.php";
+		$pag['users']        = "view/system/users.php";
+		$pag['translations'] = "view/system/translations.php";
+		$pag['pages']        = "view/system/pages.php";
+		$pag['menus']        = "view/system/menus.php";
+		$pag['links']        = "view/system/links.php";
+		$pag['locales']      = "view/system/locales.php";
+		$pag['posts']        = "view/system/posts.php";
+		$pag['home']         = "view/system/home.php";
+		$pag['messages']     = "view/system/messages.php";
+		$pag['permissions']  = "view/system/permissions.php";
+		$pag['parameters']   = "view/system/parameters.php";
+		$pag['activities']   = "view/system/activities.php";
+		$pag['tools']        = "view/system/tools.php";
 
         // $html = '';
 
@@ -466,14 +466,15 @@ if ($usrId > 0) {
 				if (count($rs))
 				{
 					gLog("---------");
-					$link = "res/" . $rs[0]['file'];
+					$link = "src/" . $rs[0]['file'];
 					$arq=str_replace('//','/',$gPath . '/' . $link);
 					$gMenuParameters['id_gfw_menus'] = $rs[0]['id'];
 					$gMenuParameters['full_link'] = $arq;
+
 					if (file_exists($arq))
 					{
 						$t = explode('/', $rs[0]['file']);
-						$classe = "res/_classes/padrao/".$t[0].".php";
+						$classe = "src/_classes/padrao/".$t[0].".php";
 						if (file_exists($classe))
 						{
 							include ($classe);
@@ -586,7 +587,7 @@ if ($usrId > 0) {
 			break;
 
 		case 'search':
-			include ("res/search.php");
+			include ("src/search.php");
 			break;
 
 		case 'index':
@@ -614,7 +615,7 @@ if ($usrId > 0) {
 
 			if (count($rs))
 			{
-				$link = "res/" . $rs[0]['file'];
+				$link = "src/" . $rs[0]['file'];
 				$arq=str_replace('//','/',$gPath . '/' . $link);
 				if (file_exists($arq))
 					include ($link);

@@ -3,7 +3,7 @@ $html = $o->msgTitle("Menus");
 
 $exit = false;
 // Obtendo idiomas disponíveis
-$locales = '';
+$locales = [];
 $langs = explode(",", str_replace(" ", "", gVar("global.languages")));
 foreach ($langs as $l) {
 	$locales[$l] = $l;
@@ -243,7 +243,7 @@ switch($gPage) {
 		$tipos = array('link', 'dropdown', 'dropdownLink', 'separator', 'submenu', 'submenuLink');
 		$type = $tipos[intval($type)];
 		$pageLink = '';
-		$flds = '';
+		$flds = [];
 		$flds['title'] = gCleanField($_REQUEST['title']);
 		$flds['icon'] = $icon;
 		$flds['content'] = gCleanHTMLContent(nl2br($_REQUEST['content']), '<br><p><h1><h2><h3><b><i><u><ul><ol><li><a>');
