@@ -1,8 +1,9 @@
-<?
+<?php
+$ambiente = '';
 if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
     $ambiente = '/teste';
 }
-require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/wms/giusoft/res/_classes/padrao/integracao.php";
+require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/emitenota/giusoft/src/view/classe/integracao.php";
 
 class PontoAcesso
 {
@@ -42,7 +43,7 @@ class PontoAcesso
     }
 
 
-    public function executarRequest($verboHttp, $url, $dados = [], $headers = [], $dadosRequisicao)
+    public function executarRequest($verboHttp, $url, $dados = [], $headers = [], $dadosRequisicao = '')
     {
         global $usrId;
 
