@@ -1,7 +1,6 @@
 <?php
 
 // Roteamento para seções dentro desta página
-
 define("INICIO", 0);
 define("INICIO_PESQUISAR", 1);
 define("INICIO_PESQUISAR_RESULTADO", 2);
