@@ -60,7 +60,7 @@ global
 
 database
 {
-	name: wms_logiclog;
+	name: wms_$EMPRESA;
 	transaction: true;
 	charset: utf8mb4;
 	user: web;

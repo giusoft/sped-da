@@ -1071,3 +1071,5 @@ function verificarNomeOuApelidoReservado()
 
     return false;
 }
+
+include_once 'system/functions.php';
