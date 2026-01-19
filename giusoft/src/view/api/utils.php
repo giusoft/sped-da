@@ -122,7 +122,13 @@ if (!function_exists("gD")) {
 if (!function_exists("decodificarJson")) {
     function decodificarJson($json, $caminhoLog)
     {
-        $json = json_decode($json, true);
+        if ($json === null || $json === '') {
+            gLog('JSON vazio ou null recebido', 1, $caminhoLog);
+            return [];
+        }
+
+        $decoded = json_decode($json, true);
+
         $erro = array(
             JSON_ERROR_NONE => 0,
             JSON_ERROR_DEPTH => 'Maximum stack depth exceeded',
@@ -135,9 +141,15 @@ if (!function_exists("decodificarJson")) {
         if ($erro) {
             gLog($erro, 1, $caminhoLog);
             formatarJson($erro);
+            return [];
         }
 
-        return array_map('gCleanField', $json);
+        if (!is_array($decoded)) {
+            gLog('JSON decodificado não é um array', 1, $caminhoLog);
+            return [];
+        }
+
+        return array_map('gCleanField', $decoded);
     }
 }
 
@@ -145,7 +157,7 @@ if (!function_exists("decodificarJson")) {
 if (!function_exists("apiSendoUsadaExternamente")) {
     function apiSendoUsadaExternamente()
     {
-        return (bool) $_GET['rota'] ?: (bool) $_GET['recurso'];
+        return (bool) ($_GET['rota'] ?? false) || (bool) ($_GET['recurso'] ?? false);
     }
 }
 
@@ -181,20 +193,22 @@ if (!function_exists("gerarAssinatura")) {
 
 
 if (!function_exists("montarParametrosIntegracao")) {
-    function montarParametrosIntegracao($empresa)
+    function montarParametrosIntegracao($empresa = '')
     {
         $uri = $_SERVER['REQUEST_URI'];
+
+        $ambiente = '';
         if (stripos($uri, 'teste')) {
             $ambiente = '/teste';
         }
 
         if (!$empresa) {
-            $partesUri = array_filter(explode('/wms/', $uri))[1];
+            $partesUri = array_filter(explode('/emitenota/', $uri))[1];
             $empresa = explode('/', $partesUri)[0];
         }
 
         return [
-            "caminhoSetup"   => $_SERVER['DOCUMENT_ROOT'] . "{$ambiente}/wms/{$empresa}/setup.php",
+            "caminhoSetup"   => $_SERVER['DOCUMENT_ROOT'] . "{$ambiente}/emitenota/{$empresa}/setup.php",
             "idPessoasCriou" => 1,
             "empresa" => $empresa,
             "transacao" => true
@@ -206,15 +220,17 @@ if (!function_exists("montarParametrosIntegracao")) {
 if (!function_exists("gVar")) {
     function gVar($par, $new = "")
     {
-        global $gLang, $_gVar;
+        global $_gVar;
 
-        if ($new <> "") {
+        if (!isset($_gVar)) {
+            $_gVar = [];
+        }
+
+        if ($new !== "") {
             $_gVar[$par] = $new;
         }
 
-        $sai = "";
-        $sai = $_gVar[$par];
-        return($sai);
+        return $_gVar[$par] ?? "";
     }
 }
 
