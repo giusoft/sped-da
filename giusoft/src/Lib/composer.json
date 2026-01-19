@@ -1,0 +1,29 @@
+{
+  "name": "seu-vendor/emitenota-api",
+  "description": "API para emissão de notas fiscais utilizando NFePHP.",
+  "type": "project",
+  "require": {
+    "php": "^8.4",
+    "justinrainbow/json-schema": "^5.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "../",
+      "NFePHP\\Common\\": "sped-common/src/",
+      "NFePHP\\NFe\\": "sped-nfe/src/",
+      "NFePHP\\DA\\": "sped-da/src/"
+    },
+    "classmap": [
+      "../Controller/",
+      "../Model/",
+      "../api.php",
+      "./utils.php"
+    ]
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "preferred-install": "dist"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}

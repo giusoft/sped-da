@@ -1,0 +1,407 @@
+#!/bin/bash
+
+DEBUG=0
+DAEMON=0
+FCMD="/tmp/wcmd"
+ICMD="$1"
+HOJE=` date +"%Y-%m-%d" `
+HORA=` date +"%H" `
+ARQ="/tmp/worker.bin"
+LOG="/var/log/wcmd.log"
+
+SO="undefined"
+if [ -f "/etc/redhat-release" ];then
+	SO="redhat"
+else
+	if [ -f "/etc/issue" ];then
+		SO=`cat /etc/issue | cut -f 1 -d" " | tr '[:upper:]' '[:lower:]'`
+	else
+		SO="macos"
+	fi
+fi
+
+
+# Mensagens na tela
+function echoDebug()
+{
+	if [ "$DAEMON" == 1 ];then
+		echo `date +"%Y-%m-%d %H:%M:%S "` $1 >> $LOG
+	else
+		if [ "$DEBUG" == 1 ];then
+			echo $1
+		fi
+	fi
+}
+
+# Verifica se há versão nova e atualiza versão deste programa
+function update()
+{
+	echoDebug "...update"
+	su - sistemas
+	cd /var/www/html/gfw
+	git pull
+	exit
+}
+
+
+function httpdAccess()
+{
+	echoDebug "...httpdAccess"
+	if [ -f /var/www/html/_acessos-httpd.log ];then
+		echo "-httpdAccess: " >> $ARQ
+		cat /var/www/html/_acessos-httpd.log >> $ARQ
+	fi
+}
+
+# Fornece status de algum serviço
+function servStatus()
+{
+	echoDebug "...servStatus $1"
+	PAR="$1"
+
+	if [ "$SO" == "ubuntu" ];then
+		if [ "$PAR" == "httpd" ];then
+			PAR="apache2"
+		fi
+	fi
+
+	if [ "$SO" == "ubuntu" ];then
+		if [ -f /etc/init.d/$PAR ];then
+			if /etc/init.d/$PAR status | grep "inactive" ;then
+				echo "-servStatus $1: 0" >> $ARQ
+			else
+				echo "-servStatus $1: 1" >> $ARQ
+			fi
+		else
+			echo "-servStatus $1: -" >> $ARQ
+		fi
+	else
+		if service $PAR status | grep "parado" ;then
+			echo "-servStatus $1: 0" >> $ARQ
+		else
+			echo "-servStatus $1: 1" >> $ARQ
+		fi
+	fi
+}
+
+# Para serviço
+function servStop()
+{
+	echoDebug "...servStop $1"
+	PAR="$1"
+
+	if [ "$SO" == "ubuntu" ];then
+		if [ "$PAR" == "httpd" ];then
+			PAR="apache2"
+		fi
+	fi
+
+	if [ "$SO" == "ubuntu" ];then
+		if [ -f /etc/init.d/$PAR ];then
+			if /etc/init.d/$PAR stop | grep " ok " ;then
+				echo "-servStop $1: 1" >> $ARQ
+			else
+				echo "-servStop $1: 0" >> $ARQ
+			fi
+		else
+			echo "-servStop $1: -" >> $ARQ
+		fi
+	else
+		if service $PAR stop ;then
+			echo "-servStop $1: 1" >> $ARQ
+		else
+			echo "-servStop $1: 0" >> $ARQ
+		fi
+	fi
+
+}
+
+# Inicia serviço
+function servStart()
+{
+	echoDebug "...servStart $1"
+	PAR="$1"
+
+	if [ "$SO" == "ubuntu" ];then
+		if [ "$PAR" == "httpd" ];then
+			PAR="apache2"
+		fi
+	fi
+
+	if [ "$SO" == "ubuntu" ];then
+		if [ -f /etc/init.d/$PAR ];then
+			if /etc/init.d/$PAR start | grep "ok" ;then
+				echo "-servStart $1: 1" >> $ARQ
+			else
+				echo "-servStart $1: 0" >> $ARQ
+			fi
+		else
+			echo "-servStart $1: -" >> $ARQ
+		fi
+	else
+		if service $PAR start  ;then
+			echo "-servStart $1: 1" >> $ARQ
+		else
+			echo "-servStart $1: 0" >> $ARQ
+		fi
+	fi
+
+}
+
+# Checa se becape foi feito
+function bkpStatus()
+{
+	echoDebug "...bkpStatus"
+
+}
+
+# Para execução do bacape
+function bkpStop()
+{
+	echoDebug "...bkpStop"
+
+}
+
+# Inicia a execução do becape
+function bkpStart()
+{
+	echoDebug "...bkpStart"
+
+}
+
+# Obtém dados do ambiente atual
+function info()
+{
+	echoDebug "...info"
+	# SISTEMA
+
+	echo -n "-Hostname: " >> $ARQ
+	hostname >> $ARQ
+
+	# PROCESSADOR
+
+	echo -n "-OS: " >> $ARQ
+	if [ "$SO" == "macos" ];then
+		# Mac
+		echo -n "macOS " >> $ARQ 2>/dev/null
+		sw_vers | cut -f 2 | head -n 2 | tail -n 1 >> $ARQ 2>/dev/null
+		echo -n "-Processor: " >> $ARQ 2>/dev/null
+		sysctl -n machdep.cpu.brand_string >> $ARQ 2>/dev/null
+		echo -n "-Cores: " >> $ARQ
+		sysctl -n machdep.cpu.core_count >> $ARQ 2>/dev/null
+		echo -n "-Memory: " >> $ARQ
+		sysctl -n hw.memsize >> $ARQ 2>/dev/null
+		echo "-Disk:" >> $ARQ
+		df -h | grep /dev/disk >> $ARQ 2>/dev/null
+	else
+		if [ "$SO" == "redhat" ];then
+			# Redhat, Fedora, Centos
+			head -n 1 /etc/redhat-release >> $ARQ 2>/dev/null
+		else
+			# Linux
+			head -n 1 /etc/issue >> $ARQ 2>/dev/null
+		fi
+
+		echo "-Processor: `cat /proc/cpuinfo | grep "model name" | cut -f 2 -d: | head -n 1`" | sed 's/^[ \t]*//;s/[ \t]*$//' >> $ARQ 2>/dev/null
+		echo "-Cores: `cat /proc/cpuinfo | grep "model name" | cut -f 2 -d: | wc -l`" | sed 's/^[ \t]*//;s/[ \t]*$//' >> $ARQ 2>/dev/null
+		echo "-Bogomips: `cat /proc/cpuinfo | grep "bogomips" | cut -f 2 -d: | head -n 1 | sed 's/^[ \t]*//;s/[ \t]*$//'`" | sed 's/^[ \t]*//;s/[ \t]*$//' >> $ARQ 2>/dev/null
+		echo "-Memory: `free | head -n 2 | tail -n 1 | cut -f 2 -d: | sed 's/^[ \t]*//;s/[ \t]*$//' | cut -f 1 -d" "`" | sed 's/^[ \t]*//;s/[ \t]*$//' >> $ARQ 2>/dev/null
+		echo "-Disk:" >> $ARQ
+		df -h | grep /dev/sd >> $ARQ 2>/dev/null
+	fi
+
+
+}
+
+# Consulta dados sobre os bancos de dados existentes
+function dbinfo()
+{
+	echoDebug "...dbinfo - start"
+	# BANCOS DE DADOS
+
+	echo "-DB:" >> $ARQ
+	BDUSER="root"
+	BDSENHA="Vchar3200"
+	QUERY="SELECT table_schema, sum(table_rows) linhas, sum(data_length) tamanho_dados, sum(index_length) tamanho_indices,  sum(round(((data_length + index_length) / 1024 / 1024),2)) tamanho_em_mb  FROM information_schema.TABLES  GROUP BY table_schema ORDER BY (sum(data_length) + sum(index_length)) DESC;"
+	mysql -s -u $BDUSER -p$BDSENHA --execute "$QUERY" >> $ARQ 2>/dev/null
+	BDSENHA="mili0Watt"
+	mysql -s -u $BDUSER -p$BDSENHA --execute "$QUERY" >> $ARQ 2>/dev/null
+	BDSENHA="cablev35"
+	mysql -s -u $BDUSER -p$BDSENHA --execute "$QUERY" >> $ARQ 2>/dev/null
+	mysql -s -u $BDUSER --execute "$QUERY" >> $ARQ 2>/dev/null
+	echoDebug "...dbinfo - end"
+}
+
+# Libera espaço em disco
+function purge()
+{
+	echoDebug "...purge"
+
+	rm -f /tmp/alitem-* 2>/dev/null
+	rm -f /tmp/gbrowser-* 2>/dev/null
+	echo > /var/log/gbrowser.log 2>/dev/null
+	echo > /var/log/gjuridico_atualizacoes.log 2>/dev/null
+	echo > /var/spool/mail/root 2>/dev/null
+}
+
+
+# Checa se está permitido o login via ssh com senha
+function sshStatusPassword()
+{
+	echoDebug "...sshStatusPassword"
+	echo -n "-sshStatusPassword: " >> $ARQ
+	if (grep -v "#" /etc/ssh/sshd_config | grep "PasswordAuthentication yes") > /dev/null;then
+		echo 1 >> $ARQ
+	else
+		echo 0 >> $ARQ
+	fi
+}
+
+# Libera o login via ssh com senha
+function sshEnablePassword()
+{
+	echoDebug "...sshEnablePassword"
+
+	if [ ! -f /etc/ssh/sshd_config.bkp ];then
+		cp -f /etc/ssh/sshd_config /etc/ssh/sshd_config.bkp
+	fi
+	grep -v "PasswordAuthentication" /etc/ssh/sshd_config > /tmp/ssh.tmp
+	echo /tmp/ssh.tmp > /etc/ssh/sshd_config
+	echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
+	rm -f /tmp/ssh.tmp
+	servStop "sshd"
+	servStart "sshd"
+}
+
+# Bloqueia o login via ssh com senha
+function sshDisablePassword()
+{
+	echoDebug "...sshDisablePassword"
+
+	if [ ! -f /etc/ssh/sshd_config.bkp ];then
+		cp -f /etc/ssh/sshd_config /etc/ssh/sshd_config.bkp
+	fi
+	grep -v "PasswordAuthentication" /etc/ssh/sshd_config > /tmp/ssh.tmp
+	echo /tmp/ssh.tmp > /etc/ssh/sshd_config
+	echo "PasswordAuthentication no" >> /etc/ssh/sshd_config
+	rm -f /tmp/ssh.tmp
+	servStop "sshd"
+	servStart "sshd"
+}
+
+# Executa comando
+function run()
+{
+	echoDebug "SO: $SO"
+
+	for CMD in $CMDS;do
+		echoDebug "running: $CMD"
+
+		P1=`echo $CMD|cut -d':' -f 1`
+		P2=`echo $CMD|cut -d':' -f 2`
+		P3=`echo $CMD|cut -d':' -f 3`
+		P4=`echo $CMD|cut -d':' -f 4`
+		P5=`echo $CMD|cut -d':' -f 5`
+
+		#echoDebug "...P1=$P1 P2=$P2 P3=$P3 P4=$P4"
+
+		case "$P1" in
+			date)
+				echoDebug "...date"
+				echo -n "-Date: " >> $ARQ
+				date "+%Y-%m-%d %H:%M:%S" >> $ARQ
+				;;
+			update)
+				update
+				;;
+			debug)
+				DEBUG=1
+				;;
+			cat)
+				echoDebug "...cat"
+				if [ "$P1" == "$P2" ];then
+					cat $ARQ
+				else
+					cat $P2 >> $ARQ
+				fi
+				;;
+			info)
+				info
+				;;
+			dbinfo)
+				dbinfo
+				;;
+			purge)
+				purge
+				;;
+			httpdAccess)
+				httpdAccess
+				;;
+			sshStatusPassword)
+				sshStatusPassword
+				;;
+			sshEnablePassword)
+				sshEnablePassword
+				;;
+			sshDisablePassword)
+				sshDisablePassword
+				;;
+			servStart)
+				servStart $P2
+				;;
+			servStop)
+				servStop $P2
+				;;
+			servStatus)
+				servStatus $P2
+				;;
+			reboot)
+				reboot
+				;;
+			shutdown)
+				shutdown -h now
+				;;
+			execute)
+				echoDebug '...execute'
+				$P2 $P3 $P4 $P5 >> $ARQ
+				;;
+			*)
+				echo "cmd error: $CMD"
+				exit 1
+		esac
+	done
+}
+
+# Verifica se há comando a executar
+function checkRun()
+{
+	if [ "$ICMD" != "" ];then
+		echo $ICMD | tr ',' "\n" > $FCMD
+	fi
+	if [ -f $FCMD ];then
+		# Remove o arquivo de resultado para poder gerar um novo
+		rm -f $ARQ
+		CMDS=`cat $FCMD`
+		run
+		chmod 666 $ARQ
+		# Apaga arquivo com lote de comandos
+		rm -f $FCMD
+	fi
+}
+
+if [ "$ICMD" == "-d" ];then
+	# Roda como daemon
+	echo "Modo Daemon"
+	ICMD=""
+	DAEMON=1
+	DEBUG=1
+	rm -f /tmp/wcmd
+	while [ : ]
+	do
+		checkRun
+		sleep 3
+	done
+else
+	# Roda uma vez somente
+	checkRun
+fi

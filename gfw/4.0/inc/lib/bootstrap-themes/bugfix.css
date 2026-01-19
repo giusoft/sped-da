@@ -1,0 +1,78 @@
+/* Correção de bugs */
+/* Correção de bugs */
+@media (max-width:992px) {
+	.dropdown-header {color: #d0d0d0;}
+	h1 {font-size: 24px;}	h2 {font-size: 20px;}	h3 {font-size: 18px;}	h4 {font-size: 15px;}	h5 {font-size: 14px;}
+}
+
+@media (max-width: 767px) {
+	h1 {font-size: 20px;}	h2 {font-size: 17px;}	h3 {font-size: 16px;}	h4 {font-size: 14px;}	h5 {font-size: 14px;}
+	.carousel-indicators {display: none;}
+	.dropdown-header {color: #d0d0d0;}
+	.navbar-default .navbar-nav .open .dropdown-menu > li > a {
+	    color: #fff;
+	}
+}
+.fileinput-filename {padding-left: 6px; padding-right: 6px;}
+.btn {margin-top: 2px;margin-bottom: 2px;}
+.modal-dialog {left: 0}
+.label {font-weight: 100; font-size: 85%}
+.rdp { z-index: 100; position: fixed; bottom: 0;left: 0;right: 0;}
+.panel-group .panel {
+	overflow: visible;
+}
+
+
+.visible-xs,
+.visible-sm,
+.visible-md,
+.visible-lg {
+  .responsive-invisibility();
+}
+.visible-xs {
+  @media (max-width: @screen-tablet) {
+    .responsive-visibility();
+  }
+}
+.visible-sm {
+  @media (min-width: @screen-tablet) and (max-width: @screen-tablet-max) {
+    .responsive-visibility();
+  }
+}
+.visible-md {
+  @media (min-width: @screen-desktop) and (max-width: @screen-desktop-max) {
+    .responsive-visibility();
+  }
+}
+.visible-lg {
+  @media (min-width: @screen-large-desktop) {
+    .responsive-visibility();
+  }
+}
+
+.hidden-xs,
+.hidden-sm,
+.hidden-md,
+.hidden-lg {
+  .responsive-visibility();
+}
+.hidden-xs {
+  @media (max-width: @screen-tablet) {
+    .responsive-invisibility();
+  }
+}
+.hidden-sm {
+  @media (min-width: @screen-tablet) and (max-width: @screen-tablet-max) {
+    .responsive-invisibility();
+  }
+}
+.hidden-md {
+  @media (min-width: @screen-desktop) and (max-width: @screen-desktop-max) {
+    .responsive-invisibility();
+  }
+}
+.hidden-lg {
+  @media (min-width: @screen-large-desktop) {
+    .responsive-invisibility();
+  }
+}

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<data>
+	<page>
+		<header_start>
+[html]
+	[head]
+		[meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" /]
+		[meta name="keywords" content="#global.keywords#" /]
+		[meta name="description" content="#global.keywords#" /]
+		[title]#global.site#[/title]
+		</header_start>
+		<header_end>
+	[/head]
+	[body]
+		</header_end>
+		<css>
+		</css>
+		<footer>
+	[/body]
+[/html]
+		</footer>
+	</page>
+	<menu>
+		<topbar_start>
+[html]
+	[head]
+	[/head]
+	[body leftmargin=1 topmargin=1]
+		</topbar_start>
+		<topbar_end>
+	[/body]
+[/html]
+		</topbar_end>
+		<bottombar_start>
+[html]
+	[head]
+	[/head]
+	[body leftmargin=0 topmargin=0 valign='top']</bottombar_start>
+		<bottombar_end>
+	[/body]
+[/html]
+		</bottombar_end>
+		<menu_start>
+[html]
+	[head]
+	[/head]
+	[body leftmargin=1 topmargin=1]
+		</menu_start>
+		<menu_end>
+	[/body]
+[/html]
+		</menu_end>
+	</menu>
+	<table>
+		<header_noborder_free_start>
+
+		[table border='0' width='
+		</header_noborder_free_start>
+		<header_noborder_free_end>' cellpadding='1' cellspacing='1' style='background-color: #ffffff']
+		</header_noborder_free_end>
+		<header_noborder_tiny>
+
+		[table border='0' width='400'  cellpadding='1' cellspacing='1' style='background-color: #ffffff']
+		</header_noborder_tiny>
+		<header_noborder_medium>
+
+		[table border='0' width='80%'  cellpadding='1' cellspacing='1' style='background-color: #ffffff']
+		</header_noborder_medium>
+		<header_noborder_big>
+
+		[table border='0' width='100%' cellpadding='1' cellspacing='1' style='background-color: #ffffff']
+		</header_noborder_big>
+		<header_border_free_start>
+
+		[table border='0' width='
+		</header_border_free_start>
+		<header_border_free_end>' border='0' cellpadding='1' cellspacing='1']
+		</header_border_free_end>
+		<header_border_tiny>
+
+		[table border='0' width='500' cellpadding='1' cellspacing='1']
+		</header_border_tiny>
+		<header_border_medium>
+
+		[table border='0' width='80%' cellpadding='1' cellspacing='1' ]
+		</header_border_medium>
+		<header_border_big>
+
+		[table border='0' width='100%' cellpadding='1' cellspacing='1']
+		</header_border_big>
+		<footer>
+		[/table]
+		</footer>
+		<row_start>
+			[tr valign='top']
+		</row_start>
+		<row_end>
+			[/tr]
+		</row_end>
+		<col_start>
+				[td]
+		</col_start>
+		<col_end>
+				[/td]
+		</col_end>
+		<col_header_start>
+				[th]
+		</col_header_start>
+		<col_header_end>
+				[/th]
+		</col_header_end>
+		<col_start>
+				[td]</col_class_start>
+		<col_end>[/td]</col_end>
+	</table>
+</data>

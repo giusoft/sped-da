@@ -1,0 +1,246 @@
+# Baseado na documentação do SICREDI
+
+tipo_registro:
+  pos: [1, 1]
+  picture: '9(01)'
+  default:  '1'
+
+# Não utilizado para boletos com e sem registro
+tipo_cobranca:
+  pos: [2, 2]
+  picture: 'X(01)'
+  default: 'A'
+
+tipo_carteira:
+  pos: [3,3]
+  picture: 'X(1)'
+  default: 'A'
+
+tipo_impressao:
+  pos: [4,4]
+  picture: 'X(01)'
+  default: 'A'
+
+brancos01:
+  pos: [5,16]
+  picture: 'X(12)'
+  default: ''
+
+tipo_moeda:
+  pos: [17,17]
+  picture: X(01)
+  default: 'A'
+
+tipo_desconto:
+  pos: [18,18]
+  picture: 'X(01)'
+  default: 'A' # A = Valor / B = Percentual
+
+tipo_juros:
+  pos: [19,19]
+  picture: X(01)
+  default: 'A' # A = Valor / B = Percentual
+
+brancos02:
+  pos: [20,47]
+  picture: X(28)
+  default: ''
+
+nosso_numero:
+  pos: [48,56]
+  picture: '9(09)'
+
+brancos03:
+  pos: [57,62]
+  picture: 'X(06)'
+  default: ''
+
+data_instrucao:
+  pos: [63,70]
+  picture: '9(08)'
+  date_format: '%Y%m%d'
+
+campo_alterado:
+  pos: [71,71]
+  picture: 'X(01)'
+  default: ''
+
+postagem:
+  pos: [72,72]
+  picture: 'X(01)'
+  default: 'N'
+
+brancos04:
+  pos: [73,73]
+  picture: 'X(01)'
+  default: ''
+
+emissao_boleto:
+  pos: [74,74]
+  picture: 'X(01)'
+  default: 'B'
+
+numero_parcela:
+  pos: [75,76]
+  picture: 'X(02)'
+  default: ''
+
+numero_total_parcelas:
+  pos: [77,78]
+  picture: 'X(02)'
+  default: ''
+
+brancos05:
+  pos: [79,82]
+  picture: 'X(04)'
+  default: ''
+
+desconto_por_dia:
+  pos: [83, 92]
+  picture: '9(10)'
+  default: '0'
+
+valor_multa:
+  pos: [93,96]
+  picture: '9(2)V9(2)'
+  default: '0'
+
+brancos06:
+  pos: [97,108]
+  picture: 'X(12)'
+  default: ''
+
+instrucao:
+  pos: [109,110]
+  picture: '9(02)'
+  default: '01'
+
+seu_numero:
+  pos: [111,120]
+  picture: 'X(10)'
+  default: ''
+
+data_vencimento:
+  pos: [121,126]
+  picture: '9(6)'
+  date_format: '%d%m%y'
+
+valor_titulo:
+  pos: [127,139]
+  picture: '9(11)V9(2)'
+
+brancos07:
+  pos: [140,148]
+  picture: 'X(09)'
+  default: ''
+
+especie:
+  pos: [149,149]
+  picture: 'X(01)'
+  default: 'K'
+
+aceite:
+  pos: [150,150]
+  picture: 'X(01)'
+  default: 'S'
+
+data_emissao:
+  pos: [151, 156]
+  picture: '9(06)'
+  date_format: '%d%m%y'
+
+instrucao1:
+  pos: [157, 158]
+  picture: 'X(02)'
+  default:  '00'
+
+instrucao2:
+  pos: [159, 160]
+  picture: 'X(02)'
+  default:  '00'
+
+juros_um_dia:
+  pos: [161, 173]
+  picture: '9(11)V9(2)'
+  default:  '0'
+
+desconto_ate:
+  pos: [174, 179]
+  picture: '9(06)'
+  default:  '0'
+  date_format: '%d%m%y'
+
+valor_desconto:
+  pos: [180, 192]
+  picture: '9(11)V9(2)'
+  default:  '0'
+
+brancos08:
+  pos: [193,205]
+  picture: '9(13)'
+  default: '0'
+
+abatimento:
+  pos: [206, 218]
+  picture: '9(11)V9(2)'
+  default:  '0'
+
+sacado_tipo:
+  pos: [219,219]
+  picture: '9(01)'
+  default: '1'
+
+brancos09:
+  pos: [220,220]
+  picture: 'X(01)'
+  default: ''
+
+sacado_numero_inscricao:
+  pos: [221, 234]
+  picture: '9(14)'
+
+nome:
+  pos: [235, 274]
+  picture: 'X(40)'
+
+sacado_logradouro:
+  pos: [275, 314]
+  picture: 'X(40)'
+
+sacado_codigo:
+  pos: [315,319]
+  picture: '9(05)'
+  default: '0'
+
+brancos10:
+  pos: [320,325]
+  picture: '9(6)'
+  default: '0'
+
+brancos11:
+  pos: [326,326]
+  picture: 'X(1)'
+  default: ''
+
+cep:
+  pos: [327, 334]
+  picture: '9(08)'
+
+codigo_pagador:
+  pos: [335, 339]
+  picture: '9(5)'
+  default:  '0'
+
+sacador_avalista_codigo:
+  pos: [340,353]
+  picture: 'X(14)'
+  default: ''
+
+sacador_avalista_nome:
+  pos: [354, 394]
+  picture: 'X(41)'
+  default: ''
+
+numero_sequencial:
+  pos: [395, 400]
+  picture: '9(06)'

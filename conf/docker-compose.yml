@@ -1,0 +1,47 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: conf/Dockerfile
+    image: emitenota-app
+    container_name: emitenota_app
+    restart: unless-stopped
+    ports:
+      - "2083:2083"
+    volumes:
+      - "..:/var/www/html/emitenota"
+      - "emitenota_vendor:/var/www/html/emitenota/giusoft/src/Lib/vendor"
+      - "emitenota_storage:/var/www/html/emitenota/giusoft/src/storage"
+    environment:
+      TZ: America/Bahia
+      EMITENOTA_STORAGE: /var/www/html/emitenota/giusoft/src/storage
+    command:
+      - bash
+      - -lc
+      - |
+        set -e
+
+        # expõe /var/www/html/gfw, mas a origem é /var/www/html/emitenota/gfw
+        rm -rf /var/www/html/gfw
+        ln -s /var/www/html/emitenota/gfw /var/www/html/gfw
+
+        cd /var/www/html/emitenota/giusoft/src/Lib
+        composer install --no-dev --no-interaction --optimize-autoloader
+        cd /var/www/html
+
+        mkdir -p /var/www/html/emitenota/giusoft/src/storage/{log,certificados,logos,output}
+        chown -R www-data:www-data /var/www/html/emitenota/giusoft/src/storage
+        touch /var/www/html/emitenota/giusoft/src/storage/log/php.log
+        chown www-data:www-data /var/www/html/emitenota/giusoft/src/storage/log/php.log
+
+        apache2-foreground
+    networks:
+      - emitenota_network
+
+volumes:
+  emitenota_vendor:
+  emitenota_storage:
+
+networks:
+  emitenota_network:
+    driver: bridge

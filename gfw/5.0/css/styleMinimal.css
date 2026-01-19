@@ -1,0 +1,237 @@
+img {border: none}
+a:link, a:active, a:visited {text-decoration: none}
+a:hover {}
+h1 {
+	font-size: 16px;
+	color: #007fff;
+	margin: 0px;
+	padding: 4px;
+}
+h2 {
+    font-size: 14px;
+    color: #007fff;
+    margin: 0px;
+    padding: 4px;
+}
+h3 {
+    font-size: 13px;
+    color: #007fff;
+    margin: 0px;
+    padding: 4px;
+}
+h4 {
+    font-size: 12px;
+    color: #007fff;
+    margin: 0px;
+    padding: 4px;
+}
+p {
+	margin: 0px;
+}
+ul {
+	margin-top: 4px;
+	margin-bottom: 6px;
+}
+
+li {
+	font-size: 10px;
+}
+
+hr {
+    height: 4px;
+    margin: 0px;
+}
+
+form {
+	margin: 0px;
+}
+
+img {
+	width: 100%;
+}
+
+select {font-size: 10pt; padding: 2px; margin-bottom: 2px; border-bottom: 2px; width: 150px; height: 18px; }
+input {padding: 2px; margin-bottom: 2px; border-bottom: 2px; width: 150px; min-height: 18px; }
+/*input[type=submit] {padding: 2px; margin-bottom: 2px; border-bottom: 2px; width: 150px; height: 32px !important; }
+input[type=button] {padding: 2px; margin-bottom: 2px; border-bottom: 2px; width: 150px; height: 32px; }
+*/
+body {
+    margin: 0;
+    padding-top: 0px;
+    font-family: tahoma,arial,helvetica,sans-serif;
+    font-size: 10pt;
+    background: #d0d0d0 repeat-x center top;
+    color: #000000;
+    text-align: center;
+    -webkit-text-size-adjust: none;
+}
+
+.menu {
+	font-size: 14px;
+	color: #fff;
+	background-color: #000;
+	height: 20px;
+}
+
+.g-center {text-align: center}
+
+label {
+    position: absolute;
+    margin: 14px 0 0 6px;
+    font-size: 14px;
+    color: #BBBBBB;
+}
+
+
+.g-a {
+    display: block;
+    text-decoration: none;
+    color: #404080;
+}
+
+.g-msg-title {
+    display: block;
+    margin: 0;
+    padding-top: 12px;
+    line-height: 18px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    color:#15428b;
+}
+
+.g-menu-line  {
+    display: block;
+    vertical-align: middle;
+    text-align: left;
+    height: 40px;
+    margin: 1px;
+    margin-left: 2px;
+    margin-right: 2px;
+    padding: 4px;
+    border-bottom: 1px dotted #c0c0c0;
+}
+.g-menu {
+	font-size: 16px;
+    background: white;
+    border: 1px solid #a0a0a0;
+    margin-left: 8px;
+    margin-right: 8px;
+    margin-top: 4px;
+    border-radius: 8px;
+
+@media all and (-webkit-min-device-pixel-ratio:10000), not all and (-webkit-min-device-pixel-ratio:0) {
+
+}
+}
+
+tbody.g {
+    background: white; font-size: 10pt ; color: black;
+    border: none ;
+    text-align: left;
+}
+tbody.g:hover {
+    background: #f0ffff; font-size: 10pt ; color: black;
+    border: none;
+    text-align: left;
+}
+
+.g-label {
+	font-size: 10px;
+	color: #fff;
+	line-height: 20px;
+	background-color: #333;
+	padding: 3px;
+	display: inline;
+	margin: 2px;
+}
+
+.g-label-info {
+	background-color: #007fff;	
+}
+
+.g-label-success {
+	background-color: #00aa5f;	
+}
+
+.g-label-danger {
+	background-color: #ff7f00;	
+}
+
+
+.g-msg-alert {
+    display: block;
+    font-weight: bold;
+    padding: 2px;
+    background-color: red;
+    color: #fff;
+}
+
+.g-msg-warning {
+    display: block;
+    font-weight: bold;
+    padding: 2px;
+    background-color: #ff4400;
+    color: #fff;
+}
+.g-msg-info {
+    display: block;
+    font-weight: bold;
+    padding: 2px;
+    background-color: #007fff;
+    color: #fff;
+}
+.g-msg-success {
+    display: block;
+    font-weight: bold;
+    padding: 2px;
+    background-color: #00aa6f;
+    color: #fff;
+}
+
+table {}
+.g-table {
+    background: white;
+    border-collapse: collapse;
+    border-spacing: 0pt;
+    empty-cells: show;
+    font-style: normal;
+    border: solid 1px #d0d0d0;
+    color: black;
+    background-color: white;
+    width: 100%;
+}
+.g-tiny {width: 200px}
+.g-medium {width: 400px}
+
+td.g { color: black; border: none 0px;}
+
+td.g-header {
+    background-color:#EBF3FD;
+    padding: 1pt; padding-left: 2pt; padding-right: 2pt; 
+    line-height: 17px;
+    border: 1px #d0d0d0 solid;
+    font-weight: bold;
+}
+
+.g-detail { padding: 1pt; padding-left: 2pt; padding-right: 2pt; border: solid 1px #d0d0d0; margin: 0px}
+.g-bigdetail { padding: 1pt; padding-left: 2pt; padding-right: 2pt; border: solid 1px #d0d0d0; margin: 0px; height:34px}
+
+.g-title {padding: 1pt; padding-left: 2pt; padding-right: 2pt; background: #bad0ee; font-weight: bold; font-size: 11px ; color: #15428b; border-bottom: 1px solid #d0d0d0}
+.g-subtitle {padding: 1pt; padding-left: 2pt; padding-right: 2pt; background: #bad0ee; font-weight: bold; font-size: 11px ; color: white; border-bottom: 1px solid #d0d0d0}
+.g-footer {padding: 1pt; padding-left: 2pt; padding-right: 2pt; color: #5050e2; }
+.g-summary {padding: 1pt; padding-left: 2pt; padding-right: 2pt; background: #d7e5f5; color: #303030; border-left: 1px solid #d0d0d0; border-bottom: 1px solid #d0d0d0}
+.g-summary:last-child {border-right: 1px solid #abc7ec; }
+
+td.g-white {padding: 1pt; padding-left: 2pt; padding-right: 2pt; color: #ffffff; background: #000000; border: 1px solid #d0d0d0}
+td.g-grey {padding: 1pt; padding-left: 2pt; padding-right: 2pt; color: #000000; background: #c0c0c0; border: 1px solid #d0d0d0}
+td.g-red {padding: 1pt; padding-left: 2pt; padding-right: 2pt; color: #FF0000; border: 1px solid #d0d0d0}
+td.g-green {padding: 1pt; padding-left: 2pt; padding-right: 2pt; color: #60FF60; border: 1px solid #d0d0d0}
+td.g-blue {padding: 1pt; padding-left: 2pt; padding-right: 2pt; color: #0000FF; border: 1px solid #d0d0d0}
+td.g-yellow {padding: 1pt; padding-left: 2pt; padding-right: 2pt; background: #ffff00; border: 1px solid #d0d0d0}
+td.g-orange {padding: 1pt; padding-left: 2pt; padding-right: 2pt; background: #ff8000; border: 1px solid #d0d0d0}
+
+td.g-total {padding: 1pt; padding-left: 2pt; padding-right: 2pt; background: #e2e2e2; font-weight: bold; color: black; border-bottom: 1px solid #d0d0d0}
+td.g-disabled {padding: 1pt; padding-left: 2pt; padding-right: 2pt; background: #f5f5f5; color: #606060; border: 1px solid #d0d0d0}
+td.g-enabled {padding: 1pt; padding-left: 2pt; padding-right: 2pt; background: #d0d0d0; color: black; border: 1px solid #d0d0d0}
+td.g-negative {padding: 1pt; padding-left: 2pt; padding-right: 2pt; background: #ffffff; color: red; border: 1px solid #d0d0d0}

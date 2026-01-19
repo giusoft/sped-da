@@ -1,0 +1,96 @@
+body {text-align: center; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px; font-family: Arial,helvetica; font-size: 10px ; background: white; color: black; }
+
+hr {
+	border: 0px none;
+	border-bottom: 1px dashed #c0c0c0;
+	height: 4px;
+	padding-bottom: 8px;
+}
+span {display: inline}
+
+/* Textos */
+
+.normal {}
+span.title {
+	display: block;
+	font-family: times, Times New Roman, times-roman, georgia, serif;
+	color: #444;
+	margin: 0;
+	padding: 0px 0px 0px 0px;
+	font-size: 30px;
+	line-height: 26px;
+	letter-spacing: -2px;
+	font-weight: bold;
+	padding-bottom: 4px;
+
+}
+span.minititle {
+	display: block;
+	font-family: Gill Sans, Verdana;
+	font-size: 11px;
+	line-height: 14px;
+	text-transform: uppercase;
+	letter-spacing: 2px;
+	font-weight: bold;
+	padding-bottom: 4px;
+}
+span.subtitle{
+	display: block;
+	font-size: 13px; 
+	padding-bottom: 4px;
+}
+	
+span.tiny {font-size: 10px; display: block }
+span.more {font-size: 10px; display: inline; }
+span.list {}
+.link {}
+.link:hover {}
+ 
+ol {
+font: italic 1em Georgia, Times, serif;
+color: #999999;
+}
+ 
+ol p {
+font: normal .8em Arial, Helvetica, sans-serif;
+color: #000000;
+}
+ 
+/* Citação */
+.blockquote:first-letter {
+	background: url(/gs/v6/img_2.0/home/double.gif) no-repeat left top;
+	padding-left: 18px;
+	font: italic 1.4em Georgia, "Times New Roman", Times, serif;
+}
+.blockquote{
+	display: block;
+	padding-top: 10px;
+	font: italic 1.4em Georgia, "Times New Roman", Times, serif;
+}
+ 
+/* Jornal */
+.newspaper:first-letter {
+	font-size : 250%;
+	font-weight : bold;
+	float : left;
+	width : 1em;
+}
+.newspaper{
+	display: block;
+	padding-top: 10px;
+}
+
+div.in { margin: 6px 6px;}
+
+div.tiny { }
+div.medium { }
+div.big { }
+		
+div.tinyfree { }
+div.mediumfree {}
+div.bigfree { }
+		
+div.tinyfull { }
+div.mediumfull { }
+div.bigfull { }
+

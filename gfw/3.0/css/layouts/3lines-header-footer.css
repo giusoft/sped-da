@@ -1,0 +1,33 @@
+#g-body {
+	width: 831;
+	margin: 0 auto;
+}
+
+#g-body-container {width: 850; top: 20}
+#g-body {float: left; margin: 0 auto; width: 830; height: 20; border: 1px solid}
+#g-body-shadow-left {float: left; margin: 0 auto; width: 10; height: 20; border: 1px solid}
+#g-body-shadow-right {float: right; margin: 0 auto; width: 10; height: 20; border: 1px solid}
+
+#g-top {
+	margin: 0px;
+	padding: 0px;
+}
+#g-mid {
+	margin: 0px;
+	padding: 0px;
+}
+#g-bottom {
+	margin: 0px;
+	padding: 0px;
+}
+
+#g-header {
+	margin: 0px;
+	padding: 0px;
+	height: 20px;
+}
+
+#g-footer {
+	margin: 0px;
+	padding: 0px;
+}
