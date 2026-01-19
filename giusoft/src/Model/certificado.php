@@ -1,0 +1,133 @@
+<?php
+
+namespace App\Model;
+
+class Certificado
+{
+    private $corpoRequisicao;
+    private $api;
+
+    public function __construct($args)
+    {
+        $this->api = $args;
+        $this->corpoRequisicao = $args->corpoRequisicao;
+    }
+
+    public function buscarDadosCertificado()
+    {
+        $cnpjLimpo = soNumeros($this->corpoRequisicao['cnpj_emitente']);
+
+        $diretorioCertificados = __DIR__ . "/../storage/certificados/{$cnpjLimpo}/";
+        $caminhoCompletoCertificado = $diretorioCertificados . "certificado.pfx";
+
+        if (file_exists($caminhoCompletoCertificado) || $this->corpoRequisicao['certificado']) {
+            // Certificado
+            if ($this->corpoRequisicao['certificado']) {
+                $conteudoCertificado = base64_decode($this->corpoRequisicao['certificado']);
+            } else {
+                $conteudoCertificado = file_get_contents($caminhoCompletoCertificado);
+            }
+
+            if (!isset($this->corpoRequisicao['senhaCertificado'])) {
+                $this->api->emitirErro("Informe a senha do certificado", 400);
+            }
+
+            $senhaCertificado = desencriptar($this->corpoRequisicao['senhaCertificado']);
+
+            if (!openssl_pkcs12_read($conteudoCertificado, $dadosExtraidosCertificado, $senhaCertificado)) {
+
+                $erroTecnico = buscarErroSSL();
+                $mensagemUsuario = traduzirErroCertificado($erroTecnico);
+                error_log('[CERTIFICADO] ' . $erroTecnico);
+                $this->api->emitirErro($mensagemUsuario, 400);
+            }
+
+            $certificadoX509 = openssl_x509_read($dadosExtraidosCertificado['cert']);
+            $informacoesCertificado = openssl_x509_parse($certificadoX509);
+
+            $resposta['Arquivo'] = "certificado.pfx";
+            $resposta['Empresa'] = $informacoesCertificado['subject']['CN'];
+
+            if (isset($informacoesCertificado['subject']['emailAddress'])) {
+                $resposta['E-mail'] = $informacoesCertificado['subject']['emailAddress'];
+            }
+
+            $resposta['País'] = $informacoesCertificado['subject']['C'];
+            $resposta['Certificadora'] = $informacoesCertificado['subject']['O'];
+            $resposta['Tipo de certificado'] = $informacoesCertificado['subject']['OU'][2];
+            $resposta['Fornecedora'] = $informacoesCertificado['issuer']['OU'] . " / " . $informacoesCertificado['issuer']['CN'];
+
+            $anoValidade = substr($informacoesCertificado['validTo'], 0, 2);
+            $mesValidade = substr($informacoesCertificado['validTo'], 2, 2);
+            $diaValidade = substr($informacoesCertificado['validTo'], 4, 2);
+
+            // Obtém o timestamp da data de validade do certificado
+            $dataValidadeFormatada = date("d-m-Y", gmmktime(0, 0, 0, $mesValidade, $diaValidade, $anoValidade));
+            $resposta['Validade'] = $dataValidadeFormatada;
+
+            $this->api->emitirSucesso("Certificado válido", 200, $resposta);
+        }
+
+        $this->api->emitirErro("Certificado não encontrado");
+    }
+
+
+    public function importarPfx()
+    {
+        // Decodificar o certificado base64
+        $certificadoConteudo = base64_decode($this->corpoRequisicao['certificado']);
+
+        // Definir diretórios
+        $cnpjAtual = soNumeros($this->corpoRequisicao['cnpj_emitente']);
+        $diretorioCerts = __DIR__ . "/../storage/certificados/{$cnpjAtual}/";
+        $diretorioAntigos = $diretorioCerts . "certificadosAntigos/";
+
+        // Criar diretórios se não existirem
+        if (!is_dir($diretorioCerts)) {
+            mkdir($diretorioCerts, 0777, true);
+        }
+
+        if (!is_dir($diretorioAntigos)) {
+            mkdir($diretorioAntigos, 0777, true);
+        }
+
+        $uniqId = uniqid();
+        $certificadosMovidos = [];
+        $certificadosExistentes = glob($diretorioCerts . "/certificado*");
+
+        // Se já existe um certificado, mover para antigos
+        foreach ($certificadosExistentes as $certificado) {
+            if (!is_file($certificado)) {
+                continue;
+            }
+
+            $nomeCertificado = $diretorioAntigos
+                . "/" . pathinfo($certificado, PATHINFO_FILENAME)
+                . "_" . $uniqId
+                . "." . pathinfo($certificado, PATHINFO_EXTENSION);
+
+            $certificadosMovidos[] = [
+                'antigo' => $nomeCertificado,
+                'original' => $certificado
+            ];
+
+            rename($certificado, $nomeCertificado);
+        }
+
+        $destino = $diretorioCerts . "/certificado.pfx";
+
+        if (!file_put_contents($destino, $certificadoConteudo)) {
+            // Reverter movimentações se falhar
+            foreach ($certificadosMovidos as $certificadoMovido) {
+                if (is_file($certificadoMovido['antigo'])) {
+                    rename($certificadoMovido['antigo'], $certificadoMovido['original']);
+                }
+            }
+            $this->api->emitirErro("Erro ao salvar o certificado");
+        }
+
+        chmod($destino, 0664);
+
+        $this->api->emitirSucesso("Certificado importado com sucesso");
+    }
+}
