@@ -3,11 +3,12 @@
 use Api\programacao as Programacao;
 use Api\uma as Uma;
 
+$ambiente = '';
 if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
     $ambiente = '/teste';
 }
 
-require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/wms/giusoft/res/api/accesspoint.php";
+require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/emitenota/giusoft/src/view/api/accesspoint.php";
 
 class Api
 {
@@ -47,7 +48,11 @@ class Api
             $this->emitirErro("Cabecalhos HTTP ausentes", "400 Bad Request");
         }
 
-        if ($this->headers['Content-Type'] != 'application/json' && apiSendoUsadaExternamente()) {
+        if (
+            isset($this->headers['Content-Type'])
+            && $this->headers['Content-Type'] != 'application/json'
+            && apiSendoUsadaExternamente()
+        ) {
             $this->emitirErro("Content-Type invalido", "415 Unsupported Media Type");
         }
 
@@ -478,7 +483,7 @@ class Api
     }
 
 
-    public function validarParametrosApi()
+    public static function validarParametrosApi()
     {
 
         if (!apiSendoUsadaExternamente()) {
