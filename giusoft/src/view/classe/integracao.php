@@ -1,8 +1,9 @@
 <?php
+
 if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
     $ambiente = '/teste';
 }
-require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/wms/giusoft/res/api/utils.php";
+require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/emitenota/giusoft/src/view/api/utils.php";
 
 date_default_timezone_set('America/Bahia');
 
@@ -25,21 +26,26 @@ class Integracao
 		if ($this->parametro['caminhoSetup']) {
 			$this->carregarSetup($this->parametro['caminhoSetup']);
 		}
-		$this->nomeArquivoLog = "integracao_".$this->setup["global.logfile"];
 
-		$this->conectarBanco($this->parametro['conexaoBanco'] ?: $this->setup);
+		$this->nomeArquivoLog = "integracao_" . $this->setup["global.logfile"];
+
+		$this->conectarBanco($this->parametro['conexaoBanco'] ?? $this->setup);
+
 		$this->gParam = $this->gParam();
+
 		$sql = "SELECT armazens.id
-					FROM pessoas_armazens
-					JOIN armazens ON armazens.id = pessoas_armazens.id_armazens
-					WHERE pessoas_armazens.cancelado = 0
-					LIMIT 1";
-		$this->parametro['idArmazens'] = $this->parametro['idArmazens'] ?: $this->executarQuery($sql)[0]['id'];
+				FROM pessoas_armazens
+				JOIN armazens ON armazens.id = pessoas_armazens.id_armazens
+				WHERE pessoas_armazens.cancelado = 0
+				LIMIT 1";
+
+		$this->parametro['idArmazens'] = $this->parametro['idArmazens'] ?? $this->executarQuery($sql)[0]['id'];
 	}
+
 
 	public function carregarSetup()
 	{
-		include $this->parametro['caminhoSetup'];
+		require_once $this->parametro['caminhoSetup'];
 
 		$stp = trim(str_replace("\n","", $gSETUP));
 		$mtz = explode("}",$stp);
@@ -47,15 +53,17 @@ class Integracao
 		foreach ($mtz as $el) {
 			if (strpos($el,"{") !== false) {
 				$class = trim(substr($el,0,strpos($el,"{")));
-				$parm = substr($el,strpos($el,"{")+1);
-				$parm = trim(substr($parm,0,strlen($parm)-1));
+				$parm  = substr($el,strpos($el,"{")+1);
+				$parm  = trim(substr($parm,0,strlen($parm)-1));
 				$parms = $this->cssDecode($parm);
-				foreach ($parms as $key=>$value)
+				foreach ($parms as $key => $value) {
 					$classes[$class . "." . $key] = $value;
+				}
 			}
 		}
 		$this->setup = $classes;
 	}
+
 
 	public function conectarBanco($credenciais)
 	{
@@ -69,6 +77,7 @@ class Integracao
 			$this->conexaoBanco->beginTransaction();
 		}
 	}
+
 
 	public function executarQuery($query, $retornarId = 0)
 	{
@@ -104,6 +113,7 @@ class Integracao
 		}
 	}
 
+
 	public function consultarId($tabela, $where, $orderBy)
 	{
 		if (is_array($where)) {
@@ -117,6 +127,7 @@ class Integracao
 		$sql = "SELECT id FROM {$tabela} WHERE {$where} {$orderBy} LIMIT 1";
 	 	return (int) $this->executarQuery($sql)[0]['id'];
 	}
+
 
 	public function criarProgramacao($mtz, $itens, $idsProgramacoes, $retornarDetalhes = 0)
 	{
@@ -184,6 +195,7 @@ class Integracao
 		return $idProgramacao;
 	}
 
+
 	public function criarProgramacaoApanha($mtz, $idsProgramacoes = 0)
 	{
 		$mtz['data_criacao'] = $mtz['data_criacao'] ?: date('Y-m-d H:i:s');
@@ -199,7 +211,6 @@ class Integracao
 		$mtz["numero_cliente"] = $mtz["numeroCliente"];
 		$mtz["ocorrencias"] = $mtz["ocorrencias"];
 
-		
 		if ($this->setup["database.name"] == 'wms_uniklog') {
 			$mtz['conferir_por_apanha'] = 0;
 		}
@@ -221,6 +232,7 @@ class Integracao
 
 		return $idProgramacaoApanha;
 	}
+
 
 	public function criarItensProgramacao($item, $idProgramacao)
 	{
@@ -264,6 +276,7 @@ class Integracao
 
 		$this->debug('#Insere na tabela programacao_itens: ' . $idProgramacaoItens);
 	}
+
 
 	public function cadastrarItem($dados, $retornarDetalhes = 0)
 	{
@@ -397,12 +410,14 @@ class Integracao
 		$where = implode(' AND ', $where);
 		return $this->consultarId('itens_skus', $where, "ativo DESC");
 	}
+
 	/* METODOS DE UTILIDADE GERAL*/
 
 	public function cssDecode($css)
 	{
-		$sai = "";
+		$sai = [];
 		$css = html_entity_decode($css, ENT_NOQUOTES, 'UTF-8');
+
 		if (strpos($css, "[") !== false) {
 			$b = strpos($css, "[") + 1;
 			for ($a = $b; $a < strlen($css); $a++) {
@@ -435,6 +450,7 @@ class Integracao
 				}
 			}
 		}
+
 		$css = str_replace("{", "", $css);
 		$css = str_replace("}", "", $css);
 		$array = explode(";", $css);
@@ -444,29 +460,33 @@ class Integracao
 			$key = substr($value, 0, strpos($value, ":"));
 			$value = trim(str_replace("'", "", substr($value, strpos($value, ":") + 1)));
 			$new = array($key, $value);
+
 			if (trim($new[0]) <> "") {
 				$val = trim($new[1]);
 				$val = str_replace("`", "'", $val);
 				$val = str_replace("^", "{", $val);
 				$val = str_replace("~", "}", $val);
+
 				if (substr($val, 0, 1) == "[") {
 					if (strpos($val, "|") !== false) {
-						$val = explode("|", substr($val, 1, strlen($val - 3)));
+						$val = explode("|", substr($val, 1, strlen($val) - 3));
 					}
 				}
 				$sai[trim($new[0])] = $val;
 			}
 		}
+
 		if ($items <> "") {
 			$sai['items'] = trim($items);
 		}
+
 		foreach ($sai as $key => $item) {
-			if (substr($item, 0, 10) == "--(encode)") {
+			if (is_string($item) && substr($item, 0, 10) == "--(encode)") {
 				$sai[$key] = base64_decode(substr($item, 10));
 			}
 		}
 
-		return ($sai);
+		return $sai;
 	}
 
 
@@ -481,13 +501,14 @@ class Integracao
     }
 
 
-    public function excluirIndicesNumericos($array) {
+    public function excluirIndicesNumericos($array)
+	{
         foreach (array_keys($array) as $chave) {
             if (is_numeric($chave)) {
                 unset($array[$chave]);
             }
         }
-        
+
         return $array;
     }
 
@@ -530,15 +551,18 @@ class Integracao
 		return $data->format($formatoDestino);
     }
 
+
 	public function decodificarBase64($texto)
 	{
 		return ($this->isBase64($texto)) ? base64_decode($texto) : $texto;
 	}
 
+
 	public function isBase64($texto)
 	{
 		return ($texto === base64_encode(base64_decode($texto)));
 	}
+
 
 	public function gParam()
 	{
@@ -553,12 +577,16 @@ class Integracao
 		return $gParam;
 	}
 
-	public function debug($mensagem, $dados, $erro = 0)
+
+	public function debug($mensagem, $dados = '', $erro = 0)
 	{
 		if (!$this->exibirDebug && $this->parametro['idPessoasCriou'] <> 1) {
 			return '';
 		}
+
+		$debug = '';
 		$debug .= '[' . date('d-m-Y H:i:s') . ']  FILE:'. debug_backtrace()[1]['file'] . '  LINE:' . debug_backtrace()[1]['line'];
+
 		if ($mensagem) {
 			if ($erro) {
 				$mensagem = "[ERROR] " . $mensagem;
@@ -566,7 +594,7 @@ class Integracao
 			$debug .= '  MSG: ' . $mensagem;
 		}
 
-		if ($dados) {
+		if ($dados !== '') {
 			$debug .= '  DADOS: ';
 			if (is_array($dados)) {
 				$debug .= json_encode($dados);
@@ -574,31 +602,46 @@ class Integracao
 				$debug .= $dados;
 			}
 		}
+
 		$this->debug[] = $debug;
 	}
 
-	function gLog($txt, $erro = 0, $arq = "")
+	public function gLog($txt, $erro = 0, $arq = "")
 	{
-		global $debug,$DB, $_SESSION;
-
-		if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN') {
-			define('gAPP_FILE', "/gApp_");
-			setlocale(LC_ALL, 'POSIX');
-			define('gLogPath', "/");
-		} else {
-			define('gAPP_FILE', "/tmp/gApp_");
-			setlocale(LC_ALL, 'english');
-			if (file_exists("/var/www/log"))
-			{
-				define('gLogPath', "/var/www/log/");
+		if (!defined('gAPP_FILE') || !defined('gLogPath')) {
+			if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN') {
+				if (!defined('gAPP_FILE')) {
+					define('gAPP_FILE', "/gApp_");
+				}
+				setlocale(LC_ALL, 'POSIX');
+				if (!defined('gLogPath')) {
+					define('gLogPath', "/");
+				}
 			} else {
-				define('gLogPath', "/var/log/");
+				if (!defined('gAPP_FILE')) {
+					define('gAPP_FILE', "/tmp/gApp_");
+				}
+				setlocale(LC_ALL, 'english');
+				if (!defined('gLogPath')) {
+					if (file_exists("/var/www/log")) {
+						define('gLogPath', "/var/www/log/");
+					} else {
+						define('gLogPath', "/var/log/");
+					}
+				}
 			}
-		
 		}
 
-		if(strpos($_SERVER["HTTP_HOST"],"localhost")!==false || strpos($_SERVER["HTTP_HOST"],"127.0.0.1")!==false || file_exists("/tmp/gLogEnabled") || true)
-		{
+
+		$remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+		$httpHost = $_SERVER['HTTP_HOST'] ?? '';
+
+		if (
+			strpos($httpHost, "localhost") !== false
+			|| strpos($httpHost, "127.0.0.1") !== false
+			|| file_exists("/tmp/gLogEnabled")
+			|| true
+		) {
 			$logfile = gLogPath . $this->gVar("global.logfile");
 			$sqllogfile = gLogPath . $this->gVar("global.sqllogfile");
 			$loglevel = $this->gVar("global.debug");
@@ -624,62 +667,83 @@ class Integracao
 
 				$d = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 				unset($d[0]);
-
 				unset($d['function']);
-
 				array_splice($d, -2);
-				
+
 				$deb = array_map(function($trace) {
-					return basename($trace['file']) . ":" . $trace['function'] . ":" . $trace['line'];
+					return basename($trace['file'] ?? 'unknown') . ":" . ($trace['function'] ?? 'unknown') . ":" . ($trace['line'] ?? 0);
 				}, array_reverse($d));
 
 				$deb = implode(" => ", $deb);
 
-				$faz = (stripos($txt, "select") !== false) || 
-					(stripos($txt, "update") !== false) || 
-					(stripos($txt, "insert") !== false) || 
-					(stripos($txt, "delete") !== false);
+				$faz = (
+					stripos($txt, "select") !== false
+					|| stripos($txt, "update") !== false
+					|| stripos($txt, "insert") !== false
+					|| stripos($txt, "delete") !== false
+				);
 
-					$ipAddress = (($_SERVER['REMOTE_ADDR'] == '::1') || ($_SERVER['REMOTE_ADDR'] == '127.0.0.1')) ? gethostbyname(gethostname()) : $_SERVER['REMOTE_ADDR'];
+				$remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+				$ipAddress = (($remoteAddr == '::1') || ($remoteAddr == '127.0.0.1')) ? gethostbyname(gethostname()) : $remoteAddr;
 
-					$logHeader = $colors['default'] . date("y-m-d H:i:s") . " " . $ipAddress;
+				$logHeader = $colors['default'] . date("y-m-d H:i:s") . " " . $ipAddress;
 
-					if ($faz) {
-						$logMessage = "$logHeader\t" . $lpre . $deb . $colors['reset'] . "\t" . $cpre . $txt . $cpos;
-					} else {
-						$logMessage = $logHeader . "\tLOG:\t" . $lpre . $deb . $cpos . "\t" . $cpre . $txt . $cpos;
-					}
-					$path = fopen($logfile, 'a');
+				if ($faz) {
+					$logMessage = "$logHeader\t" . $lpre . $deb . $colors['reset'] . "\t" . $cpre . $txt . $cpos;
+				} else {
+					$logMessage = $logHeader . "\tLOG:\t" . $lpre . $deb . $cpos . "\t" . $cpre . $txt . $cpos;
+				}
+
+				$path = @fopen($logfile, 'a');
+				if ($path !== false) {
 					$logMessage = preg_replace('/\s+/', ' ', $logMessage);
 					fputs($path, $logMessage . PHP_EOL);
-					fclose($logfile);
+					fclose($path);
+				} else {
+					$fallbackLog = '/tmp/' . basename($logfile);
+					$path = @fopen($fallbackLog, 'a');
+					if ($path !== false) {
+						$logMessage = preg_replace('/\s+/', ' ', $logMessage);
+						fputs($path, $logMessage . PHP_EOL);
+						fclose($path);
+					}
+				}
 			}
 		}
 	}
 
 
-	function gVar($par, $new="")
+	public function gVar($par, $new = "")
 	{
 		global $gLang, $_gVar;
+
+		if (!isset($_gVar)) {
+			$_gVar = [];
+		}
+
 		$sai = "";
-		if ($new<>"")
-			$_gVar[$par]=$new;
-		$sai=$_gVar[$par];
-		return($sai);
+		if ($new <> "") {
+			$_gVar[$par] = $new;
+		}
+
+		$sai = isset($_gVar[$par]) ? $_gVar[$par] : "";
+
+		return $sai;
 	}
+
 
 	public function retornouDados($rs)
 	{
 		if (!is_object($rs)) {
-			 return false;
+			return false;
 		}
 
 		if ($rs->rowCount() > 0) {
-			 return true;
+			return true;
 		}
 
-		return false;	
-}
+		return false;
+	}
 
 
 	public function updateTable($nomeTabela, $matrizDados, $id)
