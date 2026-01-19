@@ -148,7 +148,7 @@ switch ($gPage) {
 				$html.=$persistencia->pagination->render('{style:margin-top:-1.6%;}');
 			}
 			$html.=$o->tableBegin('big', true, true);
-			$mtz = array();
+			$mtz = [];
 			$mtz[]="<-Opções";
 			$mtz[]="<>Ativo";
 			$mtz[]="<>Apto";
@@ -170,14 +170,14 @@ switch ($gPage) {
 			$cnt=0;
 			foreach ($rs as $id => $row)
 			{
-				$mtz = array();
+				$mtz = [];
 				$mtz[]='<-'.$o->button("{icon: folder-open; caption: Abrir; hint: Abrir a ficha do item; size: small; href: ".$o->page."&gPage=".CAPA."&gId=".$row['id']."}");
 				$mtz[]='<>'.gCheck($row['ativo']);
 				$mtz[]='<>'.gCheck($row['apto']);
 				$mtz[]='<-'.$row['nome'].'<br>'.$o->small($row['descricao']);
 				$mtz[]='<-'.$row['codigo'];
 				if ($gParam['INTEGRACAO_WINTHOR']['ativo']) {
-					$codigoBarrasSku = explode('•', $row['codigos_barras']);
+					$codigoBarrasSku = explode('•', (string) $row['codigos_barras']);
 					if ($codigoBarrasSku[1] <> '') {
 						$codigoBarrasSku = implode(' • ', $codigoBarrasSku);
 					} else {
@@ -211,11 +211,11 @@ switch ($gPage) {
 
 
 	case INICIO_PESQUISAR:
-		$comboOpcoes = array(
+		$comboOpcoes = [
 			'*Indiferente',
 			'Sim',
 			'Não'
-		);
+		];
 
 		$frm   = new gForm("columns: 3;");
 		$html .= $o->msgSubTitle("Pesquisar itens");
@@ -243,8 +243,8 @@ switch ($gPage) {
 
 
 	case INICIO_PESQUISAR_RESULTADO:
-		$where = array();
-		$filtro = array();
+		$where = [];
+		$filtro = [];
 		$nome  = gCleanField($_REQUEST['nome']);
 		$pesquisaRapida  = gCleanField($_REQUEST['pesquisaRapida']);
 		$codigo = gCleanField($_REQUEST['codigo']);
@@ -336,11 +336,11 @@ switch ($gPage) {
 				$filtro[] = "Prioridade de saída: " . gFieldById("prioridades_saida", $id_prioridades_saida, "descricao");
 			}
 
-			$comboCondicional = array(
-				0 => false, //*Indiferente
-				1 => 1, //Opcao "Sim"
-				2 => 0 //Opcao "Nao"
-			);
+			$comboCondicional = [
+				0 => false, // *Indiferente
+				1 => 1, // Opcao "Sim"
+				2 => 0 // Opcao "Nao"
+			];
 
 			if ($situacao) {
 				$where[]  = "i.ativo = " . $comboCondicional[$situacao];
@@ -437,7 +437,7 @@ switch ($gPage) {
 		}");
 
 		$html .= $o->tableBegin('big', true);
-		$mtz   = array();
+		$mtz   = [];
 
 		if (!$gXLS && !$gCSV && !$gXML && !$gPDF && !$gDOC) {
 			$mtz[] = '<-Opções';
@@ -471,7 +471,7 @@ switch ($gPage) {
 
 		foreach ($rs as $row) {
 			$salt  = gSalt($row['apelido']);
-			$mtz   = array();
+			$mtz   = [];
 
 			if (!$gXLS && !$gCSV && !$gXML && !$gPDF && !$gDOC) {
 				$btns  = '<-' . $o->button("{icon: search; caption: Abrir; size: small; href: " . $o->page . "&gPage=" . DADOS . "&gId=" . $row['id'] . "}");
@@ -484,13 +484,16 @@ switch ($gPage) {
 				}
 				$mtz[] = $btns;
 			}
+
 			if (gDBCheck($_REQUEST['mostrarDetalhesSku'])) {
 				$mtz[] = '<-' . gCheck($row['ativo']);
 			}
+
 			$mtz[] = '<-' . $row['codigo'];
 			if (gDBCheck($_REQUEST['mostrarDetalhesSku'])) {
 				$mtz[] = '<-' . $row['unidade'];
 			}
+
 			$mtz[] = '<-' . $row['nome'];
 			$mtz[] = '<-' . $o->small($row['descricao']);
 			$mtz[] = '<-' . $row['codigo_barras'];
@@ -514,16 +517,18 @@ switch ($gPage) {
 		$html .= $o->msg("Total de itens: " . count($rs));
 		break;
 
+
 	/* ----------------------------- FORMULÁRIO ------------------------ */
 	case DADOS:
 		if ($gId>0)
 		{
-			$html.=mostraCabecalho($gId);
+			$html.=mostraCabecalho();
 		}
 		$frm = new gForm();
 		$rs = $persistencia->obtemRegistros("i.id=".$gId);
 		$html.=$persistencia->geraCamposDoFormulario($frm, $rs[0], DADOS_SALVAR);
 		break;
+
 
 	/* ----------------------------- TUNNEL > SALVAR ------------------ */
 	case DADOS_SALVAR:
@@ -545,6 +550,7 @@ switch ($gPage) {
 			$html.=$o->backButton;
 		}
 		break;
+
 
 	/* ----------------------------- SKU ------------------------ */
 	case SKUS:
@@ -584,7 +590,7 @@ switch ($gPage) {
 			$o->addJavascript($js);
 		}
 
-		$frm=new gForm();
+		$frm = new gForm();
 		if ($gParam["EXIBIR_CAMPO_CODIGO2_ITENS"]["ativo"]) {
 			$campoDatasul=$frm->add("{name: codigo2; fieldLabel: Código 2; type: upperText; value: ".$row2['codigo2']."}");
 		}
@@ -631,7 +637,7 @@ switch ($gPage) {
 
 		$html .= $o->msgSubTitle('SKUs deste item');
 		$html .= $o->tableBegin("big", true);
-		$mtz = array();
+		$mtz = [];
 		$mtz[]="<-Opções";
 		$mtz[]="->Id";
 		$mtz[]="<>Ativo";
@@ -652,10 +658,9 @@ switch ($gPage) {
 		$mtz[]="->Valor";
 		$html.=$o->tableRow($mtz, "header");
 		foreach ($rs as $id=>$row) {
-			$mtz = array();
-			$btns=$o->button("{icon: pencil; caption: Editar;size: tiny; style: default; href: ".$o->page."&gPage=" . SKUS . "&gId=".$gId."&gIdd=".$row['id']."}");
-			if ($id>0)
-			{
+			$mtz = [];
+			$btns = $o->button("{icon: pencil; caption: Editar;size: tiny; style: default; href: ".$o->page."&gPage=" . SKUS . "&gId=".$gId."&gIdd=".$row['id']."}");
+			if ($id > 0) {
 				// Verifica se o SKU já foi utilizado. Só permite excluir se nunca foi utilizado
 				$sql = "SELECT id FROM umas_itens WHERE cancelada=0 AND id_itens_skus=".$row['id']." LIMIT 1";
 				$rst = dbQuery($sql);
@@ -680,6 +685,7 @@ switch ($gPage) {
 					$btns.=$o->button("{icon: trash; caption: Excluir; style: danger; size: tiny; openModal: confirmaExclusao; }", "javascript:gIdd='" . $row['id'] . "'");
 				}
 			}
+
 			$mtz[]="<-".$btns;
 			$mtz[]="->".$row["id"];
 			$mtz[]="<>".gCheck($row["ativo"]);
@@ -715,7 +721,7 @@ switch ($gPage) {
 
 	case SKUS_SALVAR:
 		$hoje = date('Y-m-d H:i:s');
-		$flds = array();
+		$flds = [];
 		$flds['id_itens']=$gId;
 		$flds['ativo']=gDBCheck($_REQUEST['ativo']);
 		$flds['codigo']=gCleanField($_REQUEST['codigo']);
@@ -823,7 +829,7 @@ switch ($gPage) {
 			}
 			$o->out($o->modal("{title: Confirme; size: small; content: Excluir esta ocorrência?; okCaption: Excluir agora; name: confirmaExclusaoOco; url: excluiOco()}"), gLOC_INLINE, 999);
 			$html.=$o->tableBegin('big', true);
-			$mtz = array();
+			$mtz = [];
 			$mtz[]='<-Opções';
 			$mtz[]='<-Data digitação';
 			$mtz[]='<-Data ocorrência';
@@ -832,21 +838,19 @@ switch ($gPage) {
 			$mtz[]='<-Colaborador';
 			$mtz[]='<-Pública?';
 			$html.=$o->tableRow($mtz, 'header');
-			foreach ($rs as $row)
-			{
-				$mtz = array();
+			foreach ($rs as $row) {
+				$mtz = [];
 				$btns=$o->button("{icon: pencil; hint: Alterar ocorrência; caption: Editar; size: small; href: ".$o->page."&gPage=".OCORRENCIAS."&gId=".$gId."&gIdEnd=".$row['id']."}");
 				$btns.=$o->button("{icon: trash; caption: Excluir; style: danger; size: small; openModal: confirmaExclusaoOco; }", "javascript:gIda='" . $row['id'] . "'");
 				$mtz[]='<-'.$btns;
 
 				$mtz[]='<-'.gDate($row['data_digitacao']);
 				$mtz[]='<-'.gDate($row['data_ocorrencia']);
-				$mtz[]='<-'.$o->small(nl2br($row['descricao']));
+				$mtz[]='<-'.$o->small(nl2br((string) $row['descricao']));
 				$mtz[]='<-'.$row['tipo_ocorrencia'];
 				$mtz[]='<-'.$row['funcionario'];
 				$mtz[]='<-'.gCheck($row['publica']);
-				if ($row['id']==$gIdEnd)
-				{
+				if ($row['id']==$gIdEnd) {
 					$html.=$o->tableRow($mtz, 'success');
 				} else {
 					$html.=$o->tableRow($mtz, 'detail');
@@ -860,30 +864,27 @@ switch ($gPage) {
 
 
 	case OCORRENCIAS_SALVAR:
-		$gIdEnd=intval($_REQUEST['gIdEnd']);
-		if ($gIdEnd==0)
-		{
+		$gIdEnd = intval($_REQUEST['gIdEnd']);
+		if ($gIdEnd == 0) {
 			$ok = $persistencia->insereOcorrencia($_REQUEST, $gId);
 			$gIdEnd = $ok;
-		} else
-		{
+		} else {
 			$ok = $persistencia->modificaOcorrencia($_REQUEST, $gId, $gIdEnd);
 		}
-		if ($ok)
-		{
+
+		if ($ok) {
 			userLog('Ocorrência alterada no item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
 			redirect($o->page."&gPage=".OCORRENCIAS."&gId=".$gId."&gIdEnd=".$gIdEnd);
 		} else {
 			$html.=$o->msgDanger(implode("<br>",$persistencia->erros));
 			$html.=$o->backButton;
 		}
+
 		break;
 
 
 	case OCORRENCIAS_NOVA:
-		$flds=array(
-			'id_pessoas'	=> $gId
-		);
+		$flds = ['id_pessoas' => $gId];
 		$gIdEnd=dbInsert('itens_ocorrencias', $flds, true);
 		userLog('Ocorrência adicionada ao item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
 		redirect($o->page."&gPage=".OCORRENCIAS."&gId=".$gId."&gIdEnd=".$gIdEnd);
@@ -898,12 +899,16 @@ switch ($gPage) {
 
 
 	case IMAGENS_RAPIDO:
-		$sql="SELECT a.*, p.nome criou, I.nome, SK.codigo
-		FROM itens_anexos a
-		LEFT JOIN pessoas p on (a.id_pessoas_criou=p.id AND p.cliente=0)
-		LEFT JOIN itens I ON a.id_itens=I.id
-		LEFT JOIN itens_skus SK ON I.id=SK.id_itens
-		WHERE a.id_itens=" . $gId ." ORDER BY a.descricao";
+		$sql = "SELECT
+					a.*,
+					p.nome criou,
+					I.nome,
+					SK.codigo
+				FROM itens_anexos a
+				LEFT JOIN pessoas p on (a.id_pessoas_criou=p.id AND p.cliente=0)
+				LEFT JOIN itens I ON a.id_itens=I.id
+				LEFT JOIN itens_skus SK ON I.id=SK.id_itens
+				WHERE a.id_itens=" . $gId ." ORDER BY a.descricao";
 		$rs=dbQuery($sql);
 
 		$html.=$o->msg($o->big($rs[0]['codigo'])."<br>".$rs[0]['nome']);
@@ -917,20 +922,16 @@ switch ($gPage) {
 		$html.=$frm->render($o);
 		$html.=$o->msgFilter("O tamanho máximo permitido para a inclusão de arquivos é de 4Mb");
 
-		if (count($rs)>0)
-		{
+		if ($rs) {
 			$http_usr_files.='anexos/';
 			$gPathUsrFiles.='anexos/';
 			$o->out($o->modal("{title: Confirme; size: small; content: Excluir este arquivo?; okCaption: Excluir agora; name: confirmaExclusao; url: excluiItem()}"), gLOC_INLINE, 999);
 			$html.='<div class="row">';
 			$id = 0;
-			foreach ($rs as $row)
-			{
-				if ($id<>$row['id'])
-				{
-					$ext = substr($row['arquivo'],strpos($row['arquivo'],'/')+1);
-					if ($ext=="")
-					{
+			foreach ($rs as $row) {
+				if ($id<>$row['id']) {
+					$ext = substr((string) $row['arquivo'],strpos((string) $row['arquivo'],'/')+1);
+					if ($ext == "") {
 						$ext = "jpg";
 					}
 					$imgName = $row['id'].'.'.$ext;
@@ -990,12 +991,9 @@ switch ($gPage) {
 
 
 
-
-
-
 	/* ----------------------------- IMAGENS ------------------------ */
 	case IMAGENS:
-		$html.=mostraCabecalho();
+		$html .= mostraCabecalho();
 
 		$sql="SELECT a.*, p.nome criou
 		FROM itens_anexos a
@@ -1009,25 +1007,21 @@ switch ($gPage) {
 		$frm->add("{name: descricao; type: upperFirstLetterText; }");
 		$frm->add("{name: arquivo; type: file; }");
 
-
 		$frm->addButton("{icon: camera; title: Usar webcam; hint: Utilizar a webcam; style: primary; size: small; href:javascript:;;}", "javascript:solicitarCam();");
 		$frm->buttonNextCaption=gT('Incluir');
 		$html.=$frm->render($o);
 
-
-		if (count($rs)>0)
-		{
+		if ($rs) {
 			$http_usr_files.='anexos/';
 			$gPathUsrFiles.='anexos/';
 			$o->out($o->modal("{title: Confirme; size: small; content: Excluir este arquivo?; okCaption: Excluir agora; name: confirmaExclusao; url: excluiItem()}"), gLOC_INLINE, 999);
 			$html.='<div class="row">';
-			foreach ($rs as $row)
-			{
-				$ext = substr($row['arquivo'],strpos($row['arquivo'],'/')+1);
-				if ($ext=="")
-				{
+			foreach ($rs as $row) {
+				$ext = substr((string) $row['arquivo'],strpos((string) $row['arquivo'],'/')+1);
+				if ($ext == "") {
 					$ext = "jpg";
 				}
+
 				$imgName = $row['id'].'.'.$ext;
 				$arquivo = $http_usr_files . $imgName;
 				$html.='<div class="col-lg-3 col-md-3 col-sm-6 col-xs-12 text-center">';
@@ -1086,19 +1080,18 @@ switch ($gPage) {
 	case IMAGENS_SALVAR:
 		$erros='';
 		$tamanhoMaximo=4000000;
-		$arquivo = isset($_FILES['arquivo']) ? $_FILES['arquivo'] : FALSE;
-		if ($gId==0)
-		{
+		$arquivo = $_FILES['arquivo'] ?? FALSE;
+		if ($gId == 0) {
 			$sql = "SELECT I.id
 					FROM itens I
 					LEFT JOIN itens_skus SK ON I.id=SK.id_itens
-					WHERE codigo='".strtoupper($_REQUEST['codigo'])."'";
+					WHERE codigo='".strtoupper((string) $_REQUEST['codigo'])."'";
 			$rst = dbQuery($sql);
 			$gId = intval($rst[0]['id_itens']);
 		}
-		if ($arquivo && $arquivo['name']<>'') {
-			if ($arquivo['error']==1)
-			{
+
+		if ($arquivo && $arquivo['name'] <> '') {
+			if ($arquivo['error'] == 1) {
 				$html.=$o->msgDanger("Houve um erro ao salvar o arquivo");
 				$html.=$o->msg("Verifique se o tamanho do arquivo é inferior ao limite, se existe permissão na pasta para salvá-lo e se o tipo de arquivo é compatível.");
 				$html.=$backButton;
@@ -1107,8 +1100,7 @@ switch ($gPage) {
 				// Verifica tamanho do arquivo
 				if ($arquivo['size'] > $tamanhoMaximo)
 				$erros[] = 'Arquivo em tamanho muito grande! A imagem deve ser de no máximo ' . $tamanhoMaximo . ' bytes. Envie outro arquivo...';
-				if (is_array($erros))
-				{
+				if (is_array($erros)) {
 					$msgErro = "Não foi possível salvar o arquivo de imagem.<br><br><ul>";
 					foreach ($erros as $erro)
 					{
@@ -1117,24 +1109,24 @@ switch ($gPage) {
 					$msgErro.= '</ul>';
 					$html.=$o->msgDanger($msgErro);
 					$html.=$backButton;
-				} else
-				{
-					$flds = array(
+				} else {
+					$flds = [
 						'data'             => $agora,
 						'id_itens'         => $gId,
 						'id_pessoas_criou' => $usrId,
 						'descricao'        => gCleanField($_REQUEST['descricao']),
 						'arquivo'          => $arquivo['type']
-					);
+					];
 					$gPathUsrFiles.='anexos/';
-					$ext = substr($arquivo['type'],strpos($arquivo['type'],'/')+1);
-					if ($ext == "")
-					{
+					$ext = substr((string) $arquivo['type'],strpos((string) $arquivo['type'],'/')+1);
+					if ($ext == "") {
 						$ext = "jpg";
 					}
-					if(!is_dir($gPathUsrFiles))
-					mkdir($gPathUsrFiles,0755);
-					$id=dbInsert('itens_anexos', $flds, true);
+					if (!is_dir($gPathUsrFiles)) {
+						mkdir($gPathUsrFiles,0755);
+					}
+
+					$id = dbInsert('itens_anexos', $flds, true);
 					$imgName = $id.'.'.$ext;
 					$ok = move_uploaded_file($arquivo['tmp_name'], $gPathUsrFiles . $imgName);
 					gLog("===> Arquivo salvo: ".$gPathUsrFiles . $imgName . " (".$arquivo['tmp_name'].")");
@@ -1143,58 +1135,57 @@ switch ($gPage) {
 					redirect($o->page."&gPage=".IMAGENS."&gId=".$gId);
 				}
 			}
-		} else
-		{
+		} else {
 			redirect($o->page."&gPage=".IMAGENS."&gId=".$gId);
 		}
+
 		break;
 
 
 	case IMAGENS_EXCLUIR:
-		$rs=dbQuery("SELECT * FROM itens_anexos WHERE id=".intval($_REQUEST['gIda']));
-		if (count($rs)>0)
-		{
+		$rs = dbQuery("SELECT * FROM itens_anexos WHERE id=".intval($_REQUEST['gIda']));
+		if ($rs) {
 			$gPathUsrFiles.='anexos/';
-			$imgName = $_REQUEST['gIda'].'.'.substr($rs[0]['arquivo'],strpos($rs[0]['arquivo'],'/')+1);
+			$imgName = $_REQUEST['gIda'].'.'.substr((string) $rs[0]['arquivo'],strpos((string) $rs[0]['arquivo'],'/')+1);
 			unlink($gPathUsrFiles.$imgName);
 			dbQuery("DELETE FROM itens_anexos WHERE id=".intval($_REQUEST['gIda']));
 			userLog('Imagem excluída do item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
 		}
+
 		redirect($o->page."&gPage=".IMAGENS."&gId=".$gId);
 		break;
 
 
 	case IMAGENS_UPLOAD:
-		if (isset($_FILES['webcam']['tmp_name']))
-		{
-			if ($gId==0)
-			{
+		if (isset($_FILES['webcam']['tmp_name'])) {
+			if ($gId == 0) {
 				$sql = "SELECT I.id
 						FROM itens I
 						LEFT JOIN itens_skus SK ON I.id=SK.id_itens
-						WHERE codigo='".strtoupper($_REQUEST['codigo'])."'";
+						WHERE codigo='".strtoupper((string) $_REQUEST['codigo'])."'";
 				$rst = dbQuery($sql);
 				$gId = intval($rst[0]['id_itens']);
 			}
 
 			/* Reculperando arquivo */
 			$arquivo=$_FILES['webcam'];
-			$flds = array(
+			$flds = [
 				'data'             => $agora,
 				'id_itens'         => $gId,
 				'id_pessoas_criou' => $usrId,
 				'descricao'        => 'Imagem do item',
 				'arquivo'          => $arquivo['type']
-			);
+			];
 			$gPathUsrFiles.='anexos/';
-			$ext = substr($arquivo['type'],strpos($arquivo['type'],'/')+1);
-			if ($ext == "")
-			{
+			$ext = substr((string) $arquivo['type'],strpos((string) $arquivo['type'],'/')+1);
+			if ($ext == "") {
 				$ext = "jpg";
 			}
-			if(!is_dir($gPathUsrFiles))
+
+			if (!is_dir($gPathUsrFiles)) {
 				mkdir($gPathUsrFiles,0755);
-			$id=dbInsert('itens_anexos', $flds, true);
+			}
+			$id = dbInsert('itens_anexos', $flds, true);
 			$imgName = $id.'.'.$ext;
 			move_uploaded_file($arquivo['tmp_name'], $gPathUsrFiles . $imgName);
 			chmod($gPathUsrFiles . $imgName, 0644); // evita ação de hackers
@@ -1207,8 +1198,7 @@ switch ($gPage) {
 	case ATIVAR_DESATIVAR:
 		$sql = "UPDATE itens SET ativo=1-ativo,data_alteracao='".date('Y-m-d H:i:s')."',id_pessoas_alterou=".$usrId." WHERE id=".$gId;
 		dbQuery($sql);
-		if ($_REQUEST['ativo']==1)
-		{
+		if ($_REQUEST['ativo'] == 1) {
 			userLog('Desativou item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
 		} else {
 			userLog('Ativou item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
@@ -1301,7 +1291,7 @@ switch ($gPage) {
 			break;
 		}
 
-		$where = array();
+		$where = [];
 
 		if ($nome <> '') {
 			if (intval($_REQUEST['formulario'])==1) {
@@ -1341,11 +1331,11 @@ switch ($gPage) {
 			$where[] = "i.id_prioridades_saida = {$id_prioridades_saida}";
 		}
 
-		$comboCondicional = array(
-			0 => false, //*Indiferente
-			1 => 1, //Opcao "Sim"
-			2 => 0 //Opcao "Nao"
-		);
+		$comboCondicional = [
+			0 => false, // *Indiferente
+			1 => 1, // Opcao "Sim"
+			2 => 0 // Opcao "Nao"
+		];
 
 		if ($situacao) {
 			$where[] = "i.ativo = " . $comboCondicional[$situacao];
@@ -1377,11 +1367,11 @@ switch ($gPage) {
 		}
 
 		if (is_array($where)) {
-			$novoDadoItem = array(
+			$novoDadoItem = [
 				'id_pessoas_proprietario' => $novo_id_pessoas_proprietario,
 				'id_pessoas_fornecedor'   => $novo_id_pessoas_fornecedor,
 				'apto' => 0
-			);
+			];
 			$persistencia->copiarItem($where, $novoDadoItem);
 			$html .= $o->msgWarning("Avisos: " . $o->ul($persistencia->avisos));
 
@@ -1412,7 +1402,7 @@ switch ($gPage) {
 			$html .= $o->msgSubTitle('Itens a partir da cópia');
 			$html .= $o->tableBegin('big', true);
 
-			$mtz = array();
+			$mtz = [];
 			$mtz[] = '<>' . 'Opções';
 			$mtz[] = '<-' . 'Item';
 			$mtz[] = '<>' . 'Ativo';
@@ -1421,7 +1411,7 @@ switch ($gPage) {
 			$html .= $o->tableRow($mtz, 'header');
 
 			foreach ($rs as $row) {
-				$mtz = array();
+				$mtz = [];
 				$botoes = $o->button("{icon: folder; caption: Abrir; size: small; href: " . $o->page . "&gPage=" . SKUS . "&gId=" . $row['id_itens'] . "&gIdd=" . $row['id_itens_skus'] . "; target: _blank;}");
 				$mtz[] = '<>' . $botoes;
 				$mtz[] = '<-' . $row['descricao_item'];
@@ -1478,27 +1468,27 @@ switch ($gPage) {
 		$sql = "SELECT IA.*, A.descricao area FROM itens_areas IA LEFT JOIN areas A ON IA.id_areas=A.id LEFT JOIN posicoes AS p ON p.id = IA.id_posicoes WHERE IA.id_itens=$gId AND IA.id_posicoes = 0 ORDER BY IA.prioridade, A.descricao";
 		$rs = dbQuery($sql);
 
-		if (count($rs)>0)
-		{
+		if ($rs) {
 			$o->out($o->modal("{title: Confirme; size: small; content: Excluir este registro?; okCaption: Excluir agora; name: confirmaExclusao; url: excluirRegistro()}"), gLOC_INLINE, 999);
 			$html.=$o->tableBegin("medium", true);
-			$mtz=array();
+			$mtz=[];
 			$mtz[]="<-Opções";
 			$mtz[]="->Id";
 			$mtz[]="<>Ativo";
 			$mtz[]="<>Prioridade";
 			$mtz[]="<-Área";
 			$html.=$o->tableRow($mtz, "header");
-			foreach ($rs as $id=>$row) {
-				$btns='';
+			foreach ($rs as $id => $row) {
+				$btns=[];
 				$btns.=$o->button("{icon: trash; caption: Excluir; style: danger; size: small; openModal: confirmaExclusao; }", "javascript:gIdd='" . $row['id'] . "'");
 				$btns.=$o->button("{icon: arrow-up;style: primary; size: small;href: ".$o->page."&gPage=".AREAS_PRIORIDADE_SOBE."&gId=".$gId."&gIdd=".$row['id']."; }");
 				$btns.=$o->button("{icon: arrow-down;style: primary; size: small;href: ".$o->page."&gPage=".AREAS_PRIORIDADE_DESCE."&gId=".$gId."&gIdd=".$row['id']."; }");
-				if ($row['ativo']==1)
+				if ($row['ativo']==1) {
 					$btns.=$o->button("{icon: eraser; caption: Desativar; style: warning; size: small; href:".$o->page."&gPage=".AREAS_DESATIVAR."&gId=".$gId."&gIdd=".$row['id']."}");
-				else
+				} else {
 					$btns.=$o->button("{icon: check; caption: Ativar; style: success; size: small; href:".$o->page."&gPage=".AREAS_DESATIVAR."&gId=".$gId."&gIdd=".$row['id']."}");
-				$mtz=array();
+				}
+				$mtz=[];
 				$mtz[]="<-".$btns;
 				$mtz[]="->".$row["id"];
 				$mtz[]="<>".gCheck($row["ativo"]);
@@ -1509,8 +1499,7 @@ switch ($gPage) {
 			$html.=$o->tableEnd();
 			$o->addJavascript('gIdd=0;function excluirRegistro(){document.location.href="'.$o->page."&gPage=".AREAS_EXCLUIR."&gId=$gId&gIdd=".'"+gIdd;}');
 		} else {
-			if ($gParam['POSICIONAMENTO_LIVRE']['ativo']==0)
-			{
+			if ($gParam['POSICIONAMENTO_LIVRE']['ativo'] == 0) {
 				$html.=$o->msgDanger("Nenhuma área definida para este item!<br>É necessário definir ao menos uma área para tornar o item apto para operação");
 			} else {
 				$html.=$o->msgInfo("Nenhuma área definida para este item");
@@ -1520,7 +1509,7 @@ switch ($gPage) {
 
 	case AREAS_SALVAR:
 		$idAreas    = implode(',', $_REQUEST['id_areas']);
-		$erros = array();
+		$erros = [];
 
 		if (!$idAreas) {
 			$erros[] = "Não é possível cadastrar uma área <b>indiferente</b>. Por favor selecione uma área válida";
@@ -1538,7 +1527,7 @@ switch ($gPage) {
 		}
 
 		if ($erros) {
-			$html .= mostraCabecalho($gId);
+			$html .= mostraCabecalho();
 			$html .= $o->msgDanger("Erros de validação: " . $o->ul($erros));
 			$html .= $o->button("{icon:arrow-left; caption:Voltar; href:".$o->page."&gPage=".AREAS."&gId=".$gId.";}");
 			break;
@@ -1546,26 +1535,24 @@ switch ($gPage) {
 
 		// Verifica se a área comporta um palete com as especificações informadas
 		$sql = "SELECT SK.*, U.descricao unidade
-					FROM itens_skus SK
-					LEFT JOIN unidades U ON SK.id_unidades=U.id
-					WHERE SK.id_itens=".$gId;
+				FROM itens_skus SK
+				LEFT JOIN unidades U ON SK.id_unidades=U.id
+				WHERE SK.id_itens=".$gId;
 		$rs = dbQuery($sql);
-		$posicoesInviaveis = array();
+		$posicoesInviaveis = [];
 		// Verifica pra cada SKU cadastrado
-		foreach ($rs as $row)
-		{
+		foreach ($rs as $row) {
 			// Cadastrado em centímetros
 			$altura = $row['altura'];
 			$paleteAltura = $row['palete_altura'];
 			$alturaPaleteSKU = $altura*$paleteAltura;
 			// Verifica para cada posição da área
 			$sql = "SELECT P.*, P.codigo_barras posicao, A.descricao area
-						FROM posicoes P
-						LEFT JOIN areas A ON P.id_areas=A.id
-						WHERE id_areas IN ({$idAreas})";
+					FROM posicoes P
+					LEFT JOIN areas A ON P.id_areas=A.id
+					WHERE id_areas IN ({$idAreas})";
 			$rsp = dbQuery($sql);
-			foreach ($rsp as $rowp)
-			{
+			foreach ($rsp as $rowp) {
 				// Cadastrado em metros
 				$alturaPosicao = $rowp['altura']*100;
 				if ($alturaPaleteSKU>=$alturaPosicao)
@@ -1575,8 +1562,8 @@ switch ($gPage) {
 			}
 		}
 
-		if (count($posicoesInviaveis)>0) {
-			$html.=mostraCabecalho($gId);
+		if ($posicoesInviaveis) {
+			$html.=mostraCabecalho();
 			$html.=$o->msgDanger("Não foi possível adicionar esta área, pois existem posições com dimensões que não suportam este item");
 			$html.=$o->ul($posicoesInviaveis);
 			$html.=$backButton;
@@ -1669,8 +1656,8 @@ switch ($gPage) {
 	case ATUALIZAR_EM_LOTE_PESQUIAR:
 		$html .= $o->msgSubTitle('Atualização em lote');
 
-		$where   = array();
-		$filtros = array();
+		$where   = [];
+		$filtros = [];
 
 		if ($_REQUEST["id_unidades"]) {
 			$filtros[] = "Unidade: " . gFieldById('unidades', $_REQUEST["id_unidades"], 'sigla');
@@ -1684,7 +1671,7 @@ switch ($gPage) {
 
 		if ($_REQUEST["codigo"]) {
 			$filtros[] = "Código do item: " . $_REQUEST["codigo"];
-			$codigo = str_replace(' ', '', implode("','", explode(',', $codigo)));
+			$codigo = str_replace(' ', '', implode("','", explode(',', (string) $codigo)));
 			$where[] = " (IK.codigo IN ('" . $codigo . "')) ";
 		}
 
@@ -1708,10 +1695,7 @@ switch ($gPage) {
 			$where[] = " I.id_pessoas_fornecedor = '" . $_REQUEST["id_pessoas_fornecedor"] . "'";
 		}
 
-		$opcoesCombo = array(
-			'Sim' => 1,
-			'Não' => 0
-		);
+		$opcoesCombo = ['Sim' => 1, 'Não' => 0];
 
 		if ($_REQUEST['faz_picking']) {
 			$filtros[] = "Picking: " . $_REQUEST['faz_picking'];
@@ -1732,20 +1716,19 @@ switch ($gPage) {
 		$where = $where ? "WHERE" . $where : "";
 
 		$sql = "SELECT
-				I.ativo, I.faz_picking, I.prazo_recebimento,
-				IK.id, IK.largura, IK.comprimento, P.nome fornecedor,
-				I.nome, IK.codigo, IK.quantidade, IK.peso_liquido, IK.peso_bruto, IK.palete_altura, IK.palete_lastro, U.descricao un_descricao, T.descricao ti_descricao, G.descricao gr_descricao, IK.altura, I.critico,
-				PD.descricao AS descricao_saida, I.picking_quantidade_minima, I.picking_quantidade_maxima, I.id AS id_item, I.dias_bloqueio, I.shelf_life, I.prazo_validade
-			  FROM itens_skus IK
-			  LEFT JOIN itens I ON IK.id_itens = I.id
-			  LEFT JOIN unidades U ON IK.id_unidades = U.id
-			  LEFT JOIN grupos G ON G.id = I.id_grupos
-			  LEFT JOIN pessoas P ON P.id = I.id_pessoas_fornecedor
-			  LEFT JOIN tipos T ON I.id_tipos = T.id
-			  LEFT JOIN prioridades_saida PD ON PD.id = I.id_prioridades_saida
-			  {$where}
-			  ORDER BY I.nome ASC
-			  ";
+					I.ativo, I.faz_picking, I.prazo_recebimento,
+					IK.id, IK.largura, IK.comprimento, P.nome fornecedor,
+					I.nome, IK.codigo, IK.quantidade, IK.peso_liquido, IK.peso_bruto, IK.palete_altura, IK.palete_lastro, U.descricao un_descricao, T.descricao ti_descricao, G.descricao gr_descricao, IK.altura, I.critico,
+					PD.descricao AS descricao_saida, I.picking_quantidade_minima, I.picking_quantidade_maxima, I.id AS id_item, I.dias_bloqueio, I.shelf_life, I.prazo_validade
+				FROM itens_skus IK
+				LEFT JOIN itens I ON IK.id_itens = I.id
+				LEFT JOIN unidades U ON IK.id_unidades = U.id
+				LEFT JOIN grupos G ON G.id = I.id_grupos
+				LEFT JOIN pessoas P ON P.id = I.id_pessoas_fornecedor
+				LEFT JOIN tipos T ON I.id_tipos = T.id
+				LEFT JOIN prioridades_saida PD ON PD.id = I.id_prioridades_saida
+				{$where}
+				ORDER BY I.nome ASC";
 		$itens = dbQuery($sql);
 
 		if ($filtros) {
@@ -1793,7 +1776,7 @@ switch ($gPage) {
 			$frm->add('{type: number; fieldLabel:Qtd. no palete - Altura; name:altura_palete; value:;}'),
 			$frm->add('{type: number; fieldLabel:Empilhamento máximo; name:empilhamento_maximo; value:;}')
 		);
-		$padraoCombo = array();
+		$padraoCombo = [];
 		$padraoCombo["0"] = "* Indiferente";
 		$padraoCombo["1"] = "SIM";
 		$padraoCombo["2"] = "NÃO";
@@ -1828,7 +1811,7 @@ switch ($gPage) {
 			$frm->add("{name: prazo_validade; fieldLabel: Prazo validade (dias); type: number; maxLength: 4; value:;} ")
 		);
 
-		$comboAtivarItem=array();
+		$comboAtivarItem=[];
 		$comboAtivarItem["0"] = "* Indiferente";
 		$comboAtivarItem["1"] = "SIM";
 		$comboAtivarItem["2"] = "NÃO";
@@ -1841,12 +1824,12 @@ switch ($gPage) {
 			);
 		}
 
-		$curvas = array(
+		$curvas = [
 			'0' => "* Indiferente",
 			'1' => 'A',
 			'2' => 'B',
 			'3' => 'C'
-		);
+		];
 
 		$frm->row(
 			$frm->add("{type: combo; fieldLabel: Grupo; name:id_grupo; items:" . $sp["grupos"] . ";}"),
@@ -1863,7 +1846,7 @@ switch ($gPage) {
 
 		$html .= $o->msg("Itens que serão alterados: ");
 		$html .= $o->tableBegin("big", true);
-		$mtz   = array();
+		$mtz   = [];
 		$mtz[] = "<>Ativo";
 		$mtz[] = "<-Nome";
 		$mtz[] = "<-Fornecedor";
@@ -1892,7 +1875,7 @@ switch ($gPage) {
 		$mtz[] = "->Prazo validade";
 		$html .=  $o->tableRow($mtz, "header");
 		foreach ($itens as $item) {
-			$mtz = array();
+			$mtz = [];
 			$mtz[] = "<>" . gCheck($item["ativo"]);
 			$mtz[] = "<-" . $item["nome"];
 			$mtz[] = "<-" . $item["fornecedor"];
@@ -1926,7 +1909,7 @@ switch ($gPage) {
 
 
 	case CONFIRMAR_ATUALIZAR_EM_LOTE_PESQUISAR:
-		$mtz=array();
+		$mtz=[];
 		if ($_REQUEST["quantidade"]) {
 			$mtz["quantidade"] = gDBFloat($_REQUEST["quantidade"]);
 		}
@@ -1967,7 +1950,7 @@ switch ($gPage) {
 			$mtz["id_unidades"] = $_REQUEST["id_unidades"];
 		}
 
-		$mtzItem=array();
+		$mtzItem=[];
 		if ($_REQUEST["exige_lote"]) {
 			$exige_lote = (int) ($_REQUEST["exige_lote"] == 1);
 			$mtzItem["exige_lote"] = $exige_lote;
@@ -2011,11 +1994,11 @@ switch ($gPage) {
 		}
 
 		if ($_REQUEST["curva"]) {
-			$curvas = array(
+			$curvas = [
 				'1' => 'A',
 				'2' => 'B',
 				'3' => 'C'
-			);
+			];
 			$mtzItem["curva"] = $curvas[$_REQUEST["curva"]];
 		}
 
@@ -2054,7 +2037,7 @@ switch ($gPage) {
 			$mtzItem['id_pessoas_fornecedor'] = (int) $_REQUEST['id_pessoas_fornecedor'];
 		}
 
-		$itens = explode("|", $_REQUEST["itens_json"]);
+		$itens = explode("|", (string) $_REQUEST["itens_json"]);
 		foreach ($itens as $item) {
 			if (!empty($item) && !is_null($item)) {
 
@@ -2087,11 +2070,11 @@ switch ($gPage) {
 
 		// Insumos deste proprietário
 		$sqlInsumos = "SELECT ik.id, CONCAT(i.codigo,' - ',i.nome, ' (',ik.quantidade,'x', u.sigla,')') nome
-				FROM itens_skus ik
-				LEFT JOIN unidades u ON ik.id_unidades = u.id
-				LEFT JOIN itens i ON ik.id_itens = i.id
-				WHERE i.ativo = 1 AND ik.ativo = 1 AND i.produto_acabado = 0 AND i.id_pessoas_proprietario = $id_pessoas_proprietario
-				ORDER BY i.nome, ik.quantidade";
+					FROM itens_skus ik
+					LEFT JOIN unidades u ON ik.id_unidades = u.id
+					LEFT JOIN itens i ON ik.id_itens = i.id
+					WHERE i.ativo = 1 AND ik.ativo = 1 AND i.produto_acabado = 0 AND i.id_pessoas_proprietario = $id_pessoas_proprietario
+					ORDER BY i.nome, ik.quantidade";
 
 		$frm = new gForm();
 
@@ -2100,6 +2083,7 @@ switch ($gPage) {
 			$frm->add("{name: quantidade; fieldLabel: Quantidade; type: number; value: " . gFloat($row2['quantidade']) . "}"),
 			$frm->add("{name: grupo; fieldLabel: Grupo; type: upperText; maxLength: 1; value: " . $row2['grupo'] . "}")
 		);
+
 		if ($gParam['PERFIL_PRODUCAO_COM_KITS']['ativo']) {
 			$frm->add("{name: kitItens; fieldLabel: Arquivo CSV;type: file;}");
 		}
@@ -2116,11 +2100,11 @@ switch ($gPage) {
 				WHERE ie.id_itens_skus_produto = $gIdd
 				ORDER BY grupo";
 		$rs = dbQuery($sql);
-		if (count($rs)) {
+		if ($rs) {
 			$cnt   = 0;
 			$o->out($o->modal("{title: Confirme; size: small; content: Excluir este registro?; okCaption: Excluir agora; name: confirmaExclusao; url: excluirRegistro()}"), gLOC_INLINE, 999);
 			$html .= $o->tableBegin("big", true);
-			$mtz   = array();
+			$mtz   = [];
 			$mtz[] = "<-Opções";
 			$mtz[] = "->Nº";
 			$mtz[] = "<-Código";
@@ -2132,12 +2116,12 @@ switch ($gPage) {
 			foreach ($rs as $id=>$row) {
 				if ($grupo != $row['grupo']) {
 					$grupo = $row['grupo'];
-					$mtz = array();
+					$mtz = [];
 					$mtz[] = "~6" . $row['grupo'];
 					$html .= $o->tableRow($mtz, "header");
 				}
 				$cnt++;
-				$mtz = array();
+				$mtz = [];
 				$btns = $o->button("{icon: trash; caption: Excluir; style: danger; size: tiny; openModal: confirmaExclusao; }", "javascript:gIda='" . $row['id'] . "'");
 				$mtz[] = "<-" . $btns;
 				$mtz[] = "->" . $cnt;
@@ -2203,7 +2187,7 @@ switch ($gPage) {
 						WHERE id_itens_skus_produto = {$gIdd} AND id_itens_skus_insumo = " . $itensSkus[$key];
 				$rs = dbQuery($sql)[0];
 
-				$flds = array();
+				$flds = [];
 				$flds['id_itens_skus_insumo'] = $itensSkus[$key];
 				$flds['quantidade'] = gDBFloat($verificaQuantidade);
 				if ($rs) {
@@ -2225,13 +2209,14 @@ switch ($gPage) {
 			// if (!$jaTem)
 
 			$sql = "SELECT quantidade, id FROM itens_estruturas
-						WHERE id_itens_skus_produto = {$gIdd} AND id_itens_skus_insumo = " . $_REQUEST['id_itens_skus_insumo'];
+					WHERE id_itens_skus_produto = {$gIdd}
+						AND id_itens_skus_insumo = " . $_REQUEST['id_itens_skus_insumo'];
 			$rs = dbQuery($sql)[0];
 
 			$hoje = date('Y-m-d H:i:s');
 			$flds = "";
 			$flds['id_itens_skus_insumo'] = intval($_REQUEST['id_itens_skus_insumo']);
-			$flds['grupo'] = strtoupper($_REQUEST['grupo']);
+			$flds['grupo'] = strtoupper((string) $_REQUEST['grupo']);
 			$flds['quantidade'] = gDBFloat($_REQUEST['quantidade']);
 
 			if ($rs) {
@@ -2258,7 +2243,6 @@ switch ($gPage) {
 		redirect($o->page . '&gPage=' . ESTRUTURA . '&gId=' . $gId);
 		break;
 
-	// ========================================================================
 
 	case LISTAGEM:
 		$html.=$o->msgSubTitle("Listagem");
@@ -2275,8 +2259,8 @@ switch ($gPage) {
 		$id_pessoas_proprietario = intval($_REQUEST['id_pessoas_proprietario']);
 		$produto_acabado = gDBCheck($_REQUEST['produto_acabado']);
 		$insumo = gDBCheck($_REQUEST['insumo']);
-		$filtro = array();
-		$flt = array();
+		$filtro = [];
+		$flt = [];
 		if ($id_pessoas_proprietario>0)
 		{
 			$filtro[] = gFieldById("pessoas", $id_pessoas_proprietario,"nome");
@@ -2292,13 +2276,21 @@ switch ($gPage) {
 			$filtro[] = "Insumos";
 			$flt[] = "i.produto_acabado=0";
 		}
-		$where = '';
-		if (count($flt))
-		{
+		$where = [];
+		if ($flt) {
 			$where = "WHERE ".implode(" AND ",$flt);
 		}
-		$sql = "SELECT i.id, ik.id id_itens_skus, i.codigo, i.nome, u.sigla, ik.quantidade qtd_sku, ik.codigo_barras,
-						i.produto_acabado, i.ativo, ik.ativo ativo_sku
+		$sql = "SELECT
+					i.id,
+					ik.id id_itens_skus,
+					i.codigo,
+					i.nome,
+					u.sigla,
+					ik.quantidade qtd_sku,
+					ik.codigo_barras,
+					i.produto_acabado,
+					i.ativo,
+					ik.ativo ativo_sku
 				FROM itens i
 				LEFT JOIN itens_skus ik ON i.id = ik.id_itens
 				LEFT JOIN unidades u ON ik.id_unidades = u.id
@@ -2307,7 +2299,7 @@ switch ($gPage) {
 		$rs  = dbQuery($sql);
 		$html.=$o->msgFilter(implode(" • ", $filtro));
 		$html.=$o->tableBegin("big", true);
-		$mtz = array();
+		$mtz = [];
 		$mtz[] = "->Id      ";
 		$mtz[] = "<>Ativo       ";
 		$mtz[] = "<>Prod.acabado";
@@ -2318,11 +2310,9 @@ switch ($gPage) {
 		$mtz[] = "<-Unidade";
 		$mtz[] = "<-Estrutura                                            ";
 		$html.=$o->tableRow($mtz, "header");
-		foreach($rs as $row)
-		{
-			$mtz = array();
-			if (isset($_REQUEST["gPDF"]) || isset($_REQUEST["gXLS"]) || isset($_REQUEST["gDOC"]) || isset($_REQUEST["gCSV"]))
-			{
+		foreach($rs as $row) {
+			$mtz = [];
+			if (isset($_REQUEST["gPDF"]) || isset($_REQUEST["gXLS"]) || isset($_REQUEST["gDOC"]) || isset($_REQUEST["gCSV"])) {
 				$mtz[] = "->".$row['id'];
 			} else {
 				$mtz[] = "->"."<a target='_new' href='".$o->page."&gPage=10&gId=".$row['id']."'>".$row['id']."</a>";
@@ -2336,8 +2326,7 @@ switch ($gPage) {
 			$mtz[] = "->".gFloat($row['qtd_sku']);
 			$mtz[] = "<-".$row['sigla'];
 			$estrutura = '';
-			if ($row['produto_acabado'])
-			{
+			if ($row['produto_acabado']) {
 				$sql = "SELECT ie.grupo, ie.quantidade,
 							i.codigo, i.nome, u.sigla, ik.quantidade qtd_sku
 						FROM itens_estruturas ie
@@ -2346,52 +2335,50 @@ switch ($gPage) {
 						LEFT JOIN unidades u ON ik.id_unidades = u.id
 						WHERE ie.id_itens_skus_produto=".$row['id_itens_skus']." ORDER BY ie.grupo";
 				$rsi = dbQuery($sql);
-				$itens = array();
-				foreach ($rsi as $r)
-				{
-					if ($r['grupo']<>'')
+				$itens = [];
+				foreach ($rsi as $r) {
+					if ($r['grupo']<>'') {
 						$grupo = $o->label($r['grupo'])." ";
-					else 
+					} else {
 						$grupo = "";
+					}
 					$itens[] = $grupo . intval($r['quantidade'])." de ".$r['codigo']." (".intval($r['qtd_sku'])."x".$r['sigla'].")";
 				}
 				$estrutura = $o->small(implode("<br>",$itens));
-			} else {
-
 			}
+
 			$mtz[] = "<-".$estrutura;
-			if (($row['produto_acabado'] && $estrutura<>"") || $insumo)
-			{
-				$html.=$o->tableRow($mtz, "detail");
+			if (($row['produto_acabado'] && $estrutura<>"") || $insumo) {
+				$html .= $o->tableRow($mtz, "detail");
 			}
 
 		}
+
 		$html.=$o->tableEnd();
 	break;
 
-	// ========================================================================
+
 	case FORNECEDORES:
 		$html.=mostraCabecalho();
 		$html.=$o->msg("Tabela de conversão de códigos para importação de XML de fornecedor para o cliente");
 
 		$frm = new gForm();
 
-		$sql = "
-			SELECT ik.id,
-				CONCAT(
-					ik.codigo, ' - ', i.nome,
-					' (', ik.quantidade, 'x', u.sigla, ')',
-					' - ', proprietario.apelido
-				) nome
-			FROM itens_skus ik
-			LEFT JOIN unidades u ON ik.id_unidades=u.id
-			LEFT JOIN itens i ON ik.id_itens=i.id
-			JOIN pessoas proprietario ON proprietario.id = i.id_pessoas_proprietario
-			WHERE i.ativo=1
-				AND i.id={$gId}
-				AND ik.ativo=1
-				AND i.produto_acabado=0
-			ORDER BY i.nome, ik.quantidade";
+		$sql = "SELECT ik.id,
+					CONCAT(
+						ik.codigo, ' - ', i.nome,
+						' (', ik.quantidade, 'x', u.sigla, ')',
+						' - ', proprietario.apelido
+					) nome
+				FROM itens_skus ik
+				LEFT JOIN unidades u ON ik.id_unidades=u.id
+				LEFT JOIN itens i ON ik.id_itens=i.id
+				JOIN pessoas proprietario ON proprietario.id = i.id_pessoas_proprietario
+				WHERE i.ativo=1
+					AND i.id={$gId}
+					AND ik.ativo=1
+					AND i.produto_acabado=0
+				ORDER BY i.nome, ik.quantidade";
 
 		$frm->row(
 			$frm->add("{name: cnpj; fieldLabel: CNPJ; type: text; value: ".($row2['cnpj'])."; maxLength: 14;"),
@@ -2403,17 +2390,15 @@ switch ($gPage) {
 		$frm->add("{name: gIdd;type: hidden; value: ".$gIdd."}");
 		$html.=$frm->render($o);
 
-
-		$sql = "
-			SELECT f.id,
-				f.cnpj,
-				f.codigo,
-				CONCAT(ik.codigo,' - ',i.nome, ' (',ik.quantidade,'x', u.sigla,')') nome
-			FROM itens_fornecedores f
-			JOIN itens_skus ik ON f.id_itens_skus = ik.id
-			JOIN itens i ON ik.id_itens=i.id
-			JOIN unidades u ON ik.id_unidades=u.id
-			WHERE f.id_itens = {$gId}";
+		$sql = "SELECT f.id,
+					f.cnpj,
+					f.codigo,
+					CONCAT(ik.codigo,' - ',i.nome, ' (',ik.quantidade,'x', u.sigla,')') nome
+				FROM itens_fornecedores f
+				JOIN itens_skus ik ON f.id_itens_skus = ik.id
+				JOIN itens i ON ik.id_itens=i.id
+				JOIN unidades u ON ik.id_unidades=u.id
+				WHERE f.id_itens = {$gId}";
 		$rs = dbQuery($sql);
 		if (!$rs[0]['id']) {
 			$html .= $o->msgInfo("Este item não tem códigos para conversão cadastrados");
@@ -2433,7 +2418,7 @@ switch ($gPage) {
 
 		$html .= $o->tableBegin("big", true);
 
-		$mtz = array();
+		$mtz = [];
 		$mtz[]="<-Opções";
 		$mtz[]="->Nº";
 		$mtz[]="<-CNPJ";
@@ -2442,7 +2427,7 @@ switch ($gPage) {
 		$html.=$o->tableRow($mtz, "header");
 
 		foreach ($rs as $chave=>$row) {
-			$mtz = array();
+			$mtz = [];
 			$mtz[] = "<-" . $o->button("{icon: trash; caption: Excluir; style: danger; size: tiny; openModal: confirmaExclusao; }", "javascript:gIda='" . $row['id'] . "'");
 			$mtz[]="->".($chave+1);
 			$mtz[]="<-".$row["cnpj"];
@@ -2459,11 +2444,11 @@ switch ($gPage) {
 		{
 
 			$hoje = date('Y-m-d H:i:s');
-			$flds = array();
+			$flds = [];
 			$flds['id_itens']=$gId;
 			$flds['id_itens_skus']=intval($_REQUEST['id_itens_skus']);
 			$flds['codigo']=gCleanField($_REQUEST['codigo']);
-			$flds['cnpj']=preg_replace('/[^0-9]+/i ', '', $_REQUEST['cnpj']);
+			$flds['cnpj']=preg_replace('/[^0-9]+/i ', '', (string) $_REQUEST['cnpj']);
 			dbInsert("itens_fornecedores", $flds);
 			userLog('Código de fornecedor '.$flds['codigo'].' à estrutura do item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
 		}
@@ -2482,7 +2467,7 @@ switch ($gPage) {
 		$doc = array_splice($doc,1);
 
 		$html.=$o->tableBegin("big", true);
-		$mtz = array();
+		$mtz = [];
 		$mtz[]="Codigo";
 		$mtz[]="Produto";
 		$mtz[]="CodBarras";
@@ -2494,10 +2479,10 @@ switch ($gPage) {
 
 		foreach($doc as $res){
 			$codigo = $produto = $codBarras = $fornecedor = $cnpj = '';
-			list($codigo,$produto,$codBarras,$fornecedor,$cnpj) = explode(";",$res);
-			$cnpj = trim(preg_replace('/[^\d]/', '',$cnpj));
+			[$codigo, $produto, $codBarras, $fornecedor, $cnpj] = explode(";",(string) $res);
+			$cnpj = trim((string) preg_replace('/[^\d]/', '',$cnpj));
 
-			$mtz   = array();
+			$mtz   = [];
 			$mtz[] = $codigo;
 			$mtz[] = $produto;
 			$mtz[] = $codBarras;
@@ -2507,19 +2492,19 @@ switch ($gPage) {
 			$item = dbQuery("SELECT id, nome FROM itens WHERE codigo = '".$codigo."'")[0];
 			if(count($item) > 0){
 
-				$res = dbQuery("SELECT p.id, pj.razao_social 
-				FROM pessoas p 
-				LEFT JOIN pessoas_juridicas pj ON pj.id_pessoas = p.id
-				WHERE REPLACE(REPLACE(REPLACE(pj.cnpj, '/',''),'.', ''),'-', '') = '$cnpj' ")[0];
+				$res = dbQuery("SELECT p.id, pj.razao_social
+								FROM pessoas p
+								LEFT JOIN pessoas_juridicas pj ON pj.id_pessoas = p.id
+								WHERE REPLACE(REPLACE(REPLACE(pj.cnpj, '/',''),'.', ''),'-', '') = '$cnpj' ")[0];
 
-				if($res['id'] > 0){
+				if ($res['id'] > 0) {
 					dbQuery("UPDATE itens SET id_pessoas_fornecedor = ".$res['id']." WHERE id = ".$item['id']);
 					dbQuery("UPDATE pessoas SET fornecedor=1,situacao='Ativo',nome='".$fornecedor."' WHERE id=".$res['id']);
 					$mtz[]=gCheck(1);
 					$mtz[]= "<- Alterado o item <b>".$item['nome']."</b> (".$codigo.") para o fornecedor <b>".$fornecedor."</b> (".$cnpj.")";
 					$html.=$o->tableRow($mtz, "detail");
-				}else{
-					$flds = array();
+				} else {
+					$flds = [];
 					$flds["data_cadastro"] = date('Y-m-d H:i:s');
 					$flds["id_pessoas_criou"] = 1;
 					$flds["tipo"] = 'J';
@@ -2529,7 +2514,7 @@ switch ($gPage) {
 					$flds["apelido"] = ($cnpj);
 					$id = dbInsert('pessoas', $flds, true);
 
-					$flds = array();
+					$flds = [];
 					$flds["id_pessoas"] = $id;
 					$flds["cnpj"] = $cnpj;
 					$flds["razao_social"] = $cnpj;
@@ -2540,7 +2525,7 @@ switch ($gPage) {
 					$mtz[]= "<- Não foi possível encontrar um fornecedor com o CNPJ: ".$cnpj.". Foi necessário realizar o cadastro deste fornecedor.";
 					$html.=$o->tableRow($mtz, "detail");
 				}
-			}else{
+			} else {
 				$mtz[]=gCheck(0);
 				$mtz[]= "<- Não foi possível encontrar um item com o código: ".$codigo;
 				$html.=$o->tableRow($mtz, "detail");
@@ -2548,7 +2533,7 @@ switch ($gPage) {
 		}
 		$html.=$o->tableEnd();
 
-	break;
+		break;
 
 
 	case POSICAO_FIXA_LOTE:
@@ -2591,7 +2576,6 @@ switch ($gPage) {
 				$erros[] = 'Linha ' . ($numeroLinha+1) . ' deste arquivo com coluna vazia';
 				continue;
 			}
-
 
 			//Consultar item e posição
 			$sql = "SELECT id_itens AS id
@@ -2642,6 +2626,7 @@ switch ($gPage) {
 		$html .= $o->msgSuccess("Posições fixas cadastradas com sucesso");
 		break;
 
+
 	case FILTRO_IMPORTAR_ITENS_KIT:
 		$html .= $o->msgSubTitle("Kit itens em Lote");
 
@@ -2660,6 +2645,7 @@ switch ($gPage) {
 			<br> - Verificar se todos os itens de insumo estão cadastrados no sistema
 			<br> - Verificar se o campo da quantidade está preenchido");
 		break;
+
 
 	case IMPORTAR_ITENS_KIT:
 		$conteudoCsv = file_get_contents($_FILES['kitItens']['tmp_name']);
@@ -2709,7 +2695,7 @@ switch ($gPage) {
 				if ($rs) {
 					$idKit = $rs[0]['id'];
 				} else {
-					$campos = array();
+					$campos = [];
 					$campos['codigo'] = gCleanField($codigoKit);
 					$campos['codigo_barras'] = gCleanField($codigoKit);
 					$campos['nome'] = gCleanField($codigoKit);
@@ -2734,7 +2720,7 @@ switch ($gPage) {
 					$campos['data_cadastro'] = date("Y-m-d H:i:s");
 					$idItens = dbInsert("itens",$campos,true);
 
-					$campos = array();
+					$campos = [];
 					$campos['id_itens'] = $idItens;
 					$campos['ativo'] = 0;
 					$campos['codigo'] = $codigoKit;
@@ -2775,10 +2761,10 @@ switch ($gPage) {
 							AND id_itens_skus_insumo = " . $insumo['id_itens_skus'];
 					$rs = dbQuery($sql)[0];
 
-					$conferirQuantidade = preg_replace('/[^\d\,]/', '', $insumo['quantidade']);
+					$conferirQuantidade = preg_replace('/[^\d\,]/', '', (string) $insumo['quantidade']);
 					$conferirQuantidade = str_replace(',', '.', $conferirQuantidade);
 
-					$flds = array();
+					$flds = [];
 					$flds['id_itens_skus_insumo'] = $insumo['id_itens_skus'];
 					$flds['quantidade'] = gDBFloat($conferirQuantidade);
 					if ($rs) { //Caso ja tenha insumo cadastrado ele faz um update
@@ -2830,8 +2816,8 @@ switch ($gPage) {
 
 		$conteudoCsv = explode("\n", $conteudoCsv);
 
-		$novosSkus = array();
-		$values = array();
+		$novosSkus = [];
+		$values = [];
 		foreach ($conteudoCsv as $chave => $linha) {
 
 			$numeroLinha = $chave + 1;
@@ -2864,24 +2850,22 @@ switch ($gPage) {
 				$erros[] = 'Código do fonecedor está vazio na linha ' . $numeroLinha;
 			}
 
-			$sql = "
-				SELECT itens_skus.id, itens_skus.id_itens
-				FROM itens_skus
-				JOIN unidades ON unidades.id = itens_skus.id_unidades
-				WHERE (codigo = '" . $codigo . "'
-					OR codigo_barras = '" . $codigo . "')
-					AND unidades.sigla = '" . $unidade . "'
-				ORDER by ativo DESC";
-			$sku = dbQuery($sql)[0];
-
-			if (!$sku) {
-				$sql = "
-					SELECT id_itens
+			$sql = "SELECT itens_skus.id, itens_skus.id_itens
 					FROM itens_skus
 					JOIN unidades ON unidades.id = itens_skus.id_unidades
 					WHERE (codigo = '" . $codigo . "'
 						OR codigo_barras = '" . $codigo . "')
+						AND unidades.sigla = '" . $unidade . "'
 					ORDER by ativo DESC";
+			$sku = dbQuery($sql)[0];
+
+			if (!$sku) {
+				$sql = "SELECT id_itens
+						FROM itens_skus
+						JOIN unidades ON unidades.id = itens_skus.id_unidades
+						WHERE (codigo = '" . $codigo . "'
+							OR codigo_barras = '" . $codigo . "')
+						ORDER by ativo DESC";
 				$idItem = dbQuery($sql)[0]['id_itens'];
 
 				if (!$idItem) {
@@ -2891,7 +2875,7 @@ switch ($gPage) {
 				}
 
 				if (!$erros) {
-					$idUnidade = dbquery("SELECT id FROM unidades WHERE sigla = '{$unidade}'")[0]['id'];
+					$idUnidade = dbQuery("SELECT id FROM unidades WHERE sigla = '{$unidade}'")[0]['id'];
 
 					$dados['ativo'] = 0;
 					$dados['id_itens'] = $idItem;
@@ -2915,10 +2899,8 @@ switch ($gPage) {
 				}
 			}
 
-			$sql = "SELECT
-						id
-					FROM
-						itens_fornecedores
+			$sql = "SELECT id
+					FROM itens_fornecedores
 					WHERE id_itens = '" . $sku['id_itens'] . "'
 						AND id_itens_skus = '" . $sku['id'] . "'
 						AND cnpj = '" . $cnpj . "'
@@ -2958,18 +2940,18 @@ switch ($gPage) {
 		$html .= $o->msgSubTitle("Importação de fornecedores");
 		$html .= $o->msgSuccess("Importação realizada com sucesso");
 
-		$novosSkus = explode(',', $_REQUEST['novosSkus']);
+		$novosSkus = explode(',', (string) $_REQUEST['novosSkus']);
 		if ($novosSkus) {
 			$html .= $o->msgInfo("Foram criados novos SKUS com as unidades que constam no arquivo importado para os seguintes itens:<br>");
 			$skusExibir = '';
 
 			$html .= $o->tableBegin('tiny', true);
-			$mtz   = array();
+			$mtz   = [];
 			$mtz[] = '<-' . 'Código';
 			$html .= $o->tableRow($mtz, 'header');
 
 			foreach ($novosSkus as $sku) {
-				$mtz   = array();
+				$mtz   = [];
 				$mtz[] = '<-' . linkParaCodigoItem($sku);
 				$html .= $o->tableRow($mtz, 'detail');
 			}
@@ -2984,7 +2966,6 @@ switch ($gPage) {
 
 	case POSICAO_FIXA:
 		$html .= mostraCabecalho($gId);
-
 		$frm = new gForm("{columns: 3}");
 		$frm->add("{name: id_posicoes; fieldLabel: Adicionar posições fixas; allowBlank: false; type: comboMultiSelection; value: ; items: " . $sp['combo_posicoes_picking'] . "}");
 		$frm->addButton("{icon: arrow-left; title: Voltar; hint: Voltar; style: default; href: " . $o->page . "&gPage=" . AREAS . "&gId=" . $gId . ";}");
@@ -2992,19 +2973,17 @@ switch ($gPage) {
 		$frm->add("{name: gId; type: hidden; value: $gId}");
 		$html.=$frm->render($o);
 
-		$sql =
-			"SELECT
-				IA.*,
-				p.codigo_barras AS posicoes
-			FROM
-				itens_areas IA
-			LEFT JOIN areas A
-				ON IA.id_areas = A.id
-			LEFT JOIN posicoes AS p
-				ON p.id = IA.id_posicoes
-			WHERE IA.id_itens = $gId AND IA.id_posicoes > 0
-			ORDER BY IA.prioridade, A.descricao"
-		;
+		$sql = "SELECT
+					IA.*,
+					p.codigo_barras AS posicoes
+				FROM
+					itens_areas IA
+				LEFT JOIN areas A
+					ON IA.id_areas = A.id
+				LEFT JOIN posicoes AS p
+					ON p.id = IA.id_posicoes
+				WHERE IA.id_itens = $gId AND IA.id_posicoes > 0
+				ORDER BY IA.prioridade, A.descricao";
 		$rs = dbQuery($sql);
 
 		if (!$apto && !$rs) {
@@ -3019,14 +2998,14 @@ switch ($gPage) {
 
 		$o->out($o->modal("{title: Confirme; size: small; content: Excluir este registro?; okCaption: Excluir agora; name: confirmaExclusao; url: excluirRegistro()}"), gLOC_INLINE, 999);
 		$html .= $o->tableBegin("medium", true);
-		$mtz = array();
+		$mtz = [];
 		$mtz[] = "<- Opções";
 		$mtz[] = "-> Id";
 		$mtz[] = "<> Ativo";
 		$mtz[] = "<- Posição";
 		$html .= $o->tableRow($mtz, "header");
 		foreach ($rs as $id => $row) {
-			$btns = '';
+			$btns = [];
 			$btns .= $o->button("{icon: trash; caption: Excluir; style: danger; size: small; openModal: confirmaExclusao; }", "javascript:gIdd='" . $row['id'] . "'");
 
 			if ($row['ativo']==1) {
@@ -3035,7 +3014,7 @@ switch ($gPage) {
 				$btns .= $o->button("{icon: check; caption: Ativar; style: success; size: small; href:" . $o->page . "&gPage=" . AREAS_DESATIVAR . "&gId=" . $gId . "&gIdd=" . $row['id'] . "&posicaoFixa=1}");
 			}
 
-			$mtz = array();
+			$mtz = [];
 			$mtz[] = "<-" . $btns;
 			$mtz[] = "->" . $row["id"];
 			$mtz[] = "<>" . gCheck($row["ativo"]);
@@ -3053,7 +3032,8 @@ switch ($gPage) {
 				FROM itens_areas I
 				LEFT JOIN areas A ON I.id_areas = A.id
 				WHERE id_itens = {$gId}
-					AND id_posicoes > 0 AND id_posicoes IN ({$idPosicoes})";
+					AND id_posicoes > 0
+					AND id_posicoes IN ({$idPosicoes})";
 		$rs = dbQuery($sql);
 
 		if ($rs) {
@@ -3061,7 +3041,7 @@ switch ($gPage) {
 		}
 
 		if ($erros) {
-			$html .= mostraCabecalho($gId);
+			$html .= mostraCabecalho();
 			$html .= $o->msgDanger("Erros de validação: " . $o->ul($erros));
 			$html .= $o->button("{icon:arrow-left; caption:Voltar; href:" . $o->page . "&gPage=" . POSICAO_FIXA . "&gId=" . $gId . ";}");
 			break;
@@ -3069,47 +3049,47 @@ switch ($gPage) {
 
 		// Verifica se a área comporta um palete com as especificações informadas
 		$sql = "SELECT SK.*, U.descricao unidade
-					FROM itens_skus SK
-					LEFT JOIN unidades U ON SK.id_unidades=U.id
-					WHERE SK.id_itens=".$gId;
+				FROM itens_skus SK
+				LEFT JOIN unidades U ON SK.id_unidades=U.id
+				WHERE SK.id_itens=".$gId;
 		$rs = dbQuery($sql);
-		$posicoesInviaveis = array();
+		$posicoesInviaveis = [];
 
 		$idAreas = dbQuery("SELECT GROUP_CONCAT(id_areas) as areas FROM posicoes WHERE id IN ({$idPosicoes})")[0]['areas'];
 
 		// Verifica pra cada SKU cadastrado
-		foreach ($rs as $row)
-		{
+		foreach ($rs as $row) {
 			// Cadastrado em centímetros
 			$altura = $row['altura'];
 			$paleteAltura = $row['palete_altura'];
 			$alturaPaleteSKU = $altura*$paleteAltura;
 			// Verifica para cada posição da área
-			$sql = "SELECT P.*, P.codigo_barras posicao, A.descricao area
-						FROM posicoes P
-						LEFT JOIN areas A ON P.id_areas=A.id
-						WHERE id_areas IN ($idAreas)";
+			$sql = "SELECT
+						P.*,
+						P.codigo_barras posicao,
+						A.descricao area
+					FROM posicoes P
+					LEFT JOIN areas A ON P.id_areas=A.id
+					WHERE id_areas IN ($idAreas)";
 			$rsp = dbQuery($sql);
-			foreach ($rsp as $rowp)
-			{
+			foreach ($rsp as $rowp) {
 				// Cadastrado em metros
 				$alturaPosicao = $rowp['altura']*100;
-				if ($alturaPaleteSKU>=$alturaPosicao)
-				{
+				if ($alturaPaleteSKU>=$alturaPosicao) {
 					$posicoesInviaveis[]=$rowp['posicao']." ".$o->label($alturaPosicao."cm")." < ".$o->label($alturaPaleteSKU."cm")." do SKU ".$row['unidade'].' com '.intval($row['quantidade']);
 				}
 			}
 		}
 
-		if (count($posicoesInviaveis)>0) {
-			$html.=mostraCabecalho($gId);
+		if ($posicoesInviaveis) {
+			$html.=mostraCabecalho();
 			$html.=$o->msgDanger("Não foi possível adicionar esta área, pois existem posições com dimensões que não suportam este item");
 			$html.=$o->ul($posicoesInviaveis);
 			$html.=$backButton;
 		} else {
 			foreach ($_REQUEST['id_posicoes'] as $key => $posicao) {
 				$hoje = date('Y-m-d H:i:s');
-				$flds = array();
+				$flds = [];
 				$flds['id_itens'] = $gId;
 				$flds['ativo'] = 1;
 				$flds['id_posicoes'] = $posicao;
@@ -3127,33 +3107,31 @@ switch ($gPage) {
 
 function mostraCabecalho()
 {
-	
-	global $o,$html, $gPage, $gId, $rs, $row, $gParam, $persistencia, $faz_picking;
-	if ($gId>0)
-	{
-		$sql="SELECT i.*, p.nome cliente, pf.nome fornecedor, pc.nome criou, pa.nome alterou, g.descricao grupo, t.descricao tipo
-		FROM itens i
-		LEFT JOIN pessoas p ON (i.id_pessoas_proprietario=p.id and p.cliente=1)
-		LEFT JOIN pessoas pf ON (i.id_pessoas_fornecedor=pf.id AND pf.cliente=0)
-		LEFT JOIN pessoas pc ON (i.id_pessoas_criou=pc.id AND pc.cliente=0)
-		LEFT JOIN pessoas pa ON (i.id_pessoas_alterou=pa.id AND pa.cliente=0)
-		LEFT JOIN grupos g ON i.id_grupos = g.id
-		LEFT JOIN tipos t ON i.id_tipos = t.id
-		WHERE i.id=$gId ";
-		$rs=dbQuery($sql);
-		if (count($rs)>0)
-		{
+
+	global $o, $html, $gPage, $gId, $rs, $row, $gParam, $persistencia, $faz_picking;
+
+	if ($gId > 0) {
+		$sql = "SELECT i.*, p.nome cliente, pf.nome fornecedor, pc.nome criou, pa.nome alterou, g.descricao grupo, t.descricao tipo
+				FROM itens i
+				LEFT JOIN pessoas p ON (i.id_pessoas_proprietario=p.id and p.cliente=1)
+				LEFT JOIN pessoas pf ON (i.id_pessoas_fornecedor=pf.id AND pf.cliente=0)
+				LEFT JOIN pessoas pc ON (i.id_pessoas_criou=pc.id AND pc.cliente=0)
+				LEFT JOIN pessoas pa ON (i.id_pessoas_alterou=pa.id AND pa.cliente=0)
+				LEFT JOIN grupos g ON i.id_grupos = g.id
+				LEFT JOIN tipos t ON i.id_tipos = t.id
+				WHERE i.id=$gId ";
+		$rs = dbQuery($sql);
+		if ($rs) {
 			$row=$rs[0];
 			$cor = 'header';
-			if ($row['ativo']==0)
-			{
+			if ($row['ativo'] == 0) {
 				$cor="danger";
 			}
+
 			$html.=$o->tableBegin("big");
-			$mtz=array();
+			$mtz=[];
 			$mtz[]='<-'. $o->small('Código').'<br><b>'.$row['codigo'].'</b><br>&nbsp;';
-			if ($gParam["USAR_REGRA_POSICIONAMENTO"]["ativo"]==1)
-			{
+			if ($gParam["USAR_REGRA_POSICIONAMENTO"]["ativo"] == 1) {
 				$mtz[]='<-'. $o->small('Regra').'<br><b>'.$row['regra_posicionamento'].'</b><br>&nbsp;';
 			}
 			$mtz[]='<-'. $o->small('Empresa').'<br><b>'.$row['cliente'].'<br>'.$row['fornecedor']."</b>&nbsp;";
@@ -3161,13 +3139,12 @@ function mostraCabecalho()
 			$mtz[]='<-'. $o->small('Cadastro').'<br><b>'.gDateTime($row['data_cadastro'])."<br><small>".$row['criou']."</small></b>&nbsp;";
 			$mtz[]='<-'. $o->small('Alteração').'<br><b>'.gDateTime($row['data_alteracao'])."<br><small>".$row['alterou']."</small></b>&nbsp;";
 			$html.=$o->tableRow($mtz, $cor);
-			if ($row['produto_acabado']==1)
-			{
-				$mtz = array();
+			if ($row['produto_acabado']==1) {
+				$mtz = [];
 				$mtz[]='~6<>Produto acabado';
 				$html.=$o->tableRow($mtz, 'warning');
 			}
-			$mtz = array();
+			$mtz = [];
 
 			$posicaoFixa = dbQuery("SELECT id FROM itens_areas WHERE id_itens = $gId AND id_posicoes > 0 LIMIT 1")[0]['id'];
 			if ($row['apto']==1) {
@@ -3192,8 +3169,7 @@ function mostraCabecalho()
 			$active5='false';
 			$active6='false';
 			$active7='false';
-			switch ($gPage)
-			{
+			switch ($gPage) {
 				case DADOS:
 				$active1='true';
 				break;
@@ -3218,9 +3194,9 @@ function mostraCabecalho()
 				case POSICAO_FIXA:
 				$active8 = 'true';
 				break;
-				}
+			}
 
-			$btns='';
+			$btns = [];
 
 			$btns[]=$o->button("{active: ".$active1."; caption: Dados do item; icon: barcode-read; hint: Dados do item; responsive: true; href: ".$o->page."&gPage=".DADOS."&gId=".$gId."}");
 			if (!$persistencia->aptoSKUs($gId)) {
