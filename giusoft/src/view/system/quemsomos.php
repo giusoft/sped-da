@@ -1,5 +1,5 @@
 <?
-include "header.php";
+include __DIR__ . "/header.php";
 ?>
 	<div class="row-fluid">
 		<div class="span1">&nbsp;</div>
@@ -15,5 +15,5 @@ include "header.php";
 		<div class="span1">&nbsp;</div>
 	</div>
 <?
-include "footer.php";
+include __DIR__ . "/footer.php";
 ?>
