@@ -6,12 +6,10 @@ define("DESCRICAO_REQUISICAO",         2);
 define("BAIXAR_REQUISICAO",            3);
 define("REENVIAR_REQUISICAO",          4);
 
-
 $html .= $o->msgTitle("Central de integrações");
 
 switch ($gPage) {
 	case INICIO:
-
         $html .= '<div class="hidden-print"><form class="form-inline" method="POST" action="index.php?g=central_requisicoes">';
         $html .= '<input id="pesquisa" name="pesquisa" type="text" class="form-control input-md" placeholder="Pesquisa rápida...">&nbsp;<input type="hidden" name="g" value="central_requisicoes"><input type="hidden" name="gPage" value="0"> ';
         $html .= '<input id="action" name="action" type="hidden" class="form-control input-md" value="filtroRapido">';
@@ -31,7 +29,7 @@ switch ($gPage) {
             }"
         );
 
-        $where = array();
+        $where = [];
 
         if (!empty($_POST['pesquisa'])) {
             $pesquisa = gCleanField($_POST['pesquisa']);
@@ -103,11 +101,9 @@ switch ($gPage) {
         if ($persistencia->porPagina > 0) {
             $totalRegistros = $persistencia->pagination->controlarQuantidadePaginas($sql, $qtdMinimaPaginas = 10);
             $pagination = $persistencia->pagination->addPagination($totalRegistros, $persistencia->porPagina);
-            $sql .= " LIMIT {$pagination->iniciar}, {$pagination->numero_registro_por_pagina}";
-        } else {
-            if ($gParam['LIMITAR_VISUALIZACAO']['ativo']) {
-                $sql .= " LIMIT " . $gParam['LIMITAR_VISUALIZACAO']['valor'];
-            }
+            $sql .= sprintf(' LIMIT %s, %s', $pagination->iniciar, $pagination->numero_registro_por_pagina);
+        } elseif ($gParam['LIMITAR_VISUALIZACAO']['ativo']) {
+            $sql .= " LIMIT " . $gParam['LIMITAR_VISUALIZACAO']['valor'];
         }
 
         $rs = dbFastQuery($sql);
@@ -122,17 +118,17 @@ switch ($gPage) {
         $html .= $persistencia->pagination->render('{style:margin-top:-1%;}');
 
         $html .= $o->tableBegin("big", true);
-        $mtz   = array();
-        $mtz[] = '<>' . 'Opções';
-        $mtz[] = '->' . 'Id';
-        $mtz[] = '<>' . 'Data';
-        $mtz[] = '<-' . 'Classe';
-        $mtz[] = '<-' . 'Método';
-        $mtz[] = '<-' . 'Proprietário';
-        $mtz[] = '<-' . 'OS';
+        $mtz   = [];
+        $mtz[] = '<>Opções';
+        $mtz[] = '->Id';
+        $mtz[] = '<>Data';
+        $mtz[] = '<-Classe';
+        $mtz[] = '<-Método';
+        $mtz[] = '<-Proprietário';
+        $mtz[] = '<-OS';
         // $mtz[] = '<-' . 'Ativa / Passiva';
-        $mtz[] = '<>' . 'Pendente';
-        $mtz[] = '->' . 'Quantidade tentativas';
+        $mtz[] = '<>Pendente';
+        $mtz[] = '->Quantidade tentativas';
         $html .= $o->tableRow($mtz, 'header-fixed');
 
         foreach ($rs as $row) {
@@ -144,11 +140,11 @@ switch ($gPage) {
                 . "; hint: Abrir requisição; target: _blank}");
             }
 
-            $mtz   = array();
+            $mtz   = [];
             $mtz[] = '<>' . $botaoAbrir;
             $mtz[] = '->' . $row['id_requisicao'];
             $mtz[] = '<>' . gDateTime($row['data_hora']);
-            $mtz[] = '<-' . ucfirst($row['classe_integracao']);
+            $mtz[] = '<-' . ucfirst((string) $row['classe_integracao']);
             $mtz[] = '<-' . $row['metodo'];
             $mtz[] = '<-' . $row['proprietario'];
             $mtz[] = '<-' . linkParaOS($row['os']);
@@ -203,57 +199,48 @@ switch ($gPage) {
                     gatilhos.url_rota,
                     gatilhos_configuracoes.url_base,
                     programacao.os
-                FROM
-                    gatilhos_configuracoes
-                JOIN gatilhos ON
-                    gatilhos.id_gatilhos_configuracoes = gatilhos_configuracoes.id
-                JOIN gatilhos_requisicoes ON
-                    gatilhos_requisicoes.id_gatilhos = gatilhos.id
-                JOIN gatilhos_requisicoes_detalhes ON
-                    gatilhos_requisicoes_detalhes.id_gatilhos_requisicoes = gatilhos_requisicoes.id
-                JOIN pessoas ON
-                    pessoas.id = gatilhos_configuracoes.id_pessoas_proprietario
-                LEFT JOIN programacao ON
-                    programacao.id = gatilhos_requisicoes.id_programacao
-                WHERE
-                    gatilhos_requisicoes.id = {$_REQUEST['idRequisicao']}
-                GROUP BY
-                    gatilhos_requisicoes_detalhes.id
-                ORDER BY
-                    gatilhos_requisicoes_detalhes.id";
+                FROM gatilhos_configuracoes
+                JOIN gatilhos ON gatilhos.id_gatilhos_configuracoes = gatilhos_configuracoes.id
+                JOIN gatilhos_requisicoes ON gatilhos_requisicoes.id_gatilhos = gatilhos.id
+                JOIN gatilhos_requisicoes_detalhes ON gatilhos_requisicoes_detalhes.id_gatilhos_requisicoes = gatilhos_requisicoes.id
+                JOIN pessoas ON pessoas.id = gatilhos_configuracoes.id_pessoas_proprietario
+                LEFT JOIN programacao ON programacao.id = gatilhos_requisicoes.id_programacao
+                WHERE gatilhos_requisicoes.id = {$_REQUEST['idRequisicao']}
+                GROUP BY gatilhos_requisicoes_detalhes.id
+                ORDER BY gatilhos_requisicoes_detalhes.id";
         $rs = dbFastQuery($sql);
 
         $html.=$o->tableBegin("big", true);
 
         $dadosCabecalho = $rs[0];
 
-		$mtz = array();
+		$mtz = [];
 		$mtz[] = '<-' . formatarParaCabecalho('Id', $dadosCabecalho['id_requisicao']);
 		$mtz[] = '<-' . formatarParaCabecalho('Data', gDateTime($dadosCabecalho['data_hora']));
         $mtz[] = '<-' . formatarParaCabecalho('Proprietário', $dadosCabecalho['proprietario']);
 		$html .= $o->tableRow($mtz, 'header');
 
-		$mtz = array();
-        $mtz[] = '<-' . formatarParaCabecalho('Classe', ucfirst($dadosCabecalho['classe_integracao']));
+		$mtz = [];
+        $mtz[] = '<-' . formatarParaCabecalho('Classe', ucfirst((string) $dadosCabecalho['classe_integracao']));
 		$mtz[] = '<-' . formatarParaCabecalho('Método', $dadosCabecalho['metodo']);
 		$mtz[] = '<-' . formatarParaCabecalho('Ativa / Passiva', $dadosCabecalho['ativa_passiva']);
 		$html .= $o->tableRow($mtz, 'header');
 
-        $mtz = array();
+        $mtz = [];
         $mtz[] = '<-' . formatarParaCabecalho('Pendente', gCheck($dadosCabecalho['pendente'], true));
 		$mtz[] = '<-' . formatarParaCabecalho('OS', linkParaOS($dadosCabecalho['os']));
         $mtz[] = '<-' . formatarParaCabecalho('Quantidade tentativas', count($rs));
 		$html .= $o->tableRow($mtz, 'header');
 
-        $mtz = array();
+        $mtz = [];
 		$mtz[] = '~3<-' . formatarParaCabecalho('Url completa', $dadosCabecalho['url_base'] . $dadosCabecalho['url_rota']);
 		$html .= $o->tableRow($mtz, 'header');
 
         $html .= $o->tableBegin('big', true);
-        $mtz = array();
+        $mtz = [];
         $btnDownloadEnviado = $o->button("{icon: download; style: success; size: tiny; href: "
-        . $o->page . "&gPage=" . BAIXAR_REQUISICAO . "&idRequisicao=" . $dadosCabecalho['id_requisicao'] . "&tipo=enviado"
-        . "; hint: Download; target: _blank}");
+            . $o->page . "&gPage=" . BAIXAR_REQUISICAO . "&idRequisicao=" . $dadosCabecalho['id_requisicao'] . "&tipo=enviado"
+            . "; hint: Download; target: _blank}");
 
         $js = "
             function btnAbrirModal(id)
@@ -280,7 +267,7 @@ switch ($gPage) {
             $btnReenviar = $o->button("{style: primary; icon: upload; hint: Reenviar requisição; size: tiny; onClick: btnAbrirModal(" . $dadosCabecalho['id_requisicao'] . ");}");
         }
 
-        $enviado = base64_decode($dadosCabecalho['enviado']);
+        $enviado = base64_decode((string) $dadosCabecalho['enviado']);
         $mtz[] = '<-' . formatarParaCabecalho(
             $o->big('Enviado ') . $btnDownloadEnviado . ' ' . $btnReenviar .
             "<button class='btnArrumarJson hidden-print btn btn-primary btn-xs' style='margin-bottom: 4px; margin-left: 2px;' data-target='jsonEnviado'>
@@ -302,20 +289,19 @@ switch ($gPage) {
 
             $html .= $o->tableBegin('big', true);
 
-            $mtz = array();
-
             $btnDownloadRecebido = $o->button("{icon: download; style: success; size: tiny; href: "
                 . $o->page . "&gPage=" . BAIXAR_REQUISICAO . "&idDetalhesRequisicao=" . $row['id_detalhes_requisicao'] . "&tipo=recebido"
                 . "; hint: Download; target: _blank}");
 
             $idPreRecebido = "jsonRecebido_" . $row['numero_tentativa'];
 
+            $mtz = [];
             $mtz[] = '<-' . formatarParaCabecalho(
                 $o->big('Recebido • Tentativa ' . $row['numero_tentativa'] . ' • ' . gDateTime($row['data_hora']) . ' • Duração: ' . $row['tempo_execucao']) . ' ' . $btnDownloadRecebido .
-                "<button class='btnArrumarJson hidden-print btn btn-primary btn-xs' style='margin-bottom: 4px; margin-left: 2px;' data-target='$idPreRecebido'>
+                "<button class='btnArrumarJson hidden-print btn btn-primary btn-xs' style='margin-bottom: 4px; margin-left: 2px;' data-target='{$idPreRecebido}'>
                     <i class='fas fa-code'></i>
                 </button> <br>" .
-                "<pre id='$idPreRecebido'>" . stripcslashes(htmlspecialchars(base64_decode($row['recebido']))) . "</pre>",
+                sprintf("<pre id='%s'>", $idPreRecebido) . stripcslashes(htmlspecialchars(base64_decode((string) $row['recebido']))) . "</pre>",
                 ' '
             );
 
@@ -351,20 +337,20 @@ switch ($gPage) {
         if ($_REQUEST['tipo'] == 'enviado') {
             $id = $_REQUEST['idRequisicao'];
 
-            $sql = "SELECT enviado FROM gatilhos_requisicoes WHERE id = {$id}";
+            $sql = 'SELECT enviado FROM gatilhos_requisicoes WHERE id = ' . $id;
             $rs = dbFastQuery($sql)[0]['enviado'];
         }
 
         if ($_REQUEST['tipo'] == 'recebido') {
             $id = $_REQUEST['idDetalhesRequisicao'];
 
-            $sql = "SELECT recebido FROM gatilhos_requisicoes_detalhes WHERE id = {$id}";
+            $sql = 'SELECT recebido FROM gatilhos_requisicoes_detalhes WHERE id = ' . $id;
             $rs = dbFastQuery($sql)[0]['recebido'];
         }
 
-        $conteudo = base64_decode($rs);
+        $conteudo = base64_decode((string) $rs);
 
-        $nomeArquivo = "requisicao_{$id}.txt";
+        $nomeArquivo = sprintf('requisicao_%s.txt', $id);
         header('Content-Type: text/plain; charset=utf-8');
 
         header('Content-Disposition: attachment; filename="' . $nomeArquivo . '"');
@@ -400,12 +386,13 @@ switch ($gPage) {
 
         $persistencia->acionarEventoMomento($dadosRequisicao['metodo'], $parametro);
 
-        $body = base64_decode($dadosRequisicao['enviado']);
+        $body = base64_decode((string) $dadosRequisicao['enviado']);
 
-        $dadosReenvioRequisicao = array();
+        $dadosReenvioRequisicao = [];
         if ($dadosRequisicao['total_tentativas'] == 0) {
             $dadosReenvioRequisicao['idGatilhoRequisicaoDetalhes']  = $dadosRequisicao['id_gatilhos_requisicoes_detalhes'];
         }
+
         $dadosReenvioRequisicao['idProgramacao'] 		= $dadosRequisicao['id_programacao'];
         $dadosReenvioRequisicao['numeroTentativa'] 	    = $dadosRequisicao['total_tentativas'];
         $dadosReenvioRequisicao['idGatilhos'] 	        = $dadosRequisicao['id_gatilhos'];
