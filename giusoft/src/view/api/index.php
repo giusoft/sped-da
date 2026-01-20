@@ -4,7 +4,7 @@ use Api\programacao as Programacao;
 use Api\uma as Uma;
 
 $ambiente = '';
-if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
+if (in_array('teste', explode("/", (string) $_SERVER['REQUEST_URI']))) {
     $ambiente = '/teste';
 }
 
@@ -13,17 +13,30 @@ require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/emitenota/giusoft/src/vie
 class Api
 {
     public $ip;
+
     public $token;
+
     public $headers;
+
     public $idArmazens;
+
     public $integracao;
+
     public $rotaCompleta;
+
     public $nomeArquivoLog;
+
     public $corpoRequisicao;
+
     public $idPessoasProprietario;
+
     public $ambienteDesenvolvimento = 0;
-    public $request, $response;
+
+    public $request;
+    public $response;
+
     public $empresa;
+
     public $privateKey;
 
     public function __construct()
@@ -99,7 +112,7 @@ class Api
         define("EXPJWT", "3600");
 
         if (!apiSendoUsadaExternamente()) {
-            return;
+            return null;
         }
 
         if ($_GET["rota"] == "autenticar") {
@@ -126,14 +139,15 @@ class Api
     {
         $this->validarLimiteRequisicoes();
 
-        if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
+        if (in_array('teste', explode("/", (string) $_SERVER['REQUEST_URI']))) {
             $ambiente = '/teste';
         }
+
         include_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/emitenotaweb/giusoft/res/api/" . $_GET["rota"] . ".php";// tem que ser include porque nao pode danificar o funcionamento da aplicacao
 
-        $classeCompleta = "Api\\" . ucfirst(trim($_GET['rota']));
+        $classeCompleta = "Api\\" . ucfirst(trim((string) $_GET['rota']));
         if (!class_exists($classeCompleta)) {
-            return $this->emitirErro("A rota {$classeCompleta} não existe");
+            return $this->emitirErro(sprintf('A rota %s não existe', $classeCompleta));
         }
 
         $classe = new $classeCompleta($this);
@@ -171,9 +185,9 @@ class Api
 
     public function obterDadosToken($id, $token = null)
     {
-        $where = "token = '{$token}'";
+        $where = sprintf("token = '%s'", $token);
         if (!$token) {
-            $where = "id_pessoas = {$id}";
+            $where = 'id_pessoas = ' . $id;
         }
 
         $sql = "SELECT
@@ -208,9 +222,9 @@ class Api
     public function obterUsuario($args)
     {
         $usuario = $args["usuario"];
-        $senha = md5($args["senha"]);
+        $senha = md5((string) $args["senha"]);
 
-        $sql = "SELECT id FROM pessoas WHERE apelido = '{$usuario}' AND senha = '{$senha}'";
+        $sql = sprintf("SELECT id FROM pessoas WHERE apelido = '%s' AND senha = '%s'", $usuario, $senha);
         $idUsuario  = $this->integracao->executarQuery($sql)[0]["id"];
 
         if (!$idUsuario) {
@@ -231,10 +245,10 @@ class Api
             LIMIT 1";
 
         if (!$codigoArmazem) {
-            $sql = "SELECT id_armazens AS id
+            $sql = 'SELECT id_armazens AS id
                     FROM pessoas_armazens
                     WHERE cancelado = 0
-                        AND id_pessoas = {$this->idPessoasProprietario}";
+                        AND id_pessoas = ' . $this->idPessoasProprietario;
         }
 
         $idArmazem = $this->integracao->executarQuery($sql)[0]['id'];
@@ -267,26 +281,26 @@ class Api
     public function gerarToken($id)
     {
         $this->gerarChavesAleatorias();
-        $header = array(
+        $header = [
             "alg" => "RS256",
             "typ" => "JWS"
-        );
+        ];
 
-        $payload = array(
+        $payload = [
             "iss" => "giusoft",               // (iss - Issuer) Empresa emissora do token
             "sub" => "wms_api",               // (sub - Subject) Assunto do token
-            "aud" => "wms_{$this->empresa}",  // (aud - Audience) Destinatário do token
+            "aud" => 'wms_' . $this->empresa,  // (aud - Audience) Destinatário do token
             "iat" => time(),                  // (iat - Issued At) Data e hora em que o token foi emitido
             "exp" => time() + (int) EXPJWT,   // (exp - Expiration) Data e hora em que o token expirar
             "jti" => md5($this->empresa.$id), // (jti - JWT ID) ID do token
             "typ" => "Bearer",                // (typ - Type) Tipo do token
-            "address" => md5($this->ip),      // (address - IP Address) Endereço IP do usuário
+            "address" => md5((string) $this->ip),      // (address - IP Address) Endereço IP do usuário
             "date" => date('Y-m-d h:m:s'),    // (date - Date) Data em que o token foi emitido
             "arm" => $this->idArmazens        // (arm - Armazem) Codigo id do armazem
-        );
+        ];
 
         $jwt = base64Encode(json_encode($header)) .".". base64Encode(json_encode($payload));
-        $this->token = "{$jwt}." . gerarAssinatura($this->privateKey, $jwt, true);
+        $this->token = $jwt . '.' . gerarAssinatura($this->privateKey, $jwt, true);
 
         $dadosToken = [
             "id_pessoas" => $id,
@@ -302,6 +316,8 @@ class Api
         if ($this->integracao->insertTable("tokens", $dadosToken, 1)) {
             return ["token" => $dadosToken["token"]];
         }
+
+        return '';
     }
 
 
@@ -344,14 +360,14 @@ class Api
         $this->request->sucesso = (int) $sucesso;
 
         $dadosRequisicao = [
-            "rota"      => ($_GET["rota"] <> 'autenticar') ? $_GET["rota"] : 'index',
+            "rota"      => ($_GET["rota"] != 'autenticar') ? $_GET["rota"] : 'index',
             "recurso"   => ($_GET["rota"] == 'autenticar') ? $_GET["rota"] : $_GET["recurso"]
         ];
 
         $this->salvarRequisicaoApi($msg, $this->corpoRequisicao);
         $this->registrarConsumoApi($sucesso, $dadosRequisicao['rota'], $dadosRequisicao['recurso']);
 
-        header("HTTP/1.1 $status");
+        header('HTTP/1.1 ' . $status);
         formatarJson($msg);
     }
 
@@ -385,7 +401,7 @@ class Api
             return;
         }
 
-        $sql = "SELECT quantidade_contratada FROM pessoas_consumo_api WHERE id_pessoas_proprietario = '{$this->idPessoasProprietario}' ORDER BY id DESC LIMIT 1";
+        $sql = sprintf("SELECT quantidade_contratada FROM pessoas_consumo_api WHERE id_pessoas_proprietario = '%s' ORDER BY id DESC LIMIT 1", $this->idPessoasProprietario);
         $quantidadeContratada = $this->integracao->executarQuery($sql)[0]['quantidade_contratada'];
 
         $dadosPessoasConsumoApi = [
@@ -420,7 +436,7 @@ class Api
         $idGatilhos = $this->integracao->executarQuery($sql)[0]['id'];
 
         if ($idGatilhos) {
-            $dadosRequisicao = array();
+            $dadosRequisicao = [];
             $dadosRequisicao['id_pessoas_criou'] = $this->idPessoasProprietario;
             $dadosRequisicao['id_gatilhos'] = $idGatilhos;
 
@@ -428,7 +444,7 @@ class Api
             $dadosRequisicao['enviado'] = base64_encode(json_encode(corrigirCodificacaoArray($enviado), JSON_UNESCAPED_UNICODE));
             $idGatilhoRequisicao = $this->integracao->insertTable("gatilhos_requisicoes", $dadosRequisicao, 1); // 1 = para retornar o id depois de inserir
 
-            $dadosRequisicaoDetalhes = array();
+            $dadosRequisicaoDetalhes = [];
             $dadosRequisicaoDetalhes['id_gatilhos_requisicoes'] = $idGatilhoRequisicao;
             $dadosRequisicaoDetalhes['data_hora'] = date("Y-m-d H:i:s");
             $dadosRequisicaoDetalhes['recebido'] = base64_encode(json_encode(corrigirCodificacaoArray($recebido), JSON_UNESCAPED_UNICODE));
@@ -459,23 +475,21 @@ class Api
                 WHERE PGC.id_pessoas_proprietario = '{$this->idPessoasProprietario}'
                     AND PG.passiva = 1
                     AND PGC.classe_integracao = 'ApiWms'
-                LIMIT 1
-        ";
-
+                LIMIT 1";
         $rs = $this->integracao->executarQuery($sql)[0];
 
         if (!$rs || !$rs['limite_requisicoes_periodo']) {
             return true; // sem limite configurado
         }
 
-        list($limite, $tempoMin) = explode("/", $rs['limite_requisicoes_periodo']);
+        [$limite, $tempoMin] = explode("/", (string) $rs['limite_requisicoes_periodo']);
 
         if ($rs['total'] >= $limite) {
-            $primeiraReq = strtotime($rs['primeira_requisicao']);
+            $primeiraReq = strtotime((string) $rs['primeira_requisicao']);
             $tempoPassado = time() - $primeiraReq;
             $tempoRestante = $tempoMin * 60 - $tempoPassado;
 
-            $this->emitirErro("Você excedeu o limite de {$limite} requisições a cada {$tempoMin} minuto(s). Seu acesso será liberado em " . floor($tempoRestante / 60) . " minuto(s) e " . $tempoRestante % 60 . " segundo(s).");
+            $this->emitirErro(sprintf('Você excedeu o limite de %s requisições a cada %s minuto(s). Seu acesso será liberado em ', $limite, $tempoMin) . floor($tempoRestante / 60) . " minuto(s) e " . $tempoRestante % 60 . " segundo(s).");
             exit;
         }
 
