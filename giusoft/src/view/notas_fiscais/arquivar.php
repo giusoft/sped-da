@@ -1,4 +1,5 @@
-<?
+<?php
+
 include_once $gPath . "res/_classes/padrao/notas_fiscais.php";
 
 define("INICIO", 			0);
@@ -53,7 +54,7 @@ if ($_REQUEST['gAjax']) {
             }
         }
 
-        $retorno = json_decode($retornoJson['resposta'], true);
+        $retorno = json_decode((string) $retornoJson['resposta'], true);
 
         if (isset($retorno['sucesso']) && $retorno['sucesso']) {
             $_SESSION['processo_arquivar']['processados'] += count($loteAtual);
@@ -102,7 +103,7 @@ if ($_REQUEST['gAjax']) {
             }
         }
 
-        $retorno = json_decode($retornoJson['resposta'], true);
+        $retorno = json_decode((string) $retornoJson['resposta'], true);
         if (isset($retorno['sucesso']) && $retorno['sucesso']) {
             $dadosRetorno = $retorno['detalhes'] ?: $retorno['dados'] ?: [];
             $nomeArquivo = $dadosRetorno['arquivo'] ?: '';
@@ -119,7 +120,7 @@ if ($_REQUEST['gAjax']) {
             $urlBase = rtrim(gCleanField($dadosRota['url_base']), '/');
             $urlRota = trim(gCleanField($dadosRota['url_rota']), '/');
 
-            if (strpos($urlBase, 'http://') !== 0 && strpos($urlBase, 'https://') !== 0) {
+            if (!str_starts_with($urlBase, 'http://') && !str_starts_with($urlBase, 'https://')) {
                 $urlBase = 'http://' . $urlBase;
             }
 
@@ -153,13 +154,13 @@ if ($_REQUEST['gAjax']) {
 switch ($gPage) {
     case INICIO:
         $frm = new gForm('{columns:2;}');
-        $combo_tipo_nota = array();
+        $combo_tipo_nota = [];
         $combo_tipo_nota[0] = "* Indiferente";
         $combo_tipo_nota[1] = "NF-e Saída";
         $combo_tipo_nota[2] = "NF-e Equipamento";
         $combo_tipo_nota[3] = "NF-e Entrada";
 
-        $mtz = array();
+        $mtz = [];
         $mtz[0] = 'Somente aprovadas';
         $mtz[1] = 'Somente canceladas';
         $mtz[2] = 'Canceladas e aprovadas';
@@ -175,7 +176,7 @@ switch ($gPage) {
             $frm->add('{type: date; allowBlank: false; name: data_final; fieldLabel: Data final;}')
         );
 
-        $mtz = array();
+        $mtz = [];
         $mtz[0] = '*Indiferente';
         $mtz[1] = 'Sim';
         $mtz[2] = 'Não';
@@ -194,8 +195,8 @@ switch ($gPage) {
 
     case PREPARAR:
         // Validações
-        $validacoes = array();
-        $filtros = array();
+        $validacoes = [];
+        $filtros = [];
 
         if (!isset($_REQUEST["com_pdf"]) && !isset($_REQUEST["com_xml"])) {
             $validacoes[] = "Selecione se deseja arquivar DANFE ou PDF";
@@ -205,7 +206,7 @@ switch ($gPage) {
             $validacoes[] = "Informe o tipo de nota";
         }
 
-        if (count($validacoes) > 0) {
+        if (!$validacoes) {
             $html .= $o->msgDanger("Falhas de validação: " . $o->ul($validacoes));
             $html .= $o->button('{title:Voltar; hint:Voltar a página anterior; icon:arrow-left; href:'.$o->page.'&gPage='.INICIO.';}');
             break;
@@ -215,8 +216,8 @@ switch ($gPage) {
         $dataFinal = date('Y-m-d 23:59:59', strtotime(gDBDate($_REQUEST["data_final"])));
         $situacao = $_REQUEST['situacao'];
 
-        $where = array();
-        $where[] = "(DATE(NE.data)>='{$dataInicio}' AND DATE(NE.data)<='{$dataFinal}')";
+        $where = [];
+        $where[] = sprintf("(DATE(NE.data)>='%s' AND DATE(NE.data)<='%s')", $dataInicio, $dataFinal);
 
         if ($_REQUEST["id_pessoas_proprietario"]) {
             $where[] = "(N.id_pessoas_proprietario=" . intval($_REQUEST["id_pessoas_proprietario"]) . ")";
