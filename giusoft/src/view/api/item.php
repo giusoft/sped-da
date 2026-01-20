@@ -4,12 +4,7 @@ namespace Api;
 
 class Item
 {
-    protected $api;
-
-    public function __construct($api)
-    {
-        $this->api = $api;
-    }
+    public function __construct(protected $api) {}
 
     public function cadastrar($args)
     {
@@ -43,50 +38,47 @@ class Item
 
         $mtz = $args['item'];
 
-        $this->api->validarCamposObrigatorios($mtz, array('descricao', 'ncm', 'codigo', 'codigoBarras', 'quantidade', 'siglaUnidade', 'descricaoUnidade', 'altura', 'comprimento'));
+        $this->api->validarCamposObrigatorios($mtz, ['descricao', 'ncm', 'codigo', 'codigoBarras', 'quantidade', 'siglaUnidade', 'descricaoUnidade', 'altura', 'comprimento']);
 
         $itemExiste = $this->verificarSeItemExiste($mtz['codigoBarras'], $mtz['siglaUnidade']);
         if ($itemExiste) {
             $this->api->emitirErro('Item ja cadastrado');
         }
 
-        if ($this->api->gParam["USA_REGRA_PALETIZACAO"]["ativo"]) {
-            if (!isset($mtz['paleteLastro']) || !isset($mtz['paleteAltura'])) {
-                $this->api->emitirErro("A regra de paletização está ativa, mas os campos 'paleteLastro' e 'paleteAltura' não foram informados.");
-            }
+        if ($this->api->gParam["USA_REGRA_PALETIZACAO"]["ativo"] && (!isset($mtz['paleteLastro']) || !isset($mtz['paleteAltura']))) {
+            $this->api->emitirErro("A regra de paletização está ativa, mas os campos 'paleteLastro' e 'paleteAltura' não foram informados.");
         }
 
-        $dados = array();
-        $dados['ncm']           = substr($mtz['ncm'], 0, 10);
-        $dados['nome']          = substr($mtz['descricao'], 0, 149);
-        $dados['descricao']     = substr($mtz['descricao'], 0, 254);
-        $dados['unidade']       = substr($mtz['siglaUnidade'], 0, 2);
-        $dados['descricaoUnidade'] = substr($mtz['descricaoUnidade'], 0, 2);
-        $dados['codigo']        = substr($mtz['codigo'], 0, 19);
-        $dados['altura']        = (float) substr($mtz['altura'], 0, 14);
-        $dados['largura']       = (float) substr($mtz['largura'], 0, 14);
-        $dados['comprimento']   = (float) substr($mtz['comprimento'], 0, 14);
-        $dados['quantidade']    = (float) substr($mtz['quantidade'], 0, 14);
-        $dados['codigo_barras'] = substr($mtz['codigoBarras'], 0, 59);
-        $dados['palete_lastro'] = (float) substr($mtz['paleteLastro'], 0, 14);
-        $dados['palete_altura'] = (float) substr($mtz['paleteAltura'], 0, 14);
+        $dados = [];
+        $dados['ncm']           = substr((string) $mtz['ncm'], 0, 10);
+        $dados['nome']          = substr((string) $mtz['descricao'], 0, 149);
+        $dados['descricao']     = substr((string) $mtz['descricao'], 0, 254);
+        $dados['unidade']       = substr((string) $mtz['siglaUnidade'], 0, 2);
+        $dados['descricaoUnidade'] = substr((string) $mtz['descricaoUnidade'], 0, 2);
+        $dados['codigo']        = substr((string) $mtz['codigo'], 0, 19);
+        $dados['altura']        = (float) substr((string) $mtz['altura'], 0, 14);
+        $dados['largura']       = (float) substr((string) $mtz['largura'], 0, 14);
+        $dados['comprimento']   = (float) substr((string) $mtz['comprimento'], 0, 14);
+        $dados['quantidade']    = (float) substr((string) $mtz['quantidade'], 0, 14);
+        $dados['codigo_barras'] = substr((string) $mtz['codigoBarras'], 0, 59);
+        $dados['palete_lastro'] = (float) substr((string) $mtz['paleteLastro'], 0, 14);
+        $dados['palete_altura'] = (float) substr((string) $mtz['paleteAltura'], 0, 14);
         $dados['id_pessoas_proprietario'] = $this->api->idPessoasProprietario;
 
         // dados acima que não possui na funcao cadastrarItem (ncm, sigla, altura, largura, quantidade, comprimento, palete_lastro e palete_altura)
         $detalhesSku = $this->api->integracao->cadastrarItem($dados, 1);
 
-
         if ($this->api->integracao->erros) {
             $this->api->emitirErro($this->api->integracao->erros);
         }
 
-        $this->api->finalizarRequisicao(true, array(
-            'item' => array(
+        $this->api->finalizarRequisicao(true, [
+            'item' => [
                 'id' => $detalhesSku['id'],
                 'codigoBarras' => $detalhesSku['codigoBarras'],
                 'siglaUnidade' => $detalhesSku['siglaUnidade']
-            )
-        ), 200);
+            ]
+        ], 200);
 
     }
 
@@ -117,9 +109,9 @@ class Item
             $this->api->emitirErro('As chaves codigo ou codigoBarras devem ser informadas');
         }
 
-        $this->api->validarCamposObrigatorios($mtz, array('siglaUnidade'));
+        $this->api->validarCamposObrigatorios($mtz, ['siglaUnidade']);
 
-        $where = array();
+        $where = [];
         $where[] = "(I.id_pessoas_proprietario = '" . $this->api->idPessoasProprietario . "')";
 
         if ($mtz['codigo']) {
@@ -143,6 +135,7 @@ class Item
         if ($mtz['id']) {
             $where[] = "(SK.id = '" . gCleanField($mtz['id']) . "')";
         }
+
         $where = implode(" AND ", $where);
 
         $sql = "SELECT
