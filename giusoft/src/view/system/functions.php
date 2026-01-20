@@ -1,14 +1,13 @@
-<?
+<?php
 
-
-function mostraErros($titulo, $erros = array())
+function mostraErros($titulo, $erros = [])
 {
 	global $o;
-	$msg  = $titulo."<br><br>";
-	if (count($erros)>0)
-	{
-		$msg.=$o->ul($erros);
+	$msg  = $titulo . "<br><br>";
+	if ($erros) {
+		$msg .= $o->ul($erros);
 	}
+
 	return ($msg);
 }
 
@@ -17,13 +16,13 @@ function obtemIdEmpresa($idProprietario=0)
 	global $EMPRESA;
 
 	if (
-		$EMPRESA=="logic"
-		&& $idProprietario==334
+		$EMPRESA == "logic"
+		&& $idProprietario == 334
 	) {
 		return (2);
 	}
 
-	if (intval($_SESSION['armazemAtualId'])>0) {
+	if (intval($_SESSION['armazemAtualId']) > 0) {
 		return ($_SESSION['armazemAtualId']);
 	}
 
@@ -33,60 +32,53 @@ function obtemIdEmpresa($idProprietario=0)
 
 function obtemProprietario($id, $campo="*")
 {
-	$sql="SELECT
+	$sql = "SELECT
 				{$campo}
-		  FROM pessoas
-		  WHERE id='{$id}' AND cliente='1';
-		 ";
-
+			FROM pessoas
+			WHERE id = '{$id}' AND cliente = '1'";
 	return (dbQuery($sql)[0]);
 }
 
+
 function obtemSKU($id, $separador="•", $campo="")
 {
-	if (empty($campo))
-	{
-		$campo="";
-	} else
-	{
-		$campo=$campo.",";
-	}
+	$campo = empty($campo) ? "" : $campo . ",";
 
-	$sql="SELECT
-			{$campo}
-        	CONCAT(CONCAT_WS(' {$separador} ',ISK.codigo, I.nome,U.descricao), ' com ', CAST(ISK.quantidade as SIGNED)) descricao_sku
-          FROM itens_skus ISK
-          LEFT JOIN itens I on ISK.id_itens = I.id
-       	  LEFT JOIN unidades U on U.id = ISK.id_unidades
-          WHERE ISK.id='{$id}'
-          GROUP BY ISK.id, I.nome";
+	$sql = "SELECT
+				{$campo}
+				CONCAT(CONCAT_WS(' {$separador} ',ISK.codigo, I.nome,U.descricao), ' com ', CAST(ISK.quantidade as SIGNED)) descricao_sku
+			FROM itens_skus ISK
+			LEFT JOIN itens I on ISK.id_itens = I.id
+			LEFT JOIN unidades U on U.id = ISK.id_unidades
+			WHERE ISK.id='{$id}'
+			GROUP BY ISK.id, I.nome";
     return (dbQuery($sql)[0]);
 }
-
 
 
 function userLog($details="")
 {
 	global $usrId, $usrEquip, $gMenuParameters;
+
 	$usrId = (int) $usrId;
-	$request=base64_encode(serialize($_REQUEST));
+	$request = base64_encode(serialize($_REQUEST));
 	$sql = "INSERT INTO gfw_log
 	(id_gfw_users,id_equip, id_gfw_menus,date,full_link,request,details) VALUES
 	($usrId, $usrEquip, ".intval($gMenuParameters['id_gfw_menus']).", NOW(),'".$gMenuParameters['full_link']."','$request','$details')";
 	dbFastQuery($sql);
 }
 
+
 function formataDescricaoItemSKU($codigo, $nome, $unidade, $quantidade)
 {
 	global $o;
-	$descricao="";
+	$descricao = "";
 	$sep = "<br>";
-	if ($_REQUEST['gPDF']==1)
-	{
+	if ($_REQUEST['gPDF'] == 1) {
 		$sep = " - ";
 	}
-	if (!empty($codigo))
-	{
+
+	if (!empty($codigo)) {
 		if (
 			$_REQUEST['gPDF']
 			|| $_REQUEST['gXLS']
@@ -94,59 +86,59 @@ function formataDescricaoItemSKU($codigo, $nome, $unidade, $quantidade)
 		 	|| $_REQUEST['gCSV']
 		 	|| $_REQUEST['g']=='programacao'
 		) {
-			$descricao.=$codigo.$sep;
+			$descricao .= $codigo . $sep;
 		} else {
-			$descricao.=$o->big($codigo).$sep;
+			$descricao .= $o->big($codigo) . $sep;
 		}
 
 	}
 
-	if (!empty($nome))
-	{
-		$descricao.=$nome.$sep;
+	if (!empty($nome)) {
+		$descricao .= $nome . $sep;
 	}
 
-	if (!empty($unidade))
-	{
-		$descricao.=$unidade." com ";
+	if (!empty($unidade)) {
+		$descricao .= $unidade . " com ";
 	}
 
-	if (!empty($quantidade))
-	{
-		$descricao.=intval($quantidade);
+	if (!empty($quantidade)) {
+		$descricao .= intval($quantidade);
 	}
+
     return ($descricao);
 }
 
+
 function formataDescricaoData($pessoa, $data)
 {
-	$descricao="";
-	if (!empty($pessoa))
-	{
-		$descricao.=$pessoa;
+	$descricao = "";
+	if (!empty($pessoa)) {
+		$descricao .= $pessoa;
 	}
 
-	if (!empty($data))
-	{
-		$descricao.=$data;
+	if (!empty($data)) {
+		$descricao .= $data;
 	}
 }
+
 
 function isBase64($texto)
 {
-	return ($texto === base64_encode(base64_decode($texto)));
+	return ($texto === base64_encode(base64_decode((string) $texto)));
 }
 
-function decodificarObservacao($texto) 
+
+function decodificarObservacao($texto)
 {
-	return (isBase64($texto)) ? base64_decode($texto) : $texto;
+	return (isBase64($texto)) ? base64_decode((string) $texto) : $texto;
 }
+
 
 function separarString($string, $limit)
 {
-	$str = wordwrap($string, $limit, "*");
+	$str = wordwrap((string) $string, $limit, "*");
     $str = explode("*", $str);
-    
+
     return $str;
 }
 
@@ -157,65 +149,70 @@ function excluirIndicesNumericos($array) {
             unset($array[$chave]);
         }
     }
+
     return $array;
 }
 
+
 function obtemModalConfirmacao($idModal, $titulo, $btnCancelar, $btnConfirmar, $url)
 {
-  global $o, $gId;
-  $content  = $titulo . "<br/><br/>";
-  $content .= "<div class='modal-footer'>
-                 <input type='hidden' name='idExcluir' id='idExcluir' value=''/>
-                 ".$o->button("{id: ". $btnCancelar ."; title: Cancelar; size: medium; target: '#';}")."
-                 ".$o->button("{id: ". $btnConfirmar ."; title: Confirmar; style:primary; size: medium; target: _new; href: $url; }")."
-               </div>";
-  $html.= $o->modal("{title: Confirmação; size: medium; confirm: false; cancel: false; content: $content; name: $idModal;}");
-  $javascript = "
-     function opemModal (id, idModal)
-     {
-     	var idModal=(idModal)?idModal:'".$idModal."';
-     	$('#' + idModal).modal('show');
-        $('#idExcluir').val(id);
-     }
+	global $o, $gId;
 
-     $('#". $btnCancelar ."').on('click', function (e) {
-        e.preventDefault();
-        $('#".$idModal."').modal('hide');
-     });
-     $('#". $btnConfirmar ."').on('click', function (e) {
-     	e.preventDefault();
-        showWait();
-     	$('#". $btnConfirmar ."').attr('disabled', 'disabled');
-     	setTimeout(function () {
-     		$('#". $btnConfirmar ."').removeAttr('disabled');
-     	}, 1000);
-        var idExcluir = $('#idExcluir').val();
-        var gId=".$gId.";
-        if (gId>0)
-        {
-        	var rota = '". $url ."&gIdEnd=' + idExcluir;
-        } else
-        {
-        	var rota = '". $url ."';
-        	var existegId=rota.indexOf('gId');
-        	if (existegId=='-1')
-        	{
-        		rota+='&gId='+idExcluir+'&gIdEnd='+idExcluir;
-        	} else
-        	{
-        		rota=rota.replace('gId=0', 'gId='+idExcluir);
-        	}
-        }
-        location.href = rota;
-     });
-     ";
-  $o->addJavascript($javascript);
-  return ($html);
+	$content  = $titulo . "<br/><br/>";
+	$content .= "<div class='modal-footer'>
+					<input type='hidden' name='idExcluir' id='idExcluir' value=''/>
+					".$o->button("{id: ". $btnCancelar ."; title: Cancelar; size: medium; target: '#';}")."
+					".$o->button("{id: ". $btnConfirmar .sprintf('; title: Confirmar; style:primary; size: medium; target: _new; href: %s; }', $url))."
+				</div>";
+	$html .= $o->modal(sprintf('{title: Confirmação; size: medium; confirm: false; cancel: false; content: %s; name: %s;}', $content, $idModal));
+	$javascript = "
+		function opemModal (id, idModal)
+		{
+			var idModal=(idModal)?idModal:'".$idModal."';
+			$('#' + idModal).modal('show');
+			$('#idExcluir').val(id);
+		}
+
+		$('#". $btnCancelar ."').on('click', function (e) {
+			e.preventDefault();
+			$('#".$idModal."').modal('hide');
+		});
+		$('#". $btnConfirmar ."').on('click', function (e) {
+			e.preventDefault();
+			showWait();
+			$('#". $btnConfirmar ."').attr('disabled', 'disabled');
+			setTimeout(function () {
+				$('#". $btnConfirmar ."').removeAttr('disabled');
+			}, 1000);
+			var idExcluir = $('#idExcluir').val();
+			var gId=".$gId.";
+			if (gId>0)
+			{
+				var rota = '". $url ."&gIdEnd=' + idExcluir;
+			} else
+			{
+				var rota = '". $url ."';
+				var existegId=rota.indexOf('gId');
+				if (existegId=='-1')
+				{
+					rota+='&gId='+idExcluir+'&gIdEnd='+idExcluir;
+				} else
+				{
+					rota=rota.replace('gId=0', 'gId='+idExcluir);
+				}
+			}
+			location.href = rota;
+		});
+		";
+	$o->addJavascript($javascript);
+	return ($html);
 }
+
 
 function jsButtonVoltar()
 {
 	global $o;
+
 	$js = "
 		    $('.fa-arrow-left')[0].parentNode.setAttribute('class', 'hidden-print btn btn-default pull-left');
 		    $('#gSubmitButton').attr('style', 'margin-left: 0.2%;');
@@ -223,92 +220,96 @@ function jsButtonVoltar()
 	$o->addJavascript($js);
 }
 
+
 /* Calcula diferença entre duas datas e retorna uma string com a informação */
 function calculaDiferencaDatas($entrou, $saiu)
 {
 	$entrou = new \DateTime($entrou);
     $saiu = new \DateTime($saiu);
-    $intervalo=$entrou->diff($saiu);
-    $diferenca="";
-    if ($intervalo->days>0)
-        $diferenca.="{$intervalo->days}d e ";
+    $intervalo = $entrou->diff($saiu);
 
-    if ($intervalo->h>0)
-        $diferenca.="{$intervalo->h}h: ";
+    $diferenca = "";
+    if ($intervalo->days > 0) {
+        $diferenca .= $intervalo->days . 'd e ';
+    }
 
-    if ($intervalo->i>0)
-        $diferenca.="{$intervalo->i}m";
+    if ($intervalo->h > 0) {
+        $diferenca .= $intervalo->h . 'h: ';
+    }
+
+    if ($intervalo->i > 0) {
+        $diferenca .= $intervalo->i . 'm';
+    }
+
     return ($diferenca);
 }
 
 
 function linkParaGoogle($query, $modoIa = false)
 {
-	if ($modoIa) {
-		$modoIa = '&udm=50';
-	} else {
-		$modoIa = '';
-	}
-	return '<a href="https://www.google.com/search?q=' . urlencode(trim($query)) . $modoIa .  '" target="_blank">' . htmlspecialchars(trim($query)) . '</a>';
+	$modoIa = $modoIa ? '&udm=50' : '';
+
+ 	return '<a href="https://www.google.com/search?q=' . urlencode(trim((string) $query)) . $modoIa .  '" target="_blank">' . htmlspecialchars(trim((string) $query)) . '</a>';
 }
-
-
 
 
 function tabelaSkuUmas($rs)
 {
 	global $o;
+
 	$html = "";
 	if (!$rs) {
 		return $html;
 	}
 
-	$html.=$o->msgFilter("UMAs com saldo apto");
-	$html.=$o->tableBegin("big", true, true);
-	$mtz=array();
-	$mtz[]="<-Pos.";
-	$mtz[]="<-UMA";
-	$mtz[]="<-Proprietário";
-	$mtz[]="<-Código";
-	$mtz[]="<-SKU";
-	$mtz[]="->Quantidade";
-	$mtz[]="<-Lote";
-	$mtz[]="<>Fabricação";
-	$mtz[]="<>Validade";
-	$html.=$o->tableRow($mtz, "header");
+	$html .= $o->msgFilter("UMAs com saldo apto");
+	$html .= $o->tableBegin("big", true, true);
+	$mtz = [];
+	$mtz[] = "<-Pos.";
+	$mtz[] = "<-UMA";
+	$mtz[] = "<-Proprietário";
+	$mtz[] = "<-Código";
+	$mtz[] = "<-SKU";
+	$mtz[] = "->Quantidade";
+	$mtz[] = "<-Lote";
+	$mtz[] = "<>Fabricação";
+	$mtz[] = "<>Validade";
+	$html .= $o->tableRow($mtz, "header");
 	$tQuantidade=0;
 	foreach ($rs as $uma) {
 		if ($uma["quantidade"] <= 0) {
 			continue;
 		}
 
-		if (!in_array($uma["codigo_barras"], $tUMA))		{
+		if (!in_array($uma["codigo_barras"], $tUMA)) {
 			$tUMA[$uma["codigo_barras"]] = 1;
 		}
+
 		$tQuantidade+=$uma["quantidade"];
-		$descricaoProprietario=(!empty($uma["proprietario"])) ?  $uma["proprietario"] : "--";
-		$mtz=array();
-		$mtz[]="<-".$uma['local'].' '.linkParaPosicao($uma["posicao"]);
-		$mtz[]="<-".linkParaUMA($uma["codigo_barras"]);
-		$mtz[]="<-".$descricaoProprietario;
-		$mtz[]="<-".linkParaCodigoItem($uma["codigo"]);
-		$mtz[]="<-".$uma["item_descricao"];
-		$mtz[]="->".gFloat($uma["quantidade"]);
-		$mtz[]="<-".$uma["lote"];
-		$mtz[]="<>".gDate($uma["data_fabricacao"]);
-		$mtz[]="<>".gDate($uma["data_validade"]);
-		$html.=$o->tableRow($mtz, "detail");
+		$descricaoProprietario = (!empty($uma["proprietario"])) ?  $uma["proprietario"] : "--";
+		$mtz = [];
+		$mtz[] = "<-".$uma['local'].' '.linkParaPosicao($uma["posicao"]);
+		$mtz[] = "<-".linkParaUMA($uma["codigo_barras"]);
+		$mtz[] = "<-".$descricaoProprietario;
+		$mtz[] = "<-".linkParaCodigoItem($uma["codigo"]);
+		$mtz[] = "<-".$uma["item_descricao"];
+		$mtz[] = "->".gFloat($uma["quantidade"]);
+		$mtz[] = "<-".$uma["lote"];
+		$mtz[] = "<>".gDate($uma["data_fabricacao"]);
+		$mtz[] = "<>".gDate($uma["data_validade"]);
+		$html .= $o->tableRow($mtz, "detail");
 	}
-	$mtz=array();
-	$mtz[]="<---";
-	$mtz[]="<-TOTAL DE UMAs: ".count($tUMA);
-	$mtz[]="<---";
-	$mtz[]="--";
-	$mtz[]="<---";
-	$mtz[]="->".gFloat($tQuantidade);
-	$mtz[]="--";
-	$mtz[]="--";
-	$mtz[]="--";
+
+	$mtz = [];
+	$mtz[] = "<---";
+	$mtz[] = "<-TOTAL DE UMAs: ".count($tUMA);
+	$mtz[] = "<---";
+	$mtz[] = "--";
+	$mtz[] = "<---";
+	$mtz[] = "->".gFloat($tQuantidade);
+	$mtz[] = "--";
+	$mtz[] = "--";
+	$mtz[] = "--";
 	$html .= $o->tableRow($mtz, "footer");
 
 	return $html;
@@ -318,6 +319,7 @@ function tabelaSkuUmas($rs)
 function linkParaCodigoItem($codigo="")
 {
 	global $o, $usrCliente;
+
 	if (
 		$_REQUEST['gPDF']
 		|| $_REQUEST['gXLS']
@@ -335,6 +337,7 @@ function linkParaCodigoItem($codigo="")
 function linkParaNFESaida($nfSaida, $page = 80)
 {
 	global $o, $usrCliente;
+
 	if (
 		$_REQUEST['gPDF']
 		|| $_REQUEST['gXLS']
@@ -346,7 +349,7 @@ function linkParaNFESaida($nfSaida, $page = 80)
 		return $nfSaida;
 	}
 
-	$sql  = "SELECT id FROM notas WHERE numero = '{$nfSaida}' AND tipo='S' LIMIT 1";
+	$sql  = sprintf("SELECT id FROM notas WHERE numero = '%s' AND tipo='S' LIMIT 1", $nfSaida);
 	$idNota = dbFastQuery($sql)[0]['id'];
 	if (!$idNota) {
 		return $nfSaida;
@@ -373,7 +376,7 @@ function linkParaNFEntrada($nfEntrada, $page=80)
 		return $nfEntrada;
 	}
 
-	$sql  = "SELECT id FROM notas WHERE numero = '{$nfEntrada}' AND tipo = 'E' LIMIT 1";
+	$sql  = sprintf("SELECT id FROM notas WHERE numero = '%s' AND tipo = 'E' LIMIT 1", $nfEntrada);
 	$idNota = dbQuery($sql)[0]['id'];
 
 	if (!$idNota) {
@@ -396,12 +399,12 @@ function linkParaNota($id, $numero, $tipo) {
 	}
 
 	if ($id && $numero && $tipo) {
-		$notas = array();
+		$notas = [];
 		$notas[0]['id'] = $id;
 		$notas[0]['tipo'] = $tipo;
 		$notas[0]['numero'] = $numero;
 	} else {
-		$sql  = "SELECT DISTINCT id, tipo, numero FROM notas WHERE id IN ({$id})";
+		$sql  = sprintf('SELECT DISTINCT id, tipo, numero FROM notas WHERE id IN (%s)', $id);
 		$notas = dbFastQuery($sql);
 		if (!$notas) {
 			return $link;
@@ -436,10 +439,10 @@ function linkParaNota($id, $numero, $tipo) {
 }
 
 
-
 function linkParaCadastroEmpresa($id, $textoLink)
 {
 	global $usrCliente;
+
 	if (
 		$_REQUEST['gPDF']
 		|| $_REQUEST['gXLS']
@@ -457,6 +460,7 @@ function linkParaCadastroEmpresa($id, $textoLink)
 function linkParaCadastroItem($id, $textoLink)
 {
 	global $usrCliente;
+
 	if (
 		$_REQUEST['gPDF']
 		|| $_REQUEST['gXLS']
@@ -474,6 +478,7 @@ function linkParaCadastroItem($id, $textoLink)
 function linkParaCadastroSku($idItensSkus, $textoLink, $idItens = 0)
 {
 	global $usrCliente;
+
 	if (
 		$_REQUEST['gPDF']
 		|| $_REQUEST['gXLS']
@@ -487,84 +492,88 @@ function linkParaCadastroSku($idItensSkus, $textoLink, $idItens = 0)
 	if (!$idItens) {
 		$idItens = gFieldById('itens_skus', $idItensSkus, 'id_itens');
 	}
+
 	return '<a target="_new" href="index.php?g=itens&gPage=20&gId=' . $idItens . '&gIdd=' . $idItensSkus . '">' . $textoLink . "</a>";
 }
-
-
 
 
 /* Gerar combo baseado na quantidade de itens */
 function renderComboItem($comboSql, $value="")
 {
 	/*Conferir quantidade de itens*/
-	$totalItem=(dbQuery("SELECT count(id) tt FROM itens_skus")[0]['tt']);
-	if ($totalItem>3000)
-	{
-		$combo="{name: codigo_itens_skus; fieldLabel: Código Item; type:text; value:".$value.";}";
-	} else
-	{
-		$combo="{name: id_itens_skus; fieldLabel: Item; type: combo; items:".$comboSql."; value:".$value.";}";
+	$totalItem = (dbQuery("SELECT count(id) tt FROM itens_skus")[0]['tt']);
+	if ($totalItem > 3000) {
+		$combo = "{name: codigo_itens_skus; fieldLabel: Código Item; type:text; value:" . $value . ";}";
+	} else {
+		$combo = "{name: id_itens_skus; fieldLabel: Item; type: combo; items:" . $comboSql . "; value:" . $value . ";}";
 	}
+
 	return ($combo);
 }
 
+
 function filtroComboItem($requisicao, $aliasSKU)
 {
-	$return=array();
-	if (isset($requisicao["id_itens_skus"]) && $requisicao["id_itens_skus"])
-	{
+	$return = [];
+	if (isset($requisicao["id_itens_skus"]) && $requisicao["id_itens_skus"]) {
 		$idItem=intval($requisicao["id_itens_skus"]);
-		$return["where"]= " AND ({$aliasSKU}.id='{$idItem}')";
-		$sql="SELECT
-        		ISK.id,
-        		CONCAT(CONCAT_WS(' • ',ISK.codigo, I.descricao,U.descricao), ' com ', CAST(ISK.quantidade as SIGNED)) descricao
-        	FROM itens I
-        	LEFT JOIN itens_skus ISK on ISK.id_itens = I.id
-        	LEFT JOIN unidades U on U.id = ISK.id_unidades
-        	WHERE ISK.id='$idItem'
-        	GROUP BY ISK.id, I.descricao";
-		$return["cabecalho"] = " Item: ".dbQuery($sql)[0]["descricao"];
-	} else if (isset($requisicao["codigo_itens_skus"]) && $requisicao["codigo_itens_skus"])
-	{
+		$return["where"]= " AND ({$aliasSKU}.id = '{$idItem}')";
+		$sql = "SELECT
+					ISK.id,
+					CONCAT(CONCAT_WS(' • ',ISK.codigo, I.descricao,U.descricao), ' com ', CAST(ISK.quantidade as SIGNED)) descricao
+				FROM itens I
+				LEFT JOIN itens_skus ISK on ISK.id_itens = I.id
+				LEFT JOIN unidades U on U.id = ISK.id_unidades
+				WHERE ISK.id = '{$idItem}'
+				GROUP BY ISK.id, I.descricao";
+		$return["cabecalho"] = " Item: " . dbQuery($sql)[0]["descricao"];
+	} elseif (isset($requisicao["codigo_itens_skus"]) && $requisicao["codigo_itens_skus"]) {
 		$codigoItem=gCleanField($requisicao["codigo_itens_skus"]);
-		$return["where"]= " AND ({$aliasSKU}.codigo like '%{$codigoItem}%' OR {$aliasSKU}.codigo_barras like '%{$codigoItem}%')";
+		$return["where"]= " AND ({$aliasSKU}.codigo LIKE '%{$codigoItem}%' OR {$aliasSKU}.codigo_barras LIKE '%{$codigoItem}%')";
 		$return["cabecalho"]=" Código do item: ".$codigoItem;
 	}
+
 	return ($return);
 }
 
 
-
 function orderBy()
 {
-	//exemplo de uso: orderBy($array, 'col1', SORT_DESC, 'col2', SORT_DESC...)
-    $args = func_get_args();
-    $data = array_shift($args);
+	$args = func_get_args();
+	$data = array_shift($args);
     foreach ($args as $n => $field) {
-        if (!is_string($field)) continue;
-        $tmp = array();
-        foreach ($data as $key => $row)
+        if (!is_string($field)) {
+            continue;
+        }
+
+        $tmp = [];
+        foreach ($data as $key => $row) {
             $tmp[$key] = $row[$field];
+		}
+
         $args[$n] = $tmp;
     }
+
     $args[] = &$data;
-    call_user_func_array('array_multisort', $args);
+    array_multisort($args);
 
     return array_pop($args);
 }
 
 
 function arrayUniqueMultidimensional($array, $key) {
-    $tempArray = array();
+    $tempArray = [];
     $i = 0;
-    $keyArray = array();
+    $keyArray = [];
     foreach($array as $val) {
         if (!in_array($val[$key], $keyArray)) {
             $keyArray[$i]  = $val[$key];
             $tempArray[$i] = $val;
         }
+
         $i++;
     }
+
     return $tempArray;
 }
 
@@ -572,18 +581,21 @@ function arrayUniqueMultidimensional($array, $key) {
 function paramLabel($chave, $padrao="")
 {
 	global $gParam;
-	if ($gParam[$chave]['ativo'])
+
+	if ($gParam[$chave]['ativo']) {
 		return $gParam[$chave]['valor'];
+	}
+
 	return $padrao;
 }
 
 
-function somarHoras($horarios = array('00:00:00'))
+function somarHoras($horarios = ['00:00:00'])
 {
 	//exemplo de uso: somarHoras(array('10:00:00', '11:54:48'))
 	$soma = 0;
     foreach ($horarios as $horario) {
-		list($horas, $minutos, $segundos) = explode( ':', $horario);
+		[$horas, $minutos, $segundos] = explode( ':', (string) $horario);
 		$soma += (($horas * 3600) + ($minutos * 60) + $segundos);
     }
 
@@ -598,9 +610,8 @@ function somarHoras($horarios = array('00:00:00'))
 function retirarCaracteresReservadosXml($stringXmlCompleto)
 {
 	//troca os caracteres '&', ';' por espaco vazio
-	return str_replace(array('&', ';'), ' ', $stringXmlCompleto);
+	return str_replace(['&', ';'], ' ', $stringXmlCompleto);
 }
-
 
 
 function downloadModeloImportacao($modelo = '', $gId = '')
@@ -609,7 +620,6 @@ function downloadModeloImportacao($modelo = '', $gId = '')
 	header('Content-Disposition: attachment; filename=modelo.csv');
 
 	$modeloGerado = gerarModeloImportacao($modelo, $gId);
-
 	exit;
 }
 
@@ -625,12 +635,14 @@ function gerarModeloImportacao($modelo = '', $gId = '')
 			foreach ($modeloCabecalho as $key => $item) {
 				echo '#' . $item['nome'] . ';';
 			}
+
 			// Espaço entre cabeçalho e corpo do arquivo
 			echo PHP_EOL . PHP_EOL;
 			// Corpo do arquivo
 			foreach ($modelo as $item) {
 				echo '#' . $item['nome'] . ';';
 			}
+
 			echo PHP_EOL;
 		} else {
 			//Corpo do arquivo
@@ -639,11 +651,12 @@ function gerarModeloImportacao($modelo = '', $gId = '')
 			}
 		}
 	} else {
-		$modelo = explode(',', $modelo);
+		$modelo = explode(',', (string) $modelo);
 
 		foreach ($modelo as $key => $item) {
 			echo $item . ';' ;
 		}
 	}
+
 	return;
 }
