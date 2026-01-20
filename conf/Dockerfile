@@ -38,4 +38,7 @@ ENV TZ=America/Bahia
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN printf '[PHP]\ndate.timezone = "%s"\n' "$TZ" > /usr/local/etc/php/conf.d/tzone.ini
 
+# Instalar Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
 EXPOSE 2083
