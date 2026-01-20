@@ -4,9 +4,7 @@ define('INICIO', 0);
 define('PESQUISAR', 10);
 define('INUTILIZAR', 20);
 
-$paginasPodeExportar = array(
-	PESQUISAR
-);
+$paginasPodeExportar = [PESQUISAR];
 
 if (in_array($gPage, $paginasPodeExportar)) {
 	$o->PDFEnabled = true;
@@ -17,13 +15,13 @@ if (in_array($gPage, $paginasPodeExportar)) {
 
 $html .= $o->msgTitle("Inutilizar Numeração de NFe");
 
-$situacoesNfe = array(
+$situacoesNfe = [
 	'Aprovada',
 	'Assinada',
 	'Submetida',
 	'Cancelada',
 	'Reprovada'
-);
+];
 
 switch ($gPage) {
 	case INICIO:
@@ -40,14 +38,14 @@ switch ($gPage) {
 
 
 	case PESQUISAR:
-		$where = array();
-		$filtros = array();
+		$where = [];
+		$filtros = [];
 
 		$temFiltroData   = (!empty($_REQUEST["data_cadastro_de"]) && !empty($_REQUEST["data_cadastro_ate"]));
 		$temFiltroNumero = (!empty($_REQUEST["numero_de"]) && !empty($_REQUEST["numero_ate"]));
 
 		// REMOVER DEPOIS, AQUI ESTÁ SÓ PARA AMBIENTE DE TESTE
-		if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
+		if (in_array('teste', explode("/", (string) $_SERVER['REQUEST_URI']))) {
 			$where[] = "nfe.data >= '2025-12-03 00:00:00'";
 		}
 
@@ -89,6 +87,7 @@ switch ($gPage) {
 			 	$situacoes .= $situacoesNfe[$i] . ", ";
 			 	$filtrarSituacao[$situacoesNfe[$i]] = 1;
 			}
+
 			$filtrarSituacao['Não emitida - A inutilizar'] = 1;
 			$filtrarSituacao['Inutilizada'] = 1;
 
@@ -130,7 +129,7 @@ switch ($gPage) {
 		$numerosEmitidos = array_column($rs, 'numero');
 		$numeroInicial = min($numerosEmitidos);
 		$numeroFinal = max($numerosEmitidos);
-		$numerosFaltantes = array();
+		$numerosFaltantes = [];
 
 		// Buscar números já inutilizados na SEFAZ
 		$sqlInutilizados = "
@@ -146,26 +145,22 @@ switch ($gPage) {
 
 		$podeInutilizar = false;
 		for ($i = $numeroInicial; $i <= $numeroFinal; $i++) {
-			$indiceEmitido = array_search($i, $numerosEmitidos);
-			if ($indiceEmitido !== false) {
-				if (in_array($i, $numerosInutilizados)) {
-					$rs[$indiceEmitido]['situacao'] = 'Inutilizada';
-				}
+			$indiceEmitido = array_search($i, $numerosEmitidos, true);
+			if ($indiceEmitido !== false && in_array($i, $numerosInutilizados)) {
+				$rs[$indiceEmitido]['situacao'] = 'Inutilizada';
+			} elseif (in_array($i, $numerosInutilizados)) {
+				$rs[] = [
+					'id' => 0,
+					'numero' => $i,
+					'situacao' => 'Inutilizada'
+				];
 			} else {
-				if (in_array($i, $numerosInutilizados)) {
-					$rs[] = array(
-						'id' => 0,
-						'numero' => $i,
-						'situacao' => 'Inutilizada'
-					);
-				} else {
-					$podeInutilizar = true;
-					$rs[] = array(
-						'id' => 0,
-						'numero' => $i,
-						'situacao' => 'Não emitida - A inutilizar'
-					);
-				}
+				$podeInutilizar = true;
+				$rs[] = [
+					'id' => 0,
+					'numero' => $i,
+					'situacao' => 'Não emitida - A inutilizar'
+				];
 			}
 		}
 
@@ -271,18 +266,18 @@ switch ($gPage) {
 		}
 
 		$html .= $o->tableBegin("big", true, true);
-		$mtz = array();
+		$mtz = [];
 		$mtz[] = '<>' . 'Opções';
 
 		if ($usrId <= 2) {
-			$mtz[] = '->' . 'Id NFe';
+			$mtz[] = '->Id NFe';
 		}
 
-		$mtz[] = '<>' . 'Data cadastro';
-		$mtz[] = '<-' . 'Número';
-		$mtz[] = '<-' . 'Situação';
-		$mtz[] = '<-' . 'Chave';
-		$mtz[] = '<>' . 'Cancelada';
+		$mtz[] = '<>Data cadastro';
+		$mtz[] = '<-Número';
+		$mtz[] = '<-Situação';
+		$mtz[] = '<-Chave';
+		$mtz[] = '<>Cancelada';
 		$html .= $o->tableRow($mtz, "header-fixed");
 
 		foreach ($rs as $row) {
@@ -311,7 +306,7 @@ switch ($gPage) {
 				continue;
 			}
 
-			$mtz = array();
+			$mtz = [];
 			$mtz[] = '<>' . $checkbox;
 			if ($usrId <= 2) {
 				$mtz[] = '->' . $row['id'];
@@ -345,7 +340,7 @@ switch ($gPage) {
 			break;
 		}
 
-		$motivo = trim($_REQUEST['motivo']);
+		$motivo = trim((string) $_REQUEST['motivo']);
 		$tamanhoMotivo = strlen($motivo);
 
 		if ($tamanhoMotivo < 15 || $tamanhoMotivo > 1000) {
@@ -354,12 +349,12 @@ switch ($gPage) {
 			break;
 		}
 
-		$numerosSelecionados = explode(',', $_REQUEST['numeros']);
+		$numerosSelecionados = explode(',', (string) $_REQUEST['numeros']);
 		$numeros = array_filter(array_map('intval', $numerosSelecionados));
 		sort($numeros);
 
 		// Agrupa números consecutivos em intervalos
-		$intervalos = array();
+		$intervalos = [];
 		$intervaloAtual = null;
 		foreach ($numeros as $numero) {
 			if ($intervaloAtual === null) {
@@ -380,14 +375,14 @@ switch ($gPage) {
 		$dadosEmpresa = $nf->obtemDadosEmpresa(obtemIdEmpresa());
 		$dadosConfig = $nf->buscarConfiguracoes($dadosEmpresa['cnpjArmazem']);
 
-		$sucessos = array();
-		$erros = array();
+		$sucessos = [];
+		$erros = [];
 
 		foreach ($intervalos as $intervalo) {
 			$numeroInicial = $intervalo['inicio'];
 			$numeroFinal   = $intervalo['fim'];
 
-			$dadosInutilizar = array();
+			$dadosInutilizar = [];
 			$dadosInutilizar['temRetorno']     = 1;
 			$dadosInutilizar['serie']          = $dadosConfig['serie'];
 			$dadosInutilizar['numero_inicial'] = $numeroInicial;
@@ -398,13 +393,11 @@ switch ($gPage) {
 
 			$retorno = dispararGatilho('inutilizarNfe', $dadosInutilizar);
 
-			if ($retorno['erroCurl'] && !$retorno['resposta']) {
-				if (!empty($retorno['erroCurl'])) {
-					$erros[] = gCleanField($retorno['erroCurl']);
-				}
+			if ($retorno['erroCurl'] && !$retorno['resposta'] && !empty($retorno['erroCurl'])) {
+				$erros[] = gCleanField($retorno['erroCurl']);
 			}
 
-			$retorno = json_decode($retorno['resposta'], true);
+			$retorno = json_decode((string) $retorno['resposta'], true);
 
 			$textoNumeros = ($numeroInicial == $numeroFinal)
 					? "Número <b>{$numeroInicial}</b>"
@@ -412,7 +405,7 @@ switch ($gPage) {
 
 			// Inserir um registro para CADA número no intervalo
 			for ($num = $numeroInicial; $num <= $numeroFinal; $num++) {
-				$registro = array();
+				$registro = [];
 				$registro['data']                 = date('Y-m-d H:i:s');
 				$registro['serie']                = $dadosConfig['serie'];
 				$registro['motivo']               = gCleanField($motivo);
@@ -423,7 +416,7 @@ switch ($gPage) {
 				$registro['retorno_mensagem'] 	  = gCleanField(removerAcentos($retorno['mensagem']));
 
 				if ($retorno['sucesso']) {
-					$registro['xml']       = base64_decode($retorno['detalhes']['xml']);
+					$registro['xml']       = base64_decode((string) $retorno['detalhes']['xml']);
 					$registro['protocolo'] = $retorno['detalhes']['protocolo'];
 				}
 
@@ -432,13 +425,11 @@ switch ($gPage) {
 
 			// Mensagens de sucesso/erro (uma por intervalo)
 			if ($retorno['sucesso']) {
-				$sucessos[] = "{$textoNumeros} - Protocolo: {$retorno['detalhes']['protocolo']}";
+				$sucessos[] = sprintf('%s - Protocolo: %s', $textoNumeros, $retorno['detalhes']['protocolo']);
+			} elseif (!$retorno['detalhes']['codigo']) {
+				$erros[] = $registro['retorno_mensagem'];
 			} else {
-				if (!$retorno['detalhes']['codigo']) {
-					$erros[] = $registro['retorno_mensagem'];
-				} else {
-					$erros[] = "{$textoNumeros} - " . $registro['retorno_mensagem'] . " (Código: {$retorno['detalhes']['codigo']})";
-				}
+				$erros[] = "{$textoNumeros} - " . $registro['retorno_mensagem'] . " (Código: {$retorno['detalhes']['codigo']})";
 			}
 		}
 
