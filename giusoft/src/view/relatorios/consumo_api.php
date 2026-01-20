@@ -4,9 +4,7 @@ define("INICIO", 0);
 define("FILTROS_CONSUMO_API", 1);
 define("RELATORIO_CONSUMO_API", 2);
 
-$paginasPodeExportar = array(
-   RELATORIO_CONSUMO_API
-);
+$paginasPodeExportar = [RELATORIO_CONSUMO_API];
 
 if (in_array($gPage, $paginasPodeExportar)) {
     $o->PDFEnabled = true;
@@ -38,8 +36,8 @@ switch ($gPage) {
     case RELATORIO_CONSUMO_API:
         $html .= $o->msgTitle("Consumo de API");
 
-        $where  = array();
-        $filtros = array();
+        $where  = [];
+        $filtros = [];
 
         $where[] = "PCA.quantidade_sucessos > 0";
 
@@ -49,8 +47,8 @@ switch ($gPage) {
         }
 
         if ($_REQUEST['mes']) {
-            $where[] = "data_inicio >= '" . date("Y-m-01", strtotime($_REQUEST['mes'])) . "'";
-            $where[] = "data_fim <= '" . date("Y-m-t", strtotime($_REQUEST['mes'])) . "'";
+            $where[] = "data_inicio >= '" . date("Y-m-01", strtotime((string) $_REQUEST['mes'])) . "'";
+            $where[] = "data_fim <= '" . date("Y-m-t", strtotime((string) $_REQUEST['mes'])) . "'";
             $filtros[] = "Mês: " . $_REQUEST['mes'];
         }
 
@@ -90,15 +88,16 @@ switch ($gPage) {
             break;
         }
 
-        $consumoPorProprietario = array();
+        $consumoPorProprietario = [];
         foreach ($rs as $row) {
             $apelido = $row['apelido'];
             if (!isset($consumoPorProprietario[$apelido])) {
-                $consumoPorProprietario[$apelido] = array(
+                $consumoPorProprietario[$apelido] = [
                     'total_consumido' => 0,
-                    'rows' => array()
-                );
+                    'rows' => []
+                ];
             }
+
             $consumoPorProprietario[$apelido]['total_consumido'] += $row['quantidade_sucessos'];
             $consumoPorProprietario[$apelido]['rows'][] = $row;
         }
@@ -106,10 +105,10 @@ switch ($gPage) {
         foreach ($consumoPorProprietario as $apelido => $consumo) {
             $html .= $o->tableBegin("big", true);
 
-            $mtz = array();
+            $mtz = [];
             $mtz[] = "~6<b>" . $apelido . "</b>";
             $html .= $o->tableRow($mtz, "header");
-            $mtz = array();
+            $mtz = [];
             $mtz[] = "<-Rota / Recurso";
             $mtz[] = "->Quantidade consumida";
             $mtz[] = "->Quantidade de erros";
@@ -119,7 +118,7 @@ switch ($gPage) {
             $html .= $o->tableRow($mtz, "header");
 
             foreach ($consumo['rows'] as $row) {
-                $mtz = array();
+                $mtz = [];
                 $mtz[] = "<-" . $row['rota'] . " - " . $row['recurso'] . "";
                 $mtz[] = "->" . $row['quantidade_sucessos'];
                 $mtz[] = "->" . $row['quantidade_erros'];
@@ -129,7 +128,7 @@ switch ($gPage) {
                 $html .= $o->tableRow($mtz, "detail");
             }
 
-            $mtz = array();
+            $mtz = [];
             $mtz[] = "~2->Total consumido: " . $consumo['total_consumido'];
             $html .= $o->tableRow($mtz, "footer");
 
