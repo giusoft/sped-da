@@ -1,12 +1,10 @@
-<?
+<?php
 
 define('FORMULARIO_NFE_TODAS', 0);
 define('RELATORIO_NFE_TODAS', 1);
 define('DOWNLOAD_XML', 2);
 
-$paginasPodeExportar = array(
-	RELATORIO_NFE_TODAS
-);
+$paginasPodeExportar = [RELATORIO_NFE_TODAS];
 
 if (in_array($gPage, $paginasPodeExportar)) {
 	$o->PDFEnabled = true;
@@ -17,7 +15,7 @@ if (in_array($gPage, $paginasPodeExportar)) {
 
 $html .= $o->msgTitle("NFe todas");
 
-$situacoesNfe = array();
+$situacoesNfe = [];
 $situacoesNfe[] = 'Aprovada';
 $situacoesNfe[] = 'Assinada';
 $situacoesNfe[] = 'Submetida';
@@ -42,8 +40,8 @@ switch ($gPage) {
 
 
 	case PESQUISAR:
-		$where = array();
-		$filtros = array();
+		$where = [];
+		$filtros = [];
 		if ($_REQUEST["id_proprietario"]) {
 			$filtros[] = "Proprietário: " . gFieldById("pessoas", $_REQUEST["id_proprietario"], "nome");
 			$where[] = "nfe.id_cliente = '" . $_REQUEST["id_proprietario"] . "'";
@@ -53,6 +51,7 @@ switch ($gPage) {
 			$filtros[] = "Data de cadastro até: " . $_REQUEST["data_cadastro_ate"];
 			$where[] = "nfe.data <= '" . gDBDate($_REQUEST["data_cadastro_ate"]) . " 23:59:59'";
 		}
+
 		if ($_REQUEST["data_cadastro_de"]) {
 			$filtros[] = "Data de cadastro de: " . $_REQUEST["data_cadastro_de"];
 			$where[] = "nfe.data >= '" . gDBDate($_REQUEST["data_cadastro_de"]) . " 00:00:00'";
@@ -79,12 +78,13 @@ switch ($gPage) {
 				if ($i == 5) { // 5 = importada
 					$whereSituacaoImportada = " OR (nfe.situacao = 'Importada' OR notas.nota_importada_cliente = 1)";
 				}
+
 				$situacoes .= "'" . $situacoesNfe[$i] . "',";
 			}
 
 			$situacoes = substr($situacoes, 0, -1);
 			$filtros[] = "Situações: " . str_replace("'", "", $situacoes);
-			$where[] = "((nfe.situacao IN (" . $situacoes .") AND (notas.nota_importada_cliente = 0 OR notas.nota_importada_cliente IS null)) {$whereSituacaoImportada})";
+			$where[] = "((nfe.situacao IN (" . $situacoes .sprintf(') AND (notas.nota_importada_cliente = 0 OR notas.nota_importada_cliente IS null)) %s)', $whereSituacaoImportada);
 		}
 
 		$html .= $o->msgFilter("Filtros selecionados: " . implode(" • ", $filtros));
@@ -98,33 +98,28 @@ switch ($gPage) {
 		$where = implode(" AND ", $where);
 
 		$sql = "SELECT
-				nfe.id,
-				nfe.data AS data_cadastro,
-				pessoa_emitiu.apelido AS colaborador_emitiu,
-				nfe.cancelada,
-				nfe.numero,
-				SUBSTR(nfe.xml, 1, 1) AS tem_xml,
-				nfe.chave AS chave,
-				nfe.situacao,
-				programacao.os AS os_saida,
-				nfe.id_notas,
-				nfe.mensagens,
-				nfe.protocolo,
-				SUBSTR(nfe.xml_cancelamento, 1, 1) AS tem_xml_cancelamento,
-				nfe.data_cancelamento,
-				pessoa_cancelou.apelido AS colaborador_cancelou
-			FROM
-				nfe
-			LEFT JOIN pessoas pessoa_emitiu ON
-				pessoa_emitiu.id = nfe.id_pessoa
-			LEFT JOIN pessoas pessoa_cancelou ON
-				pessoa_cancelou.id = nfe.id_pessoas_cancelou
-			LEFT JOIN programacao ON
-				programacao.id = nfe.id_os
-			LEFT JOIN notas ON
-				notas.id = nfe.id_notas
-			WHERE {$where}
-			ORDER BY nfe.numero";
+					nfe.id,
+					nfe.data AS data_cadastro,
+					pessoa_emitiu.apelido AS colaborador_emitiu,
+					nfe.cancelada,
+					nfe.numero,
+					SUBSTR(nfe.xml, 1, 1) AS tem_xml,
+					nfe.chave AS chave,
+					nfe.situacao,
+					programacao.os AS os_saida,
+					nfe.id_notas,
+					nfe.mensagens,
+					nfe.protocolo,
+					SUBSTR(nfe.xml_cancelamento, 1, 1) AS tem_xml_cancelamento,
+					nfe.data_cancelamento,
+					pessoa_cancelou.apelido AS colaborador_cancelou
+				FROM nfe
+				LEFT JOIN pessoas pessoa_emitiu ON pessoa_emitiu.id = nfe.id_pessoa
+				LEFT JOIN pessoas pessoa_cancelou ON pessoa_cancelou.id = nfe.id_pessoas_cancelou
+				LEFT JOIN programacao ON programacao.id = nfe.id_os
+				LEFT JOIN notas ON notas.id = nfe.id_notas
+				WHERE {$where}
+				ORDER BY nfe.numero";
 		$rs = dbFastQuery($sql);
 
 		if (!$rs) {
@@ -134,31 +129,33 @@ switch ($gPage) {
 		}
 
 		$html .= $o->tableBegin("big", true, true);
-		$mtz = array();
-		$mtz[] = '->' . 'Opções';
-		$mtz[] = '->' . 'Id';
-		$mtz[] = '<>' . 'Data cadastro';
-		$mtz[] = '->' . 'Número';
-		$mtz[] = '<-' . 'Situação';
-		$mtz[] = '<-' . 'Chave';
-		$mtz[] = '<-' . 'Resposta SEFAZ';
-		$mtz[] = '->' . 'Protocolo';
-		$mtz[] = '<-' . 'OS de saída';
-		$mtz[] = '<-' . 'Nota';
-		$mtz[] = '<-' . 'Colaborador emissor';
-		$mtz[] = '<>' . 'Cancelada';
-		$mtz[] = '<-' . 'Colaborador cancelou';
-		$mtz[] = '<>' . 'Data cancelamento';
+		$mtz = [];
+		$mtz[] = '->Opções';
+		$mtz[] = '->Id';
+		$mtz[] = '<>Data cadastro';
+		$mtz[] = '->Número';
+		$mtz[] = '<-Situação';
+		$mtz[] = '<-Chave';
+		$mtz[] = '<-Resposta SEFAZ';
+		$mtz[] = '->Protocolo';
+		$mtz[] = '<-OS de saída';
+		$mtz[] = '<-Nota';
+		$mtz[] = '<-Colaborador emissor';
+		$mtz[] = '<>Cancelada';
+		$mtz[] = '<-Colaborador cancelou';
+		$mtz[] = '<>Data cancelamento';
         $html .= $o->tableRow($mtz, "header-fixed");
 		foreach ($rs as $key => $row) {
-			$mtz = array();
+			$mtz = [];
 			$botoes = '';
 			if ($row['tem_xml']) {
 				$botoes .= $o->button("{icon: download; caption: XML enviado; style: default ; size: small; href: " . $o->page . "&gPage=" . DOWNLOAD_XML . "&gId=" . $row['id'] . "&atributo=xml; hint: Baixar xml enviado para SEFAZ; target: _blank;}");
 			}
+
 			if ($row['tem_cancelamento']) {
 				$botoes .= $o->button("{icon: download; caption: XML cancelamento; style: danger; size: small; href: " . $o->page . "&gPage=" . DOWNLOAD_XML . "&gId=" . $row['id'] . "&atributo=xml_cancelamento; hint: Baixar xml enviado para cancelamento; target: _blank;}");
 			}
+
 			$mtz[] = '->' . $botoes;
 			$mtz[] = '->' . $row['id'];
 			$mtz[] = '<>' . gDateTime($row['data_cadastro']);
@@ -176,12 +173,13 @@ switch ($gPage) {
 
 			$html .= $o->tableRow($mtz, "footer");
 		}
+
 		$html .= $o->tableEnd();
 		break;
 
 
 	case DOWNLOAD_XML:
-		$rs = dbFastQuery("SELECT id, chave, situacao, numero, " . $_REQUEST['atributo'] . " FROM nfe WHERE id = '{$gId}'")[0];
+		$rs = dbFastQuery("SELECT id, chave, situacao, numero, " . $_REQUEST['atributo'] . sprintf(" FROM nfe WHERE id = '%s'", $gId))[0];
         if (!$rs['id']) {
             $html .= $o->msgDanger("Não foi possível fazer o download do xml pois aconteceram os seguintes erros: <br> NF-e não encontrada");
            	$html .= $backButton;
@@ -195,7 +193,7 @@ switch ($gPage) {
         header('Expires: 0');
         header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
         header('Pragma: public');
-        header('Content-Length: ' . strlen($rs[$_REQUEST['atributo']]));
+        header('Content-Length: ' . strlen((string) $rs[$_REQUEST['atributo']]));
         ob_clean();
         flush();
         echo($rs[$_REQUEST['atributo']]);
