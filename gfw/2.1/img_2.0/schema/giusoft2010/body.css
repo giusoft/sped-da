@@ -1,251 +1,0 @@
-body {background: #DFE8F6; border: 0px; margin: 0px; padding: 0px; font:normal 12px tahoma,arial,helvetica,sans-serif;}
-li {font-size: 9pt }
-
-h1 {font-size: 11px ; color: #15428b}
-h2 {
-	background-image:url(../../../gfw/inc/lib/ext-3.3.0/resources/images/default/panel/white-top-bottom.gif);
-	border: 1px solid #99BBE8;
-	padding:5px 0 4px;
-	display: block;
-	font-size: 11px;
-	font-weight: bold;
-	margin-top: 4pt;
-	margin: 0;
-	color: #15428b;	
-}
-h3 {
-	display: block;
-	font-size: 11px;
-	font-weight: bold;
-	line-height: 12px;
-	margin-top: 4px;
-	margin-bottom: 6px;
-	color: #444;
-	padding:5px 0 4px;
-}
-h4 {font-size: 11px ; color: #15428b}
-h5 {font-size: 11px ; color: #15428b}
-
-font {font-size: 9pt ; color: #140181}
-font.tiny {font-size: 8px ; color: #606060}
-font.vermelho {font-size: 9pt ; color: #d00000}
-font.cinza {font-size: 9pt ; color: #606060}
-font.azul {font-size: 9pt ; color: #0000d0}
-font.verde {font-size: 9pt ; color: #00d000}
-textarea {
--moz-background-clip:border;-moz-background-inline-policy:continuous;-moz-background-origin:padding;background:transparent none repeat-x scroll 0 0;border:1px solid;background-color:#FFFFFF;border-color:#B5B8C8;
--x-system-font:none;font-size:12px;font-size-adjust:none;font-stretch:normal;font-style:normal;font-variant:normal;font-weight:normal;line-height:normal;	
-	}
-select {
--moz-background-clip:border;-moz-background-inline-policy:continuous;-moz-background-origin:padding;background:transparent none repeat-x scroll 0 0;border:1px solid;background-color:#FFFFFF;background-image:url(../../../gfw/inc/lib/ext-3.3.0/resources/images/default/form/text-bg.gif);border-color:#B5B8C8;
--x-system-font:none;font-family:tahoma,arial,helvetica,sans-serif;font-size:12px;font-size-adjust:none;font-stretch:normal;font-style:normal;font-variant:normal;font-weight:normal;line-height:normal;	
-}
-
-input {
--moz-background-clip:border;-moz-background-inline-policy:continuous;-moz-background-origin:padding;background:transparent none repeat-x scroll 0 0;border:1px solid;
-background-color:#FFFFFF;background-image:url(../../../gfw/inc/lib/ext-3.3.0/resources/images/default/form/text-bg.gif);border-color:#B5B8C8;
--x-system-font:none;font-family:tahoma,arial,helvetica,sans-serif;font-size:12px;font-size-adjust:none;font-stretch:normal;font-style:normal;font-variant:normal;font-weight:normal;line-height:normal;	
-}
-input.micro {background: transparent;height: 10px; font-size: 10px}
-input[type='button'] {height: 22px; height: 22px; font-size: 8pt;background-image: url(../../botao.gif)}
-input[type='button']:hover {font-size: 8pt;background-image: url(../../botaos.gif)}
-input.tool {height: 22px; height: 22px; background: #e0e0e0;font-size: 8pt;background-image: url(../../botao.gif)}
-input.tool:hover {
-	font-size: 8pt;background-image: url("../../botaos.gif");
-text-align:center;
-}
-input.navig {height: 22px; width:20px; background: #e0e0e0;font-size: 8pt;background-image: url(../../botao.gif)}
-input.navig:hover {width:20px; font-size: 8pt;background-image: url(../..botaos.gif)}
-input.export {height: 22px; width:36px; background: #e0e0e0;font-size: 8pt;background-image: url(../../botao.gif)}
-input.export:hover {width:36px; font-size: 8pt;background-image: url(../../botaos.gif)}
-input.image {color: transparent;background: transparent}
-
-a {text-decoration: none; font-size: 9pt ; color: #216B90}
-a:hover {text-decoration: none; font-size: 9pt ; color:#ff6600; background: transparent}
-a.tree {vertical-align: 30%; line-height:0.9; text-decoration: none; font-size: 9pt ; color: black; background: transparent}
-a.tree:hover {vertical-align: 30%; line-height:0.9; text-decoration: none; font-size: 9pt ; color:#ff6600; background: transparent}
-a.tree:active {vertical-align: 30%; line-height:0.9; text-decoration: none; font-size: 9pt ; color:white; background: #ffff00}
-a.tree:focus {vertical-align: 30%; line-height:0.9; text-decoration: none; font-size: 9pt ; color:white; background: #ff6600}
-a.busca {text-decoration: underline; font-size: 12pt ; color: #216B90}
-a.busca:hover {text-decoration: none; font-size: 12pt ; color:#ff6600; background: transparent}
-a.menu {text-decoration: none; font-size: 9pt ; color: #216B90}
-a.menu:hover {text-decoration: none; font-size: 9pt ; color:#ff6600; background: transparent}
-a.imagem {text-decoration: none; background:transparent; color: #216B90}
-a.imagem:hover {text-decoration: none; background:transparent; color: #ff6600}
-a.orderby {text-decoration: none; background: #216B90; font-weight: normal; font-size: 9pt; color: white}
-a.orderby:hover {text-decoration: none; background: #216B90; font-weight: normal; font-size: 9pt; color: #83F01C}
-a.help {text-decoration: none; font-size: 9pt ; background:#f5f5f5; color: #216B90}
-a.help:hover {text-decoration: none; font-size: 9pt ; background:#93D01C; color: white}
-a.tab {text-decoration: none; font-size: 9pt ; background: transparent; color: #216B90}
-a.tab:hover {text-decoration: none; font-size: 9pt ; background: transparent; color: #ff6600}
-
-th.cal {font-size: 9pt; background: #505050; color: white}
-
-
-th {
-background-color:#EBF3FD;
-background-image:url(../../../gfw/inc/lib/ext-3.3.0/resources/images/default/grid/grid3-hrow.gif);
-padding: 1pt; padding-left: 2pt; padding-right: 2pt; font-size: 11px ; font-weight: normal;
-line-height: 17px;
-border: 1px #d0d0d0 solid;
-color: #444;
-}
-th:last-child {}
-th:first-line {}
-
-td.subtitle {padding: 1pt; padding-left: 2pt; padding-right: 2pt; background: #bad0ee; font-weight: bold; font-size: 11px ; color: white; border-bottom: 1px solid #d0d0d0}
-td.footer {padding: 1pt; padding-left: 2pt; padding-right: 2pt; color: #5050e2; }
-td.summary {padding: 1pt; padding-left: 2pt; padding-right: 2pt; background: #d7e5f5; color: #303030; border-left: 1px solid #d0d0d0; border-bottom: 1px solid #d0d0d0}
-td.summary:last-child {border-right: 1px solid #abc7ec; }
-td.red {padding: 1pt; padding-left: 2pt; padding-right: 2pt; background: #FF6666; font-style: italic; color: black; border-bottom: 1px solid #d0d0d0}
-td.green {padding: 1pt; padding-left: 2pt; padding-right: 2pt; background: #A7FA9D; font-style: italic; color: black; border-bottom: 1px solid #d0d0d0}
-td.disable {padding: 1pt; padding-left: 2pt; padding-right: 2pt; background: #eeeeee; color: black; border-bottom: 1px solid #d0d0d0}
-td.enable {padding: 1pt; padding-left: 2pt; padding-right: 2pt; background: #d0d0d0; color: black; border-bottom: 1px solid #d0d0d0}
-td.total {padding: 1pt; padding-left: 2pt; padding-right: 2pt; background: #e2e2e2; font-weight: bold; color: black; border-bottom: 1px solid #d0d0d0}
-td.tool {font-size: 11px; color: black; background: #D5E2F2}
-td.alert {padding: 1pt; padding-left: 2pt; padding-right: 2pt; background: #FF0000; font-weight: bold; color: white; border-bottom: 1px solid #d0d0d0}
-td.group {padding: 1pt; padding-left: 2pt; padding-right: 2pt; background: #cae0fe; color: black; font-weight: bold; border-bottom: 1px solid #d0d0d0}
-td.menu {text-decoration: none; font-size: 11px ; color: #216B90}
-td.menu:hover {text-decoration: none; font-size: 11px ; background:#93D01C; color: white}
-td.detail { padding: 1pt; padding-left: 2pt; padding-right: 2pt; border: solid 1px #d0d0d0; margin: 0px}
-td.single { color: black; border: none 0px transparent;}
-td.panel { text-align: center; background: #B2D0DF; color: #216B90; border: 0px none transparent; border-left: 0px none transparent}
-td.transp { background: transparent; color: #216B90; border: 0px none transparent; border-left: 0px none transparent}
-td.tab { color: #216B90; border: 0px none transparent; border-left: 0px none transparent}
-td { color: black; border: none 0px;}
-td.tabborder {
-	padding: 5px;
-	color: black; 
-	font-family: Arial,helvetica;font-size: 11px;font-style: normal;
-	border: solid 1px #d0d0d0;
-	background-color: white;
-}
-
-tbody.detail {
-  background: white; font-size: 8pt ; color: black; 
-  border: none ;
-  text-align: left;
-}
-tbody.detail:hover {
-  background: #f0f0f0; font-size: 8pt ; color: black;
-  border: none;
-  text-align: left;
-}
-
-table {
-        border-collapse: collapse;
-        border-spacing: 0pt;
-	empty-cells: show;
-	font-size: 8pt;	font-style: normal;
-	border: solid 1px #d0d0d0;
-	color: black;	background-color: white;
-}
-
-table.nullborder {
-        border-collapse: collapse;
-        border-spacing: 0pt;
-	padding: 0px;
-	font-size: 8pt;	font-style: normal;
-	border: none 0px; 
-	background-color: transparent;
-	border-color: transparent;
-	color: black;	
-}
-td.cal {font-size: 11px; color: white; background: #707070;}
-a.setas {font-size: 11px; color: white; background: #707070;}
-a.setas:hover {font-size: 11px; color: black; background: white;}
-
-
-
-table.calendar
-{
-	width: 120px; height:100px; padding: 0px 0px 0px 0px; overflow: hidden; border: 1px solid #d0d0d0;
-	font-family: Tahoma, Arial;
-	font-size: 8px;
-}
-.dias
-{
-	font-family: Tahoma, Arial;
-	font-size: 8px;
-	color: black;
-	background-color: white;
-}
-
-.num
-{
-	font-family: Tahoma, Arial;
-	font-size: 8px;
-	color: #666666;
-	background-color: white;
-}
-.num:hover
-{
-	font-family: Tahoma, Arial;
-	font-size: 8px;
-	background-color: #ff6000;
-	color: white;
-	display: block;
-}
-
-.num_sel
-{
-	font-family: Tahoma, Arial;
-	font-size: 8px;
-	color: white;
-	background-color: #666666;
-}
-.num_sel:hover
-{
-	font-family: Tahoma, Arial;
-	font-size: 8px;
-	background-color: #ff6000;
-	color: white;
-	display: block;
-}
-
-input.calcBtn {font-family: Arial, helvetica; font-size: 9px; width: 25px}
-input.calcDisplay {font-family: Arial, helvetica; font-size: 9px; width: 110px; background: #b0b0b0;}
-input.calcDo {font-family: Arial, helvetica; font-size: 9px; width: 85px}
-
-div.big {padding: 9px; left: 3px;top: 3px;margin-right: 3px;margin-bottom: 3px;}
-div.med {padding: 9px; width: 600px; height: auto; margin: 0px auto; }
-div.tin {padding: 9px; width: 300px; height: auto; margin: 0px auto; }
-
-div.som {
-	width: 100%;
-	position: relative;	
-	overflow: visible;
-	left: 3px;
-	top: 0px;
-	margin: 0px 0px 0px 0px;
-	border:none;
-	background: transparent;
-	z-index:0;
-	}
-div.som2 {
-	width: auto;
-	overflow: visible;
-	position: relative;	
-	left: -1px;
-	top: -1px;
-	margin: 0px 0px 0px 0px;
-	border: none;
-	background: transparent;
-	z-index:1;
-	}
-div.bra {
-	width: auto;
-	overflow: visible;
-	position: relative;	
-	left: -3px;
-	top: -3px;
-	margin: 0px 0px 0px 0px;
-	border: solid 1px #99BBE8;
-	background: #DFE8F6;
-	z-index:10;
-	}
-div.int {
-	padding: 4px;
-	overflow: auto;
-}
-
