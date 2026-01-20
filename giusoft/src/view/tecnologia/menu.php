@@ -15,7 +15,7 @@ switch ($gPage) {
 		$primeiro = true;
 		$ultimo = count($rs)-1;
 		if ($rs) {
-			$o->out($o->modal("{title: Confirme; size: small; content: Excluir este menu?; okCaption: Excluir agora; name: confirmaExclusaoMenu; url: excluiMenu()}"), \GLOC_INLINE, 999);
+			$o->out($o->modal("{title: Confirme; size: small; content: Excluir este menu?; okCaption: Excluir agora; name: confirmaExclusaoMenu; url: excluiMenu()}"), gLOC_INLINE, 999);
 			$o->addJavascript('gIda=0;function excluiMenu(){document.location.href="'.$o->page."&gPage=3&gId=".'"+gIda;}');
 
 			$html.=$o->tableBegin('big', true);
