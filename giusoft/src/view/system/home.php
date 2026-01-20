@@ -1,4 +1,4 @@
-<?
+<?php
 include_once $gPathDefault . "gUI.php";
 
 $ui = new gUI("{title: Página inicial; table: gfw_home; permissions: SIUD; ajax: false}");
@@ -14,5 +14,3 @@ $ui->addDictionary("{name: subtitle; fieldLabel: Sub-título}");
 $ui->addDictionary("{name: short_text; fieldLabel: Texto curto}");
 
 $ui->run($o, $html);
-
-?>
