@@ -1,25 +1,31 @@
 <?php
 
 $ambiente = '';
-if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
+if (in_array('teste', explode("/", (string) $_SERVER['REQUEST_URI']))) {
     $ambiente = '/teste';
 }
+
 require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/emitenota/giusoft/src/view/classe/integracao.php";
 
 class PontoAcesso
 {
-    public $debug;
+    public $parametros;
+    public $debug = 0;
+
     public $dadosEnviar;
-    public $idPessoasProprietario;
+
+    public $idPessoasProprietario = 1;
+
     public $integracao;
+
     public $objetoGenerico;
+
     public $lastStatusCode;
+
     public $responseHeaders = [];
 
     public function __construct($param)
     {
-        $this->debug = 0;
-        $this->idPessoasProprietario = 1;
         $this->integracao = new Integracao(montarParametrosIntegracao($param['empresa']));
     }
 
@@ -50,7 +56,7 @@ class PontoAcesso
 
         $curl = $this->configurarCurl($verboHttp, $url, $dados, $headers);
 
-        $requisicaoEnviar = array();
+        $requisicaoEnviar = [];
         $requisicaoEnviar['idProgramacao']       = $this->parametros['idProgramacao'];
         $requisicaoEnviar['idPessoasCriou']      = $usrId ?: 1;
         $requisicaoEnviar['idGatilhos']          = $dadosRequisicao['rotas']['id'];
@@ -67,7 +73,7 @@ class PontoAcesso
         $dadosEnviar = $this->integracao->salvarRequisicao($this->dadosEnviar, $requisicaoEnviar);
 
         if (!$enviarTempoReal && !$this->parametros['task']) {
-            return;
+            return null;
         }
 
         $resposta = curl_exec($curl);
@@ -112,7 +118,7 @@ class PontoAcesso
     }
 
 
-    public function configurarCurl($verboHttp, $url, $dadosParaEnvio = array(), $headers = array())
+    public function configurarCurl($verboHttp, $url, $dadosParaEnvio = [], $headers = [])
     {
         $curl = curl_init();
         $this->responseHeaders = [];
@@ -136,7 +142,7 @@ class PontoAcesso
         curl_setopt($curl, CURLOPT_TIMEOUT, (int) $this->objetoGenerico->tempoLimiteCurl);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
 
-        $verboHttp = strtoupper($verboHttp);
+        $verboHttp = strtoupper((string) $verboHttp);
         if (in_array($verboHttp, ['GET', 'DELETE']) && !empty($dadosParaEnvio)) {
             $url .= '?' . http_build_query($dadosParaEnvio);
         }
@@ -150,6 +156,7 @@ class PontoAcesso
                 $this->dadosEnviar = is_array($dadosParaEnvio) ? json_encode($dadosParaEnvio) : $dadosParaEnvio;
                 curl_setopt($curl, CURLOPT_POSTFIELDS, $this->dadosEnviar);
             }
+
             if (isset($headers["Content-Type"]) && $headers["Content-Type"] === 'application/x-www-form-urlencoded') {
                 $this->dadosEnviar = http_build_query($dadosParaEnvio);
                 curl_setopt($curl, CURLOPT_POSTFIELDS, $this->dadosEnviar);
@@ -174,8 +181,9 @@ class PontoAcesso
     {
         $listaCabecalhos = [];
         foreach ($headers as $chave => $valor) {
-            $listaCabecalhos[] = "{$chave}: {$valor}";
+            $listaCabecalhos[] = sprintf('%s: %s', $chave, $valor);
         }
+
         curl_setopt($curl, CURLOPT_HTTPHEADER, $listaCabecalhos);
     }
 
@@ -202,9 +210,8 @@ class PontoAcesso
 
         if (!$rs) {
             if ($this->debug) {
-                error_log("*Debug => metodo {$momento} nao cadastrado para este proprietario: " . $this->idPessoasProprietario);
+                error_log(sprintf('*Debug => metodo %s nao cadastrado para este proprietario: ', $momento) . $this->idPessoasProprietario);
             }
-            return;
         }
 
         foreach ($rs as $row) {
@@ -244,9 +251,8 @@ class PontoAcesso
 
         if (!$rotas) {
             if ($this->debug) {
-                error_log("*Debug => Nenhuma configuracao encontrada para classe: '{$classe}'");
+                error_log(sprintf("*Debug => Nenhuma configuracao encontrada para classe: '%s'", $classe));
             }
-            return;
         }
 
         $this->objetoGenerico->usuario = $rotas[0]['usuario'];
@@ -255,7 +261,7 @@ class PontoAcesso
         $this->objetoGenerico->tempoLimiteCurl = $rotas[0]['tempo_limite'];
         $this->objetoGenerico->classeIntegracao = $classe;
         $this->objetoGenerico->idPessoasProprietario = $this->idPessoasProprietario;
-        
+
         ### se a requisao for enviar_tempo_real = 0, então não precisa autenticar
         if ($this->objetoGenerico->rotas[$metodo]['enviarTempoReal'] == 0 && !$parametros['task']) {
             $this->chamarMetodoClasse($this->objetoGenerico, $metodo, $parametros);
@@ -273,13 +279,14 @@ class PontoAcesso
             if ($metodo == "autenticar") {
                 return true;
             }
+
             return $this->chamarMetodoClasse($this->objetoGenerico, $metodo, $parametros);
         }
+
         if ($this->debug) {
-            error_log("*Debug => Erro ao autenticar classe {$classe}. Usuario: " . $rotas[0]['usuario'] . ' Senha: ' . $rotas[0]['senha']);
+            error_log(sprintf('*Debug => Erro ao autenticar classe %s. Usuario: ', $classe) . $rotas[0]['usuario'] . ' Senha: ' . $rotas[0]['senha']);
         }
 
-        return;
     }
 
 
@@ -292,9 +299,10 @@ class PontoAcesso
             }
         }
 
-        if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
+        if (in_array('teste', explode("/", (string) $_SERVER['REQUEST_URI']))) {
             $ambiente = '/teste';
         }
+
         $basePath = $_SERVER["DOCUMENT_ROOT"] . $ambiente . '/wms/giusoft/res';
         $pathClassesIntegracao = $basePath . '/_classes/integracao/*';
         $classesIntegracao = [];
@@ -303,15 +311,15 @@ class PontoAcesso
             $classesIntegracao[] = str_replace($basePath . '/_classes/integracao/', '', $subPath);
         }
 
-        if (in_array($classe, $classesAuxiliares) && $dir == "") {
-            $dir = __DIR__ . "/{$classe}.php";
+        if (in_array($classe, $classesAuxiliares) && $dir === "") {
+            $dir = __DIR__ . sprintf('/%s.php', $classe);
             if ($classe == "index") {
                 $classe = "Api";
             }
         }
 
-        if (in_array(lcfirst($classe), $classesIntegracao) && $dir == "") {
-            $dir = $basePath . "/_classes/integracao/" . lcfirst($classe) . "/" . lcfirst($classe) . ".php";
+        if (in_array(lcfirst((string) $classe), $classesIntegracao) && $dir === "") {
+            $dir = $basePath . "/_classes/integracao/" . lcfirst((string) $classe) . "/" . lcfirst((string) $classe) . ".php";
         }
 
         if (file_exists($dir)) {
@@ -319,7 +327,8 @@ class PontoAcesso
             if ($classe == "api_wms") {
                 $classe = "Api";
             }
-            if (class_exists(ucfirst($classe))) {
+
+            if (class_exists(ucfirst((string) $classe))) {
                 return new $classe($parametroClasse);
             }
         }
@@ -329,11 +338,12 @@ class PontoAcesso
 
     public function chamarMetodoClasse($objectClass, $metodo, $parametros)
     {
-        $className = get_class($objectClass);
+        $className = $objectClass::class;
         if (!method_exists($objectClass, $metodo)) {
             if ($this->debug) {
-                error_log("Metodo $metodo nao encontrado na classe $className");
+                error_log(sprintf('Metodo %s nao encontrado na classe %s', $metodo, $className));
             }
+
             return null;
         }
 
