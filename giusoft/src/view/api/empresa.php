@@ -4,12 +4,7 @@ namespace Api;
 
 class Empresa
 {
-    protected $api;
-
-    public function __construct($api)
-    {
-        $this->api = $api;
-    }
+    public function __construct(protected $api) {}
 
     public function cadastrarClienteFinal($args)
     {
@@ -42,44 +37,44 @@ class Empresa
 
         $mtz = $args['empresa'];
 
-        $this->api->validarCamposObrigatorios   ($mtz, array('nome', 'codigoSistemaExterno', 'razaoSocial', 'endereco', 'cep', 'cnpj'));
-        $mtz['codigoSistemaExterno'] = substr($mtz['codigoSistemaExterno'], 0, 50);
-        $mtz['cnpj'] = substr(preg_replace("/[^0-9]/", "", $mtz['cnpj']), 0, 14);
+        $this->api->validarCamposObrigatorios   ($mtz, ['nome', 'codigoSistemaExterno', 'razaoSocial', 'endereco', 'cep', 'cnpj']);
+        $mtz['codigoSistemaExterno'] = substr((string) $mtz['codigoSistemaExterno'], 0, 50);
+        $mtz['cnpj'] = substr((string) preg_replace("/[^0-9]/", "", (string) $mtz['cnpj']), 0, 14);
         $empresaExiste = $this->verificarSeEmpresaExiste($mtz['codigoSistemaExterno'], $mtz['cnpj']);
 
         if ($empresaExiste) {
             $this->api->emitirErro('Empresa ja cadastrada');
         }
 
-        $pessoa = array();
+        $pessoa = [];
         $pessoa['tipo']             = 'J';
-        $pessoa['nome']             = substr($mtz['nome'], 0, 100);
-        $pessoa['apelido']          = substr($mtz['nome'], 0, 50);
+        $pessoa['nome']             = substr((string) $mtz['nome'], 0, 100);
+        $pessoa['apelido']          = substr((string) $mtz['nome'], 0, 50);
         $pessoa['situacao']         = 'Ativo';
         $pessoa['cliente_final']    = 1;
         $pessoa['id_pessoas_criou'] = $this->api->idPessoasProprietario;
 
-        $juridico = array();
+        $juridico = [];
         $juridico['codigo_sistema_externo'] = $mtz['codigoSistemaExterno'];
-		$juridico['razao_social'] = substr($mtz['razaoSocial'], 0, 100);
+		$juridico['razao_social'] = substr((string) $mtz['razaoSocial'], 0, 100);
 		$juridico['observacoes']  = "Criado automaticamente pela api";
         $juridico['cnpj'] = $mtz['cnpj'];
-        $juridico['insc_estadual'] = substr(preg_replace("/[^0-9]/", "", $mtz['inscEstadual']), 0, 14);
-        $juridico['insc_municipal'] = substr(preg_replace("/[^0-9]/", "", $mtz['inscMunicipal']), 0, 14);
+        $juridico['insc_estadual'] = substr((string) preg_replace("/[^0-9]/", "", (string) $mtz['inscEstadual']), 0, 14);
+        $juridico['insc_municipal'] = substr((string) preg_replace("/[^0-9]/", "", (string) $mtz['inscMunicipal']), 0, 14);
 
-        $endereco = array();
-		$endereco['cep'] = substr(preg_replace("/[^0-9]/", "", $mtz['cep']), 0, 9);
-		$endereco['endereco'] = substr($mtz['endereco'], 0, 100);
-		$endereco['complemento'] = substr($mtz['complemento'], 0, 100);
+        $endereco = [];
+		$endereco['cep'] = substr((string) preg_replace("/[^0-9]/", "", (string) $mtz['cep']), 0, 9);
+		$endereco['endereco'] = substr((string) $mtz['endereco'], 0, 100);
+		$endereco['complemento'] = substr((string) $mtz['complemento'], 0, 100);
 
         $detalhesEmpresa = $this->api->integracao->cadastrarEmpresa($pessoa, $juridico, $endereco, 1);
 
-        return $this->api->finalizarRequisicao(true, array(
-            'empresa' => array(
+        return $this->api->finalizarRequisicao(true, [
+            'empresa' => [
                 'id' => $detalhesEmpresa['id'],
                 'codigoSistemaExterno' =>  $detalhesEmpresa['codigoSistemaExterno']
-            )
-        ), 200);
+            ]
+        ], 200);
     }
 
     public function verificarSeEmpresaExiste($codigoSistemaExterno, $cnpj)
@@ -108,12 +103,13 @@ class Empresa
 
         $mtz = $args['empresa'];
 
-        $this->api->validarCamposObrigatorios($mtz, array('codigoSistemaExterno'));
+        $this->api->validarCamposObrigatorios($mtz, ['codigoSistemaExterno']);
 
-        $where = array();
+        $where = [];
         if ($mtz['codigoSistemaExterno']) {
             $where[] = "(PJ.codigo_sistema_externo = '" . gCleanField($mtz['codigoSistemaExterno']) . "')";
         }
+
         if ($mtz['cnpj']) {
             $where[] = "(PJ.cnpj = '" . gCleanField($mtz['cnpj']) . "')";
         }
