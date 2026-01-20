@@ -7,7 +7,7 @@ ESTE ARQUIVO DEVE INDEPENDER DO FRAMEWORK PARA FAZER QUALQUER COISA
 ESTE ARQUIVO PODE IMPORTAR FUNCIONALIDADES E OUTROS ARQUIVOS MAS DEVE SER EXECUTAVEL VIA TERMINAL SEMPRE
 */
 
-define('SERVIDOR_ATUAL_EH_GA', (int) (stripos($_SERVER['REQUEST_URI'], '/ga/') !== false));
+define('SERVIDOR_ATUAL_EH_GA', (int) (stripos((string) $_SERVER['REQUEST_URI'], '/ga/') !== false));
 
 if (!$_REQUEST['task']) {
 	error_log('TAREFA NAO INFORMADA NO REQUEST', 0);
@@ -21,7 +21,8 @@ if ($_REQUEST['task'] == 'dataCritica') {
 	if ($_SERVER["HTTP_HOST"] != 'localhost' && $_SERVER["HTTP_HOST"] != '127.0.0.1') {
 		$ambiente = '';
 	}
-	if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
+
+	if (in_array('teste', explode("/", (string) $_SERVER['REQUEST_URI']))) {
 		$ambiente = 'teste';
 	}
 
@@ -30,12 +31,12 @@ if ($_REQUEST['task'] == 'dataCritica') {
 	} else {
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/wms/giusoft/res/_classes/padrao/integracao.php';
 	}
+
 	if (SERVIDOR_ATUAL_EH_GA) {
 		$empresas = array('ga');
 	} else {
 		$empresas = array('logiclog', 'uniklog');
 	}
-
 	foreach ($empresas as $empresa) {
 		if ($ambiente == 'teste') {
 			$caminhoSetup = $_SERVER['DOCUMENT_ROOT'] . '/' . $ambiente . "/wms/{$empresa}/setup.php";
@@ -45,10 +46,10 @@ if ($_REQUEST['task'] == 'dataCritica') {
 			require_once $_SERVER['DOCUMENT_ROOT'] . "/wms/{$empresa}/res/_classes/integracao/gmi/gmi.php";
 		}
 
-		$parametro = array(
-		    'caminhoSetup'   => $caminhoSetup,
-		    'idPessoasCriou' => 1
-		);
+		$parametro = [
+			'caminhoSetup'   => $caminhoSetup,
+			'idPessoasCriou' => 1
+		];
 
 		$integracao = new Integracao($parametro);
 		$integracao->atualizarParaSaldoCritico();
@@ -61,7 +62,8 @@ if ($_REQUEST['task'] == 'removerDataCritica') {
 	if ($_SERVER["HTTP_HOST"] != 'localhost' && $_SERVER["HTTP_HOST"] != '127.0.0.1') {
 		$ambiente = '';
 	}
-	if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
+
+	if (in_array('teste', explode("/", (string) $_SERVER['REQUEST_URI']))) {
 		$ambiente = 'teste';
 	}
 
@@ -86,10 +88,10 @@ if ($_REQUEST['task'] == 'removerDataCritica') {
 			require_once $_SERVER['DOCUMENT_ROOT'] . "/wms/{$empresa}/res/_classes/integracao/gmi/gmi.php";
 		}
 
-		$parametro = array(
-		    'caminhoSetup'   => $caminhoSetup,
-		    'idPessoasCriou' => 1
-		);
+		$parametro = [
+			'caminhoSetup'   => $caminhoSetup,
+			'idPessoasCriou' => 1
+		];
 
 		$integracao = new Integracao($parametro);
 		$integracao->removerStatusDataCritica();
@@ -102,7 +104,8 @@ if ($_REQUEST['task'] == 'relatorioInventario') {
 	if ($_SERVER["HTTP_HOST"] != 'localhost' && $_SERVER["HTTP_HOST"] != '127.0.0.1') {
 		$ambiente = '';
 	}
-	if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
+
+	if (in_array('teste', explode("/", (string) $_SERVER['REQUEST_URI']))) {
 		$ambiente = 'teste';
 	}
 
@@ -112,7 +115,7 @@ if ($_REQUEST['task'] == 'relatorioInventario') {
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/wms/giusoft/res/_classes/padrao/integracao.php';
 	}
 
-	$empresas = array('logiclog');
+	$empresas = ['logiclog'];
 
 	foreach ($empresas as $empresa) {
 		if ($ambiente == 'teste') {
@@ -123,17 +126,17 @@ if ($_REQUEST['task'] == 'relatorioInventario') {
 			require_once $_SERVER['DOCUMENT_ROOT'] . "/wms/{$empresa}/res/_classes/integracao/gmi/gmi.php";
 		}
 
-		$parametro = array(
-		    'caminhoSetup'   => $caminhoSetup,
-		    'idPessoasCriou' => 1
-		);
+		$parametro = [
+			'caminhoSetup'   => $caminhoSetup,
+			'idPessoasCriou' => 1
+		];
 
 		$integracao = new Integracao($parametro);
 
 		$sql  = "SELECT ativo, valor FROM parametros WHERE chave = 'INTEGRACAO_GMI'";
 		$parametroIntegracaoSap = $integracao->executarQuery($sql)[0];
 		if ($parametroIntegracaoSap['ativo']) {
-			$idsProprietario = explode(',', $parametroIntegracaoSap['valor']);
+			$idsProprietario = explode(',', (string) $parametroIntegracaoSap['valor']);
 			// require_once  $_SERVER['DOCUMENT_ROOT'] . "/wms/{$empresa}/res/_classes/integracao/gmi/gmi.php";
 			foreach ($idsProprietario as $idPessoasProprietario) {
 				$_REQUEST['idPessoasProprietario'] = $idPessoasProprietario;
@@ -151,7 +154,8 @@ if ($_REQUEST['task'] == 'bloquearSaldoVencer') {
 	if ($_SERVER["HTTP_HOST"] != 'localhost' && $_SERVER["HTTP_HOST"] != '127.0.0.1') {
 		$ambiente = '';
 	}
-	if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
+
+	if (in_array('teste', explode("/", (string) $_SERVER['REQUEST_URI']))) {
 		$ambiente = 'teste';
 	}
 
@@ -160,7 +164,8 @@ if ($_REQUEST['task'] == 'bloquearSaldoVencer') {
 	} else {
 		include_once $_SERVER['DOCUMENT_ROOT'] . '/wms/giusoft/res/_classes/padrao/integracao.php';
 	}
-	if (SERVIDOR_ATUAL_EH_GA) {
+
+ 	if (SERVIDOR_ATUAL_EH_GA) {
 		$empresas = array('ga');
 	} else {
 		$empresas = array('logiclog', 'uniklog');
@@ -175,10 +180,10 @@ if ($_REQUEST['task'] == 'bloquearSaldoVencer') {
 			require_once $_SERVER['DOCUMENT_ROOT'] . "/wms/{$empresa}/res/_classes/integracao/gmi/gmi.php";
 		}
 
-		$parametro = array(
-		    'caminhoSetup'   => $caminhoSetup,
-		    'idPessoasCriou' => 1
-		);
+		$parametro = [
+			'caminhoSetup'   => $caminhoSetup,
+			'idPessoasCriou' => 1
+		];
 
 		$integracao = new Integracao($parametro);
 		$sql = "
@@ -297,27 +302,28 @@ if ($_REQUEST['task'] == 'bloquearSaldoVencer') {
 				$idInsereBloqueado = $integracao->insertTable('umas_itens', $campos);
 			}
 
-			$mtz = array();
+			$mtz = [];
 			$mtz['data'] = $campos['data'];
 			$mtz['id_pessoas'] = $campos['id_pessoas_criou'];
 			$mtz['id_pessoas_proprietario'] = $campos['id_pessoas_proprietario'];
 			$mtz['tipo'] = 'B'; // B = bloqueio
 			$mtz['id_posicoes'] = $row['id_posicoes'];
 			$mtz['id_umas'] = $campos['id_umas'];
-			$mtz['descricao'] = ucfirst(strtolower($campos['observacoes']));
+			$mtz['descricao'] = ucfirst(strtolower((string) $campos['observacoes']));
 			$mtz['lote'] = $campos['lote'];
 			$mtz['data_fabricacao'] = $campos['data_fabricacao'];
 			$mtz['data_validade'] = $campos['data_validade'];
 			$integracao->insertTable('umas_movimentos', $mtz);
 
-			if ($parametroIntegracaoSap['ativo'] && in_array($campos['id_pessoas_proprietario'], explode(',', $parametroIntegracaoSap['valor']))) {
+			if ($parametroIntegracaoSap['ativo'] && in_array($campos['id_pessoas_proprietario'], explode(',', (string) $parametroIntegracaoSap['valor']))) {
 				// Chama o método do HANMOV
-				$itensLinhas = array();
+				$itensLinhas = [];
 
 				$itensLinhas['numero_planta_armazenamento'] 		= 0; // 0 = SLFG 
 				if ($row['data_critica'] == 1) {
 					$itensLinhas['numero_planta_armazenamento'] 	= 2; // 2 = SLFS
 				}
+
 				$itensLinhas['numero_planta_armazenamento_2'] 		= 2; // 2 = SLFS 
 				// require_once  $_SERVER['DOCUMENT_ROOT'] . "/wms/{$empresa}/res/_classes/integracao/gmi/gmi.php";
 				$gmi = new Gmi($parametro);
@@ -331,11 +337,11 @@ if ($_REQUEST['task'] == 'bloquearSaldoVencer') {
 if ($_REQUEST['task'] == 'viewUnidadesPorCliente') {
 	//0 4 * * * sistemas /bin/wget -q "http://localhost/wms/mmedeiros/res/system/task.php?task=viewUnidadesPorCliente"  >/dev/null 2>/dev/null
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/wms/giusoft/res/_classes/padrao/integracao.php';
-	$parametro = array(
-	    'caminhoSetup'   => $_SERVER['DOCUMENT_ROOT'] . '/wms/mmedeiros/setup.php',
-	    'idArmazens'     => 1,
-	    'idPessoasCriou' => 1
-	);
+	$parametro = [
+		'caminhoSetup'   => $_SERVER['DOCUMENT_ROOT'] . '/wms/mmedeiros/setup.php',
+		'idArmazens'     => 1,
+		'idPessoasCriou' => 1
+	];
 
 	$integracao = new Integracao($parametro);
 
@@ -410,18 +416,19 @@ if ($_REQUEST['task'] == 'viewUnidadesPorCliente') {
 if ($_REQUEST['task'] == 'desativaContainer') {
 	// 0 0 1 * * sistemas /bin/wget -q "http://localhost/wms/mmedeiros/res/system/task.php?task=desativaContainer"  >/dev/null 2>/dev/null
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/wms/giusoft/res/_classes/padrao/integracao.php';
-	$empresas = array('mmedeiros');
+	$empresas = ['mmedeiros'];
 	foreach ($empresas as $empresa) {
 		if ($ambiente == 'teste') {
 			$caminhoSetup = $_SERVER['DOCUMENT_ROOT'] . '/' . $ambiente . "/wms/{$empresa}/setup.php";
 		} else {
 			$caminhoSetup = $_SERVER['DOCUMENT_ROOT'] . "/wms/{$empresa}/setup.php";
 		}
-		$parametro = array(
-		    'caminhoSetup'   => $caminhoSetup,
-		    'idArmazens'     => 1,
-		    'idPessoasCriou' => 1
-		);
+
+		$parametro = [
+			'caminhoSetup'   => $caminhoSetup,
+			'idArmazens'     => 1,
+			'idPessoasCriou' => 1
+		];
 
 		$integracao = new Integracao($parametro);
 
@@ -436,7 +443,7 @@ if ($_REQUEST['task'] == 'desativaContainer') {
 if ($_REQUEST['task'] == 'posicoesContratadas') {
 	// 0 4 * * * sistemas /bin/wget -q "http://localhost/wms/giusoft/res/system/task.php?task=posicoesContratadas"  >/dev/null 2>&1
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/wms/giusoft/res/_classes/padrao/integracao.php';
-	$empresas = array('logic', 'logicce', 'logiclog', 'logicpe');
+	$empresas = ['logic', 'logicce', 'logiclog', 'logicpe'];
 
 	foreach ($empresas as $empresa) {
 		if ($ambiente == 'teste') {
@@ -444,11 +451,12 @@ if ($_REQUEST['task'] == 'posicoesContratadas') {
 		} else {
 			$caminhoSetup = $_SERVER['DOCUMENT_ROOT'] . "/wms/{$empresa}/setup.php";
 		}
-		$parametro = array(
-		    'caminhoSetup'   => $caminhoSetup,
-		    'idArmazens'     => 1,
-		    'idPessoasCriou' => 1
-		);
+
+		$parametro = [
+			'caminhoSetup'   => $caminhoSetup,
+			'idArmazens'     => 1,
+			'idPessoasCriou' => 1
+		];
 
 		$integracao = new Integracao($parametro);
 
@@ -486,13 +494,13 @@ if ($_REQUEST['task'] == 'posicoesContratadas') {
 
 if ($_REQUEST['task'] == 'enviarRelatorioSaldoAtual') {
 	// 0 4 * * * sistemas /bin/wget -q "http://localhost/wms/giusoft/res/system/task.php?task=enviarRelatorioSaldoAtual"  >/dev/null 2>&1
-	if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
+	if (in_array('teste', explode("/", (string) $_SERVER['REQUEST_URI']))) {
 		$ambiente = 'teste';
 	}
 
 	require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/wms/giusoft/res/api/accesspoint.php";
 
-	$empresas = array('logic', 'logiclog', 'logicpe', 'logicce');
+	$empresas = ['logic', 'logiclog', 'logicpe', 'logicce'];
 
 	foreach ($empresas as $empresa) {
 		$persistencia = new PontoAcesso(['empresa' => $empresa]);
@@ -518,13 +526,13 @@ if ($_REQUEST['task'] == 'enviarRelatorioSaldoAtual') {
 if ($_REQUEST['task'] == 'enviarRequisicoesPendentes') {
 	// 0 4 * * * root /bin/wget -q "http://localhost/wms/giusoft/res/system/task.php?task=enviarRequisicoesPendentes"  >/dev/null 2>&1
 
-	if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
+	if (in_array('teste', explode("/", (string) $_SERVER['REQUEST_URI']))) {
 		$ambiente = 'teste';
 	}
 
 	require_once $_SERVER["DOCUMENT_ROOT"] . '/' . $ambiente . "/wms/giusoft/res/api/accesspoint.php";
 
-	$empresas = array('logic', 'logiclog', 'logicpe', 'logicce');
+	$empresas = ['logic', 'logiclog', 'logicpe', 'logicce'];
 
 	foreach ($empresas as $empresa) {
 
@@ -549,13 +557,13 @@ if ($_REQUEST['task'] == 'enviarRequisicoesPendentes') {
 		$requisicoes = $persistencia->integracao->executarQuery($sql);
 
 		foreach ($requisicoes as $requisicao) {
-			$parametro = array();
+			$parametro = [];
 			$parametro['task'] = 1;
 			$parametro['idPessoasProprietario'] = $requisicao['id_pessoas_proprietario'];
 
 			$persistencia->acionarEventoMomento($requisicao['metodo'], $parametro);
 
-			$dadosRequisicao = array();
+			$dadosRequisicao = [];
 
 			if ($requisicao['total_tentativas'] == 0) {
 				$dadosRequisicao['idGatilhoRequisicaoDetalhes']  = $requisicao['id_gatilhos_requisicoes_detalhes'];
@@ -566,7 +574,7 @@ if ($_REQUEST['task'] == 'enviarRequisicoesPendentes') {
 			$dadosRequisicao['idProgramacao'] 		= $requisicao['id_programacao'];
 			$dadosRequisicao['idGatilhos'] 			= $requisicao['id_gatilhos'];
 
-			$body = base64_decode($requisicao['enviado']);
+			$body = base64_decode((string) $requisicao['enviado']);
 			$persistencia->objetoGenerico->acessarRota($requisicao['metodo'], $body, $dadosRequisicao);
 		}
 
@@ -577,15 +585,15 @@ if ($_REQUEST['task'] == 'enviarRequisicoesPendentes') {
 if ($_REQUEST['task'] == 'enviarNfesOmie') {
 	// 0 4 * * * sistemas /bin/wget -q "http://localhost/wms/giusoft/res/system/task.php?task=enviarNfesOmie"  >/dev/null 2>&1
 
-	if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
+	if (in_array('teste', explode("/", (string) $_SERVER['REQUEST_URI']))) {
 		$ambiente = 'teste';
 	}
 
 	require_once $_SERVER["DOCUMENT_ROOT"] . '/' . $ambiente . "/wms/giusoft/res/api/accesspoint.php";
 
-	$empresas = array('logic', 'logicce', 'logiclog', 'logicpe');  ### Antes de colocar em producao descomentar esta linha
+	$empresas = ['logic', 'logicce', 'logiclog', 'logicpe'];  ### Antes de colocar em producao descomentar esta linha
 
-	$where = array();
+	$where = [];
 	$where[] = " AND YEAR(nfe.data) = 20" . $_REQUEST['ano'];
 	$where[] = " MONTH(nfe.data) = "  . $_REQUEST['mes'];
 
@@ -644,15 +652,15 @@ if ($_REQUEST['task'] == 'enviarNfesOmie') {
 if ($_REQUEST['task'] == 'limparRequisicoesAntigas') {
 	// 0 3 * * * sistemas /bin/wget -q "http://localhost/wms/giusoft/res/system/task.php?task=limparRequisicoesAntigas"  >/dev/null 2>&1
 
-    if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
+    if (in_array('teste', explode("/", (string) $_SERVER['REQUEST_URI']))) {
         $ambiente = 'teste';
     }
 
     require_once $_SERVER["DOCUMENT_ROOT"] . '/' . $ambiente . "/wms/giusoft/res/api/accesspoint.php";
 
-    $empresas = array('logic', 'logiclog', 'logicpe', 'logicce');
+    $empresas = ['logic', 'logiclog', 'logicpe', 'logicce'];
     if (SERVIDOR_ATUAL_EH_GA) {
-    	$empresas = array('ga');
+    	$empresas = ['ga'];
     	$addWhere = " AND gatilhos.http_verbo <> 'PUT'";
     }
 
@@ -660,7 +668,7 @@ if ($_REQUEST['task'] == 'limparRequisicoesAntigas') {
 
         $persistencia = new PontoAcesso(['empresa' => $empresa]);
 
-		$sql = "DELETE
+		$sql = 'DELETE
 					gatilhos_requisicoes,
 					gatilhos_requisicoes_detalhes
 				FROM gatilhos_requisicoes
@@ -670,7 +678,7 @@ if ($_REQUEST['task'] == 'limparRequisicoesAntigas') {
 				LEFT JOIN gatilhos_requisicoes_detalhes AS detalhes_recentes ON
 					gatilhos_requisicoes.id = detalhes_recentes.id_gatilhos_requisicoes
 					AND detalhes_recentes.data_hora >= NOW() - INTERVAL 7 DAY
-				WHERE detalhes_recentes.id IS NULL {$addWhere}";
+				WHERE detalhes_recentes.id IS NULL ' . $addWhere;
         $persistencia->integracao->executarQuery($sql);
     }
 }
@@ -679,7 +687,7 @@ if ($_REQUEST['task'] == 'limparRequisicoesAntigas') {
 if ($_REQUEST['task'] == 'atualizarAtivacaoUMA') {
 	// 0 4 * * * sistemas /bin/wget -q "http://localhost/wms/giusoft/res/system/task.php?task=atualizarAtivacaoUMA"  >/dev/null 2>&1
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/wms/giusoft/res/_classes/padrao/integracao.php';
-	$empresas = array('logiclog', 'logic', 'logicce', 'logicpe', 'uniklog', 'toplog');
+	$empresas = ['logiclog', 'logic', 'logicce', 'logicpe', 'uniklog', 'toplog'];
 
 	foreach ($empresas as $empresa) {
 
@@ -689,15 +697,15 @@ if ($_REQUEST['task'] == 'atualizarAtivacaoUMA') {
 			$caminhoSetup = $_SERVER['DOCUMENT_ROOT'] . "/wms/{$empresa}/setup.php";
 		}
 
-		$parametro = array(
-		    'caminhoSetup'   => $caminhoSetup,
-		    'idArmazens'     => 1,
-		    'idPessoasCriou' => 1
-		);
+		$parametro = [
+			'caminhoSetup'   => $caminhoSetup,
+			'idArmazens'     => 1,
+			'idPessoasCriou' => 1
+		];
 
 		$integracao = new Integracao($parametro);
 
-		if ($empresa == "logiclog") {
+		if ($empresa === "logiclog") {
 			$where = "AND umas_itens.id_pessoas_proprietario <> 3613";
 		}
 
@@ -752,7 +760,7 @@ function prepararCamposDoItem($item)
 	$campos['tipo']           = ($item['tipo'] == '-' ? '-' : '+');
 	$campos['lote']           = $item['lote'];
 	$campos['serial']         = $item['serial'];
-	$campos['observacoes']    = substr($item['observacoes'], 0, 60);
+	$campos['observacoes']    = substr((string) $item['observacoes'], 0, 60);
 	$campos['valor']          = $item['valor'];
 	$campos['quantidade']     = $campos['tipo'] . (float) str_replace('-', '', $item['quantidade']);
 	$campos['peso_liquido']   = $campos['tipo'] . (float) str_replace('-', '', $item['peso_liquido']);
