@@ -4,7 +4,7 @@ $SITE="emitenota";
 
 $LOCALHOST = false;
 
-$url = "localhost";
+$url = "host.docker.internal";
 if ($_SERVER['SERVER_PORT']=='8080') {
         $url = "10.0.0.12";
         $LOCALHOST = true;
@@ -60,7 +60,7 @@ global
 
 database
 {
-	name: wms_$EMPRESA;
+	name: emitenota_logiclog;
 	transaction: true;
 	charset: utf8mb4;
 	user: web;

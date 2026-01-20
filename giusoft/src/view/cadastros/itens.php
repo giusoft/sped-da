@@ -88,6 +88,7 @@ $http_usr_files = $http_base."files/itens/";
 $agora = date('Y-m-d H:i:s');
 gVar("global.numformat","0.000,0000");
 
+include_once __DIR__ . "/../../Model/itens_antigo.php";
 $persistencia = new Itens();
 $html .= $o->msgTitle("Cadastro de itens");
 

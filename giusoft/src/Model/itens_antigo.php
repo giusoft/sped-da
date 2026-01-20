@@ -1,5 +1,6 @@
 <?php
-class Itens extends UMA
+include_once "Pessoas.php";
+class Itens extends Pessoas
 {
 	function __construct()
 	{
@@ -110,7 +111,7 @@ class Itens extends UMA
 	}
 
 
-	function obtemQueryConsulta($joinSku, $camposSku)
+	function obtemQueryConsulta($joinSku = "", $camposSku = "")
 	{
 		global $gParam;
 		if ($gParam['INTEGRACAO_WINTHOR']['ativo'] || $joinSku) {
@@ -452,7 +453,7 @@ class Itens extends UMA
 	}
 
 
-	public function insere($campos)
+	public function insere($campos, &$gId)
 	{
 		global $o, $gParam;
 		$gId = false;

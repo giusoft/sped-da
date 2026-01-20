@@ -1,43 +1,34 @@
 <?
 // Roteamento para seções dentro desta página
-define("INICIO", 								0);
-define("INICIO_PESQUISAR", 				1);
-define("INICIO_PESQUISAR_RESULTADO",	2);
-
+define("INICIO", 							0);
+define("INICIO_PESQUISAR", 					1);
+define("INICIO_PESQUISAR_RESULTADO",		2);
 define("CAPA", 								10);
-
-define("DADOS", 								20);
+define("DADOS", 							20);
 define("DADOS_SALVAR", 						21);
-
-define("ENDERECOS", 							30);
-define("ENDERECOS_SALVAR", 				31);
+define("ENDERECOS", 						30);
+define("ENDERECOS_SALVAR", 					31);
 define("ENDERECOS_NOVO", 					32);
 define("ENDERECOS_EXCLUIR", 				33);
-
 define("ARMAZEM", 							40);
 define("ARMAZEM_SALVAR", 					41);
-define("ARMAZEM_CANCELAR", 				42);
-
+define("ARMAZEM_CANCELAR", 					42);
 define("OCORRENCIAS", 						50);
 define("OCORRENCIAS_SALVAR", 				51);
-define("OCORRENCIAS_NOVA", 				52);
-define("OCORRENCIAS_CANCELAR",			53);
-
-define("ANEXOS", 								60);
+define("OCORRENCIAS_NOVA", 					52);
+define("OCORRENCIAS_CANCELAR",				53);
+define("ANEXOS", 							60);
 define("ANEXOS_ADICIONAR",					61);
 define("ANEXOS_REMOVER", 					62);
-
 define("PERMISSOES", 						70);
-define("PERMISSOES_ADICIONAR",			71);
+define("PERMISSOES_ADICIONAR",				71);
 define("PERMISSOES_EXCLUIR", 				72);
-define("PERMISSOES_EXCLUIR_TODAS",		73);
-define("PERMISSOES_COPIAR",				74);
-define("PERMISSOES_COPIAR_SALVAR",		75);
-
+define("PERMISSOES_EXCLUIR_TODAS",			73);
+define("PERMISSOES_COPIAR",					74);
+define("PERMISSOES_COPIAR_SALVAR",			75);
 define("REGISTRO_AVANCAR",					100);
 define("REGISTRO_VOLTAR",					101);
-
-define("WEBCAM", 								102);
+define("WEBCAM", 							102);
 define("WEBCAM_SALVAR", 					103);
 
 
@@ -61,6 +52,7 @@ $gPathUsrFiles=$gPath."files/pessoas/";
 $http_usr_files=$http_base."files/pessoas/";
 $agora=date('Y-m-d H:i:s');
 
+include_once __DIR__ . "/../../Model/PessoasFisicas.php";
 $persistencia = new PessoasFisicas();
 
 switch ($gPage)

@@ -73,6 +73,9 @@ define("IMPORTACAO", 400);
 define("IMPORTACAO_SALVAR", 401);
 define("IMPRIMIR_MODELO", 402);
 
+$paginasPodeExportar = [];
+
+include_once __DIR__ . "/../../Model/PessoasJuridicas.php";
 if (in_array($gPage, $paginasPodeExportar)) {
     $o->PDFEnabled = true;
     $o->DOCEnabled = true;
