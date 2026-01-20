@@ -8,15 +8,16 @@ if (!function_exists('gCleanField')) {
             foreach ($valor as $key => $val) {
                 $valor[$key] = gCleanField($val);
             }
+
             return $valor;
         }
 
         if (!check_utf8($valor)) {
-            $valor = utf8_encode($valor);
+            $valor = mb_convert_encoding($valor, 'UTF-8', 'ISO-8859-1');
         }
 
         $valor = str_replace("'", "‘", $valor);
-        $valor = str_replace("\"", "“", $valor);
+        $valor = str_replace('"', "“", $valor);
         $valor = trim($valor);
 
         return $valor;
@@ -27,7 +28,7 @@ if (!function_exists('gCleanField')) {
 if (!function_exists('check_utf8')) {
     function check_utf8($str)
     {
-        $len = strlen($str);
+        $len = strlen((string) $str);
         for ($i = 0; $i < $len; $i++) {
             $c = ord($str[$i]);
             if ($c <= 128) {
@@ -56,9 +57,11 @@ if (!function_exists('check_utf8')) {
                 if ($b < 128 || $b > 191) {
                     return false;
                 }
+
                 $bytes--;
             }
         }
+
         return true;
     }
 }
@@ -127,16 +130,16 @@ if (!function_exists("decodificarJson")) {
             return [];
         }
 
-        $decoded = json_decode($json, true);
+        $decoded = json_decode((string) $json, true);
 
-        $erro = array(
+        $erro = [
             JSON_ERROR_NONE => 0,
             JSON_ERROR_DEPTH => 'Maximum stack depth exceeded',
             JSON_ERROR_STATE_MISMATCH => 'Underflow or the modes mismatch',
             JSON_ERROR_CTRL_CHAR => 'Unexpected control character found',
             JSON_ERROR_SYNTAX => 'Syntax error, malformed JSON',
-            JSON_ERROR_UTF8 => 'Malformed UTF-8 characters, possibly incorrectly encoded',
-        )[json_last_error()];
+            JSON_ERROR_UTF8 => 'Malformed UTF-8 characters, possibly incorrectly encoded'
+        ][json_last_error()];
 
         if ($erro) {
             gLog($erro, 1, $caminhoLog);
@@ -173,7 +176,7 @@ if (!function_exists("obterEnderecoIp")) {
 if (!function_exists("base64Encode")) {
     function base64Encode($string)
     {
-        return str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($string));
+        return str_replace(['+', '/', '='], ['-', '_', ''], base64_encode((string) $string));
     }
 }
 
@@ -182,7 +185,7 @@ if (!function_exists("gerarAssinatura")) {
     function gerarAssinatura($privateKey, $data, $hash = false)
     {
         if ($hash === true) {
-            $data = hash('sha256', $data, true);
+            $data = hash('sha256', (string) $data, true);
         }
 
         openssl_sign($data, $signature, $privateKey, OPENSSL_ALGO_SHA256);
@@ -198,17 +201,17 @@ if (!function_exists("montarParametrosIntegracao")) {
         $uri = $_SERVER['REQUEST_URI'];
 
         $ambiente = '';
-        if (stripos($uri, 'teste')) {
+        if (stripos((string) $uri, 'teste')) {
             $ambiente = '/teste';
         }
 
         if (!$empresa) {
-            $partesUri = array_filter(explode('/emitenota/', $uri))[1];
+            $partesUri = array_filter(explode('/emitenota/', (string) $uri))[1];
             $empresa = explode('/', $partesUri)[0];
         }
 
         return [
-            "caminhoSetup"   => $_SERVER['DOCUMENT_ROOT'] . "{$ambiente}/emitenota/{$empresa}/setup.php",
+            "caminhoSetup"   => $_SERVER['DOCUMENT_ROOT'] . sprintf('%s/emitenota/%s/setup.php', $ambiente, $empresa),
             "idPessoasCriou" => 1,
             "empresa" => $empresa,
             "transacao" => true
@@ -252,13 +255,15 @@ if (!function_exists("gLog")) {
 
         // === 2. Verificação se o log deve ser ativado ===
         $logAtivo = (
-            strpos($_SERVER["HTTP_HOST"], "localhost") !== false ||
-            strpos($_SERVER["HTTP_HOST"], "127.0.0.1") !== false ||
-            file_exists("/tmp/gLogEnabled") ||
-            true // forçado para sempre ativar
+            str_contains((string) $_SERVER["HTTP_HOST"], "localhost")
+            || str_contains((string) $_SERVER["HTTP_HOST"], "127.0.0.1")
+            || file_exists("/tmp/gLogEnabled")
+            || true // forçado para sempre ativar
         );
 
-        if (!$logAtivo) return;
+        if (!$logAtivo) {
+            return;
+        }
 
         // === 3. Arquivos de log e configurações ===
         $logfile    = gLogPath . gVar("global.logfile");
@@ -269,7 +274,9 @@ if (!function_exists("gLog")) {
             $logfile = gLogPath . $arq;
         }
 
-        if (empty($logfile)) return;
+        if ($logfile === '' || $logfile === '0') {
+            return;
+        }
 
         // === 4. Preparação do texto ===
         $txt = str_replace(["\n", "\r"], '', $txt);
@@ -315,16 +322,16 @@ if (!function_exists("gLog")) {
 
         // === 10. Montagem da mensagem ===
         if ($isSql) {
-            $logMessage = "$logHeader\t{$lpre}{$deb}{$colors['reset']}\t{$cpre}{$txt}{$cpos}";
+            $logMessage = sprintf('%s	%s%s%s	%s%s%s', $logHeader, $lpre, $deb, $colors['reset'], $cpre, $txt, $cpos);
         } else {
-            $logMessage = "$logHeader\tLOG:\t{$lpre}{$deb}{$cpos}\t{$cpre}{$txt}{$cpos}";
+            $logMessage = sprintf('%s	LOG:	%s%s%s	%s%s%s', $logHeader, $lpre, $deb, $cpos, $cpre, $txt, $cpos);
         }
 
         // === 11. Escrita no arquivo ===
-        $logMessage = trim(preg_replace('/\s+/', ' ', $logMessage)) . PHP_EOL;
+        $logMessage = trim((string) preg_replace('/\s+/', ' ', $logMessage)) . PHP_EOL;
 
         if ($fp = @fopen($logfile, 'a')) {
-            fputs($fp, $logMessage);
+            fwrite($fp, $logMessage);
             fclose($fp);
         }
     }
@@ -337,7 +344,7 @@ if (!function_exists("desencriptar")) {
         global $AESKEY;
 
         $ambiente = '';
-        if (strpos($empresa, "/teste") !== false) {
+        if (str_contains($empresa, "/teste")) {
             $ambiente = '/teste';
         }
 
@@ -351,7 +358,7 @@ if (!function_exists("encriptar")) {
         global $AESKEY;
 
         $ambiente = '';
-        if (strpos($empresa, "/teste") !== false) {
+        if (str_contains($empresa, "/teste")) {
             $ambiente = '/teste';
         }
 
@@ -367,12 +374,13 @@ if (!function_exists("corrigirCodificacaoArray")) {
                 $dados[$chave] = corrigirCodificacaoArray($valor);
             } elseif (is_string($valor)) {
                 if (!mb_detect_encoding($valor, 'UTF-8', true)) {
-                    $dados[$chave] = utf8_encode($valor);
+                    $dados[$chave] = mb_convert_encoding($valor, 'UTF-8', 'ISO-8859-1');
                 } else {
                     $dados[$chave] = mb_convert_encoding($valor, 'UTF-8', 'UTF-8');
                 }
             }
         }
+
         return $dados;
     }
 }
@@ -400,7 +408,7 @@ if (!function_exists("removerAcentos")) {
         $texto = strtr($texto, $map);
         $texto = preg_replace("/[^a-zA-Z0-9\s\-\.,;:\/]/", "", $texto);
 
-        return trim($texto);
+        return trim((string) $texto);
     }
 }
 
@@ -411,7 +419,7 @@ if (!function_exists("removerEstranhos")) {
         return preg_replace(
             '/[^a-z0-9\+\-\=\.\,\!\?\:\;\@\%\&\(\)\{\}\<\>\[\]\s\'\$\/]+/i ',
             '',
-            $texto
+            (string) $texto
         );
     }
 }
@@ -420,6 +428,6 @@ if (!function_exists("removerEstranhos")) {
 if (!function_exists("extrairNumeros")) {
     function extrairNumeros($texto)
     {
-        return preg_replace('/[^0-9]+/i ', '', $texto);
+        return preg_replace('/[^0-9]+/i ', '', (string) $texto);
     }
 }
