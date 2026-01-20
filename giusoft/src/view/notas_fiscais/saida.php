@@ -1,4 +1,4 @@
-<?
+<?php
 
 define('INICIO'                         ,0);
 define('DADOS'                          ,1);
@@ -21,19 +21,9 @@ define('IMPOSTOS'                       ,100);
 define('IMPOSTOS_SALVAR'                ,101);
 define('NFE'                            ,110);
 define('NFE_SALVAR'                     ,111);
-// define('NFE_ENVIAR', 113);
-// define('NFE_DANFE_EMITIR', 114);
 define('NFE_OBTER_XML'                  ,115);
 define('NFE_OPCOES'                     ,116);
-// define('NFE_CANCELAR', 117);
-// define('NFE_CANCELAR_CONFIRMAR', 118);
-// define('NFE_CCE', 119);
-// define('NFE_CCE_CONFIRMAR', 120);
-// define('NFE_CCE_IMPRIMIR', 121);
 define('NFE_REENVIAR_EMAIL'             ,122);
-// define('NFE_ALTERNAR_MODO', 123);
-// define('NFE_FILTRAR', 124);
-// define('NFE_LISTAR', 125);
 define('UMAS'                           , 80);
 define('UMAS_ASSOCIAR'                  , 81);
 define('UMAS_DISPONIVEIS_ASSOCIAR'      , 82);
@@ -55,7 +45,7 @@ include_once $gPath."/gfw/inc/gPage.php";
 
 if (
     $_REQUEST["tipo"] == "M"
-    && $gPage <> INICIO_MAQUINA
+    && $gPage != INICIO_MAQUINA
 ) {
     redirect($o->page . "&gPage=" . INICIO_MAQUINA . "&tipo=M");
 }
@@ -156,7 +146,7 @@ if ($_REQUEST['gAjax']) {
         }
 
         $informacao = "";
-        if ($nota["informacaoFisco"] <> "" && !is_null($nota["informacaoFisco"])) {
+        if ($nota["informacaoFisco"] != "" && !is_null($nota["informacaoFisco"])) {
             $informacao = $nota["informacaoFisco"];
         }
 
@@ -216,7 +206,7 @@ if ($_REQUEST['gAjax']) {
             }
         }
 
-        $retornoEmiteNota = json_decode($retornoEmiteNota['resposta'], true);
+        $retornoEmiteNota = json_decode((string) $retornoEmiteNota['resposta'], true);
         if ($retornoEmiteNota && $retornoEmiteNota['detalhes']['andamento']) {
 
             $andamento = explode("|", gCleanField($retornoEmiteNota['detalhes']['andamento']));
@@ -247,8 +237,8 @@ if ($_REQUEST['gAjax']) {
                 mensagens = '" . gCleanField($retornoEmiteNota['mensagem']) . "',
                 protocolo = '" . gCleanField($retornoEmiteNota['detalhes']['protocolo']) . "',
                 data_recibo = '" . gCleanField($retornoEmiteNota['detalhes']['dataHoraRecebimento']) . "',
-                xml = '" . base64_decode($retornoEmiteNota['detalhes']['xml']) . "'
-            WHERE id = {$idNfe}";
+                xml = '" . base64_decode((string) $retornoEmiteNota['detalhes']['xml']) . ('\'
+            WHERE id = ' . $idNfe);
         dbFastQuery($sql);
 
         if ($retornoEmiteNota['sucesso']) {
@@ -273,7 +263,7 @@ if ($_REQUEST['gAjax']) {
                 ### Esse metodo é para chamar o OMIE. Ativar só depois para não mandar nada para eles agora ###
                 $dadosNf = [
                     "chave" => gCleanField($retornoEmiteNota['detalhes']['chave']),
-                    "xml" => base64_decode($retornoEmiteNota['detalhes']['xml']),
+                    "xml" => base64_decode((string) $retornoEmiteNota['detalhes']['xml']),
                     "idPessoasProprietario" => 1
                 ];
                 dispararGatilho("emitirNf", $dadosNf); // Esse metodo é do OMIE
@@ -286,11 +276,11 @@ if ($_REQUEST['gAjax']) {
 
         echo json_encode($resultado);
 
-        $dadosEventos = array();
+        $dadosEventos = [];
         $dadosEventos['id_nfe']               = $idNfe;
         $dadosEventos['id_notas_saida']       = $nota['id'];
         $dadosEventos['id_pessoas']           = $usrId;
-        $dadosEventos['xml']                  = base64_decode($retornoEmiteNota['detalhes']['xml']);
+        $dadosEventos['xml']                  = base64_decode((string) $retornoEmiteNota['detalhes']['xml']);
         $dadosEventos['data']                 = date('Y-m-d H:i:s');
         $dadosEventos['serie']                = (int) $dados['NfeNumeroEOperacao']['serie'];
         $dadosEventos['sucesso']              = (int) $retornoEmiteNota['sucesso'];
@@ -317,7 +307,7 @@ if ($_REQUEST['gAjax']) {
         if (!$validaArmazem['sucesso']) {
             echo json_encode([
                 'sucesso' => false,
-                'mensagem' => strip_tags($validaArmazem['msg'])
+                'mensagem' => strip_tags((string) $validaArmazem['msg'])
             ]);
             exit;
         }
@@ -357,7 +347,7 @@ if ($_REQUEST['gAjax']) {
             exit;
         }
 
-        $dadosCancelamento = array();
+        $dadosCancelamento = [];
         $dadosCancelamento['temRetorno'] = 1;
         $dadosCancelamento['chave'] = $nfeBD['chave'];
         $dadosCancelamento['protocolo'] = $nfeBD['protocolo'];
@@ -377,26 +367,24 @@ if ($_REQUEST['gAjax']) {
             }
         }
 
-        $retornoCancelamento = json_decode($retornoCancelamento['resposta'], true);
+        $retornoCancelamento = json_decode((string) $retornoCancelamento['resposta'], true);
 
         $resultado = [];
 
         if ($retornoCancelamento['sucesso']) {
-            $mtz = array();
+            $mtz = [];
             $mtz["cancelada"] = 1;
             $mtz["data_movimento"] = date('Y-m-d H:i:s');
             dbUpdate("notas", $mtz, $nfeBD['id_nota']);
-
-            $mtz = array();
+            $mtz = [];
             $mtz["cancelada"] = 1;
             $mtz["situacao"] = "Cancelada";
             $mtz["data_cancelamento"] = date("Y-m-d H:i:s");
             $mtz["id_pessoas_cancelou"] = $usrId;
-            $mtz['xml_cancelamento'] = base64_decode($retornoCancelamento['mensagem']['xml_cancelamento']);
+            $mtz['xml_cancelamento'] = base64_decode((string) $retornoCancelamento['mensagem']['xml_cancelamento']);
             dbUpdate("nfe", $mtz, $nfeBD['id']);
-
             if ($nfeBD["id_programacao"] > 0) {
-                $mtz = array();
+                $mtz = [];
                 $mtz["id_programacao"] = $nfeBD["id_programacao"];
                 $mtz["id_pessoas"] = $usrId;
                 $mtz["id_tipos_atividades"] = 20;
@@ -407,11 +395,9 @@ if ($_REQUEST['gAjax']) {
                 $mtz["descricao"] = "Cancelou NFE emitida: " . $nfeBD["numero"];
                 dbInsert("programacao_atividades", $mtz);
             }
-
             // Importar cancelamento
             $sql = "SELECT xml_cancelamento FROM nfe WHERE id = " . $nfeBD['id'];
             $xmlCancelamento = dbFastQuery($sql)[0]['xml_cancelamento'];
-
             if ($dados['config']['tpAmb'] != 2) { //2=homologacao
                 $dadosImportacao = [
                     "chave" => $nfeBD['chave'],
@@ -420,41 +406,37 @@ if ($_REQUEST['gAjax']) {
                 ];
                 dispararGatilho("importarCancNFe", $dadosImportacao); // Esse aqui é do OMIE
             }
-
             $resultado['sucesso'] = true;
             $resultado['mensagem'] = 'NFe cancelada com sucesso!';
-        } else {
+        } elseif (
+            str_contains(gCleanField($retornoCancelamento['mensagem']), '573')
+            || str_contains(gCleanField($retornoCancelamento['mensagem']), 'Duplicidade de Evento')
+        ) {
             // Verificar se é duplicidade de evento (já cancelada no SEFAZ)
-            if (strpos(gCleanField($retornoCancelamento['mensagem']), '573') !== false
-                || strpos(gCleanField($retornoCancelamento['mensagem']), 'Duplicidade de Evento') !== false) {
-
-                // Atualizar como cancelada
-                $mtz = array();
-                $mtz["cancelada"] = 1;
-                $mtz["data_movimento"] = date('Y-m-d H:i:s');
-                dbUpdate("notas", $mtz, $nfeBD['id_nota']);
-
-                $mtz = array();
-                $mtz["cancelada"] = 1;
-                $mtz["situacao"] = "Cancelada";
-                dbUpdate("nfe", $mtz, $nfeBD['id']);
-
-                $resultado['sucesso'] = false;
-                $resultado['mensagem'] = 'A NFe já se encontra cancelada no SEFAZ';
-            } else {
-                $resultado['sucesso'] = false;
-                $resultado['mensagem'] = gCleanField($retornoCancelamento['mensagem']);
-                $resultado['detalhes'] = gCleanField($retornoCancelamento['detalhes']);
-            }
+            // Atualizar como cancelada
+            $mtz = [];
+            $mtz["cancelada"] = 1;
+            $mtz["data_movimento"] = date('Y-m-d H:i:s');
+            dbUpdate("notas", $mtz, $nfeBD['id_nota']);
+            $mtz = [];
+            $mtz["cancelada"] = 1;
+            $mtz["situacao"] = "Cancelada";
+            dbUpdate("nfe", $mtz, $nfeBD['id']);
+            $resultado['sucesso'] = false;
+            $resultado['mensagem'] = 'A NFe já se encontra cancelada no SEFAZ';
+        } else {
+            $resultado['sucesso'] = false;
+            $resultado['mensagem'] = gCleanField($retornoCancelamento['mensagem']);
+            $resultado['detalhes'] = gCleanField($retornoCancelamento['detalhes']);
         }
 
         if ($retornoCancelamento['mensagem']) {
-            $dadosEventos = array();
+            $dadosEventos = [];
             $dadosEventos['id_nfe']               = $nfeBD['id'];
             $dadosEventos['id_notas_saida']       = $nfeBD['id_nota'];
             $dadosEventos['id_pessoas']           = $usrId;
             $dadosEventos['id_nfe_tipos_eventos'] = 2; // 2 = Cancelamento
-            $dadosEventos['xml']                  = base64_decode($retornoCancelamento['mensagem']['xml_cancelamento']);
+            $dadosEventos['xml']                  = base64_decode((string) $retornoCancelamento['mensagem']['xml_cancelamento']);
             $dadosEventos['data']                 = date('Y-m-d H:i:s');
             $dadosEventos['serie']                = (int) $nfeBD['serie'];
             $dadosEventos['motivo']               = $motivo;
@@ -462,6 +444,7 @@ if ($_REQUEST['gAjax']) {
             if (!empty($retornoCancelamento['mensagem']['protocolo']) ) {
                 $dadosEventos['protocolo']        = ($retornoCancelamento['mensagem']['protocolo']);
             }
+
             $dadosEventos['retorno_mensagem'] = is_array($retornoCancelamento['mensagem'])
                 ? gCleanField(removerAcentos($retornoCancelamento['mensagem']['mensagem']))
                 : gCleanField(removerAcentos($retornoCancelamento['mensagem']));
@@ -492,7 +475,7 @@ if ($_REQUEST['gAjax']) {
                     WHERE nfe.id = '{$gId}'";
             $xml = dbFastQuery($sql)[0];
 
-            $dadosDanfe = array();
+            $dadosDanfe = [];
             $dadosDanfe['temRetorno'] = 1;
             $dadosDanfe['xml'] = $xml['xml'];
             $dadosDanfe['chave'] = $xml['chave'];
@@ -515,9 +498,9 @@ if ($_REQUEST['gAjax']) {
                 }
             }
 
-            $retornoGerarDanfe = json_decode($retornoGerarDanfe['resposta'], true);
+            $retornoGerarDanfe = json_decode((string) $retornoGerarDanfe['resposta'], true);
             if ($retornoGerarDanfe['sucesso']) {
-                $pdf = base64_decode($retornoGerarDanfe['detalhes']['pdf_base64']);
+                $pdf = base64_decode((string) $retornoGerarDanfe['detalhes']['pdf_base64']);
 
                 header('Content-Type: application/pdf');
                 header('Content-Disposition: inline; filename="danfe_' . $xml['chave'] . '.pdf"');
@@ -552,7 +535,7 @@ if ($_REQUEST['gAjax']) {
         }
 
         // Busca os dados da nota origem para criar a nota de estorno com base nos dados dessa nota
-        $sql = "SELECT * FROM notas WHERE id = {$idNotaOrigem}";
+        $sql = 'SELECT * FROM notas WHERE id = ' . $idNotaOrigem;
         $notaOrigem = dbFastQuery($sql)[0];
 
         if ($notaOrigem['id_armazens'] != $_SESSION['armazemAtualId']) {
@@ -613,7 +596,7 @@ if ($_REQUEST['gAjax']) {
         $dados['operacao'] = '999 - ESTORNO DE NFE NAO CANCELADA NO PRAZO LEGAL';
         $dados['indIEDest'] = $nota["IE"]; // Atualmente não usamos na API
         $dados['codigoAntt'] = $nota["RNTC"];
-        $chaveNfe = dbFastQuery("SELECT chave FROM nfe WHERE id = {$idNFe}")[0]['chave'];
+        $chaveNfe = dbFastQuery('SELECT chave FROM nfe WHERE id = ' . $idNFe)[0]['chave'];
         $dados['refNfe'] = $chaveNfe;
         $dados['finalidadeOperacao'] = 3;
 
@@ -645,13 +628,14 @@ if ($_REQUEST['gAjax']) {
         if (intval($nota["id_programacao"]) > 0) {
             $sql = "SELECT detalhes_nfe FROM programacao WHERE id = " . $nota["id_programacao"];
             $detalhesNfe = dbFastQuery($sql);
-            if ($detalhesNfe) {
-                if (
+            if (
+                $detalhesNfe
+                && (
                     !is_null($detalhesNfe[0]["detalhes_nfe"])
                     && !empty($detalhesNfe[0]["detalhes_nfe"])
-                ) {
-                    $informacaoContribuente .= $detalhesNfe[0]["detalhes_nfe"].", ";
-                }
+                )
+            ) {
+                $informacaoContribuente .= $detalhesNfe[0]["detalhes_nfe"].", ";
             }
         }
 
@@ -683,11 +667,11 @@ if ($_REQUEST['gAjax']) {
             }
         }
 
-        $retornoEmiteNota = json_decode($retornoEmiteNota['resposta'], true);
+        $retornoEmiteNota = json_decode((string) $retornoEmiteNota['resposta'], true);
 
         if ($retornoEmiteNota && $retornoEmiteNota['detalhes']['andamento']) {
 
-            $andamento = explode("|", $retornoEmiteNota['detalhes']['andamento']);
+            $andamento = explode("|", (string) $retornoEmiteNota['detalhes']['andamento']);
 
             $resultado['statusSubmetida'] = $andamento[0];
             $resultado['modoOperacao'] = $andamento[1];
@@ -730,7 +714,7 @@ if ($_REQUEST['gAjax']) {
                     protocolo = '" . gCleanField($retornoEmiteNota['detalhes']['protocolo']) . "',
                     data_recibo = '" . gCleanField($retornoEmiteNota['detalhes']['dataHoraRecebimento']) . "',
                     xml = '" . base64_decode($retornoEmiteNota['detalhes']['xml']) . "'
-                WHERE id = {$idNfeEstorno}";
+                WHERE id = " . $idNfeEstorno;
         dbFastQuery($sql);
 
         $sql = "UPDATE notas
@@ -741,12 +725,12 @@ if ($_REQUEST['gAjax']) {
         $sql = "UPDATE notas SET id_programacao = (-id_programacao) WHERE id IN ({$idNotaOrigem}, {$idNovaNota})";
         dbFastQuery($sql);
 
-        $dadosEventos = array();
+        $dadosEventos = [];
         $dadosEventos['id_nfe']               = $idNfeEstorno;
         $dadosEventos['id_notas_saida']       = $idNotaOrigem;
         $dadosEventos['id_pessoas']           = $usrId;
         $dadosEventos['id_nfe_tipos_eventos'] = 5; // 5 = Estorno
-        $dadosEventos['xml']                  = base64_decode($retornoEmiteNota['detalhes']['xml']);
+        $dadosEventos['xml']                  = base64_decode((string) $retornoEmiteNota['detalhes']['xml']);
         $dadosEventos['data']                 = date('Y-m-d H:i:s');
         $dadosEventos['serie']                = (int) $dados['NfeNumeroEOperacao']['serie'];
         $dadosEventos['sucesso']              = (int) $retornoEmiteNota['sucesso'];
@@ -754,12 +738,12 @@ if ($_REQUEST['gAjax']) {
         $dadosEventos['retorno_mensagem']     = gCleanField(removerAcentos($retornoEmiteNota['mensagem'] ?: $mensagemErro));
         dbInsert('nfe_eventos', $dadosEventos);
 
-        $dadosEventos = array();
+        $dadosEventos = [];
         $dadosEventos['id_nfe']               = $idNfeEstorno;
         $dadosEventos['id_notas_saida']       = $idNovaNota;
         $dadosEventos['id_pessoas']           = $usrId;
         $dadosEventos['id_nfe_tipos_eventos'] = 5; // 5 = Estorno
-        $dadosEventos['xml']                  = base64_decode($retornoEmiteNota['detalhes']['xml']);
+        $dadosEventos['xml']                  = base64_decode((string) $retornoEmiteNota['detalhes']['xml']);
         $dadosEventos['data']                 = date('Y-m-d H:i:s');
         $dadosEventos['serie']                = (int) $dados['NfeNumeroEOperacao']['serie'];
         $dadosEventos['sucesso']              = (int) $retornoEmiteNota['sucesso'];
@@ -775,10 +759,10 @@ if ($_REQUEST['gAjax']) {
         if ($dadosEvento) {
             $html .= $o->label("Cartas de correção emitidas");
             $html .= $o->tableBegin('big', true);
-            $html .= $o->tableRow(array("Imprimir", "Correção", "Data"), 'header');
+            $html .= $o->tableRow(["Imprimir", "Correção", "Data"], 'header');
 
             foreach ($dadosEvento as $dadoEvento) {
-                $mtz = array();
+                $mtz = [];
                 $mtz[] = "" . $o->button("{icon: print; hint: Imprimir CCe; style: success; size: small;}", "javascript: btnImprimirCCe(" . $gId . ", " . $dadoEvento['id'] . ")");
                 $mtz[] = "<-" . $dadoEvento['motivo'];
                 $mtz[] = "" . gDateTime($dadoEvento['datahora']);
@@ -825,7 +809,7 @@ if ($_REQUEST['gAjax']) {
 
         // TODO:: Verificar se vai ter mais validações
         $statusErro = false;
-		if (strlen($_REQUEST['cce_correcao']) < 15 || strlen($_REQUEST['cce_correcao']) > 1000) {
+		if (strlen((string) $_REQUEST['cce_correcao']) < 15 || strlen((string) $_REQUEST['cce_correcao']) > 1000) {
 			$statusErro = true;
 			$msgErro[] = "O texto da correção deve ter entre 15 e 1000 caracteres!";
 		}
@@ -844,7 +828,7 @@ if ($_REQUEST['gAjax']) {
             exit;
         }
 
-        $dadosCartaCorrecao = array();
+        $dadosCartaCorrecao = [];
         $dadosCartaCorrecao['temRetorno']   = 1;
         $dadosCartaCorrecao['chave']        = $nfeBD['chave'];
         $dadosCartaCorrecao['sequencial']    = $numeroSequencial;
@@ -864,9 +848,9 @@ if ($_REQUEST['gAjax']) {
             }
         }
 
-        $retornoCartaCorrecao = json_decode($retornoCartaCorrecao['resposta'], true);
+        $retornoCartaCorrecao = json_decode((string) $retornoCartaCorrecao['resposta'], true);
 
-        $mtz = array();
+        $mtz = [];
         $mtz['id_nfe']               = $gId;
         $mtz['id_notas_saida']       = $nfeBD['id_notas'];
         $mtz['id_pessoas']           = $usrId;
@@ -878,7 +862,7 @@ if ($_REQUEST['gAjax']) {
         $mtz['retorno_mensagem']     = gCleanField(removerAcentos($retornoCartaCorrecao['mensagem'] ?: $mensagemErro));
         $mtz['sucesso']              = (int) gCleanField($retornoCartaCorrecao['sucesso']);
         if (gCleanField($retornoCartaCorrecao['sucesso'])) {
-            $mtz['xml']       = base64_decode($retornoCartaCorrecao['detalhes']['xml']);
+            $mtz['xml']       = base64_decode((string) $retornoCartaCorrecao['detalhes']['xml']);
             $mtz['protocolo'] = $retornoCartaCorrecao['detalhes']['protocolo'];
         }
 
@@ -933,12 +917,12 @@ if ($_REQUEST['gAjax']) {
 
         if (!$rs) {
             $html .= $o->msgTitle("Notas fiscais internas");
-            $html .= $o->msgDanger("Erro: Carta de correção (ID: {$idCce}) não encontrada ou não pertence a esta NFe (ID: {$gId}).");
+            $html .= $o->msgDanger("Erro: Carta de correção (ID: " . $idCce . ") não encontrada ou não pertence a esta NFe (ID: " . $gId . ").");
             $html .= $o->button("{name: back; icon: arrow-left; title: Voltar; style: default; href: " . $o->page . "&gPage=" . NFE . "&gId=" . $rs['id_notas_saida'] . "}");
             return;
         }
 
-        $dadosDanfeCartaCorrecao = array();
+        $dadosDanfeCartaCorrecao = [];
         $dadosDanfeCartaCorrecao['xml']        = $rs['xml'];
         $dadosDanfeCartaCorrecao['chave']      = $rs['chave'];
         $dadosDanfeCartaCorrecao['config']     = $nf->buscarConfiguracoes($dadosDanfeCartaCorrecao['empresa']['cnpjArmazem']);
@@ -956,10 +940,10 @@ if ($_REQUEST['gAjax']) {
             }
         }
 
-        $retornoGerarDanfeCartaCorrecao = json_decode($retornoGerarDanfeCartaCorrecao['resposta'], true);
+        $retornoGerarDanfeCartaCorrecao = json_decode((string) $retornoGerarDanfeCartaCorrecao['resposta'], true);
 
         if ($retornoGerarDanfeCartaCorrecao['sucesso']) {
-            $pdf = base64_decode($retornoGerarDanfeCartaCorrecao['detalhes']['pdf_base64']);
+            $pdf = base64_decode((string) $retornoGerarDanfeCartaCorrecao['detalhes']['pdf_base64']);
 
             header('Content-Type: application/pdf');
             header('Content-Disposition: inline; filename="danfe_' . $rs['chave'] . '.pdf"');
@@ -1018,9 +1002,7 @@ if ($gId > 0) {
 
 
 if (
-    in_array($gPage, array(
-        NFE
-    ))
+    $gPage == NFE
 ) {
     $o->addJavascript("
         /*function reloadPage(idNfe, idNota, processando) {
@@ -1298,7 +1280,7 @@ if (
                     confirmar: {
                         label: 'Confirmar',
                         className: 'btn-success',
-                        callback: function(){
+                        callback: function() {
                             dialog.modal('hide');
 
                             const url = '" . $o->page . "&idNFe=' + idNFE + '&idNota=' + idNota + '&gAjax=1&estornarNfe=1';
@@ -1308,7 +1290,7 @@ if (
                     fechar:{
                         label: 'Fechar',
                         className: 'btn-danger',
-                        callback: function(){
+                        callback: function() {
                             dialog.modal('hide');
                         }
                     }
@@ -1369,7 +1351,7 @@ if (
                 success: function (resp) {
                     document.getElementById('contentModalOpcoesNFe').innerHTML=resp;
                 },
-                error: function (resp){
+                error: function (resp) {
                 }
             });
         }
@@ -1442,12 +1424,14 @@ switch ($gPage) {
                 if (isset($req['cancelada'])) {
                     $_POST['cancelada'] = 0;
                 }
+
                 $filtro = $nf->obtemBusca($_POST, 2);
                 $where  = $filtro["where"];
                 $cabecalho = $filtro["cabecalho"];
-                if (count($cabecalho) > 0) {
+                if ($cabecalho) {
                     $html .= $o->msgFilter("Filtros selecionados: " . implode(' • ', $cabecalho));
                 }
+
                 $rs = $nf->obtemRegistros("N.id DESC", $where);
             }
         } else {
@@ -1465,6 +1449,7 @@ switch ($gPage) {
         if ($gParam["PAGINACAO"]["ativo"] == 1) {
             $html .= $nf->pagination->render('{id:o;style:margin-top:-1.4%;;}');
         }
+
         break;
 
 
@@ -1488,9 +1473,10 @@ switch ($gPage) {
             $html.=$o->msgDanger("Não é possível cancelar a nota pois uma nota fiscal eletrônica já foi aprovada, por favor cancele a NFe, e tente novamente");
             return;
         }
+
         // Registrar em programação atividades o cancelamento da nota.
         if ($nota["id_programacao"]) {
-            $mtz=array();
+            $mtz=[];
             $mtz["id_programacao"]=$nota["id_programacao"];
             $mtz["id_pessoas"]=$usrId;
             $mtz["id_tipos_atividades"]=20;
@@ -1502,17 +1488,15 @@ switch ($gPage) {
         }
 
         // Cancelando nota
-        $mtz = array();
+        $mtz = [];
         $mtz["cancelada"]=1;
         dbUpdate("notas", $mtz, $nota["id"]);
-        $sql =
-            "UPDATE notas
-            SET   id_notas_agrupar = 0,
-                  confirmada = 1
-            WHERE id_notas_agrupar = ".$nota["id"];
+        $sql = "UPDATE notas
+                SET id_notas_agrupar = 0, confirmada = 1
+                WHERE id_notas_agrupar = ".$nota["id"];
         dbQuery($sql);
 
-        $mtz=array();
+        $mtz = [];
         $mtz["cancelada"]=1;
         dbUpdate("nfe", $mtz, $nota["id_nfe"]);
         redirect($o->page . "&gPage=" . INICIO);
@@ -1563,7 +1547,7 @@ switch ($gPage) {
         }
 
         if ($nota["id_pessoas_proprietario"]) {
-            if ($nota["tipo"]=='S' && in_array($nota["situacao"], array('Aprovada', 'Cancelada'))) {
+            if ($nota["tipo"]=='S' && in_array($nota["situacao"], ['Aprovada', 'Cancelada'])) {
                 $html .= "";
             } else {
                 $html .= $frm->render($o);
@@ -1594,6 +1578,7 @@ switch ($gPage) {
             $redirect = $o->page . "&gPage=" . ITENS . "&gId=" . $gId;
             userLog('Item: <a href="index.php?g=nf_saida&gPage='.ITENS.'&gId='.$gId.'&gIdEnd='.$item["id"].'">'.$item["descricao"].'</a>  adicionado a nota fiscal id: <a href="index.php?g=nf_saida&gPage='.DADOS.'&gId='.$gId.'">'.$gId.'</a>');
         }
+
         redirect($redirect);
         break;
 
@@ -1640,7 +1625,7 @@ switch ($gPage) {
             "SELECT notas_associadas.id_cfops,GROUP_CONCAT(notas_itens.id) ids
             FROM notas_itens
             INNER JOIN notas notas_associadas ON notas_associadas.id = notas_itens.id_notas_associada
-            WHERE notas_itens.id_notas = {$_REQUEST['gId']} 
+            WHERE notas_itens.id_notas = {$_REQUEST['gId']}
             GROUP BY notas_associadas.id_cfops";
         $cfops = dbQuery($sql);
 
@@ -1652,12 +1637,14 @@ switch ($gPage) {
             $html .= $backButton;
             break;
         }
-        $nota = excluirIndicesNumericos($nota[0]);
-        $idNotaInserida = array();
 
-        if(count($cfops) > 1){
+        $nota = excluirIndicesNumericos($nota[0]);
+        $idNotaInserida = [];
+
+        if (count($cfops) > 1) {
             unset($nota['id']);
-            for ($i=1; $i < count($cfops); $i++) {
+            $counter = count($cfops);
+            for ($i=1; $i < $counter; $i++) {
                 $nota['id_pessoas_criou']=$_SESSION['usrId'];
                 $nota['data_criou'] = date("Y-m-d H:i:s");
                 $idNotas = dbInsert('notas', $nota, true);
@@ -1665,6 +1652,7 @@ switch ($gPage) {
                 dbQuery($sql);
             }
         }
+
         header('Location: '.$o->page);
         break;
 
@@ -1692,6 +1680,7 @@ switch ($gPage) {
             userLog('Nota fiscal interna adicionada id: <a href="index.php?g=nf_saida&gPage='.DADOS.'&gId='.$gId.'">'.$gId.'</a>');
             redirect($o->page . "&gPage=" . ITENS . "&gId=" . $gId);
         }
+
         break;
 
 
@@ -1726,11 +1715,11 @@ switch ($gPage) {
         $frm->add("{allowBlank: false; name: dFab; fieldLabel: Data de fabricação; type: date; maxLength: 8; value:".gDate($rs['dFab'])."}");
         $frm->add("{allowBlank: false; name: dVal; fieldLabel: Data de validade; type: date; maxLength: 8; value:".gDate($rs['dVal'])."}");
         $frm->add("{allowBlank: true; name: cAgreg; fieldLabel: Código de agregação; type: text;value:".$rs['cAgreg']."}");
-        $frm->add("{type:hidden; name:id_notas; value: $id_notas}");
-        $frm->add("{type:hidden; name:id_notas_itens; value: $id_notas_itens}");
+        $frm->add("{type:hidden; name:id_notas; value: " . $id_notas . "}");
+        $frm->add("{type:hidden; name:id_notas_itens; value: " . $id_notas_itens . "}");
         $frm->add("{type:hidden; name:gPage; value: ".MEDICAMENTO_SALVAR.";}");
 
-        $html.=$frm->render($o);
+        $html .= $frm->render($o);
         break;
 
 
@@ -1767,7 +1756,7 @@ switch ($gPage) {
         $frm->add("{allowBlank: true; name: reducao_icms_aliquota; fieldLabel: Percentual Redução Alíquota; type: number; value:".gFloat($icms["reducao_icms_aliquota"]).";}");
 
         // -- Grupo ST (Substituição Tributária) --
-        $modBMIcmsST = array();
+        $modBMIcmsST = [];
         $modBMIcmsST[0] = "0 - Preço tabelado ou máximo sugerido";
         $modBMIcmsST[1] = "1 - Lista negativa";
         $modBMIcmsST[2] = "2 - Lista positiva";
@@ -1795,7 +1784,7 @@ switch ($gPage) {
         // -- Campos Ocultos de Controle --
         $frm->add("{type: hidden; name: gPage; value: " . IMPOSTOS_SALVAR . "}");
         $frm->add("{type: hidden; name: tipo; value: icms}");
-        $frm->add("{type: hidden; name: gIdItem; value: $gId}");
+        $frm->add("{type: hidden; name: gIdItem; value: " . $gId . "}");
         $frm->add("{type: hidden; name: id_notas_itens_icms; value: ".$icms["id"].";}");
 
       if ($confereNota) {
@@ -1816,7 +1805,7 @@ switch ($gPage) {
         $frm->add("{type: number; name: ipi_pIPI; fieldLabel: Alíquota; value:".gFloat($ipi["pIPI"]).";}");
         $frm->add("{type: number; name: ipi_cEnq; fieldLabel: Enquadramento fiscal; value:".$ipi["cEnq"].";}");
         $frm->add("{type: hidden; name: tipo; value: ipi}");
-        $frm->add("{type: hidden; name: ipi_gIdItem; value: $gId}");
+        $frm->add("{type: hidden; name: ipi_gIdItem; value: " . $gId . "}");
         $frm->add("{type: hidden; name: id_notas_itens_ipi; value:".$ipi["id"].";}");
 
         if ($confereNota) {
@@ -1836,7 +1825,7 @@ switch ($gPage) {
         $frm->add("{type: select; name: id_imp_pis_cst; fieldLabel: CST; value:".$valuePisCst."; items:".$sp["combo_imp_pis_cst"].";}");
         $frm->add("{type: number; name: pis_pPIS; fieldLabel: Alíquota; value:".gFloat($pis["pPIS"]).";}");
         $frm->add("{type: hidden; name: tipo; value: pis}");
-        $frm->add("{type: hidden; name: pis_gIdItem; value: $gId}");
+        $frm->add("{type: hidden; name: pis_gIdItem; value: " . $gId . "}");
         $frm->add("{type: hidden; name: id_pis; value:".$pis["id"].";}");
 
         if ($confereNota) {
@@ -1856,7 +1845,7 @@ switch ($gPage) {
         $frm->add("{type: select; name: id_imp_cofins_cst; fieldLabel: CST; value: ".$valueCofinsCst."; items:" . $sp["combo_imp_cofins_cst"] . ";}");
         $frm->add("{type: number; name: cofins_pCOFINS; fieldLabel: Alíquota; value: " . gFloat($cofins["pCOFINS"]) . ";}");
         $frm->add("{type: hidden; name: tipo; value: cofins}");
-        $frm->add("{type: hidden; name: cofins_gIdItem; value: $gId}");
+        $frm->add("{type: hidden; name: cofins_gIdItem; value: " . $gId . "}");
         $frm->add("{type: hidden; name: id_cofins; value:" . $cofins["id"] . ";}");
 
         if ($confereNota) {
@@ -1962,7 +1951,7 @@ switch ($gPage) {
         $frm->add("{type: number; name: vIBSTransf; id: vIBSTransf; fieldLabel: Valor IBS Transferido (R$); value: " . gFloat($ibsCbs["vIBSTransf"]) . "; allowBlank: true;}");
         $frm->add("{type: number; name: vCBSTransf; id: vCBSTransf; fieldLabel: Valor CBS Transferido (R$); value: " . gFloat($ibsCbs["vCBSTransf"]) . "; allowBlank: true;}");
 
-        $tpCredPresIBSZFM = array();
+        $tpCredPresIBSZFM = [];
         $tpCredPresIBSZFM[0] = "0 - Sem Crédito Presumido";
         $tpCredPresIBSZFM[1] = "1 - Bens de consumo final (55%)";
         $tpCredPresIBSZFM[2] = "2 - Bens de capital (75%)";
@@ -1989,7 +1978,8 @@ switch ($gPage) {
                     </label>
                 </div>;}');
         }
-        $frm->add("{type: hidden; name: ibscbs_gIdItem; id: ibscbs_gIdItem; value: $gId}");
+
+        $frm->add("{type: hidden; name: ibscbs_gIdItem; id: ibscbs_gIdItem; value: " . $gId . "}");
         $frm->add("{type: hidden; name: id_ibs_cbs; id: id_ibs_cbs; value:" . $ibsCbs["id"] . ";}");
 
         if ($confereNota) {
@@ -2003,7 +1993,7 @@ switch ($gPage) {
         $abaIbsCbs = $frm->render($o);
 
         // Renderização das Abas
-        $tabs = array();
+        $tabs = [];
         $tabs[] = $o->addTabItem("ICMS", $abaIcms);
         $tabs[] = $o->addTabItem("IPI", $abaIpi);
         $tabs[] = $o->addTabItem("PIS", $abaPis);
@@ -2048,12 +2038,12 @@ switch ($gPage) {
                 $apagaRegistros=false;
                 $sql="SELECT COUNT(id) q FROM notas_itens_icms WHERE id_notas_itens=".intval($_REQUEST["gIdItem"]);
                 $r=dbQuery($sql)[0];
-                if($r['q']>1 || (int) $_REQUEST["id_notas_itens_icms"] == 0 ){
+                if ($r['q']>1 || (int) $_REQUEST["id_notas_itens_icms"] == 0 ) {
                     $apagaRegistros = true;
                     dbQuery("DELETE FROM notas_itens_icms WHERE id_notas_itens=".intval($_REQUEST["gIdItem"]));
                 }
 
-                $mtz=array();
+                $mtz=[];
                 $mtz["id_notas_itens"]=intval($_REQUEST["gIdItem"]);
                 $mtz["id_imp_icms_cst"]=intval($_REQUEST["icms_cst"]);
                 $mtz["id_imp_icms_origem"]=intval($_REQUEST["icms_orig"]);
@@ -2074,16 +2064,14 @@ switch ($gPage) {
                 $mtz['vBCFCPST'] = gDBFloat($_REQUEST['vBCFCPST']);
                 $mtz['pFCPST'] = gDBFloat($_REQUEST['pFCPST']);
                 gLog(json_encode($_REQUEST));
-                if ($_REQUEST["id_notas_itens_icms"]>0 && $apagaRegistros==false)
-                {
+                if ($_REQUEST["id_notas_itens_icms"]>0 && $apagaRegistros==false) {
                     dbUpdate("notas_itens_icms", $mtz, $_REQUEST["id_notas_itens_icms"]);
                     $id=$_REQUEST["id_notas_itens_icms"];
-                } else
-                {
+                } else {
                     $id=dbInsert("notas_itens_icms", $mtz, true);
                 }
 
-                if(!empty($_REQUEST['replicar'])){
+                if (!empty($_REQUEST['replicar'])) {
                     $id_notas = dbQuery("SELECT id_notas id FROM notas_itens WHERE id = ".intval($_REQUEST["gIdItem"]))[0];
 
                     $sql = "SELECT NI.id id_notas_itens, NI.id_notas, CMS.id id_cms FROM notas_itens NI 
@@ -2091,8 +2079,8 @@ switch ($gPage) {
                     WHERE NI.id_notas = ".$id_notas['id'];
                     $res = dbQuery($sql);
 
-                    foreach($res as $rs){
-                        $mtz=array();
+                    foreach ($res as $rs) {
+                        $mtz=[];
                         $mtz["id_notas_itens"]=$rs['id_notas_itens'];
                         $mtz["id_imp_icms_cst"]=intval($_REQUEST["icms_cst"]);
                         $mtz["id_imp_icms_origem"]=intval($_REQUEST["icms_orig"]);
@@ -2112,7 +2100,7 @@ switch ($gPage) {
                         $mtz['vBCFCPST'] = gDBFloat($_REQUEST['vBCFCPST']);
                         $mtz['pFCPST'] = gDBFloat($_REQUEST['pFCPST']);
 
-                        if (!empty($rs['id_cms'])){
+                        if (!empty($rs['id_cms'])) {
                             dbUpdate("notas_itens_icms", $mtz, $rs['id_cms']);
                         }
                         else{
@@ -2123,7 +2111,7 @@ switch ($gPage) {
                     $sql = "SELECT id FROM notas_itens_pis WHERE id_notas_itens=" . ((int) $rs['id_notas_itens']) . " LIMIT 1";
                     $idNotasItensPis = dbQuery($sql)[0]['id'];
                     if (!$idNotasItensPis) {
-                        $mtzPis = array();
+                        $mtzPis = [];
                         $mtzPis["id_notas_itens"] = $rs['id_notas_itens'];
                         $mtzPis["id_imp_pis_cst"] = 1;
                         $mtzPis["pPIS"] = 0;
@@ -2133,7 +2121,7 @@ switch ($gPage) {
                     $sql = "SELECT id FROM notas_itens_cofins WHERE id_notas_itens=" . ((int) $rs['id_notas_itens']) . " LIMIT 1";
                     $idNotasItensCofins = dbQuery($sql)[0]['id'];
                     if (!$idNotasItensCofins) {
-                        $mtzCofins = array();
+                        $mtzCofins = [];
                         $mtzCofins["id_notas_itens"] = $rs['id_notas_itens'];
                         $mtzCofins["id_imp_cofins_cst"] = 1;
                         $mtzCofins["pCOFINS"] = 0;
@@ -2146,7 +2134,7 @@ switch ($gPage) {
                 $sql = "SELECT id FROM notas_itens_pis WHERE id_notas_itens=" . ((int) $_REQUEST["gIdItem"]) . " LIMIT 1";
                 $idNotasItensPis = dbQuery($sql)[0]['id'];
                 if (!$idNotasItensPis) {
-                    $mtz = array();
+                    $mtz = [];
                     $mtz["id_notas_itens"] = $_REQUEST["gIdItem"];
                     $mtz["id_imp_pis_cst"] = 1;
                     $mtz["pPIS"] = 0;
@@ -2156,7 +2144,7 @@ switch ($gPage) {
                 $sql = "SELECT id FROM notas_itens_cofins WHERE id_notas_itens=" . ((int) $_REQUEST["gIdItem"]) . " LIMIT 1";
                 $idNotasItensCofins = dbQuery($sql)[0]['id'];
                 if (!$idNotasItensCofins) {
-                    $mtz = array();
+                    $mtz = [];
                     $mtz["id_notas_itens"] = $_REQUEST["gIdItem"];
                     $mtz["id_imp_cofins_cst"] = 1;
                     $mtz["pCOFINS"] = 0;
@@ -2164,30 +2152,30 @@ switch ($gPage) {
                 }
 
 
-            exit;
+                exit;
 
             case "salvarIPI":
                 $apagaRegistros=false;
                 $sql="SELECT COUNT(id) q FROM notas_itens_ipi WHERE id_notas_itens=".intval($_REQUEST["gIdItem"]);
                 $r=dbQuery($sql)[0];
-                if($r['q']>1){
+                if ($r['q']>1) {
                     $apagaRegistros = true;
                     dbQuery("DELETE FROM notas_itens_ipi WHERE id_notas_itens=".intval($_REQUEST["gIdItem"]));
                 }
-                $mtz=array();
+
+                $mtz=[];
                 $mtz["id_notas_itens"]=intval($_REQUEST["gIdItem"]);
                 $mtz['cEnq'] = $_REQUEST["ipi_cEnq"];
                 $mtz["id_imp_ipi_cst"]=intval($_REQUEST["id_imp_ipi_cst"]);
                 $mtz["pIPI"]=gDBFloat(str_replace(".", ",", $_REQUEST["pIPI"]));
-                if ($_REQUEST["id_notas_itens_ipi"]>0 && $apagaRegistros==false)
-                {
+                if ($_REQUEST["id_notas_itens_ipi"]>0 && $apagaRegistros==false) {
                     dbUpdate("notas_itens_ipi", $mtz, intval($_REQUEST["id_notas_itens_ipi"]));
                     $id=$_REQUEST["id_notas_itens_ipi"];
-                } else
-                {
+                } else {
                     $id=dbInsert("notas_itens_ipi", $mtz, true);
                 }
-                if(!empty($_REQUEST['replicar'])){
+
+                if (!empty($_REQUEST['replicar'])) {
                     $id_notas = dbQuery("SELECT id_notas id FROM notas_itens WHERE id = ".intval($_REQUEST["gIdItem"]))[0];
 
                     $sql = "SELECT NI.id id_notas_itens, NI.id_notas, NII.id id_ipi FROM notas_itens NI 
@@ -2195,14 +2183,14 @@ switch ($gPage) {
                     WHERE NI.id_notas = ".$id_notas['id'];
                     $res = dbQuery($sql);
 
-                    foreach($res as $rs){
-                        $mtz=array();
+                    foreach ($res as $rs) {
+                        $mtz=[];
                         $mtz["id_notas_itens"]=$rs['id_notas_itens'];
                         $mtz['cEnq'] = $_REQUEST["ipi_cEnq"];
                         $mtz["id_imp_ipi_cst"]=intval($_REQUEST["id_imp_ipi_cst"]);
                         $mtz["pIPI"]=gDBFloat(str_replace(".", ",", $_REQUEST["pIPI"]));
 
-                        if (!empty($rs['id_ipi'])){
+                        if (!empty($rs['id_ipi'])) {
                             dbUpdate("notas_itens_ipi", $mtz, $rs['id_ipi']);
                         }
                         else{
@@ -2212,75 +2200,74 @@ switch ($gPage) {
                 }
 
                 echo json_encode($id);
-            exit;
+                exit;
 
             case "salvarPIS":
                 $apagaRegistros=false;
                 $sql="SELECT COUNT(id) q FROM notas_itens_pis WHERE id_notas_itens=".intval($_REQUEST["gIdItem"]);
                 $r=dbQuery($sql)[0];
-                if($r['q']>1){
+                if ($r['q']>1) {
                     $apagaRegistros = true;
                     dbQuery("DELETE FROM notas_itens_pis WHERE id_notas_itens=".intval($_REQUEST["gIdItem"]));
                 }
-                $mtz=array();
+
+                $mtz=[];
                 $mtz["id_notas_itens"]=intval($_REQUEST["gIdItem"]);
                 $mtz["id_imp_pis_cst"]=intval($_REQUEST["id_imp_pis_cst"]);
                 $mtz["pPIS"]=gDBFloat(str_replace(".", ",", $_REQUEST["pPIS"]));
-                if ($_REQUEST["id_pis"]>0 && $apagaRegistros==false)
-                {
+                if ($_REQUEST["id_pis"] > 0 && $apagaRegistros == false) {
                     dbUpdate("notas_itens_pis", $mtz, intval($_REQUEST["id_pis"]));
                     $id=intval($_REQUEST["id_pis"]);
+                } else {
+                    $id = dbInsert("notas_itens_pis", $mtz, true);
                 }
-                else
-                    $id=dbInsert("notas_itens_pis", $mtz, true);
 
-                if(!empty($_REQUEST['replicar'])){
+                if (!empty($_REQUEST['replicar'])) {
                     $id_notas = dbQuery("SELECT id_notas id FROM notas_itens WHERE id = ".intval($_REQUEST["gIdItem"]))[0];
 
                     $sql = "SELECT NI.id id_notas_itens, NI.id_notas, NIP.id id_pis FROM notas_itens NI 
-                    LEFT JOIN notas_itens_pis NIP ON NIP.id_notas_itens = NI.id
-                    WHERE NI.id_notas = ".$id_notas['id'];
+                            LEFT JOIN notas_itens_pis NIP ON NIP.id_notas_itens = NI.id
+                            WHERE NI.id_notas = " . $id_notas['id'];
                     $res = dbQuery($sql);
 
-                    foreach($res as $rs){
-                        $mtz=array();
+                    foreach ($res as $rs) {
+                        $mtz = [];
                         $mtz["id_notas_itens"]=$rs['id_notas_itens'];
                         $mtz["id_imp_pis_cst"]=intval($_REQUEST["id_imp_pis_cst"]);
                         $mtz["pPIS"]=gDBFloat(str_replace(".", ",", $_REQUEST["pPIS"]));
 
-                        if (!empty($rs['id_pis'])){
+                        if (!empty($rs['id_pis'])) {
                             dbUpdate("notas_itens_pis", $mtz, $rs['id_pis']);
-                        }
-                        else{
+                        } else {
                             dbInsert("notas_itens_pis", $mtz, false);
                         }
                     }
                 }
 
                 echo json_encode($id);
-            exit;
+                exit;
 
             case "salvarCOFINS":
-                $apagaRegistros=false;
-                $sql="SELECT COUNT(id) q FROM notas_itens_cofins WHERE id_notas_itens=".intval($_REQUEST["gIdItem"]);
-                $r=dbQuery($sql)[0];
-                if($r['q']>1){
+                $apagaRegistros = false;
+                $sql = "SELECT COUNT(id) q FROM notas_itens_cofins WHERE id_notas_itens=".intval($_REQUEST["gIdItem"]);
+                $r = dbQuery($sql)[0];
+                if ($r['q'] > 1) {
                     $apagaRegistros = true;
                     dbQuery("DELETE FROM notas_itens_cofins WHERE id_notas_itens=".intval($_REQUEST["gIdItem"]));
                 }
-                $mtz=array();
+
+                $mtz=[];
                 $mtz["id_notas_itens"]=intval($_REQUEST["gIdItem"]);
                 $mtz["id_imp_cofins_cst"]=intval($_REQUEST["id_imp_cofins_cst"]);
                 $mtz["pCOFINS"]=gDBFloat(str_replace(".", ",", $_REQUEST["pCOFINS"]));
-                if ($_REQUEST["id_cofins"] && $apagaRegistros==false)
-                {
+                if ($_REQUEST["id_cofins"] && $apagaRegistros==false) {
                     dbUpdate("notas_itens_cofins", $mtz, intval($_REQUEST["id_cofins"]));
                     $id=intval($_REQUEST["id_cofins"]);
-                }
-                else
+                } else {
                     $id=dbInsert("notas_itens_cofins", $mtz, true);
+                }
 
-                if(!empty($_REQUEST['replicar'])){
+                if (!empty($_REQUEST['replicar'])) {
                     $id_notas = dbQuery("SELECT id_notas id FROM notas_itens WHERE id = ".intval($_REQUEST["gIdItem"]))[0];
 
                     $sql = "SELECT NI.id id_notas_itens, NI.id_notas, NIC.id id_cofins FROM notas_itens NI 
@@ -2288,29 +2275,28 @@ switch ($gPage) {
                     WHERE NI.id_notas = ".$id_notas['id'];
                     $res = dbQuery($sql);
 
-                    foreach($res as $rs){
-                        $mtz=array();
+                    foreach ($res as $rs) {
+                        $mtz=[];
                         $mtz["id_notas_itens"]=$rs['id_notas_itens'];
                         $mtz["id_imp_cofins_cst"]=intval($_REQUEST["id_imp_cofins_cst"]);
                         $mtz["pCOFINS"]=gDBFloat(str_replace(".", ",", $_REQUEST["pCOFINS"]));
 
-                        if (!empty($rs['id_cofins'])){
+                        if (!empty($rs['id_cofins'])) {
                             dbUpdate("notas_itens_cofins", $mtz, $rs['id_cofins']);
-                        }
-                        else{
+                        } else {
                             dbInsert("notas_itens_cofins", $mtz, false);
                         }
                     }
                 }
 
                 echo json_encode($id);
-            exit;
+                exit;
 
             case "salvarIbsCbs":
                 $sql = "SELECT id FROM notas_itens_ibs_cbs WHERE id_notas_itens = " . intval($_REQUEST["gIdItem"]);
                 $rs = dbFastQuery($sql)[0];
 
-                $mtz = array();
+                $mtz = [];
                 $mtz["vBC"]                   = gDBFloat(str_replace(".", ",", $_REQUEST["vBC_IBS_CBS"]));
                 $mtz["indDoacao"]             = $_REQUEST["indDoacao"];
                 $mtz["id_notas_itens"]        = $_REQUEST["gIdItem"];
@@ -2387,7 +2373,7 @@ switch ($gPage) {
                             WHERE NI.id_notas = " . $idNotas['id'];
                     $res = dbFastQuery($sql);
 
-                    foreach($res as $rs) {
+                    foreach ($res as $rs) {
                         $mtz["id_notas_itens"] = $rs["id_notas_itens"];
 
                         if (!empty($rs['id_ibs_cbs'])) {
@@ -2401,11 +2387,12 @@ switch ($gPage) {
                 echo json_encode($id);
             break;
         }
+
         break;
 
 
     case MEDICAMENTO_SALVAR:
-        $mtz = array();
+        $mtz = [];
         $mtz['data'] = date('Y-m-d H:i');
         $mtz['id_pessoas'] = $_SESSION['usrId'];
         $mtz['id_notas_itens'] = (int) $id_notas_itens;
@@ -2418,12 +2405,14 @@ switch ($gPage) {
         $mtz['dVal'] = gDBDate($_REQUEST["dVal"]);
         $mtz['cAgreg'] = gCleanField($_REQUEST["cAgreg"]);
 
-        $sql = "SELECT id FROM notas_itens_medicamentos WHERE id_notas_itens=$id_notas_itens";
+        $sql = 'SELECT id FROM notas_itens_medicamentos WHERE id_notas_itens=' . $id_notas_itens;
         $rs = dbQuery($sql);
-        if(!$rs)
+        if (!$rs) {
             dbInsert("notas_itens_medicamentos", $mtz);
-        else
+        } else {
             dbUpdate("notas_itens_medicamentos", $mtz, $rs[0]['id']);
+        }
+
         redirect($o->page . "&gPage=" . nf_saida . "&gPage=" . ITENS . "&gId=".$id_notas);
         break;
 
@@ -2436,6 +2425,7 @@ switch ($gPage) {
         } else {
             $html .= $o->msgSuccess("E-mail de NF enviado ao cliente");
         }
+
         $html .= $backButton;
         break;
 
@@ -2473,7 +2463,7 @@ switch ($gPage) {
         }
 
         $defaultInfContribuente="";
-        $inNotas = array();
+        $inNotas = [];
         foreach ($itens as $item) {
             if (!in_array($item["nota_associada"], $inNotas) && !empty($item["nota_associada"])) {
                 $inNotas[] = $item["nota_associada"];
@@ -2517,7 +2507,7 @@ switch ($gPage) {
                         notas.id,
                         notas.numero
                     FROM notas
-                    WHERE notas.cancelada = 0 AND notas.id_notas_agrupar = {$gId}";
+                    WHERE notas.cancelada = 0 AND notas.id_notas_agrupar = " . $gId;
             $rs = dbFastQuery($sql);
             if ($rs) {
                 $html .= $o->msg('Notas agrupadas: ' . linkParaNota(array_column($rs, 'id')));
@@ -2552,7 +2542,8 @@ switch ($gPage) {
         if ($gParam['INSERE_REFNFE_AUTO']['ativo']) {
             $infoRefnfe = ' (para preencher automaticamente apague o campo completamente e confirme)';
         }
-        $frm->add("{type: textarea; name: refNfe; fieldLabel: Chave de referência $infoRefnfe; value:" . $nota["refNfe"] . ";}");
+
+        $frm->add("{type: textarea; name: refNfe; fieldLabel: Chave de referência " . $infoRefnfe . "; value:" . $nota["refNfe"] . ";}");
 
         $frm->row(
             $frm->add("{type: text; name:RNTC; fieldLabel: Código ANTT;  value:".$nota["RNTC"].";}"),
@@ -2572,7 +2563,7 @@ switch ($gPage) {
             $frm->add("{type: text;  name: infAdFisco; fieldLabel: Informações fisco; value:".$nota["infAdFisco"].";}")
         );
 
-        if ($nota["InfCpl"]<>"") {
+        if ($nota["InfCpl"] != "") {
             $defaultInfContribuente = $nota["InfCpl"];
         }
 
@@ -2597,7 +2588,7 @@ switch ($gPage) {
         $listaPagamento = $nf->tipoPagamento();
 
         if (($confereNFE[0]['id_notas_origem_estorno'] != 0)) {
-            $listaPagamento = json_encode(array(90 => "90 - Sem Pagamento"));
+            $listaPagamento = json_encode([90 => "90 - Sem Pagamento"]);
         }
 
         $frm->row(
@@ -2607,7 +2598,7 @@ switch ($gPage) {
             $frm->add("{type: number;  name: vPag; fieldLabel: Valor do pagamento; value:".gFloat($nota["vPag"]).";}")
         );
 
-        $emailsEnviar = dbQuery("SELECT P.email AS email_proprietario, N.emails_enviar AS emails_nota FROM pessoas P LEFT JOIN notas N ON N.id_pessoas_proprietario = P.id WHERE N.id = {$gId}")[0];
+        $emailsEnviar = dbQuery("SELECT P.email AS email_proprietario, N.emails_enviar AS emails_nota FROM pessoas P LEFT JOIN notas N ON N.id_pessoas_proprietario = P.id WHERE N.id = " . $gId)[0];
         $emailsEnviar = $emailsEnviar['emails_nota'] ?: $emailsEnviar['email_proprietario'];
 
         $frm->row(
@@ -2621,7 +2612,7 @@ switch ($gPage) {
 
         $sql = "SELECT nfe_eventos.id_nfe_tipos_eventos
                 FROM nfe_eventos
-                WHERE nfe_eventos.id_notas_saida = {$gId}";
+                WHERE nfe_eventos.id_notas_saida = " . $gId;
         $eventosNfe = dbFastQuery($sql);
         if (
             $confereNFE
@@ -2683,16 +2674,18 @@ switch ($gPage) {
             });
         ");
 
-        if($gParam['EMITIR_NF_APROVADA']['ativo']){
+        if ($gParam['EMITIR_NF_APROVADA']['ativo']) {
             $o->addJavascript("
                 document.getElementsByName('btnEmitirNfe')[0].removeAttribute('disabled');
             ");
         }
+
         $html .= "<hr/>";
         $itens = $nf->obtemRegistrosNotasItens($gId);
         if ($confereNFE[0]['id']) {
             $html.=$nf->obterTabelaInformacoesOperacao($gId);
         }
+
         $html.=$nf->obtemTabelaItem($itens, false, true);
         break;
 
@@ -2701,9 +2694,9 @@ switch ($gPage) {
         // @note  NFE>Valida RefNfe
         if ($gParam['INSERE_REFNFE_AUTO']['ativo']) {
             $_REQUEST['refNfe'] = $_REQUEST['refNfe'] ?: $_REQUEST['refNfeOriginal'];
-            $aux = array_unique(explode(",",$_REQUEST['refNfe']));
+            $aux = array_unique(explode(",",(string) $_REQUEST['refNfe']));
             foreach ($aux as $k) {
-                if(strlen($k) != 44 || preg_match("/[^0-9]/", $k)) {
+                if (strlen($k) != 44 || preg_match("/[^0-9]/", $k)) {
                     $content = $o->msgAlert("Erro na validação do campo chave de referência.");
                     $mtz = [
                         "Chave " . $k . " incorreta",
@@ -2734,356 +2727,12 @@ switch ($gPage) {
             echo json_encode($gId);
             exit;
         }
+
     break;
 
 
-    // case NFE_EMITIR:
-    //     $sql="SELECT id FROM notas WHERE id='{$gId}' AND cancelada='1'";
-    //     $verifica=dbQuery($sql);
-    //     if ($verifica) {
-    //         $return=array();
-    //         $return["erro"]=true;
-    //         $return["msgErro"]=$o->msgDanger("A NFe não pode ser assinada pois a nota está cancelada");
-    //         echo json_encode($return);
-    //         exit;
-    //     }
-
-    //     $sql="SELECT
-    //         notas.id as idNota, nfe.id as idNfe, nfe.situacao, notas.id_programacao
-    //         FROM notas
-    //         INNER JOIN nfe ON nfe.id = notas.id_nfe
-    //         WHERE notas.id = '{$gId}'";
-    //     $confereNFE=dbQuery($sql);
-    //     /* 
-    //         Medida de segurança, pois como é um modal precisa da um redirect para bloquear o botão de emitir. 
-    //     */
-
-    //     if (count($confereNFE)>0 && in_array($confereNFE[0]["situacao"], ["Assinada", "Submetida", "Aprovada", "Cancelada"]))
-    //     {
-    //         if (in_array($confereNFE[0]["situacao"], array("Submetida", "Assinada")) || $gParam['EMITIR_NF_APROVADA']['ativo'])
-    //         {
-    //             $sql="SELECT * FROM nfe WHERE id='".$confereNFE[0]["idNfe"]."'";
-    //             $notaSalva=dbQuery($sql)[0];
-    //             $return["erro"]=false;
-    //             $return["nfe"]=$notaSalva;
-    //             $return["id_nota"]=$gId;
-    //             echo json_encode($return);
-    //             exit;
-    //         } else
-    //         {
-    //             $return=array();
-    //             $return["erro"]=true;
-    //             $return["msgErro"]=$o->msgDanger("A NF-e já foi emitida anteriormente. Por favor aperte F5 ou recarregue a página e vá em \"opções da NF-e\"");
-    //             echo json_encode($return);
-    //             exit;
-    //         }
-    //     }
-
-    //     $nota=$nf->obtemDadosNFE($gId);
-    //     $dadosEmpresa=$nf->obtemDadosEmpresa(obtemIdEmpresa($nota["id_pessoas_proprietario"]));
-    //     $tiposNota=$nota["tipo"];
-    //     $dadosProprietario=$nf->obtemDadosProprietario($nota["id_pessoas_proprietario"], $tiposNota);
-
-    //     $idTransportadora=(intval($nota["id_pessoas_transportadora"])>0)
-    //         ? $nota["id_pessoas_transportadora"]
-    //         : $nota["id_pessoas_proprietario"];
-    //     $dadosTransportadora=$nf->obtemDadosTransportadora($idTransportadora);
-    //     $nfe = new gNfe('nfe',true,'4.00');
-    //     if ($tiposNota=="E")
-    //     {
-    //         $nfe->defineCabecalho('tipoDocumento', 0); // entrada
-    //     }
-    //     if ($nota['finNFe']==3)
-    //     {
-    //         $nfe->defineCabecalho('naturezaOperacao','999');
-    //     }
-    //     $nfe->id_empresa=obtemIdEmpresa($nota["id_pessoas_proprietario"]);
-    //     $nfe->defineCabecalho($dadosEmpresa);
-    //     $nfe->defineCabecalho($dadosProprietario);
-    //     if ($idTransportadora>0)
-    //     {
-    //         $nfe->defineCabecalho($dadosTransportadora);
-    //     }
-
-    //     if ($nota["refNfe"]) {
-    //         $nfe->defineCabecalho("refNFe", $nota["refNfe"]);
-    //     }
-
-    //     $nfe->defineCabecalho("idNotas", $gId);
-    //     $nfe->defineCabecalho("idFinalidade", $nota["finNFe"]);
-    //     $nfe->defineCabecalho("idDest", $nota["idDestino"]);
-    //     $nfe->defineCabecalho("quantidadeEspecie", $nota["qVol"]);
-    //     $nfe->defineCabecalho("outrasDespesas", $nota["vOutro"]);
-    //     $nfe->defineCabecalho("especieTransportada", $nota["esp"]);
-    //     $nfe->defineCabecalho("veiculoPlaca", $nota["placa"]);
-    //     $nfe->defineCabecalho("veiculoPlacaUf", $nota["placaUF"]);
-    //     $nfe->defineCabecalho("sistema", "WMS2");
-    //     $nfe->defineCabecalho("cfop", gFieldById("cfops", $nota["id_cfops"], "codigo"));
-    //     $nfe->defineCabecalho("operacao", gFieldById("cfops", $nota["id_cfops"], "descricao_resumida"));
-    //     $nfe->defineCabecalho("indIEDest",$nota["IE"]);
-    //     $nfe->defineCabecalho("modalidadeFrete",$nota["modFrete"]);
-    //     $nfe->defineCabecalho("codigoAntt", $nota["RNTC"]);
-    //     $nfe->defineCabecalho("especieMarca", $nota["marca"]);
-    //     if (intval($nota["pesoB"])>0)
-    //     {
-    //         $nfe->defineCabecalho("totalPesoBruto", $nota["pesoB"]);
-    //     }
-    //     if (intval($nota["pesoL"])>0)
-    //     {
-    //         $nfe->defineCabecalho("totalPesoLiquido", $nota["pesoL"]);
-    //     }
-
-    //     $informacao="";
-    //     if ($nota["informacaoFisco"]<>"" && !is_null($nota["informacaoFisco"]))
-    //     {
-    //         $informacao=$nota["informacaoFisco"];
-    //     }
-    //     $informacao.=" ".$nota["infAdFisco"];
-    //     $nfe->defineCabecalho("informacoesFisco", $informacao);
-    //     $informacao_contribuente="";
-
-    //     if (intval($nota["id_programacao"])>0)
-    //     {
-    //         $nfe->defineCabecalho("idProgramacao",intval($nota["id_programacao"]));
-    //         $sql="SELECT detalhes_nfe FROM programacao WHERE id=".$nota["id_programacao"];
-    //         $detalhes_nfe=dbQuery($sql);
-    //         if (count($detalhes_nfe)>0)
-    //         {
-    //             if (!is_null($detalhes_nfe[0]["detalhes_nfe"]) 
-    //                 && !empty($detalhes_nfe[0]["detalhes_nfe"]))
-    //             {
-    //                 $informacao_contribuente.=$detalhes_nfe[0]["detalhes_nfe"].", ";
-    //             }
-    //         }
-    //     }
-    //     $informacao_contribuente.=$nota["InfCpl"];
-    //     $nfe->defineCabecalho("informacoesContribuinte", $informacao_contribuente);
-    //     $nfe->defineCabecalho("indIntermed",$nota['indIntermed']);
-    //     /* DADOS DOS ITENS */
-    //     if ($tiposNota=='M')
-    //     {
-    //         $itens=$nf->obtemDadosMaquinaNFE($gId);
-    //     } else
-    //     {
-    //         $itens=$nf->obtemDadosItensNFE($gId);
-    //     }
-
-    //     //$nfe->c["municipio"]="teste";
-    //     foreach ($itens as $item)
-    //     {   
-    //         $item["NumeroCliente"]=$nota["numseq"];
-    //         $nfe->defineItens($item);
-    //     }
-
-    //     $nfe->processa();
-    //     $return=array();
-    //     if (is_array($nfe->erros))
-    //     {
-    //         $return["erro"]=true;
-    //         $return["erros"]=$nfe->erros;
-    //         $msg="A emissão da NF-e não pode prosseguir pois foram encontrados os seguintes erros: <br>";
-    //         $msg.=$o->ul($nfe->erros);
-    //         $msg=$o->msgDanger($msg);
-    //         if($_SESSION['usrId']==1)
-    //             $msg.="<br><textarea>".$nfe->xml."</textarea>";
-    //         $return["msgErro"]=$msg;
-    //         echo json_encode($return);
-    //         exit;
-    //     } else
-    //     {
-    //         if ($tiposNota == 'E') {
-    //             $sql = "UPDATE notas SET entrada_interna = 1, tipo = 'S' WHERE id = {$gId}";
-    //             dbQuery($sql);
-    //         }
-    //         $sql="SELECT * FROM nfe WHERE chave='".$nfe->chave."' AND cancelada = 0 LIMIT 1";
-    //         $notaSalva=dbQuery($sql)[0];
-    //         $return["erro"]=false;
-    //         $return["nfe"]=$notaSalva;
-    //         $return["id_nota"]=$gId;
-    //         echo json_encode($return);
-    //         exit;
-    //     }
-        
-    // break;
-
-    // case NFE_ENVIAR:
-
-    //     $sql="SELECT nfe.*, notas.id_pessoas_proprietario
-    //           FROM nfe 
-    //           LEFT JOIN notas ON notas.id_nfe = nfe.id
-    //           where nfe.id='{$gId}'";
-    //     $rs=dbQuery($sql)[0];
-
-    //     $dadosEmpresa=$nf->obtemDadosEmpresa(obtemIdEmpresa($rs["id_pessoas_proprietario"]));
-    //     $nfe = new gNfe('nfe', true, '4.00');
-    //     $nfe->id_empresa=obtemIdEmpresa($rs["id_pessoas_proprietario"]);
-    //     $nfe->defineCabecalho($dadosEmpresa);
-    //     $nfe->config();
-    //     $return=array();
-        // if ($rs["situacao"]=="Assinada") {
-        //     $nfe->envia(trim($rs['xml']), $rs['numero']);
-        //     if (($nfe->retornoCstat == 100 || $nfe->retornoCstat == 103 || $nfe->retornoCstat == 104) && stripos($nfe->erros[0], 'Rejeicao') === false) {
-        //         $msg.=$nfe->erros[0];
-        //         $sql = "update nfe set situacao='Submetida', recibo='" . $nfe->recibo . "', mensagens='{$msg}' where id=" . $rs['id'];
-        //         dbQuery($sql);
-        //         $mtz=array();
-        //         $mtz["id_nfe"]=$gId;
-
-        //         dbUpdate("notas", $mtz, $_REQUEST["gIdNota"]);
-        //         $return["codigo"]=1;
-        //         $return["mensagem"]=$o->msgInfo("NF-e assinada com sucesso! Por favor não feche a janela.");
-        //         $return["stopRefresh"]=false;
-        //         $nf->bloquearNotaFiscal();
-        //         echo json_encode($return);
-        //         exit;
-        //     } else
-        //     {
-        //         $return["codigo"]=2;
-        //         $msg = "Erro ao submeter a nfe tente novamente mais tarde."
-        //                 . '<br>Erro: ' . $o->ul($nfe->erros)
-        //                 . '<br>cStat: ' . $nfe->retornoCstat;
-        //         $sql = "UPDATE nfe SET situacao = 'Reprovada',xml='{$xml}', mensagens='" . implode(", ", $nfe->erros) . "' WHERE situacao = 'Assinada' AND id=" . $rs['id'];
-        //         dbQuery($sql);
-        //         if ($usrId == 1) {
-        //             if ($nfe->nfexml <> "") {
-        //                 $msg .= '<textarea>' . $nfe->nfexml . '</textarea>';
-        //             } else {
-        //                 $msg .= '<textarea>' . $rs["xml"] . '</textarea>';
-        //             }
-        //         }
-
-
-    //             $return["mensagem"] = $o->msgDanger($msg);
-    //             $return["stopRefresh"]=false;
-    //             echo json_encode($return);
-    //             exit;
-    //         }
-    //     } else if ($rs["situacao"]=="Submetida")
-    //     {
-    //         $nfe->protocolo($rs['recibo'], $rs['chave']);
-    //         if ($nfe->nfexml <> "") {
-    //             $xml = $nfe->nfexml;
-    //         } else {
-    //             $xml = $rs["xml"];
-    //         }
-    //         if (substr($nfe->erros[0], 0, 3) == '100') 
-    //         {   
-    //             $sql = "UPDATE nfe SET situacao='Aprovada',xml='{$xml}', mensagens='' WHERE situacao='Submetida' AND id=" . $rs['id'];
-    //             dbQuery($sql);
-
-    //             $numeroNota = str_pad($rs['numero'], 9, "0", STR_PAD_LEFT)  ;
-
-    //             $mtz=array();
-    //             $mtz['confirmada']= '1';
-    //             $mtz['numero']= $numeroNota;
-    //             $mtz['id_nfe']=intval($rs['id']);
-    //             $mtz['data_emissao']=date('Y-m-d');
-    //             dbUpdate("notas", $mtz, $_REQUEST["gIdNota"]);
-                
-    //             $nf->bloquearNotaFiscal();
-    //             $return["codigo"]=3;
-    //             $return["mensagem"]=$o->msgInfo("NF-e aprovada com sucesso! Por favor não feche a janela.");
-    //             $return["stopRefresh"]=false;
-
-    //             if ($gParam['PERMITIR_AGRUPAMENTO_NOTA_SAIDA']['ativo']) {
-    //                 $sql =
-    //                     "UPDATE notas
-    //                     SET numero = '".$numeroNota."'
-    //                     WHERE id_notas_agrupar = ".$_REQUEST["gIdNota"];
-    //                 dbQuery($sql);
-    //             }
-
-    //             $nf->enviarEmail($_REQUEST["gIdNota"]);
-
-    //             $dadosNf = [
-    //                 "chave" => $rs['chave'],
-    //                 "xml" => $xml,
-    //                 "idPessoasProprietario" => 1
-    //             ];
-    //             dispararGatilho("emitirNf", $dadosNf);
-
-    //             echo json_encode($return);
-    //             exit;
-    //         } elseif (substr($nfe->erros[0], 0, 3) == '105') 
-    //         {
-
-    //             // Lote em processamento
-    //             $htm.= $o->msgInfo("O lote encontra-se em processamento");
-    //             $return["codigo"]=3;
-    //             $return["mensagem"]=$htm;
-    //             $return["stopRefresh"]=true;
-    //             echo json_encode($return);
-    //             exit;
-    //         } else 
-    //         {
-    //             $sql="SELECT protocolo FROM nfe WHERE id=".$rs["id"];
-    //             $rsprot=dbQuery($sql)[0];
-    //             if($rsprot['protocolo']<>"")
-    //             {
-    //                 $htm = "A NF-e não pode ser concluida pois aconteceram os seguintes erros: ";
-    //                 $htm.= $rs['mensagens'];
-    //                 $htm.= $o->ul($nfe->erros) . "<br>";
-    //                 $htm=$o->msgDanger($htm);
-    //                 $sql = "update nfe set situacao='Reprovada',xml='" . addslashes($xml) . "' where id=" . $rs['id'];
-    //                 dbQuery($sql);
-    //                 $sql = "update notas set confirmada=0 where id_nfe=" . $rs['id'];
-    //                 dbQuery($sql);
-    //                 $return["codigo"]=3;
-    //                 $return["mensagem"]=$htm;
-    //                 $return["stopRefresh"]=true;
-    //                 echo json_encode($return);
-    //                 exit;
-    //             }
-    //             else {
-    //                 $msg="Falha na atualização do protocolo <BR> Aconteceram os seguintes erros: ";
-    //                 $msg.=$o->ul($nfe->erros);
-    //                 $msg=$o->msgDanger($msg);
-    //                 $msg.=$o->button("{icon: refresh; caption: Tentar novamente; hint: Tentar novamente; style: info; size: normal;", "javascript: btnTentarNFeNovamente(".$gId.", ".$_REQUEST["gIdNota"].")");
-    //                 $return["codigo"]=3;
-    //                 $return["mensagem"]=$msg;
-    //                 $return["stopRefresh"]=true;
-    //                 echo json_encode($return);
-    //                 exit;
-    //             }
-    //         }
-    //     }
-
-    //     if ($rs["situacao"]=="Aprovada")
-    //     {
-    //         $htm=$o->msgInfo("Selecione uma das opções");
-    //         $htm.=$o->button("{icon: file; caption: Obter XML; hint: Obter xml da NF-e; style: primary; size: normal;", "javascript: btnObterXml(".$gId.")");
-    //         $htm.=$o->button("{icon: print; caption: Imprimir danfe; hint: Gerar danfe da NF-e; style: info; size: normal;", "javascript: btnImprimirDanfe(".$gId.")");
-    //         //$htm.=$o->button("{icon: envelope-open; caption: CC-e; hint: Carta de correção; style: info; size: normal;", "javascript: btnCCe(".$gId.")");
-    //         $return["codigo"]=3;
-    //         $return["mensagem"]=$htm;
-    //         $return["stopRefresh"]=true;
-    //         $return["aprovada"]=1;
-    //         echo json_encode($return);
-    //     } else if ($rs["situacao"]="Reprovada")
-    //     {
-    //         /* NOTA FISCAL FOI REPROVADA. */
-    //     }
-
-    // break;
-
-
-    // case NFE_DANFE_EMITIR:
-    //     $nfe = new gNfe();
-    //     $existeNfe=dbQuery("SELECT id FROM nfe where id = '{$gId}'");
-
-    //     if (count($existeNfe)>0)
-    //     {
-    //         $nfe->danfe(intval($gId));
-    //     } else
-    //     {
-    //         $msg="Não foi possível emitir o danfe pois aconteceram os seguintes erros: <br>";
-    //         $msg.=$o->ul(["NF-e não encontrada"]);
-    //         $html.=$o->msgDanger($msg);
-    //     }
-    // break;
-
     case NFE_OBTER_XML:
-        $rs = dbFastQuery("SELECT * FROM nfe where id = '{$gId}'")[0];
+        $rs = dbFastQuery(sprintf("SELECT * FROM nfe where id = '%s'", $gId))[0];
 
         if (!$rs) {
             $msg = "Não foi possível fazer o download do xml pois aconteceram os seguintes erros: <br>";
@@ -3102,16 +2751,15 @@ switch ($gPage) {
         header('Expires: 0');
         header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
         header('Pragma: public');
-        header('Content-Length: ' . strlen($file));
+        header('Content-Length: ' . strlen((string) $file));
         ob_clean();
         flush();
         echo($file);
         exit;
         break;
 
-
     case NFE_OBTER_XML_CANCELAMENTO:
-        $sql = "SELECT id, chave, xml_cancelamento FROM nfe WHERE id = '{$gId}'";
+        $sql = sprintf("SELECT id, chave, xml_cancelamento FROM nfe WHERE id = '%s'", $gId);
         $rs = dbFastQuery($sql)[0];
 
         if (!$rs['id']) {
@@ -3128,7 +2776,7 @@ switch ($gPage) {
         header('Expires: 0');
         header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
         header('Pragma: public');
-        header('Content-Length: ' . strlen($rs['xml_cancelamento']));
+        header('Content-Length: ' . strlen((string) $rs['xml_cancelamento']));
         ob_clean();
         flush();
         echo($rs['xml_cancelamento']);
@@ -3153,7 +2801,7 @@ switch ($gPage) {
         header('Expires: 0');
         header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
         header('Pragma: public');
-        header('Content-Length: ' . strlen($rs['xml']));
+        header('Content-Length: ' . strlen((string) $rs['xml']));
         ob_clean();
         flush();
         echo($rs['xml']);
@@ -3178,7 +2826,7 @@ switch ($gPage) {
             $temEstorno = dbFastQuery($sql)[0]['id'];
         }
 
-        $mtz = array();
+        $mtz = [];
         $mtz[] = '<-' . $o->small('Chave') . '<br><b>' . $nfe['chave'] . '</b>&nbsp;';
         $mtz[] = '<-' . $o->small('Situação') . '<br><b><small>' . $nfe['situacao'] . '</small></b>&nbsp;';
         $html .= $o->tableRow($mtz, 'header');
@@ -3187,7 +2835,7 @@ switch ($gPage) {
 
         if (!$temEstorno && !$nfe['id_notas_origem_estorno']) {
 
-            $dataNfe = strtotime($nfe['data']);
+            $dataNfe = strtotime((string) $nfe['data']);
             $agora   = time();
 
             if (($agora - $dataNfe) > 86400) {//86400 equivale a 24 horas
@@ -3200,192 +2848,6 @@ switch ($gPage) {
         $html .= $o->button("{icon: envelope-open; caption: CC-e; hint: Emitir carta de correção; style: success; size: normal;", "javascript: btnCCe(".$gId.", ".$_REQUEST["gIdNota"].")");
 
         break;
-
-    // case NFE_CANCELAR:
-    //     $frm= new gForm("{columns: 12; id:formCOFINS; onClickSubmit: btnConfirmaCancelarNFE;}");
-    //     $frm->row(
-    //         $frm->add("{type: textarea; name: motivoCancelamento; fieldLabel: Motivo cancelamento;}")
-    //     );
-    //     $frm->add("{type: hidden; name: cancela_gPage; value:".NFE_CANCELAR_CONFIRMAR.";}");
-    //     $frm->add("{type: hidden; name: cancela_gId; value:".$gId.";}");
-    //     $frm->add("{type: hidden; name: cancela_gIdNota; value:".$_REQUEST["gIdNota"].";}");
-    //     $frm->addButton("{icon: arrow-left; title: Voltar; style: success; size: normal;", "javascript: btnOpcoesNFE(".$gId.", ".$_REQUEST["gIdNota"].")");
-    //     $html.=$frm->render($o);
-    //     break;
-    
-    // case NFE_CANCELAR_CONFIRMAR:
-
-    //     $sql="SELECT nfe.id, nfe.protocolo, nfe.chave, notas.id_pessoas_proprietario, notas.id_programacao, notas.numero
-    //           FROM nfe 
-    //           LEFT JOIN notas ON notas.id_nfe = nfe.id
-    //           WHERE nfe.id = '{$gId}'";
-
-    //     $nfeBD=dbQuery($sql)[0];
-        
-    //     $dadosEmpresa=$nf->obtemDadosEmpresa(obtemIdEmpresa($nfeBD["id_pessoas_proprietario"]));
-    //     $nfe = new gNfe('nfe',true,'4.00');
-    //     $nfe->id_empresa = obtemIdEmpresa($nfeBD["id_pessoas_proprietario"]);
-    //     $nfe->defineCabecalho($dadosEmpresa);
-    //     $nfe->config();
-    //     $cancelamento=$nfe->cancela($nfeBD["chave"], $nfeBD["protocolo"], gCleanField($_REQUEST["motivo"]));
-
-    //     if ($cancelamento)
-    //     {   
-    //         $mtz=array();
-    //         $mtz["cancelada"]=1;
-    //         $mtz["data_movimento"]=date('Y-m-d H:i:s');
-    //         dbUpdate("notas", $mtz, intval($_REQUEST["gIdNota"]));  
-
-    //         $mtz=array();
-    //         $mtz["cancelada"]=1;
-    //         $mtz["situacao"]="Cancelada";
-    //         $mtz["data_cancelamento"]=date("Y-m-d H:i:s");
-    //         $mtz["id_pessoas_cancelou"]=$usrId;
-    //         dbUpdate("nfe", $mtz, intval($gId));
-    //         if ($nfeBD["id_programacao"]<>0)
-    //         {
-    //             // Persistir em programacao_atividades.
-    //             $mtz=array();
-    //             $mtz["id_programacao"]=$nfeBD["id_programacao"];
-    //             $mtz["id_pessoas"]=$usrId;
-    //             $mtz["id_tipos_atividades"]=20;
-    //             $mtz["id_itens_skus"]=0;
-    //             $mtz["cancelada"]=0;
-    //             $mtz["data"]=date("Y-m-d H:i:s");
-    //             $mtz["quantidade"]=0;
-    //             $mtz["descricao"]="Cancelou NFE emitida: ".$nfeBD["numero"];
-    //             dbInsert("programacao_atividades", $mtz);
-    //         }
-    //         $htm=$o->msgSuccess("NF-e cancelada com sucesso");
-
-    //         $sql = "SELECT
-    //                 nfe.xml_cancelamento
-    //             FROM nfe
-    //             WHERE id = " . $nfeBD['id'];
-    //         $rs = dbFastQuery($sql)[0]['xml_cancelamento'];
-
-    //         $dadosNf = [
-    //             "chave" => $nfeBD['chave'],
-    //             "xml" => $rs,
-	// 			"idPessoasProprietario" => 1
-    //         ];
-    //         dispararGatilho("importarCancNFe", $dadosNf);
-
-    //         echo json_encode($htm);
-    //         exit;
-    //     } else
-    //     {   
-    //         if (strstr($nfe->erros[0], "573 - Rejeicao: Duplicidade de Evento"))
-    //         {
-
-    //             /* Neste caso a nota já está cancelada no sefaz então posso atualizar no nosso sistema */
-
-    //             /* Cancelar na tabela nfe e na tabela nota */
-    //             $mtz=array();
-    //             $mtz["cancelada"]=1;
-    //             $mtz["data_movimento"]=date('Y-m-d H:i:s');
-    //             dbUpdate("notas", $mtz, intval($_REQUEST["gIdNota"]));
-
-    //             $mtz=array();
-    //             $mtz["cancelada"]=1;
-    //             $mtz["situacao"]="Cancelada";
-    //             dbUpdate("nfe", $mtz, intval($gId));
-
-    //             $htm="A NF-e já se encontra cancelada";
-    //             $htm=$o->msgSuccess($htm);
-    //             echo json_encode($htm);
-    //             exit;
-    //         } else
-    //         {
-    //             $htm="A NF-e não pode ser cancelada pois aconteceram os seguintes erros: ";
-    //             $htm.=$o->ul($nfe->erros);
-    //             $htm=$o->msgDanger($htm);
-    //             $htm.=$o->button("{icon: arrow-left; caption: Tentar novamente; hint: Tentar novamente; style: info; size: normal;", "javascript: btnCancelarNFE(".$gId.", ".$_REQUEST["gIdNota"].")");
-    //             echo json_encode($htm);
-    //             exit;
-    //         }
-    //     }
-    //     exit;
-    // break;
-
-    // case NFE_CCE:
-    //     $sql="SELECT id,datahora,texto FROM nfe_carta_correcao WHERE id_nfe=".(int) $gId." ORDER BY id DESC LIMIT 1";
-    //     $rs=dbQuery($sql)[0];
-    //     if($rs){
-    //         $html.=$o->tableBegin('big',true);
-    //         $html.=$o->tableRow(array("Imprimir","Correção","Data"),'header');
-    //         $mtz = array();
-    //         $mtz[]="".$o->button("{icon: print; hint: Imprimir CCe; style: success; size: small;", "javascript: btnImprimirCCe(".$gId.")");
-    //         $mtz[]="<-".$rs['texto'];
-    //         $mtz[]="".gDateTime($rs['datahora']);
-    //         $html.=$o->tableRow($mtz,'detail');
-    //         $html.=$o->tableEnd();
-    //     }
-    //     $frm= new gForm("{columns: 12; id:formCCe; onClickSubmit: btnConfirmaCCe;}");
-    //     $frm->row(
-    //         $frm->add("{type: textarea; name: cce_correcao; fieldLabel: Carta de correção;}")
-    //     );
-    //     $frm->add("{type: hidden; name: cancela_gPage; value:".NFE_CCE_CONFIRMAR.";}");
-    //     $frm->add("{type: hidden; name: cancela_gId; value:".$gId.";}");
-    //     $frm->add("{type: hidden; name: cancela_gIdNota; value:".$_REQUEST["gIdNota"].";}");
-    //     $frm->addButton("{icon: arrow-left; title: Voltar; style: success; size: normal;", "javascript: btnOpcoesNFE(".$gId.", ".$_REQUEST["gIdNota"].")");
-    //     $html.=$frm->render($o);
-    // break;
-
-    // case NFE_CCE_CONFIRMAR:
-    //     $sql="SELECT nfe.id, nfe.protocolo, nfe.chave, notas.id_pessoas_proprietario
-    //           FROM nfe 
-    //           LEFT JOIN notas ON notas.id_nfe = nfe.id
-    //           WHERE nfe.id = '{$gId}'";
-    //     $nfeBD=dbQuery($sql)[0];
-
-
-    //     $dadosEmpresa=$nf->obtemDadosEmpresa(obtemIdEmpresa($nfeBD["id_pessoas_proprietario"]));
-    //     $nfe = new gNfe('nfe',true,'4.00');
-    //     $nfe->id_empresa = obtemIdEmpresa($nfeBD["id_pessoas_proprietario"]);
-    //     $nfe->defineCabecalho($dadosEmpresa);
-    //     $nfe->config();
-    //     $cce=$nfe->cartaCorrecao($nfeBD["id"], gCleanField($_REQUEST["cce_correcao"]));
-
-    //     if($cce['true']){
-           
-    //         $htm="Evento registrado e vinculado a NF-e";
-    //         $htm =$o->msgSuccess($htm);
-    //         $htm.=$o->button("{icon: print; caption:Imprimir CCe ; hint: Imprimir CCe; style: success; size: small;", "javascript: btnImprimirCCe(".$gId.")");
-    //         echo json_encode($htm);
-    //         exit;
-    //     }
-    //     else{
-    //         $htm="A CC-e não pode ser enviada pois aconteceram os seguintes erros: ";
-    //         $htm.=$o->ul($cce);
-    //         $htm=$o->msgDanger($htm);
-    //         $htm.=$o->button("{icon: arrow-left; caption: Tentar novamente; hint: Tentar novamente; style: info; size: normal;", "javascript: btnCCe(".$gId.", ".$_REQUEST["gIdNota"].")");
-    //         echo json_encode($htm);
-    //         exit;
-    //     }
-
-    // break;
-
-    // case NFE_CCE_IMPRIMIR:
-    //     $nfe = new gNfe();
-    //     $sql="SELECT nfe_carta_correcao.*, notas.id_pessoas_proprietario 
-    //          FROM nfe_carta_correcao 
-    //          LEFT JOIN nfe ON nfe.id=nfe_carta_correcao.id_nfe
-    //          LEFT JOIN notas ON notas.id_nfe = nfe.id
-    //          WHERE nfe_carta_correcao.id_nfe={$gId} AND nfe_carta_correcao.confirmado=1";
-    //     $existeNfe=dbQuery($sql);
-    //     if (count($existeNfe)>0)
-    //     {   
-    //         $existeNfe=$existeNfe[0];
-    //         $dadosEmpresa=$nf->obtemDadosEmpresa(obtemIdEmpresa($existeNfe["id_pessoas_proprietario"]));
-    //         $nfe->cce(intval($gId),$dadosEmpresa);
-    //     } else
-    //     {
-    //         $msg="Não foi possível imprimir a CCe pois aconteceram os seguintes erros: <br>";
-    //         $msg.=$o->ul(["CCe-e não encontrada"]);
-    //         $html.=$o->msgDanger($msg);
-    //     }
-    // break;
 
     case UMAS:
         include_once $gPath . "res/_classes/padrao/operacao.php";
@@ -3406,7 +2868,7 @@ switch ($gPage) {
         }
 
         $html .= $o->tableBegin("big", true, true);
-        $mtz = array();
+        $mtz = [];
         $mtz[] = "<-NF entrada";
         $mtz[] = "<-Código de barras";
         $mtz[] = "<-Código item";
@@ -3416,12 +2878,12 @@ switch ($gPage) {
         $html .= $o->tableRow($mtz, "header");
         foreach ($rs as $row) {
             $descricaoItem=$row["codigo_item"]." • ".$row["nome_item"] . " • " . gFloat($row["quantidade"]);
-            $descricaoItem="<b>{$descricaoItem}</b>";
-            $mtz=array();
-            $mtz[]="~{$colspan}<-{$descricaoItem}";
+            $descricaoItem=sprintf('<b>%s</b>', $descricaoItem);
+            $mtz=[];
+            $mtz[]=sprintf('~%d<-%s', $colspan, $descricaoItem);
             $html.=$o->tableRow($mtz, "detail");
 
-            $where=array();
+            $where=[];
             $where[]="(UI.bloqueada='0' AND UI.cancelada='0' AND UI.avariada='0' AND UI.reservada='1' and UI.id_tipos_operacao=0)";
             $where[]="(UI.id_programacao=".$row["id_programacao"].")";
             // Pegar a quantidade exata que deu saída
@@ -3446,8 +2908,8 @@ switch ($gPage) {
             ";
             $rsUMAs=dbQuery($sql);
             if (!$rsUMAs) {
-                $mtz=array();
-                $mtz[]="~{$colspan}<> <b>Nenhuma UMA encontrada.</b>";
+                $mtz=[];
+                $mtz[]=sprintf('~%d<> <b>Nenhuma UMA encontrada.</b>', $colspan);
                 $html.=$o->tableRow($mtz, "detail");
             } else
             {
@@ -3455,7 +2917,7 @@ switch ($gPage) {
                 foreach ($rsUMAs as $rowUMA)
                 {
                     $totalUMAquantidade+=abs($rowUMA["quantidade"]);
-                    $mtz=array();
+                    $mtz=[];
                     $mtz[]="<-".linkParaNFEntrada($rowUMA["nf_numero"]);
                     $mtz[]="<-".linkParaUma($rowUMA["codigo_barras"]);
                     $mtz[]="<-".linkParaCodigoItem($rowUMA["codigo"]);
@@ -3465,7 +2927,7 @@ switch ($gPage) {
                 }
 
                 // Total
-                $mtz=array();
+                $mtz=[];
                 $mtz[]="<-Sub-total";
                 $mtz[]="<-UMAs: ".count($rsUMAs);
                 $mtz[]="--";
@@ -3475,51 +2937,49 @@ switch ($gPage) {
 
             }
         }
+
         break;
+
     case UMAS_ASSOCIAR:
         include_once $gPath . "res/_classes/padrao/operacao.php";
-        $class=new Operacao();  
-        $sql="SELECT 
-                U.id, U.ativo, U.id_notas  
+        $class=new Operacao();
+        $sql="SELECT
+                U.id, U.ativo, U.id_notas
               FROM umas U
               WHERE U.id='".intval($_REQUEST["id_umas"])."'
         ";
         $uma=dbQuery($sql);
         /* Validar passo a passo para facilitar a vida do usuário */
         /* Validar se UMA está ativa */
-        if ($uma[0]["ativo"]==0)
-        {
+        if ($uma[0]["ativo"] == 0) {
             $nf->defineErros("UMA encontra-se inativa.");
         }
-        
+
         /* Validar código da nota */
-        if ($uma[0]["id_notas"]<>0)
-        {
-            if ($uma[0]["id_notas"]==$gId)
-            {
+        if ($uma[0]["id_notas"] != 0) {
+            if ($uma[0]["id_notas"]==$gId) {
                 $nf->defineErros("UMA já está vinculada a esta nota fiscal.");
-            } else
-            {
+            } else {
                 $nf->defineErros("UMA já está vinculada a uma nota fiscal.");
             }
         }
 
         /* Validar se UMA tem saldo */
-        $where="U.id = '".$uma[0]["id"]."'";
-        $umaTemSaldo=$class->obtemUMAsComSaldo($where);
-        if (count($umaTemSaldo)==0)
-        {
+        $where = "U.id = '".$uma[0]["id"]."'";
+        $umaTemSaldo = $class->obtemUMAsComSaldo($where);
+        if ($umaTemSaldo0) {
             $nf->defineErros("UMA não possui saldo");
         }
+
         /* Verificar se existem itens compatíveis */
-        $nItens=$nf->obtemRegistrosNotasItens($gId);
-        $inSkus=array();
+        $nItens = $nf->obtemRegistrosNotasItens($gId);
+        $inSkus = [];
         foreach ($nItens as $nItem) {
             $inSkus[] = $nItem["id_itens_skus"];
         }
 
         $inSkus="(UI.id_itens_skus in (".implode(",", $inSkus).") )";
-        $where=array();
+        $where=[];
         $where[]="(U.id = '".$uma[0]["id"]."')";
         $where[]=$inSkus;
         $where[]="(U.id_notas='0' OR U.id_notas IS NULL)";
@@ -3535,23 +2995,22 @@ switch ($gPage) {
             $html .= $o->button("{icon: arrow-left; caption: Voltar; hint: Voltar; style: default; size: normal; href: ".$o->page."&gPage=".UMAS."&gId=".$gId);
             break;
         }
+
         /* se passou nas validações... */
         foreach ($umaComSaldo as $r) {
             foreach ($nItens as $nItem) {
                 if ($nItem["id_itens_skus"]==$r["id_itens_skus"]) {
                     /* Existe esse o item na nota */
-                    $where=array();
-                    $where[]="(id_umas='".$r["id"]."')";
-                    $where[]="(id_itens_skus='".$nItem["id_itens_skus"]."')";
-                    $where[]="(cancelada='0')";
-                    $where=implode(" AND ", $where);
-                    $sql="select * from umas_itens where {$where}";
+                    $where = [];
+                    $where[] = "(id_umas='".$r["id"]."')";
+                    $where[] = "(id_itens_skus='".$nItem["id_itens_skus"]."')";
+                    $where[] = "(cancelada='0')";
+                    $where = implode(" AND ", $where);
+                    $sql = 'SELECT * FROM umas_itens WHERE ' . $where;
                     $umaItens=dbQuery($sql);
-                    if (count($umaItens)>0)
-                    {
-                        foreach ($umaItens as $ui)
-                        {
-                            $mtz=array();
+                    if ($umaItens) {
+                        foreach ($umaItens as $ui) {
+                            $mtz=[];
                             $mtz["valor"]=$nItem["valor"];
                             $mtz["id_notas_itens"]=$nItem["id"];
                             dbUpdate("umas_itens", $mtz, $ui["id"]);
@@ -3564,22 +3023,23 @@ switch ($gPage) {
                 }
             }
 
-            $inSku=str_replace("UI.", "", $inSkus);
-            $inSku=str_replace("id_itens_skus", "id", $inSku);
-            $idItem=dbQuery("SELECT id_itens FROM itens_skus WHERE {$inSku}");
+            $inSku = str_replace("UI.", "", $inSkus);
+            $inSku = str_replace("id_itens_skus", "id", $inSku);
+            $idItem = dbQuery('SELECT id_itens FROM itens_skus WHERE ' . $inSku);
 
             /* definir nova posição */
-            $mtz=array();
+            $mtz = [];
             $mtz["id_notas"]=$nItens[0]["id_notas"];
             $mtz["id_posicoes_posicionar"]=$class->indicaPosicao($idItem[0]["id_itens"]);
             dbUpdate("umas", $mtz, $r["id"]);
         }
+
         redirect($o->page."&gPage=".UMAS."&gId=".$gId);
         break;
 
 
     case INICIO_MAQUINA:
-        // Javascript da página 
+        // Javascript da página
         $js="
             function btnExcluirNotaMaquina (id_notas) {
                 hideWait();
@@ -3599,7 +3059,7 @@ switch ($gPage) {
             }
         ";
         $o->addJavascript($js);
-        $where = array();
+        $where = [];
         $where[] = "(N.cancelada=0)";
         $where[] = "(N.id_armazens=". $_SESSION["armazemAtualId"] . ")";
         if (isset($_REQUEST["gFilter"]) && intval($_REQUEST["gFilter"])==1) {
@@ -3623,7 +3083,6 @@ switch ($gPage) {
                 $cadastro_de=date('Y-m-d 00:00:00', strtotime(gDBDate($_REQUEST["cadastro_de"])));
                 $cadastro_ate=date('Y-m-d 23:59:59', strtotime(gDBDate($_REQUEST["cadastro_ate"])));
                 $where[] = "(N.data_criou>='{$cadastro_de}' AND N.data_criou<='{$cadastro_ate}')";
-
             }
 
             if (!$_REQUEST["cadastro_de"] && $_REQUEST["cadastro_ate"]) {
@@ -3638,22 +3097,20 @@ switch ($gPage) {
         }
 
         $where=implode(" AND ", $where);
-        $sql="SELECT
-                N.id,
-                N.numero, AD.descricao armazem_destinatario,
-                N.data_emissao, N.data_movimento, N.data_criou, P.apelido,
-                NM.id_notas,
-                CF.descricao_resumida descricao_cfops
-              FROM notas_maquina NM
-              LEFT JOIN notas N ON N.id= NM.id_notas
-              LEFT JOIN armazens AD ON AD.id = NM.id_armazens_destinatario
-              LEFT JOIN pessoas P ON P.id = N.id_pessoas_criou
-              LEFT JOIN cfops CF ON CF.id = N.id_cfops
-              WHERE {$where}
-              ORDER BY N.data_criou DESC
-              ";
-        $rs=dbQuery($sql);
-
+        $sql = "SELECT
+                    N.id,
+                    N.numero, AD.descricao armazem_destinatario,
+                    N.data_emissao, N.data_movimento, N.data_criou, P.apelido,
+                    NM.id_notas,
+                    CF.descricao_resumida descricao_cfops
+                FROM notas_maquina NM
+                LEFT JOIN notas N ON N.id= NM.id_notas
+                LEFT JOIN armazens AD ON AD.id = NM.id_armazens_destinatario
+                LEFT JOIN pessoas P ON P.id = N.id_pessoas_criou
+                LEFT JOIN cfops CF ON CF.id = N.id_cfops
+                WHERE {$where}
+                ORDER BY N.data_criou DESC";
+        $rs = dbQuery($sql);
 
         $html = $o->msgTitle("Notas fiscais de equipamentos", $o->page."&gPage=".INICIO_MAQUINA);
         $html .= $o->button('{title:Nova; icon:plus; style:info; href:'.$o->page."&gPage=".DADOS_MAQUINA.';}');
@@ -3669,7 +3126,7 @@ switch ($gPage) {
 
         $html.="<hr/>";
         $html.=$o->tableBegin("big", true, true);
-        $mtz=array();
+        $mtz=[];
         $mtz[]="<-Opções";
         $mtz[]="->Id";
         $mtz[]="<-Número";
@@ -3679,8 +3136,7 @@ switch ($gPage) {
         $mtz[]="<>Data de movimento";
         $mtz[]="<>Cadastro";
         $html.=$o->tableRow($mtz, "header");
-        foreach ($rs as $row)
-        {
+        foreach ($rs as $row) {
             $inf_cadastro="";
             $inf_cadastro.=gDateTime($row["data_criou"]);
             $inf_cadastro.="<br/>".$row["apelido"];
@@ -3688,21 +3144,19 @@ switch ($gPage) {
             $opt=$o->button('{icon:pencil; style:info; size:small; href:'.$o->page."&gPage=".DADOS_MAQUINA.'&gId='.$row["id_notas"].';}');
             $opt.=$o->button('{icon:trash; style:danger; size:small; onClick:btnExcluirNotaMaquina('.$row["id_notas"].');}');
 
-            $sql="SELECT 
-                    N.id_nfe 
-                  FROM nfe NE 
-                  LEFT JOIN notas N ON NE.id = N.id_nfe
-                  WHERE (N.id=".$row["id"].") 
-                  AND (NE.situacao='Aprovada')
-                  AND (N.tipo='M')
-                  ";
-            $existe_nfe=dbQuery($sql);
-            if (count($existe_nfe)>0)
-            {
+            $sql = "SELECT
+                        N.id_nfe
+                    FROM nfe NE
+                    LEFT JOIN notas N ON NE.id = N.id_nfe
+                    WHERE (N.id=".$row["id"].")
+                    AND (NE.situacao='Aprovada')
+                    AND (N.tipo='M')";
+            $existe_nfe = dbQuery($sql);
+            if ($existe_nfe) {
                 $opt.=$o->button("{target:_blank; icon: print;  hint: Imprimir danfe; style: success; size: small; href: ". $o->page ."&gPage=".NFE_DANFE_EMITIR."&gId=". $existe_nfe[0]["id_nfe"] ."}");
             }
 
-            $mtz=array();
+            $mtz=[];
             $mtz[]="<-".$opt;
             $mtz[]="->".$row["id"];
             $mtz[]="<-".$row["numero"];
@@ -3713,8 +3167,10 @@ switch ($gPage) {
             $mtz[]="<>".$inf_cadastro;
             $html.=$o->tableRow($mtz, "detail");
         }
+
         $html.=$o->tableEnd();
         break;
+
     case INICIO_MAQUINA_PESQUISAR:
         $combo_armazens="SELECT id, descricao FROM armazens WHERE id <>".$_SESSION["armazemAtualId"];
         $frm = new gForm('{columns:2;}');
@@ -3728,41 +3184,40 @@ switch ($gPage) {
         $frm->add('{type:hidden; name:gPage; value:'.INICIO_MAQUINA.';}');
         $html.=$frm->render($o);
         break;
+
     case DADOS_MAQUINA:
         $html=$o->msgTitle("Notas fiscais de equipamentos", $o->page."&gPage=".INICIO_MAQUINA);
         $emitir_nota=isset($_REQUEST["gEmitirNota"]) ? intval($_REQUEST["gEmitirNota"]) : 0;
-        $sql="SELECT 
-                NE.id id_nfe, NE.situacao situacao_nfe, NE.chave, NE.recibo, NE.data_recibo, NE.mensagens
-              FROM notas N
-              LEFT JOIN nfe NE ON NE.id = N.id_nfe
-              WHERE (N.id=".$gId.")
-              AND (NE.id IS NOT NULL)
-              ";
-        $confere_nfe=dbQuery($sql);
-        if ($emitir_nota && $confere_nfe[0]["situacao_nfe"]<>'Aprovada')
-        {
+        $sql = "SELECT
+                    NE.id id_nfe, NE.situacao situacao_nfe, NE.chave, NE.recibo, NE.data_recibo, NE.mensagens
+                FROM notas N
+                LEFT JOIN nfe NE ON NE.id = N.id_nfe
+                WHERE (N.id=".$gId.")
+                AND (NE.id IS NOT NULL)";
+        $confere_nfe = dbQuery($sql);
+        if ($emitir_nota && $confere_nfe[0]["situacao_nfe"] != 'Aprovada') {
            $o->addJavascript("$('#btnSalvarNFE').click()");
         }
 
         // Javascript da página.
-        $js="
+        $js = "
             document.getElementById('gSubmitButton').setAttribute('style', 'display:none');
             document.getElementById('btnNovaNF').setAttribute('style', 'display:none');
             function btnSalvarNFE(self)
-            {   
+            {
                 $('#emitirNFe').modal('show');
                 document.getElementById('modalEmitirNfeContent').innerHTML='Enviando NFE...';
                 // Tratando campos
                 var id_armazens=document.getElementById('id_armazens').value;
                 var id_maquinas=document.getElementById('id_maquinas').value;
                 var gTipoOperacao=2;
-            
+
                 // Montando objeto para enviar dados
                 var data={};
                 data.id_maquinas=id_maquinas;
                 data.id_armazens=id_armazens;
                 data.gTipoOperacao=gTipoOperacao;
-                
+
                 /*
                 data.id_pessoas_transportadora=id_pessoas_transportadora;
                 data.idDestino=idDestino;
@@ -3783,7 +3238,7 @@ switch ($gPage) {
                 var RNTC=document.getElementById('RNTC').value;
                 var placa=document.getElementById('placa').value;
                 var placaUF=document.getElementById('placaUF').value;
-                */ 
+                */
 
                 var id_notas_atual=$('#id_nota_atual').val();
                 var liberar_emitir_nota=parseInt('".$emitir_nota."');
@@ -3798,7 +3253,7 @@ switch ($gPage) {
                     url:rota,
                     method:'POST',
                     data:data,
-                    success: function (resp) 
+                    success: function (resp)
                     {
                         var obj=JSON.parse(resp);
                         var id_notas=obj.id_notas;
@@ -3847,16 +3302,16 @@ switch ($gPage) {
             }
             ";
         $o->addJavascript($js);
-        
-        $sql="SELECT 
-                NM.*, 
-                N.id_cfops, 
-                N.IE, 
-                N.modFrete, 
-                N.finNFe, 
-                N.idDestino, 
-                N.placa, 
-                N.placaUF, 
+
+        $sql="SELECT
+                NM.*,
+                N.id_cfops,
+                N.IE,
+                N.modFrete,
+                N.finNFe,
+                N.idDestino,
+                N.placa,
+                N.placaUF,
                 N.RNTC,
                 N.id_nfe_informacoes,
                 N.InfCpl,
@@ -3866,22 +3321,20 @@ switch ($gPage) {
               WHERE N.id=".$gId."
               ";
         $nota_maquina=(dbQuery($sql)[0]);
-        if ($gId>0)
-        {
-            $nota=$nf->obtemRegistro($gId);
+        if ($gId > 0) {
+            $nota = $nf->obtemRegistro($gId);
             $html .=$nf->obtemCabecalho($nota);
         }
 
         // Informações da operação
-        if (count($confere_nfe)>0)
-        {
+        if ($confere_nfe) {
             $confere_nfe=$confere_nfe[0];
 
             $html.=$o->br();
             $html.=$o->label("Informações da operação");
             $html.=$o->br(2);
             $html.=$o->tableBegin("big", true, true);
-            $mtz=array();
+            $mtz=[];
             $mtz[]="<-Situação";
             $mtz[]="<-Chave";
             $mtz[]="<-Data do recibo";
@@ -3889,7 +3342,7 @@ switch ($gPage) {
             $mtz[]="<-Observações";
             $html.=$o->tableRow($mtz, "header");
 
-            $mtz=array();
+            $mtz=[];
             $mtz[]="<-".$confere_nfe["situacao_nfe"];
             $mtz[]="<-".$confere_nfe["chave"];
             $mtz[]="<-".gDateTime($confere_nfe["data_recibo"]);
@@ -3904,27 +3357,25 @@ switch ($gPage) {
         $frm->row(
             $frm->add('{allowBlank:false; type:combo; name:id_armazens; fieldLabel:Unidade destino; items:'.$combo_armazens.'; value:'.$nota_maquina['id_armazens_destinatario'].';}'),
             $frm->add('{allowBlank:false; type:combo; name:id_maquinas; fieldLabel:Equipamento; items:'.$sp["combo_maquinas"].'; value:'.$nota_maquina['id_maquinas'].';}')
-        );  
+        );
 
         $frm->add('{type:hidden; name:id_nota_atual; value:;}');
         $frm->add('{type:hidden; name:gPage; value:'.DADOS_MAQUINA_SALVAR.';}');
         $html.=$frm->render($o);
-        
 
-        $sql="SELECT
-            notas.id as idNota, nfe.id as idNfe, nfe.situacao
-        FROM notas
-        INNER JOIN nfe ON nfe.id = notas.id_nfe
-        WHERE notas.id = ".$gId;
-        $confere_nfe=dbQuery($sql);
-        
+        $sql = "SELECT
+                    notas.id as idNota, nfe.id as idNfe, nfe.situacao
+                FROM notas
+                INNER JOIN nfe ON nfe.id = notas.id_nfe
+                WHERE notas.id = ".$gId;
+        $confere_nfe = dbQuery($sql);
+
         // Emitir NFe
-        $html.=$o->button("{id:btnSalvarNFE; name:btnEmitirNfe; icon: print; title: Emitir Nf-e; hint: Emitir NF-e; style: info; size: small;} onClick:btnSalvarNFE(this);");
-        $html.=$o->button("{id:btnNovaNF; icon: plus; title: Nova Nfe; hint: Emitir outra NF-e; style: info; size: small; href:".$o->page."&gPage=".DADOS_MAQUINA.";}");
+        $html .= $o->button("{id:btnSalvarNFE; name:btnEmitirNfe; icon: print; title: Emitir Nf-e; hint: Emitir NF-e; style: info; size: small;} onClick:btnSalvarNFE(this);");
+        $html .= $o->button("{id:btnNovaNF; icon: plus; title: Nova Nfe; hint: Emitir outra NF-e; style: info; size: small; href:".$o->page."&gPage=".DADOS_MAQUINA.";}");
 
-        // Caso a nota esteja aprovada ou cancelada dar opção de 
-        if (count($confere_nfe)>0 && $confere_nfe[0]["situacao"]<>'')
-        {
+        // Caso a nota esteja aprovada ou cancelada dar opção de
+        if ($confere_nfe && $confere_nfe[0]["situacao"] != '') {
             $o->addJavascript("document.getElementById('btnNovaNF').removeAttribute('style')");
         }
 
@@ -3935,47 +3386,47 @@ switch ($gPage) {
             $html .= $o->modal("{title: Opções da NF-e; id: opcoesNFE; cancelCaption: Fechar; confirm: false; name: opcoesNFE; size:large; }", $conteudoModal);
             $html .= $o->button("{icon: cog; title: Opções da NF-e; hint: Opções; style: info; size: small;}", "btnOpcoesNFE('".$confere_nfe["idNfe"]."', '".$confere_nfe["idNota"]."')");
         }
+
         $conteudoModal= '<div id="modalEmitirNfeContent">Carregando dados...</div>';
         $html.=$o->modal("{title: Emitir NF-e; id: emitirNFE; cancelCaption: Fechar; confirm: false; name: emitirNFe; size:large; }", $conteudoModal);
         break;
+
     case DADOS_MAQUINA_SALVAR:
         // Verificar se existe uma NFE aprovada.
         //$sql="SELECT * FROM "
-        $sql="SELECT 
-                M.* 
-              FROM maquina M
-              LEFT JOIN unidades U ON M.id_unidades = U.id
-              WHERE M.ativa=1 AND M.id=".$_REQUEST["id_maquinas"]."
-            ";
-        $maquina=(dbQuery($sql)[0]);
+        $sql = "SELECT
+                    M.*
+                FROM maquina M
+                LEFT JOIN unidades U ON M.id_unidades = U.id
+                WHERE M.ativa = 1 AND M.id = " . $_REQUEST["id_maquinas"];
+        $maquina = dbQuery($sql)[0];
         // Gerando notas_maquina.
-        $mtz=array();
-        $mtz["id_armazens_destinatario"]=intval($_REQUEST["id_armazens"]);
-        $mtz["id_pessoas_transportadora"]=230;
-        $mtz["id_maquinas"]=intval($_REQUEST["id_maquinas"]);
-        if ($gId>0)
-        {
-            $sql="SELECT id FROM notas_maquina WHERE id_notas=".$gId; 
-            $nota_maquina=(dbQuery($sql)[0]);
+        $mtz = [];
+        $mtz["id_armazens_destinatario"] = intval($_REQUEST["id_armazens"]);
+        $mtz["id_pessoas_transportadora"] = 230;
+        $mtz["id_maquinas"] = intval($_REQUEST["id_maquinas"]);
+        if ($gId > 0) {
+            $sql = "SELECT id FROM notas_maquina WHERE id_notas = " . $gId;
+            $nota_maquina = dbQuery($sql)[0];
             dbUpdate("notas_maquina", $mtz, $nota_maquina["id"]);
-        } else
-        {
-            $mtz["data_cadastro"]=date('Y-m-d H:i:s');
-            $mtz["id_pessoas_cadastrou"]=$usrId;
-            $mtz["id_notas"]=0;
-            $id_notas_maquina=dbInsert("notas_maquina", $mtz, true);
+        } else {
+            $mtz["data_cadastro"] = date('Y-m-d H:i:s');
+            $mtz["id_pessoas_cadastrou"] = $usrId;
+            $mtz["id_notas"] = 0;
+            $id_notas_maquina = dbInsert("notas_maquina", $mtz, true);
         }
-        $idDestino=1;
-        $IE=1;
-        $finNFe=1;
-        $modFrete=0;
-        $RNTC='';
-        $placa='';
-        $placaUF='';
-        $id_pessoas_transportadora=230;
+
+        $idDestino = 1;
+        $IE = 1;
+        $finNFe = 1;
+        $modFrete = 0;
+        $RNTC = '';
+        $placa = '';
+        $placaUF = '';
+        $id_pessoas_transportadora = 230;
 
         // Gerando notas.
-        $mtz=array();
+        $mtz=[];
         $mtz["tipo"]='M';
         $mtz["confirmada"]=0;
         $mtz["cancelada"]=0;
@@ -3991,7 +3442,6 @@ switch ($gPage) {
         $mtz["id_nfe"]=0;
         $mtz["id_pessoas_criou"]=$usrId;
         $mtz["idDestino"]=$idDestino;
-        //$mtz["IE"]=$IE;
         $mtz["finNFe"]=$finNFe;
         $mtz["modFrete"]=$modFrete;
         $mtz["RNTC"]=$RNTC;
@@ -4000,24 +3450,22 @@ switch ($gPage) {
         $mtz["id_nfe_informacoes"]=16;
         $mtz["infAdFisco"]='';
         $mtz["InfCpl"]=gCleanField($maquina["InfCpl"]);
-        if ($gId>0)
-        {
+        if ($gId > 0) {
             dbUpdate("notas", $mtz, $gId);
             $id_notas=$gId;
-        } else
-        {
+        } else {
             $id_notas=dbInsert("notas", $mtz, true);
         }
 
         // Atualizando notas_maquina.
-        if ($gId==0)
-        {
-            $mtz=array();
+        if ($gId == 0) {
+            $mtz=[];
             $mtz["id_notas"]=$id_notas;
             dbUpdate("notas_maquina", $mtz, $id_notas_maquina);
         }
+
         // Salvar notas_itens
-        $mtz=array();
+        $mtz=[];
         $mtz["id_notas"]=$id_notas;
         $mtz["id_notas_associada"]=0;
         $mtz["id_itens_skus"]=0;
@@ -4038,29 +3486,28 @@ switch ($gPage) {
         $mtz["ipi"]=0;
         $sql="SELECT id FROM notas_itens WHERE id_notas=".$id_notas." AND id_maquinas=".$maquina["id"];
         $notas_itens=(dbQuery($sql));
-        if (count($notas_itens)>0)
-        {
+        if ($notas_itens) {
             $id_notas_itens=$notas_itens[0]["id"];
             dbUpdate("notas_itens", $mtz, $id_notas_itens);
-        } else
-        {
+        } else {
             $id_notas_itens=dbInsert("notas_itens", $mtz, true);
         }
-        
+
         // CST 40
-        $sql="SELECT id FROM notas_itens_icms WHERE id_notas_itens=".$id_notas_itens;
+        $sql = "SELECT id FROM notas_itens_icms WHERE id_notas_itens=".$id_notas_itens;
         $existe_icms=dbQuery($sql);
-        if (count($existe_icms)==0)
+        if (!$existe_icms)
         {
-            $mtz=array();
+            $mtz=[];
             $mtz["id_notas_itens"]=$id_notas_itens;
             $mtz["id_imp_icms_cst"]=5;
             $mtz["id_imp_icms_origem"]=1;
             dbInsert("notas_itens_icms", $mtz);
         }
+
         // Criar NFE.
         $totais=$nf->totaisNota($id_notas);
-        $mtz=array();
+        $mtz=[];
         $mtz["qVol"]=$totais["quantidade"];
         $mtz["pesoB"]=$totais["pesoB"];
         $mtz["pesoL"]=$totais["pesoL"];
@@ -4068,550 +3515,48 @@ switch ($gPage) {
         dbUpdate("notas", $mtz, $id_notas);
         if (isset($_REQUEST["gEmitirNota"]) && intval($_REQUEST["gEmitirNota"])==1)
         {
-            $return=array();
+            $return=[];
             $return["gEmitirNota"]=0;
             $return["id_notas"]=$id_notas;
         } else
         {
-            $return=array();
+            $return=[];
             $return["gEmitirNota"]=1;
             $return["id_notas"]=$id_notas;
         }
+
         echo json_encode($return);
         break;
     case DADOS_MAQUINA_EXCLUIR:
-        $sql="SELECT
-                ne.id id_nfe, n.id id_nota, ne.cancelada, ne.situacao
-              FROM notas n
-              LEFT JOIN nfe ne ON ne.id=n.id_nfe
-              WHERE
-              n.id=".$gId."
-            ";
+        $sql = "SELECT
+                    ne.id id_nfe, n.id id_nota, ne.cancelada, ne.situacao
+                FROM notas n
+                LEFT JOIN nfe ne ON ne.id=n.id_nfe
+                WHERE n.id = " . $gId;
 
-        $confere_nfe=(dbQuery($sql)[0]);
-        if (intval($confere_nfe["cancelada"])==0
+        $confere_nfe = dbQuery($sql)[0];
+        if (
+            intval($confere_nfe["cancelada"]) == 0
             && $confere_nfe["situacao"]=='Aprovada'
-            )
-        {
-            $html.=$o->msgDanger("Falhas de validação: ".$o->ul(array("A nota não pode ser cancelada pois a NFe já foi emitida. Por favor cancele a NFe e tente novamente.")));
-        } else
-        {
-            $mtz=array();
+        ) {
+            $html.=$o->msgDanger("Falhas de validação: ".$o->ul(["A nota não pode ser cancelada pois a NFe já foi emitida. Por favor cancele a NFe e tente novamente."]));
+        } else {
+            $mtz=[];
             $mtz["cancelada"]=1;
             $mtz["data_cancelamento"]=date('Y-m-d H:i:s');
             dbUpdate("notas", $mtz, $confere_nfe["id_nota"]);
             if ($confere_nfe["id_nfe"]>0)
             {
-                $mtz=array();
+                $mtz=[];
                 $mtz["cancelada"]=1;
                 $mtz["data_cancelamento"]=date('Y-m-d H:i:s');
                 $mtz["id_pessoas_cancelou"]=$usrId;
             }
+
             redirect($o->page."&gPage=".INICIO_MAQUINA);
         }
+
         break;
-
-
-    // case NFE_FILTRAR:
-    //     $html = $o->msgTitle('Situação de NFe');
-    //     $form = new gForm();
-    //     $form->add('{name: ciente; id: cliente; fieldLabel: Cliente; type: combo; items: '.$sp['combo_clientes'].';}');
-    //     $form->add('{name: numero; id: numero; fieldLabel: Número Nfe; type: text;}');
-    //     $form->add('{name: dataInicial; id: dataInicial; fieldLabel: Data Inicial de emissão; type: date; allowBlank: false;}');
-    //     $form->add('{name: dataFinal; id: dataFinal; fieldLabel: Data Final de emissão; type: date; allowBlank: false;}');
-    //     $form->add('{name: gPage; id: gPage; type: hidden; value: '.NFE_LISTAR.';}');
-    //     $html .= $form->render($o);
-    //     break;
-
-    // case NFE_LISTAR:
-    //     $html = $o->msgTitle('Situação de NFe');
-    //     $sql = "
-    //         SELECT  nfe.*,
-    //                 notas.id AS id_nota,
-    //                 sistema,
-    //                 CLIENTE.nome AS cliente,
-    //                 chave,
-    //                 protocolo,
-    //                 programacao.os AS os
-    //         FROM nfe
-    //         LEFT JOIN pessoas CLIENTE ON CLIENTE.id = nfe.id_pessoa
-    //         LEFT JOIN programacao ON programacao.id = nfe.id_os
-    //         LEFT JOIN notas ON notas.id_nfe = nfe.id
-    //         WHERE nfe.situacao <> 'Importada'
-    //               AND notas.id_armazens = '".$_SESSION['armazemAtualId']."'";
-    //     if (!empty($dataInicial)) {
-    //         $sql .= " AND DATE(nfe.data) >= '".gDBDate($dataInicial)."'";
-    //     }
-
-    //     if (!empty($dataFinal)) {
-    //         $sql .= " AND DATE(nfe.data) <= '".gDBDate($dataFinal)."'";
-    //     }
-
-    //     if (!empty($numero)) {
-    //         $sql .= " AND nfe.numero = '".$numero."'";
-    //     }
-
-    //     if (!empty($cliente)) {
-    //         $sql .= " AND CLIENTE.nome LIKE '%".$cliente."%'";
-    //     }
-
-    //     if (!empty($os)) {
-    //         $sql .= " AND programacao.os LIKE '%".$os."%'";
-    //     }
-
-    //     $sql .= ' ORDER BY nfe.id DESC';
-
-    //     $nfes = dbQuery($sql);
-
-    //     $html .= $o->tableBegin('big', true);
-    //     $mtz = array(
-    //         'Id',
-    //         'Sistema',
-    //         'Data',
-    //         'Cliente',
-    //         'Situação',
-    //         'Número',
-    //         'Chave',
-    //         'Protocolo',
-    //         'OS',
-    //         'Mensagens',
-    //     );
-    //     $html .= $o->tableRow($mtz, 'header');
-
-    //     foreach ($nfes as $nfe) {
-    //         $dadosEmpresa = $nf->obtemDadosEmpresa($nfe['id_empresa']);
-    //         $nfeObject = new gNfe('nfe', true, '4.00');
-    //         $nfeObject->defineCabecalho($dadosEmpresa);
-    //         $nfeObject->config();
-
-    //         if ($nfe['situacao'] == "Assinada") {
-    //             dbQuery("
-    //                 UPDATE nfe
-    //                 SET id_notas = ".$nfe['id_notas']."
-    //                 WHERE id= ".$nfe['id']);
-
-    //             if ($nfeObject->envia(trim($nfe['xml']), $nfe['numero'])) {
-    //                 $msg .= $nfeObject->erros[0];
-    //                 dbQuery("
-    //                     update nfe
-    //                     set situacao='Submetida',
-    //                         recibo='" . $nfeObject->recibo . "',
-    //                         mensagens='{$msg}'
-    //                     where id=" . $nfe['id']);
-    //                 $html .= $o->msgSuccess("NFe submetida <BR> Recibo: ".$nfeObject->recibo);
-    //             } else {
-    //                 $msg = "Erro ao submeter a nfe tente novamente mais tarde."
-    //                     . '<br>Erro: ' . $o->ul($nfe->erros);
-    //                 if ($usrId == 1) {
-    //                     if ($nfeObject->nfexml <> "") {
-    //                         $msg .= '<textarea>' . $nfeObject->nfexml . '</textarea>';
-    //                     } else {
-    //                         $msg .= '<textarea>' . $nfe["xml"] . '</textarea>';
-    //                     }
-    //                 }
-    //                 $html .= $o->msgDanger($msg);
-    //             }
-    //         } elseif ($nfe["situacao"] == "Submetida") {
-    //             $nfeObject->protocolo($nfe['recibo'], $nfe['chave']);
-    //             if ($nfeObject->nfexml <> "") {
-    //                 $xml = $nfeObject->nfexml;
-    //             } else {
-    //                 $xml = $nfe["xml"];
-    //             }
-    //             if (substr($nfeObject->erros[0], 0, 3) == '100') {
-    //                 dbQuery("
-    //                     UPDATE nfe
-    //                     SET situacao='Aprovada',
-    //                     xml='{$xml}',
-    //                     mensagens=''
-    //                     WHERE situacao='Submetida'
-    //                         AND id=" . $nfe['id']);
-    //                 $nf->enviarEmail($nfe['id_nota']);
-    //             } elseif (substr($nfeObject->erros[0], 0, 3) == '105') {
-    //                 $html .= $o->msgInfo("O lote encontra-se em processamento");
-    //             } else {
-    //                 $rsprot = dbQuery("
-    //                     SELECT protocolo
-    //                     FROM nfe
-    //                     WHERE id=".$nfe["id"])[0];
-    //                 if ($rsprot['protocolo'] <> "") {
-    //                     $html .= "A NF-e não pode ser concluida pois aconteceram os seguinres erros: ";
-    //                     $html .= $nfe['mensagens'];
-    //                     $html .= $o->ul($nfeObject->erros) . "<br>";
-    //                     $html  =  $o->msgDanger($htm);
-    //                     dbQuery("
-    //                         update nfe
-    //                         set situacao='Reprovada',
-    //                         mensagens='".implode(' ',$nfeObject->erros)."',
-    //                         xml='" . addslashes($xml) . "'
-    //                         where id=" . $nfe['id']);
-    //                 } else {
-    //                     $msg   = "Falha na atualização do protocolo <BR> Aconteceram os seguintes erros: ";
-    //                     $msg  .= $o->ul($nfeObject->erros);
-    //                     $msg   = $o->msgDanger($msg);
-    //                     $msg  .= $o->button("{icon: refresh; caption: Tentar novamente; hint: Tentar novamente; style: info; size: normal;");
-    //                     $html .= $msg;
-    //                 }
-    //             }
-    //         }
-
-    //         if ($nfe["situacao"] == "Aprovada") {
-    //             $opcoes = $o->button('{name: danfe; style: default; hint: Gerar DANFE;
-    //                          title: DANFE; onClick: btnImprimirDanfe('.$nfe['id'].');}')
-    //                 .'&nbsp'
-    //                 .$o->button('{name: danfe; style: default; hint: Gerar XML;
-    //                      title: XML; onClick: btnObterXml('.$nfe['id'].');}');
-    //         }
-
-    //         if ($nfe["situacao"] == "Reprovada") {
-    //             $html .= $o->msgAlert($nfe['mensagens']);
-    //         }
-    //         $mtz   = array();
-    //         $mtz[] = ''.$nfe['id'];
-    //         $mtz[] = '<-'.$nfe['sistema'];
-    //         $mtz[] = ''.gDateTime($nfe['data']);
-    //         $mtz[] = ''.$nfe['cliente'];
-    //         $mtz[] = '<-'.$nfe['situacao'];
-    //         $mtz[] = ''.$nfe['numero'];
-    //         $mtz[] = ''.$nfe['chave'];
-    //         $mtz[] = ''.$nfe['protocolo'];
-    //         $mtz[] = '<-'.$nfe['os'];
-    //         $mtz[] = ''.$opcoes;
-
-    //         $html .= $o->tableRow($mtz, 'detail');
-    //     }
-    //     $html .= $o->tableEnd();
-    //     break;
-
-
-    // case NFE_ESTORNAR:
-    //     $idNotaOrigem = (int) $idNota;
-
-    //     $sql = "SELECT id FROM notas WHERE id_notas_origem_estorno = {$idNotaOrigem} AND cancelada = 0";
-    //     $rs  = dbQuery($sql)[0]['id'];
-    //     if ($rs) {
-    //         $html .= $o->msgDanger('Esta nota já possui vínculo de estorno com a nota: ' . linkParaNota($rs));
-    //         $html .= $backButton;
-    //         break;
-    //     }
-
-    //     $sql =
-    //         "SELECT *
-    //         FROM notas
-    //         WHERE id = {$idNotaOrigem}";
-    //     $novaNota = dbQuery($sql)[0];
-
-    //     $novaNota = excluirIndicesNumericos($novaNota);
-    //     unset($novaNota['id']);
-    //     unset($novaNota['numero']);
-    //     unset($novaNota['data_movimento']);
-    //     unset($novaNota['confirmada']);
-    //     unset($novaNota['situacao']);
-    //     $novaNota['data_criou'] = date('Y-m-d H:i:s');
-    //     $novaNota['id_armazens'] = $_SESSION['armazemAtualId'];
-    //     $novaNota['id_pessoas_criou'] = $_SESSION['usrId'];
-    //     $novaNota['id_programacao'] = 0;
-    //     $novaNota['id_notas_origem_estorno'] = $idNotaOrigem;
-
-    //     $sql = "SELECT id FROM cfops WHERE codigo = '999'";
-    //     $cfopEstorno = dbQuery($sql)[0]['id'];
-    //     $novaNota['id_cfops'] = $cfopEstorno ?: $novaNota['id_cfops'];
-
-    //     $idNovaNota = dbInsert('notas', $novaNota, true);
-
-    //     $sql =
-    //         "SELECT *
-    //         FROM notas_itens
-    //         WHERE id_notas IN (" . $idNotaOrigem . ")
-    //         ORDER BY id";
-    //     $notasItensSelecionados = dbQuery($sql);
-    //     $itensNovaNota = array();
-
-    //     foreach ($notasItensSelecionados as $item) {
-    //         $item = excluirIndicesNumericos($item);
-    //         unset($item['id']);
-    //         $item['id_notas'] = $idNovaNota;
-    //         $item['prazo_validade']  = $item['prazo_validade']  ?: '0';
-    //         $item['aliquota_ipi']    = $item['aliquota_ipi']    ?: '0';
-    //         $item['total_icms_calc'] = $item['total_icms_calc'] ?: '0';
-
-    //         $sqlItens .= "('" . implode("','", array_values($item)) . "'),";
-    //     }
-
-    //     $sql =
-    //         "INSERT INTO notas_itens (".implode(',', array_keys($item)).") VALUES ";
-    //     $sql = $sql . substr($sqlItens, 0, -1);
-    //     dbQuery($sql);
-
-    //     $nota = $nf->obtemDadosNFE($idNovaNota);
-    //     $dadosNFE = dbQuery("SELECT chave FROM nfe WHERE id = {$idNFe}")[0];
-    //     $dadosEmpresa = $nf->obtemDadosEmpresa(obtemIdEmpresa($nota["id_pessoas_proprietario"]));
-    //     $dadosProprietario = $nf->obtemDadosProprietario($nota["id_pessoas_proprietario"], 'S');
-
-    //     $idTransportadora = $nota["id_pessoas_transportadora"] ?: $nota["id_pessoas_proprietario"];
-    //     $dadosTransportadora = $nf->obtemDadosTransportadora($idTransportadora);
-
-    //     $nfe = new gNfe('nfe',true,'4.00');
-    //     $nfe->defineCabecalho('tipoDocumento', 0); // entrada
-    //     $nfe->id_empresa=obtemIdEmpresa($nota["id_pessoas_proprietario"]);
-    //     $nfe->defineCabecalho($dadosEmpresa);
-    //     $nfe->defineCabecalho($dadosProprietario);
-    //     if ($idTransportadora) {
-    //         $nfe->defineCabecalho($dadosTransportadora);
-    //     }
-    //     $nfe->defineCabecalho("chaveEstorno", $dadosNFE["chave"]);
-    //     $nfe->defineCabecalho("idNotas", $idNovaNota);
-    //     $nfe->defineCabecalho("idFinalidade", 3);
-    //     $nfe->defineCabecalho("idDest", $nota["idDestino"]);
-    //     $nfe->defineCabecalho("quantidadeEspecie", $nota["qVol"]);
-    //     $nfe->defineCabecalho("outrasDespesas", $nota["vOutro"]);
-    //     $nfe->defineCabecalho("especieTransportada", $nota["esp"]);
-    //     $nfe->defineCabecalho("veiculoPlaca", $nota["placa"]);
-    //     $nfe->defineCabecalho("veiculoPlacaUf", $nota["placaUF"]);
-    //     $nfe->defineCabecalho("sistema", "WMS2");
-    //     $nfe->defineCabecalho("cfop", gFieldById("cfops", $nota["id_cfops"], "codigo"));
-    //     $nfe->defineCabecalho('operacao','999 - ESTORNO DE NFE NAO CANCELADA NO PRAZO LEGAL');
-    //     $nfe->defineCabecalho("indIEDest",$nota["IE"]);
-    //     $nfe->defineCabecalho("modalidadeFrete",$nota["modFrete"]);
-    //     $nfe->defineCabecalho("codigoAntt", $nota["RNTC"]);
-    //     $nfe->defineCabecalho("especieMarca", $nota["marca"]);
-    //     if (intval($nota["pesoB"])>0)
-    //     {
-    //         $nfe->defineCabecalho("totalPesoBruto", $nota["pesoB"]);
-    //     }
-    //     if (intval($nota["pesoL"])>0)
-    //     {
-    //         $nfe->defineCabecalho("totalPesoLiquido", $nota["pesoL"]);
-    //     }
-
-    //     $informacao="";
-    //     if ($nota["informacaoFisco"]<>"" && !is_null($nota["informacaoFisco"]))
-    //     {
-    //         $informacao=$nota["informacaoFisco"];
-    //     }
-    //     $informacao.=" ".$nota["infAdFisco"];
-    //     $nfe->defineCabecalho("informacoesFisco", $informacao);
-    //     $informacao_contribuente="";
-
-    //     if (intval($nota["id_programacao"])>0)
-    //     {
-    //         //$nfe->defineCabecalho("idProgramacao",intval($nota["id_programacao"]));
-    //         $sql="SELECT detalhes_nfe FROM programacao WHERE id=".$nota["id_programacao"];
-    //         $detalhes_nfe=dbQuery($sql);
-    //         if (count($detalhes_nfe)>0)
-    //         {
-    //             if (!is_null($detalhes_nfe[0]["detalhes_nfe"]) 
-    //                 && !empty($detalhes_nfe[0]["detalhes_nfe"]))
-    //             {
-    //                 $informacao_contribuente.=$detalhes_nfe[0]["detalhes_nfe"].", ";
-    //             }
-    //         }
-    //     }
-    //     $informacao_contribuente.=$nota["InfCpl"];
-    //     $nfe->defineCabecalho("informacoesContribuinte", $informacao_contribuente);
-    //     $itens=$nf->obtemDadosItensNFE($idNovaNota);
-    //     foreach ($itens as $item)
-    //     {   
-    //         $item["NumeroCliente"]=$nota["numseq"];
-    //         $nfe->defineItens($item);
-    //     }
-
-    //     $nfe->processa();
-    //     $return=array();
-    //     if (is_array($nfe->erros))
-    //     {
-    //         $msg="A emissão da NF-e não pode prosseguir pois foram encontrados os seguintes erros: <br>";
-    //         $msg.=$o->ul($nfe->erros);
-    //         $msg=$o->msgDanger($msg);
-    //         if($_SESSION['usrId']==1)
-    //             $msg.="<br><textarea>".$nfe->xml."</textarea>";
-    //         $html.=$msg;
-    //     } 
-    //     else
-    //     {
-    //         $sql="SELECT * FROM nfe WHERE chave='".$nfe->chave."'";
-    //         $notaSalva=dbQuery($sql)[0];
-    //         $sql = "UPDATE notas SET id_programacao = (-id_programacao) WHERE id IN ({$idNotaOrigem}, {$idNovaNota})";
-    //         dbQuery($sql);
-    //         $rota=$o->page."&gPage=".NFE_ESTORNAR_ATUALIZAR."&idNfe=".$notaSalva['id']."&idNota=".$idNovaNota;
-    //         redirect($rota);
-    //     }
-    //     break;
-    // case NFE_ESTORNAR_ATUALIZAR:
-    //     $sql="SELECT * FROM nfe WHERE id= ".$idNfe;
-    //     $rs=dbQuery($sql)[0];
-    //     $nfe = new gNfe('nfe',true,'4.00');
-    //     $dadosEmpresa=$nf->obtemDadosEmpresa($rs['id_empresa']);
-    //     $nfe->defineCabecalho($dadosEmpresa);
-    //     $nfe->config();
-    //     if($rs['situacao']=="Assinada")
-    //     {
-    //         $sql="UPDATE nfe SET id_notas=$idNota WHERE id=$idNfe";
-    //         dbQuery($sql);
-    //         $nfe->envia(trim($rs['xml']), $rs['numero']);
-    //         if($nfe->retornoCstat == 100 || $nfe->retornoCstat == 103 || $nfe->retornoCstat == 104)
-    //         {
-    //             $msg.=$nfe->erros[0];
-    //             $sql = "update nfe set situacao='Submetida', recibo='" . $nfe->recibo . "', mensagens='{$msg}' where id=" . $rs['id'];
-    //             dbQuery($sql);
-    //             $html.=$o->msgSuccess("NFe submetida <BR> Recibo: ".$nfe->recibo);
-    //         }
-    //         else
-    //         {
-    //             $html.=$o->msgDanger("Erro ao submeter a NFe, verifique a estabilidade com a SEFAZ e tente novamente mais tarde");
-    //              $sql = "UPDATE nfe
-    //                 SET situacao = 'Reprovada',xml='{$xml}', mensagens='" . implode(", ", $nfe->erros)
-    //                 . "'  WHERE situacao = 'Assinada' AND id=" . $rs['id'];
-    //              dbQuery($sql);
-    //         }
-    //     }
-    //     elseif ($rs["situacao"]=="Submetida")
-    //     {
-    //         $nfe->protocolo($rs['recibo'], $rs['chave']);
-    //         if ($nfe->nfexml <> "") {
-    //             $xml = $nfe->nfexml;
-    //         } else {
-    //             $xml = $rs["xml"];
-    //         }
-    //         if (substr($nfe->erros[0], 0, 3) == '100')
-    //         {
-    //             $sql = "UPDATE nfe SET situacao='Aprovada',xml='{$xml}', mensagens='' WHERE situacao='Submetida' AND id=" . $rs['id'];
-    //             dbQuery($sql);
-    //             $nf->enviarEmail($_REQUEST["idNota"]);
-    //         } elseif (substr($nfe->erros[0], 0, 3) == '105')
-    //         {
-    //             // Lote em processamento
-    //             $html.= $o->msgInfo("O lote encontra-se em processamento");
-    //         } else
-    //         {
-    //             $sql="SELECT protocolo FROM nfe WHERE id=".$rs["id"];
-    //             $rsprot=dbQuery($sql)[0];
-    //             if($rsprot['protocolo']<>"")
-    //             {
-    //                 $html.= "A NF-e não pode ser concluída pois aconteceram os seguintes erros: ";
-    //                 $html.= $rs['mensagens'];
-    //                 $html.= $o->ul($nfe->erros) . "<br>";
-    //                 $html=$o->msgDanger($htm);
-    //                 $sql = "update nfe set situacao='Reprovada',mensagens='".implode(' ',$nfe->erros)."',xml='" . addslashes($xml) . "' where id=" . $rs['id'];
-    //                 dbQuery($sql);
-    //             }
-    //             else
-    //             {
-    //                 $msg="Falha na atualização do protocolo <BR> Aconteceram os seguintes erros: ";
-    //                 $msg.=$o->ul($nfe->erros);
-    //                 $msg=$o->msgDanger($msg);
-    //                 $msg.=$o->button("{icon: refresh; caption: Tentar novamente; hint: Tentar novamente; style: info; size: normal;");
-    //                 $html.=$msg;
-    //             }
-    //         }
-    //     }
-
-    //     if ($rs["situacao"]=="Aprovada")
-    //     {
-    //         $html.=$o->msgInfo("Selecione uma das opções");
-    //         $html.=$o->button("{icon: file; caption: Obter XML; hint: Obter xml da NF-e; style: primary; size: normal;", "javascript: btnObterXml(".$idNfe.")");
-    //         $html.=$o->button("{icon: print; caption: Imprimir danfe; hint: Gerar danfe da NF-e; style: info; size: normal;", "javascript: btnImprimirDanfe(".$idNfe.")");
-    //     }
-    //     if($rs["situacao"]=="Reprovada"){
-    //         $html.=$o->msgAlert($rs['mensagens']);
-    //     }
-
-    //     if($rs["situacao"]<>"Aprovada" && $rs["situacao"]<>"Reprovada"){
-    //         $html.=$o->msgAlert("Não feche a página, ela será atualizada em instantes.");
-    //         $js="setInterval(function(){location.reload(); }, 8000);";
-    //         $o->addJavaScript($js);
-    //     }
-    //     break;
-/* CODIGO EM DESUSO
-        $nfe->processa();
-        $return=array();
-        if (is_array($nfe->erros))
-        {
-            $msg="A emissão da NF-e não pode prosseguir pois foram encontrados os seguintes erros: <br>";
-            $msg.=$o->ul($nfe->erros);
-            $msg=$o->msgDanger($msg);
-            if($_SESSION['usrId']==1)
-                $msg.="<br><textarea>".$nfe->xml."</textarea>";
-            $html.=$msg;
-        } 
-        else
-        {
-            $sql="SELECT * FROM nfe WHERE chave='".$nfe->chave."'";
-            $notaSalva=dbQuery($sql)[0];
-            $sql = "UPDATE notas SET id_programacao = (-id_programacao) WHERE id IN ({$idNotaOrigem}, {$idNovaNota})";
-            dbQuery($sql);
-            $rota=$o->page."&gPage=".NFE_ESTORNAR_ATUALIZAR."&idNfe=".$notaSalva['id']."&idNota=".$idNovaNota;
-            redirect($rota);
-        }
-        break;
-    case NFE_ESTORNAR_ATUALIZAR:
-        $sql="SELECT * FROM nfe WHERE id= ".$idNfe;
-        $rs=dbQuery($sql)[0];
-        $nfe = new gNfe('nfe',true,'4.00');
-        $dadosEmpresa=$nf->obtemDadosEmpresa($rs['id_empresa']);
-        $nfe->defineCabecalho($dadosEmpresa);
-        $nfe->config();
-        if ($rs['situacao']=="Assinada") {
-            $sql="UPDATE nfe SET id_notas=$idNota WHERE id=$idNfe";
-            dbQuery($sql);
-            $nfe->envia(trim($rs['xml']), $rs['numero']);
-            if (($nfe->retornoCstat == 100 || $nfe->retornoCstat == 103 || $nfe->retornoCstat == 104) && stripos($nfe->erros[0], 'Rejeicao') === false) {
-                $msg.=$nfe->erros[0];
-                $sql = "update nfe set situacao='Submetida', recibo='" . $nfe->recibo . "', mensagens='{$msg}' where id=" . $rs['id'];
-                dbQuery($sql);
-                $html.=$o->msgSuccess("NFe submetida <BR> Recibo: ".$nfe->recibo);
-            } else {
-                $html.=$o->msgDanger(
-                    "Erro ao submeter a NFe, verifique a estabilidade com a SEFAZ e tente novamente mais tarde"
-                    . '<br>Erro: ' . $o->ul($nfe->erros)
-                    . '<br>cStat: ' . $nfe->retornoCstat);
-                 $sql = "UPDATE nfe
-                    SET situacao = 'Reprovada',xml='{$xml}', mensagens='" . implode(", ", $nfe->erros)
-                    . "'  WHERE situacao = 'Assinada' AND id=" . $rs['id'];
-                 dbQuery($sql);
-            }
-        }
-        elseif ($rs["situacao"]=="Submetida")
-        {
-            $nfe->protocolo($rs['recibo'], $rs['chave']);
-            if ($nfe->nfexml <> "") {
-                $xml = $nfe->nfexml;
-            } else {
-                $xml = $rs["xml"];
-            }
-            if (substr($nfe->erros[0], 0, 3) == '100') 
-            {   
-                $sql = "UPDATE nfe SET situacao='Aprovada',xml='{$xml}', mensagens='' WHERE situacao='Submetida' AND id=" . $rs['id'];
-                dbQuery($sql);
-                $nf->enviarEmail($_REQUEST["idNota"]);
-            } elseif (substr($nfe->erros[0], 0, 3) == '105') 
-            {
-                // Lote em processamento
-                $html.= $o->msgInfo("O lote encontra-se em processamento");
-            } else 
-            {
-                $sql="SELECT protocolo FROM nfe WHERE id=".$rs["id"];
-                $rsprot=dbQuery($sql)[0];
-                if($rsprot['protocolo']<>"")
-                {
-                    $html.= "A NF-e não pode ser concluída pois aconteceram os seguintes erros: ";
-                    $html.= $rs['mensagens'];
-                    $html.= $o->ul($nfe->erros) . "<br>";
-                    $html=$o->msgDanger($htm);
-                    $sql = "update nfe set situacao='Reprovada',mensagens='".implode(' ',$nfe->erros)."',xml='" . addslashes($xml) . "' where id=" . $rs['id'];
-                    dbQuery($sql);
-                }
-                else
-                {
-                    $msg="Falha na atualização do protocolo <BR> Aconteceram os seguintes erros: ";
-                    $msg.=$o->ul($nfe->erros);
-                    $msg=$o->msgDanger($msg);
-                    $msg.=$o->button("{icon: refresh; caption: Tentar novamente; hint: Tentar novamente; style: info; size: normal;");
-                    $html.=$msg;
-                }
-            }
-        }
-*/
 
     case LISTAR_CLIENTES_AGRUPAMENTO:
         $form = new gForm();
@@ -4668,6 +3613,7 @@ switch ($gPage) {
             $where .= " AND DATE(N.data_criou) <= '".gDBDate($_REQUEST["dataCadastroAte"])."'";
             $cabecalho[] = "Data criação Até: ".$_REQUEST["dataCadastroAte"];
         }
+
         if (!$_REQUEST["dataCadastroDe"] && !$_REQUEST["dataCadastroAte"]) {
             $qtdLimiteNotas = 1000;
             $cabecalho[] = "Limite padrão de registros: " . $qtdLimiteNotas;
@@ -4688,7 +3634,7 @@ switch ($gPage) {
         $html .= $form->render($o);
 
         $html .= $o->tableBegin('big', true);
-        $mtz   = array();
+        $mtz   = [];
         $mtz[] = 'Selecionar';
         $mtz[] = '<-Id';
         $mtz[] = '<-OS';
@@ -4706,13 +3652,14 @@ switch ($gPage) {
                 continue;
             }
 
-            $mtz   = array();
+            $mtz   = [];
             $mtz[] = '<input type="checkbox" class="notas" onChange="marcarNota('.$nota['id'].')">';
             if ($usrId == 1) {//1=root
                 $mtz[] = '<-' . linkParaNota($nota['id']);
             } else {
                 $mtz[] = '<-' . $nota['id'];
             }
+
             $mtz[] = '<-' . linkParaOS($nota['os']);
             $mtz[] = '<-' . $nota['numero'];
             $mtz[] = '<-' . $nota['nome_cliente'];
@@ -4726,7 +3673,7 @@ switch ($gPage) {
         break;
 
     case EXIBIR_NOTA_AGRUPADA:
-        $idNotas = explode(',', $_REQUEST['id_notas']);
+        $idNotas = explode(',', (string) $_REQUEST['id_notas']);
 
         if (count($idNotas) < 2) {//2=minimo de duas notas para agrupar
             $html .= $o->msgDanger('Você deve selecionar pelo menos duas notas para continuar este procedimento');
@@ -4735,7 +3682,7 @@ switch ($gPage) {
         }
 
         $itens = $nf->obtemRegistrosNotasItens($idNotas);
-        $itensNovaNota = array();
+        $itensNovaNota = [];
         foreach ($itens as $item) {
             $item = excluirIndicesNumericos($item);
             $indice = $item['id_itens_skus'] . '_' . $item['valor'];
@@ -4744,6 +3691,7 @@ switch ($gPage) {
                 $skuExistente['quantidade'] += $item['quantidade'];
                 $item = $skuExistente;
             }
+
             $itensNovaNota[$indice] = $item;
         }
 
@@ -4762,14 +3710,14 @@ switch ($gPage) {
             WHERE notas.id = ".$idNotas[0];
         $nota = dbQuery($sql)[0];
         $html .= $o->msg("Dados da nota");
-        $mtz = array();
+        $mtz = [];
         $mtz[] = '<-Armazém';
         $mtz[] = '<-Proprietário';
         $mtz[] = '<-Tipo';
         $mtz[] = 'Cadastro';
         $html .= $o->tableRow($mtz, 'header');
 
-        $mtz = array();
+        $mtz = [];
         $mtz[] = '<-<b>'.$_SESSION['armazemAtualDescricao'].'</b>';
         $mtz[] = '<-<b>'.$nota['proprietario'].'</b>';
         $mtz[] = '<-<b>'.'Saída'.'</b>';
@@ -4783,12 +3731,9 @@ switch ($gPage) {
         $html .= $nf->obtemTabelaItem($itensNovaNota, 0, 0, 0, $idProgramacao);
         break;
 
-
     case AGRUPAR_NOTAS_SELECIONADAS:
-        $sql =
-            "SELECT *
-            FROM notas
-            WHERE id IN (".$_REQUEST['id_notas'].")";
+        $sql = "SELECT * FROM notas
+                WHERE id IN (".$_REQUEST['id_notas'].")";
         $notasSelecionadas = dbQuery($sql);
 
         $novaNota = $notasSelecionadas[0];
@@ -4803,13 +3748,11 @@ switch ($gPage) {
         $novaNota['id_notas_agrupar'] = 0;
         $idNovaNota = dbInsert('notas', $novaNota, true);
 
-        $sql =
-            "SELECT *
-            FROM notas_itens
-            WHERE id_notas IN (".$_REQUEST['id_notas'].")
-            ORDER BY id_notas_associada, id";
+        $sql = "SELECT * FROM notas_itens
+                WHERE id_notas IN (".$_REQUEST['id_notas'].")
+                ORDER BY id_notas_associada, id";
         $notasItensSelecionados = dbQuery($sql);
-        $itensNovaNota = array();
+        $itensNovaNota = [];
         foreach ($notasItensSelecionados as $item) {
             $item = excluirIndicesNumericos($item);
             unset($item['id']);
@@ -4819,8 +3762,10 @@ switch ($gPage) {
                 $skuExistente['quantidade'] += $item['quantidade'];
                 $item = $skuExistente;
             }
+
             $itensNovaNota[$indice] = $item;
         }
+
         $itensNovaNota = array_values($itensNovaNota);
 
         $sql =
@@ -4832,19 +3777,17 @@ switch ($gPage) {
             $item['total_icms_calc'] = $item['total_icms_calc'] ?: '0';
             $sql .= "('".implode("','", array_values($item))."'),";
         }
+
         $sql = substr($sql, 0, -1);
         dbQuery($sql);
 
-        $sql =
-            "UPDATE notas
-            SET id_notas_agrupar = {$idNovaNota}
-            WHERE id IN (".$_REQUEST['id_notas'].")";
+        $sql = "UPDATE notas
+                SET id_notas_agrupar = {$idNovaNota}
+                WHERE id IN (".$_REQUEST['id_notas'].")";
         dbQuery($sql);
-
 
         header("Location: ".$o->page."&gPage=".DADOS."&gId=".$idNovaNota);
         break;
-
 
     case ATIVAR_DESATIVAR_CONTINGENCIA:
         $sql = "UPDATE armazens_notas
