@@ -388,7 +388,8 @@ function linkParaNFEntrada($nfEntrada, $page=80)
 }
 
 
-function linkParaNota($id, $numero, $tipo) {
+function linkParaNota($id = '', $numero = '', $tipo = '')
+{
 	$link = '';
 	if (!$id) {
 		return $link;
