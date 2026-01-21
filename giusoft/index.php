@@ -278,8 +278,8 @@ if (($g == "login")) {
 						$amz=dbQuery("SELECT * FROM armazens LIMIT 1");
 				}*/
 
-				$_SESSION['armazemAtualId'] = $amz[0]["id"];
-				$_SESSION['armazemAtualDescricao'] = $amz[0]["descricao"];
+				$_SESSION['armazemAtualId'] = 1;
+				$_SESSION['armazemAtualDescricao'] = 1;
 
 				// echo "<pre>";
 				// var_dump($id_armazens,$amz);exit;

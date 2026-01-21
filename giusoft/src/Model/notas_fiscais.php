@@ -382,28 +382,7 @@ class NotasFiscais {
 		$sai=false;
 		$sql="SELECT nfe.id FROM nfe INNER JOIN notas on notas.id_nfe=nfe.id WHERE notas.id=".intval($id);
 		$conferirImportacao=dbQuery($sql);
-		// Verificar se existe alguma UMA associado a nota
-		$sql = "
-			SELECT
-				umas_itens.id
-			FROM
-				umas_itens
-			LEFT JOIN notas_itens ON
-				notas_itens.id = umas_itens.id_notas_itens
-			LEFT JOIN notas ON
-				notas.id = notas_itens.id_notas
-			WHERE
-				notas.id = ".intval($id)."
-				AND umas_itens.cancelada = 0
-			LIMIT 1
-		";
-		$existe_uma=dbQuery($sql);
-		
-		if (count($existe_uma)>0)
-		{
-			$sai=true;
-		}
-		
+
 		$sql="SELECT id FROM notas WHERE id=".intval($id)." AND (id_programacao <> 0 AND id_programacao IS NOT NULL)";
 		$programacao_associada=dbQuery($sql);
 		
@@ -2323,13 +2302,7 @@ class NotasFiscais {
 
 	public function consultarProgramacaoNotaAgrupada($idNotaAgrupada, $coluna)
 	{
-		$sql =
-			"SELECT {$coluna}
-			FROM notas
-			JOIN programacao ON programacao.id = notas.id_programacao 
-			WHERE id_programacao > 0
-				AND id_notas_agrupar = ".$idNotaAgrupada;
-		return array_column(dbQuery($sql), $coluna);
+		return;
 	}
 
 	function obtemQuery()
@@ -2367,7 +2340,6 @@ class NotasFiscais {
 			PC.apelido apelido_proprietario,
 			A.descricao armazem,
 			PT.nome nome_transportadora,
-			PR.os,
 			N.id_armazens,
 			N.volume,
 			NOTA_AGRUPADA.id AS id_nota_agrupada,
@@ -2383,7 +2355,6 @@ class NotasFiscais {
 		LEFT JOIN pessoas PC ON PC.id = N.id_pessoas_proprietario
 		LEFT JOIN armazens A ON A.id = N.id_armazens
 		LEFT JOIN pessoas PT ON PT.id = N.id_pessoas_transportadora
-		LEFT JOIN programacao PR ON PR.id = N.id_programacao
 		";
 		if ($this->inner_item)
 		{
@@ -2559,14 +2530,12 @@ class NotasFiscais {
 	}
 
 
-	public function obtemDadosNFE($id, $campos="N.*, NFI.descricao informacaoFisco, PR.os, PR.numseq, PRODUCAOORIGEM.os AS os_origem")
+	public function obtemDadosNFE($id, $campos="N.*, NFI.descricao informacaoFisco")
 	{
 		$sql = "SELECT
 					{$campos}
 				FROM notas N
 				LEFT JOIN nfe_informacoes NFI ON N.id_nfe_informacoes = NFI.id
-				LEFT JOIN programacao PR ON PR.id = N.id_programacao
-				LEFT JOIN programacao PRODUCAOORIGEM ON PRODUCAOORIGEM.id = PR.id_programacao_origem
 				WHERE N.id = {$id}";
 		return (dbFastQuery($sql)[0]);
 	}

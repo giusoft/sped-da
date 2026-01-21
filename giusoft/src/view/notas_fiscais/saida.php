@@ -2437,15 +2437,6 @@ switch ($gPage) {
             $nota['os'] .= ' -- OS PRODUÇÃO: '.$nota['os_origem'];
         }
 
-        $programacaoNotaAgrupada = implode(', ', $nf->consultarProgramacaoNotaAgrupada($gId, 'os'));
-        if ($programacaoNotaAgrupada) {
-            $nota["os"] .= $programacaoNotaAgrupada;
-        }
-
-        if (!empty($nota["os"])) {
-            $defaultInfContribuente .= " OS: " . $nota["os"];
-        }
-
         $sql = "SELECT
                     nfe.*,
                     notas.numero os,
@@ -2567,7 +2558,7 @@ switch ($gPage) {
 
         $frm->addButton("{name:btnEmitirNfe; icon: print; title: Emitir Nf-e; hint: Emitir NF-e; style: info; size: small;}", "emitNFE('".$gId."', this)");
 
-        $sql = "SELECT nfe_eventos.id_nfe_tipos_eventos
+        $sql = "SELECT nfe_eventos.id_tipo_evento
                 FROM nfe_eventos
                 WHERE nfe_eventos.id_notas_saida = " . $gId;
         $eventosNfe = dbFastQuery($sql);
