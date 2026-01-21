@@ -10,7 +10,7 @@ services:
       - "2083:2083"
     volumes:
       - "..:/var/www/html/emitenota"
-      - "/var/www/html/gfw:/var/www/html/gfw"
+      - "../../gfw:/var/www/html/gfw"
       - "emitenota_vendor:/var/www/html/emitenota/giusoft/src/Lib/vendor"
       - "emitenota_storage:/var/www/html/emitenota/giusoft/src/storage"
     environment:
