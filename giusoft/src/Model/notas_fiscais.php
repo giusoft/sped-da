@@ -1,5 +1,6 @@
-<?
-include_once 'pagination.php';
+<?php
+
+include_once 'Pagination.php';
 
 class NotasFiscais {
 
@@ -108,7 +109,7 @@ class NotasFiscais {
 			in_array($row["situacao"], array("Aprovada", "Reprovada", "Cancelada"))
 			&& $row["tipo"] == "S" || !$row["tipo"]
 		) {
-			$mtz[] = "~2<-" . $o->small("OS") . '<br><b>' . linkParaOS($row["os"]) . "</b>&nbsp<br></b>";
+			$mtz[] = "~2<-" . $o->small("OS") . '<br><b>' . $row["os"] . "</b>&nbsp<br></b>";
 		}
 
 		if (
@@ -156,7 +157,7 @@ class NotasFiscais {
 			$html .= $o->tableRow($mtz, 'header');
 
 			$mtz = array();
-			$mtz[] = '<-' . $o->small('OS') . "<br><b>".linkParaOS($row['os']) . "</b>&nbsp;";
+			$mtz[] = '<-' . $o->small('OS') . "<br><b>" . $row['os'] . "</b>&nbsp;";
 			$mtz[] = '';
 			$mtz[] = '';
 			$mtz[] = '';
@@ -194,9 +195,6 @@ class NotasFiscais {
 			case ITENS:
 				$btn1=true;
 			break;
-			case UMAS:
-				$btn3=true;
-			break;
 			case NFE:
 				$btn4=true;
 			break;
@@ -206,14 +204,7 @@ class NotasFiscais {
 		}
 		$html.=$o->button("{title: Dados; active: ".($btn0 ? "true" : "false").";icon: clock; href: ".$o->page."&gPage=".DADOS."&gId=".$gId." }");
 		$html.=$o->button("{title: Itens; active: ".($btn1 ? "true" : "false").";icon: tasks; href: ".$o->page."&gPage=".ITENS."&gId=".$gId." }");
-		if ($this->tipo=="E")
-		{
-			$html.=$o->button("{title: UMAs; active: ".($btn3 ? "true" : "false")."; href: ".$o->page."&gPage=".UMAS."&gId=".$gId." }");
-		}
 		if ($this->tipo=='S') {
-			if ($row["id_programacao"]) {
-				$html.=$o->button("{title: UMAs; active: ".($btn3 ? "true" : "false")."; href: ".$o->page."&gPage=".UMAS."&gId=".$gId." }");
-			}
 			$html .= $o->button("{title: NF-e; active: ".($btn4 ? "true" : "false")."; href: ".$o->page."&gPage=".NFE ."&gId=".$gId." }");
 		}
 
@@ -433,7 +424,7 @@ class NotasFiscais {
 		$exibirOpcoes   = true,
 		$exibirSubtotal = false,
 		$exibirHeader   = true,
-		$idProgramacao
+		$idProgramacao  = ''
 	) {
 		global $o, $gId, $gIdEnd, $gParam, $usrId;
 		$sql = "SELECT N.id_pessoas_proprietario, N.id, N.id_cfops, C.codigo codigo_cfops, N.venda, N.cancelada, N.refNfe ref
@@ -542,9 +533,6 @@ class NotasFiscais {
 
 		$colspan = count($mtz);
 		$html .= $o->tableRow($mtz,"header");
-		$a = '<div id="modalMedicamento_content">Carregando dados...</div>';
-		$html .= $o->modal("{title: Medicamentos ; cancelCaption: Fechar; confirm: false; name: modalMedicamento; size:big; }",$a);
-		$o->addJavascript($js);
 
 		$tQuantidade = 0;
 		$tPesoLiquido = 0;
@@ -572,9 +560,9 @@ class NotasFiscais {
 			$btnImpostos = $o->button("{icon: coins; caption: ; hint: Informações de tributação; style: success; size: small;openModal:modalImpostos}", "modalImpostos(".$row['id'].", ". $gId .", '".$row['situacao']."')");
 
 			$btnMedicamento = '';
-			if ($gParam['MEDICAMENTOS_EM_NOTA_FISCAL']['ativo']) {
-				$btnMedicamento = $o->button("{icon: ambulance;caption:; hint:Informações do medicamento; style: danger; size: small;openModal:modalMedicamento}",'modalMedicamento(' . $row['id'] . ', ' . $gId . ')');
-			}
+			// if ($gParam['MEDICAMENTOS_EM_NOTA_FISCAL']['ativo']) {
+			// 	$btnMedicamento = $o->button("{icon: ambulance;caption:; hint:Informações do medicamento; style: danger; size: small;openModal:modalMedicamento}",'modalMedicamento(' . $row['id'] . ', ' . $gId . ')');
+			// }
 
 			if ($row["tipo"]=="S" && intval($row["id_programacao"])>0) {
 				if (in_array($row["situacao"], array('Aprovada', 'Cancelada'))) {
@@ -702,8 +690,8 @@ class NotasFiscais {
 			ORDER BY I.nome";
 			$rso = dbQuery($sql);
 
-			if (count($rso)>0) {
-				$html.=$o->msgFilter("Itens solicitados na OS ".linkParaOS($rso[0]['os']));
+			if ($rso) {
+				$html.=$o->msgFilter("Itens solicitados na OS " . $rso[0]['os']);
 				$html.=$o->tableBegin("big",true, true);
 				$cnt = 0;
 				$mtz=array();
@@ -1010,24 +998,6 @@ class NotasFiscais {
                     error: function(){
                         hideWait();
                         $('#impostosmodal_content').html('Erro ao carregar dados. Tente novamente mais tarde');
-                    }
-                });
-            }
-
-
-			function modalMedicamento(id_notas_itens,id_notas)
-			{
-                showWait();
-                $.ajax({
-                    url: '".$o->page."&gAjs=1&gPage=" . MEDICAMENTO . "&id_notas='+ id_notas+'&id_notas_itens='+id_notas_itens,
-                    type: 'GET',
-                    success: function(data){
-                        hideWait();
-                        document.querySelector('#modalMedicamento_content').innerHTML = data;
-                    },
-                    error: function(){
-                        hideWait();
-                        document.querySelector('#modalMedicamento_content').innerHTML = 'Erro ao carregar dados. Tente novamente mais tarde';
                     }
                 });
             }
@@ -1931,7 +1901,7 @@ class NotasFiscais {
 			$frm->add("{name: id_pessoas_fornecedor; fieldLabel: Fornecedor; type: combo; value: ".$registroAtual['id_pessoas_fornecedor']."; items: ".$sp['combo_fornecedores']."}"),
 			$frm->add("{name: volume; type: number; allowBlank: true; fieldLabel: Volume; value: ".$registroAtual['volume']."}")
 		);
-		$dataEmissao=(count($registroAtual)>0) ? $registroAtual["data_emissao"] : date('Y-m-d');
+		$dataEmissao= ($registroAtual) ? $registroAtual["data_emissao"] : date('Y-m-d');
 		$frm->row(
 			$frm->add("{name: data_emissao; type: date; allowBlank: false; fieldLabel: Emissão; value: ".gDate($dataEmissao)."}"),
 			$frm->add("{name: data_movimento; type:date; fieldLabel: Movimento; value: ".gDate($registroAtual['data_movimento']).";}")
