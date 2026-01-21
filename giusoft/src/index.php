@@ -1,4 +1,5 @@
-<?
+<?php
+
 include $gPath."gfw/inc/gChart.php";
 include $gPath."res/_classes/classes.php";
 
@@ -23,16 +24,6 @@ if (count($rs)>0)
 {
 	$html.='<div class="alert alert-danger alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>Você possui mensagens não lidas</div>';
 }
-
-
-
-
-
-
-
-
-
-
 
 // ----------------- DASHBOARD -----------------
 
