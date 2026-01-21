@@ -13,7 +13,6 @@ if ($gParam['ACESSO']['ativo']==0 && $usrId>0)
 
 $hoje=date("Y-m-d");
 
-
 // Mensagens
 $sql="SELECT m.*,p.nome de
 		FROM mensagens m
