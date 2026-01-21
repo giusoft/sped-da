@@ -15,10 +15,6 @@ define('ITENS'												,60);
 define('ITENS_SALVAR'										,61);
 define('ITENS_EXCLUIR'										,62);
 define('FORMULARIO_IMPORTAR_ITENS_NOTA'						,64);
-define('UMAS'												,80);
-define('UMAS_ASSOCIAR'										,81);
-define('UMAS_DISPONIVEIS_ASSOCIAR'							,82);
-define('UMAS_DESASSOCIAR'									,83);
 define('SUBSTITUIR_NFE'										,90);
 define('IMPOSTOS'											,100);
 define('IMPOSTOS_SALVAR'									,101);
@@ -27,8 +23,12 @@ define('CONFIRMACAO_TRANSFERENCIA_PROPRIETARIO_FRAGMENTADA'	, 120);
 define('ITENS_ATUALIZAR_CFOP_ORIGEM'						, 130);
 
 // Removendo paginação e limit quando for exportação
-if (isset($_REQUEST["gPDF"]) || isset($_REQUEST["gXLS"]) || isset($_REQUEST["gDOC"]) || isset($_REQUEST["gCSV"]))
-{
+if (
+	isset($_REQUEST["gPDF"])
+	|| isset($_REQUEST["gXLS"])
+	|| isset($_REQUEST["gDOC"])
+	|| isset($_REQUEST["gCSV"])
+) {
 	$gParam["PAGINACAO"]["ativo"]=0;
 	$gParam["LIMITAR_VISUALIZACAO"]["ativo"]=0;
 }
@@ -39,13 +39,11 @@ if (!$gAjs) {
 
 $nf = new NotasFiscais('E');
 $ni = new ImportacaoNFE();
-if ($gId>0)
-{
+if ($gId > 0) {
 	$conferirImportacao=dbQuery(sprintf("SELECT nfe.id FROM nfe INNER JOIN notas on notas.id_nfe=nfe.id WHERE notas.id='%s'", $gId));
 }
 
-if ($gPage<10)
-{
+if ($gPage < 10) {
    $o->PDFEnabled=true;
    $o->DOCEnabled=true;
    $o->XLSEnabled=true;
@@ -241,22 +239,6 @@ $o->addJavascript(
 		});
 	}
 
-	function modalUmasDisponiveis(id)
-	{
-		showWait();
-		$.ajax({
-			url: '".$o->page."&gAjs=1&gPage=".UMAS_DISPONIVEIS_ASSOCIAR."&gId='+id,
-			type: 'GET',
-			success: function(data){
-				hideWait();
-				document.querySelector('#umasmodal_content').innerHTML = data;
-			},
-			error: function(){
-				hideWait();
-				document.querySelector('#umasmodal_content').innerHTML = 'Erro ao carregar dados. Tente novamente mais tarde';
-			}
-		});
-	}
 ");
 
 switch($gPage) {
@@ -486,353 +468,6 @@ switch($gPage) {
 		}
 
 		break;
-
-	case UMAS:
-		include_once $gPath . "res/_classes/padrao/operacao.php";
-		$uClass = new UMA();
-		$nota   = $nf->obtemRegistro($gId);
-		$itensNaNota = $nf->obtemRegistrosNotasItens($gId);
-		/* Se não tem item então não permitir o vinculo. */
-		if (!$itensNaNota) {
-			$html.=$o->msgDanger(mostraErros("A operação não pode continuar pois aconteceram os seguintes erros: .", ["Não é permitida a vinculação de UMAS em notas sem items"]));
-			$html.=$o->button("{icon: arrow-left; caption: Voltar; hint: Voltar; style: default; size: normal; href: ".$o->page."&gPage=".ITENS."&gId=".$gId); 
-			return;
-		}
-
-		$inSku=[];
-		$inItemNota=[];
-		foreach ($itensNaNota as $itemNaNota) {
-			$inSku[] = $itemNaNota["id_itens_skus"];
-			$inItemNota[] = $itemNaNota["id"];
-		}
-
-		$inSku = "UI.id_itens_skus in (".implode(",", $inSku).")";
-		$where = [];
-		$where[] = "(U.id_notas IS NULL OR U.id_notas = '0')";
-		$where[] = "(".$inSku.")";
-		$where[] = "(UI.cancelada='0')";
-		$where[] = "(UI.id_notas_itens = '0' OR UI.id_notas_itens IS NULL)";
-		$where[] = "(UI.id_pessoas_proprietario='".$nota["id_pessoas_proprietario"]."')";
-		$where = implode(" AND ", $where);
-		$umasDisponiveis = $uClass->obtemUMAsComSaldo($where);
-		$combo = [];
-		foreach ($umasDisponiveis as $uma) {
-			$combo[$uma["id"]] = $uma["codigo_barras"]." - ".$uma["item"];
-		}
-
-		/* framework não renderiza em caso de ter apenas 1 item nesse modelo de combo, então usar isso momentâneamente */
-		$combo["0"] = "";
-		$content = '<div id="umasmodal_content">Carregando dados...</div>';
-		$html .= $o->modal("{title: Itens na nota; cancelCaption: Fechar; confirm: false; name: modalUmasDisponiveis; size:large;}", $content);
-		$html .= $nf->obtemCabecalho($nota);
-		$frm = new gForm('{columns:2}');
-		$primeiroValue = $umasDisponiveis[0]["id"];
-		if (count($combo)>1) {
-			$frm->add("{type: combo; name:id_umas; value:".$primeiroValue."; fieldLabel: selecione a UMA; items:'".json_encode($combo)."'; }");
-		} else {
-			$frm->add("{type: show; name:id_umas; value:Não existe UMAs disponíveis; fieldLabel: UMA;}");
-		}
-
-		$frm->add('{type: hidden; name: gPage; value:'.UMAS_ASSOCIAR.';}');
-		$frm->addButton("{icon: eye; title: Itens na nota; hint: Conferir itens na nota; style: info; size: small;}", "javascript:opemModalUmasDisponiveis(".$gId.")");
-		//$html.=$frm->render($o);
-		$o->addJavascript("
-			if ($('#gSubmitButton'))
-			{
-				$('#gSubmitButton').attr('style', '');
-			}
-		");
-
-		$where="U.id_notas = '{$gId}'";
-		$sql = "SELECT
-					NI.*, N.id_pessoas_proprietario, SK.codigo, I.nome item, U.descricao unidade
-				FROM notas_itens NI
-				LEFT JOIN notas N ON N.id = NI.id_notas
-				LEFT JOIN itens_skus SK ON SK.id = NI.id_itens_skus
-				LEFT JOIN itens I ON I.id = SK.id_itens
-				LEFT JOIN unidades U ON U.id = SK.id_unidades
-				WHERE NI.id_notas=".intval($gId);
-		if (intval($_REQUEST["id_itens_skus"]) > 0) {
-			$sql.=" AND NI.id_itens_skus=".intval($_REQUEST["id_itens_skus"]);
-		}
-
-		$iNotas=dbQuery($sql);
-
-		$html.=$o->tableBegin("big", true, true);
-		$mtz = [];
-		$mtz[] = "<>Opções";
-		$mtz[] = "<-Posição";
-		$mtz[] = "<-Código de barras";
-		$mtz[] = "<-Código item";
-		$mtz[] = "<-NCM";
-		$mtz[] = "<>Quantidade";
-		$mtz[] = "<>Qnt. Estoque";
-		$mtz[] = "<-Situação";
-		$colspan = count($mtz);
-		$html.=$o->tableRow($mtz, "header");
-		foreach ($iNotas as $iNota) {
-			// não considerar programações de saída pois o saldo provavelmente vai ser zerado, e o saldo da nota vai voltar a ficar disponível.
-			$where="(UI.cancelada=0 AND PR.id_tipos_programacao not in (2)) AND (UI.id_notas_itens=".intval($iNota["id"]).")";
-			$rs=$uClass->obtemUMAsComSaldo($where, false);
-			if ($rs) {
-				$ttl = 0;
-				foreach ($rs as $uma) {
-					$ttl += $uma["quantidade"];
-				}
-
-				$descricao = $iNota["codigo"]." - ".$iNota["item"]." - ".$iNota["unidade"]." &nbsp&nbsp<b>Quantidade: </b>".gFloat($iNota["quantidade"])."  &nbsp&nbsp<b>Quantidade disponível: </b>".gFloat($iNota["quantidade"]-$ttl);
-				$idItemSku = $uma["id_itens_skus"];
-				$mtz = [];
-				$mtz[] = "~{$colspan}<>{$descricao}";
-				$html .= $o->tableRow($mtz, "footer");
-				$confereEntrada = [];
-				$idItemSku = 0;
-
-				$tQuantidade = 0;
-				$tQuantidadeEstoque = 0;
-				$i = 0;
-				$tUMAs = 0;
-				foreach ($rs as $uma) {
-					$i++;
-					$whereSaldoEstoque="(UI.cancelada=0 AND UI.reservada=0 AND UI.separada=0)";
-					$whereSaldoEstoque.=" AND (UI.id_notas_itens=".intval($iNota["id"]).") AND (UI.id_umas=".intval($uma["id"]).")";
-					$whereSaldoEstoque.= " AND (UI.id_pessoas_proprietario=".intval($iNota["id_pessoas_proprietario"]).")";
-					//$whereSaldoEstoque.= " AND SK.codigo='122703'";
-					//$whereSaldoEstoque.=" AND UI.id_pessoas_proprietario="\
-					$rsEstoque=$uClass->obtemUmasComSaldo($whereSaldoEstoque);
-					if ($rsEstoque) {
-						$qntEstoque = 0;
-					} else {
-						$qntEstoque = 0;
-						foreach ($rsEstoque as $rEstoque) {
-							$qntEstoque+=$rEstoque["quantidade"];
-						}
-					}
-
-					if (floatval($uma["quantidade"]) > 0) {
-						$tUMAs++;
-						$tQuantidadeEstoque+=$qntEstoque;
-						$tQuantidade+=$uma["quantidade"];
-						$liberar=true;
-						/*
-							Essa conferencia é necessária pois o método obtemUmasComSaldo pode vim com o registro repetido,
-							devido ao fato de uma parte do saldo está separada e outra reservada por exemplo.
-						 */
-						foreach ($confereEntrada as $confere) {
-							if (
-								$confere["codigo_barras"] == $uma["codigo_barras"]
-								&& $confere["id_itens_skus"] == $uma["id_itens_skus"]
-							) {
-								$liberar=false;
-							}
-						}
-
-						$confereEntrada[]=$uma;
-						/* Recuperando ncm */
-						$sql = "SELECT I.ncm
-								FROM itens_skus IK
-								LEFT JOIN itens I ON I.id = IK.id_itens
-								WHERE IK.id = '".$uma["id_itens_skus"]."'";
-						$outrosDados=dbQuery($sql);
-						$btns="--";
-						if (gDBFloat($qntEstoque) > 0) {
-							$rota=$o->page."&gPage=".UMAS_DESASSOCIAR."&idUMA=".intval($uma["id"])."&idNotaItem=".$iNota["id"]."&gId=".$gId;
-							$btns=$o->button("{size:sm; icon: trash; caption:; hint: Excluir item; style: danger; size: normal; href:".$rota.";}");
-						}
-
-						$mtz = [];
-						$mtz[] = "<>".$btns;
-						$mtz[] = "<-".$uClass->linkParaPosicao($uma["posicao"]);
-						$mtz[] = "<-".$uClass->linkParaUMA($uma["codigo_barras"]);
-						$mtz[] = "<-".$uma["codigo"];
-						$mtz[] = "<-".$outrosDados[0]["ncm"];
-						$mtz[] = "<>".gFloat($uma["quantidade"]);
-						$mtz[] = "<>".gFloat($qntEstoque);
-						if ($qntEstoque == 0) {
-							$mtz[]="<-Saída efetivada";
-						} else {
-							$mtz[]="<-".str_replace("_", "", ucfirst($uClass->obtemSituacaoUMA("U.id=".$uma["id"])));
-						}
-
-						$html.=$o->tableRow($mtz, "detail");
-					}
-
-					if ($i === count($rs)) {
-
-						if ($tUMAs > 0) {
-							$mtz = [];
-							$mtz[] = "<>";
-							$mtz[] = "<>";
-							$mtz[] = "<-Total UMA: ".$tUMAs;
-							$mtz[] = "";
-							$mtz[] = "";
-							$mtz[] = "<>".gFloat($tQuantidade);
-							$mtz[] = "<>".gFloat($tQuantidadeEstoque);
-							$mtz[] = "<---";
-							$html.=$o->tableRow($mtz, "footer");
-						} else {
-							$mtz = [];
-							$mtz[] = "~8<><b>Nenhuma UMA vinculada</b>";
-							$html .= $o->tableRow($mtz, "detail");
-						}
-
-					}
-				}
-			}
-		}
-
-		$html.=$o->tableEnd();
-
-		$js="
-			function opemModalUmasDisponiveis (gId) {
-				$('#modalUmasDisponiveis').modal('show');
-				modalUmasDisponiveis(gId);
-			}
-		";
-		$o->addJavascript($js);
-		break;
-
-	case UMAS_ASSOCIAR:
-		include_once $gPath . "res/_classes/padrao/operacao.php";
-		$class = new Operacao();
-		$idProprietario = gFieldById("notas", $gId, "id_pessoas_proprietario");  
-		$sql = "SELECT
-					U.id, U.ativo, U.id_notas
-				FROM umas U
-				WHERE U.id='".intval($_REQUEST["id_umas"])."'";
-		$uma = dbQuery($sql);
-		/* Validar passo a passo para facilitar a vida do usuário */
-		/* Validar se UMA está ativa */
-		if ($uma[0]["ativo"] == 0) {
-			$nf->defineErros("UMA encontra-se inativa.");
-		}
-
-		/* Validar código da nota */
-		if ($uma[0]["id_notas"] != 0) {
-			if ($uma[0]["id_notas"] == $gId) {
-				$nf->defineErros("UMA já está vinculada a esta nota fiscal.");
-			} else {
-				$nf->defineErros("UMA já está vinculada a uma nota fiscal.");
-			}
-		}
-
-		/* Validar se UMA tem saldo */
-		$where="U.id = '".$uma[0]["id"]."'";
-		$umaTemSaldo=$class->obtemUMAsComSaldo($where);
-		if (!$umaTemSaldo) {
-			$nf->defineErros("UMA não possui saldo !");
-		}
-
-		/* Verificar se existem itens compatíveis */
-		$nItens=$nf->obtemRegistrosNotasItens($gId);
-		$inSkus = [];
-		foreach ($nItens as $nItem) {
-			$inSkus[]=$nItem["id_itens_skus"];
-		}
-
-		$inSkus="(UI.id_itens_skus in (".implode(",", $inSkus).") )";
-		$where=[];
-		$where[]="(U.id = '".$uma[0]["id"]."')";
-		$where[]=$inSkus;
-		$where[]="(U.id_notas='0' OR U.id_notas IS NULL)";
-		$where[]="(UI.id_notas_itens='0' OR UI.id_notas_itens IS NULL)";
-		$where=implode(" AND ", $where);
-		$umaComSaldo=$class->obtemUMAsComSaldo($where, true);
-		if ($umaComSaldo) {
-			$nf->defineErros("A UMA não possuem itens compatíveis a nota fiscal");
-		}
-
-		/* se passou nas validações... */
-		if ($nf->obtemErros()) {
-			foreach ($umaComSaldo as $r) {
-				foreach ($nItens as $nItem) {
-					if ($nItem["id_itens_skus"]==$r["id_itens_skus"]) {
-						/* Existe esse o item na nota */
-						$where=[];
-						$where[]="(id_umas='".$r["id"]."')";
-						$where[]="(id_itens_skus='".$nItem["id_itens_skus"]."')";
-						$where[]="(cancelada='0')";
-						$where=implode(" AND ", $where);
-						$sql='SELECT id FROM umas_itens WHERE ' . $where;
-						$umaItens = dbQuery($sql);
-						if ($umaItens) {
-							foreach ($umaItens as $ui) {
-								$mtz=[];
-								$mtz["valor"]=$nItem["valor"];
-								$mtz["id_notas_itens"]=$nItem["id"];
-								dbUpdate("umas_itens", $mtz, $ui["id"]);
-							}
-						} else {
-							$html.=$o->msgDanger(mostraErros("A associação não pode continuar pois aconteceram os seguintes erros: .", ["Não foram encontradas UMAs para associação"]));
-							$html.=$o->button("{icon: arrow-left; caption: Voltar; hint: Voltar; style: default; size: normal; href: ".$o->page."&gPage=".UMAS."&gId=".$gId); 
-							return;
-						}
-					}
-				}
-
-				$inSku=str_replace("UI.", "", $inSkus);
-				$inSku=str_replace("id_itens_skus", "id", $inSku);
-				$idItem=dbQuery('SELECT id_itens FROM itens_skus WHERE ' . $inSku);
-
-				/* definir nova posição */
-				$mtz=[];
-				$mtz["id_notas"]=$nItens[0]["id_notas"];
-				$mtz["id_posicoes_posicionar"]=$class->indicaPosicao($idItem[0]["id_itens"]);
-				dbUpdate("umas", $mtz, $r["id"]);
-			}
-
-			redirect($o->page."&gPage=".UMAS."&gId=".$gId);
-		} else {
-			$html.=$o->msgDanger(mostraErros("A associação não pode continuar pois aconteceram os seguintes erros: .", $nf->obtemErros()));
-			$html.=$o->button("{icon: arrow-left; caption: Voltar; hint: Voltar; style: default; size: normal; href: ".$o->page."&gPage=".UMAS."&gId=".$gId); 
-		}
-
-		break;
-
-	case UMAS_DESASSOCIAR:
-		$sql = "SELECT
-					UI.*,
-					U.id_posicoes,
-					N.numero,
-					PJ.fiscal
-				FROM umas_itens UI
-				LEFT JOIN umas U ON U.id = UI.id_umas
-				LEFT JOIN notas_itens NI ON NI.id = UI.id_notas_itens
-				LEFT JOIN notas N ON N.id = NI.id_notas
-				LEFT JOIN pessoas_juridicas PJ ON PJ.id_pessoas = N.id_pessoas_proprietario
-				WHERE id_umas=".intval($_REQUEST["idUMA"])." AND id_notas_itens=".intval($_REQUEST["idNotaItem"]);
-		$rs = dbQuery($sql);
-
-		foreach ($rs as $row) {
-
-			$mtz=[];
-			$mtz["valor"]=0;
-			$mtz["id_notas_itens"]=0;
-
-			// Se o cliente for fiscal bloquear a carga, pois não pode ficar sem nota.
-			if (intval($row["fiscal"]) == 1) {
-				$mtz["bloqueada"]=1;
-			}
-
-			dbUpdate("umas_itens", $mtz, $row["id"]);
-			$mtz=[];
-			$mtz["id_pessoas"]=$usrId;
-			$mtz["id_umas"]=$row["id_umas"];
-			$mtz["id_umas_para"]=0;
-			$mtz["id_posicoes"]=$row["id_posicoes"];
-			$mtz["id_pessoas_proprietario"]=$row["id_pessoas_proprietario"];
-			$mtz["tipo"]="N";
-			$mtz["data"]=date('Y-m-d H:i:s');
-			$mtz["descricao"]="UMA removida da NF número: ".$row["numero"]. ", NI: ".$row["id_notas_itens"];
-			$mtz["lote"]=$row["lote"];
-			$mtz["data_validade"]=$row["data_validade"];
-			$mtz["data_fabricacao"]=$row["data_fabricacao"];
-			dbInsert("umas_movimentos", $mtz);
-		}
-
-		$rota=$o->page."&gPage=".UMAS."&gId=".$gId;
-		redirect($rota);
-	break;
 
 	case FORMULARIO_IMPORTAR_ITENS_NOTA:
 		if ($_REQUEST['importar'] == 1) {
@@ -1265,8 +900,8 @@ switch($gPage) {
 		/**
 		 * IPI
 		 */
-		$ipi=$nf->obtemDadosIpi($gId);
-		$valueIpiCst=(count($ipi)>0)?$ipi["id_imp_ipi_cst"]:1;
+		$ipi = $nf->obtemDadosIpi($gId);
+		$valueIpiCst = ($ipi) ? $ipi["id_imp_ipi_cst"] : 1;
 		$frm=new gForm("{id:formIPI; onClickSubmit: btnIPI}");
 		$frm->row(
 			$frm->add("type:combo; name: id_imp_ipi_cst; fieldLabel: CST; items:".$sp["combo_imp_ipi_cst"]."; value:".$valueIpiCst.";")
@@ -1315,7 +950,7 @@ switch($gPage) {
 		 * COFINS
 		 */
 		$cofins=$nf->obtemDadosCofins($gId);
-		$valueCofinsCst=(count($cofins)>0)?$cofins["id_imp_cofins_cst"]:1;
+		$valueCofinsCst = ($cofins) ? $cofins["id_imp_cofins_cst"] : 1;
 		$frm = new gForm("{id:formCOFINS; onClickSubmit: btnCOFINS}");
 		$frm->row(
 			$frm->add("type: combo; name:id_imp_cofins_cst; fieldLabel:CST; value:".$valueCofinsCst."; items:".$sp["combo_imp_cofins_cst"].";")
@@ -1406,40 +1041,6 @@ switch($gPage) {
 
 				echo json_encode($id);
 				exit;
-		}
-
-		break;
-
-	case UMAS_DISPONIVEIS_ASSOCIAR:
-
-		/* 1º UMAs sem notas fiscais  */
-		/* 2º UMAs que contenham o mesmo sku dos itens da nota */
-		$itensNaNota=$nf->obtemRegistrosNotasItens($gId);
-		if ($itensNaNota) {
-			$html.=$o->tableBegin("big", true, true);
-			$mtz=[];
-			$mtz[]="<-Item";
-			$mtz[]="<-NCM";
-			$mtz[]="<-Quantidade";
-			$mtz[]="<-Valor";
-			$mtz[]="<-Peso bruto";
-			$mtz[]="<-Peso líquido";
-			$html.=$o->tableRow($mtz, "header");
-			foreach ($itensNaNota as $item) {
-				$mtz=[];
-				$mtz[]="<-".formataDescricaoItemSKU($item["codigo"], $item["descricao"], $item["sigla"], $item["quantidade_sku"]);
-				$mtz[]="<-".$item["ncm"];
-				$mtz[]="<-".gFloat($item["quantidade"]);
-				$mtz[]="<-".gFloat($item["valor"]);
-				$mtz[]="<-".gFloat($item["peso_bruto"]);
-				$mtz[]="<-".gFloat($item["peso_liquido"]);
-				$html.=$o->tableRow($mtz, "detail");
-			}
-
-			$html.=$o->tableEnd();
-		} else {
-			$html.=$o->msgInfo("Não existem itens nessa nota fiscal.");
-			$html.=$o->button("{icon: arrow-left; caption: Voltar; hint: Voltar; style: info; size: normal; href: ".$o->page . "&gPage=" . UMAS . "&gId=" . $gId);
 		}
 
 		break;
