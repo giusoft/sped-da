@@ -1,9 +1,12 @@
-<?
+<?php
 $ip = $_SERVER["REMOTE_ADDR"];
 $SITE="emitenota";
 
 $LOCALHOST = false;
-$url = "localhost";
+
+// $url = "IP_DA_MAQUINA PARA FUNCIONAR EM LOCAL SEM PRECISAR MEXER NO DOCKER";
+// LÁ EM BAIXO NO JSON DO BANCO DE DADOS ALTERE PARA A EMPRESA QUE TEM NO BANCO
+$url = "host.docker.internal";
 if ($_SERVER['SERVER_PORT']=='8080') {
 	$url = "10.0.0.12";
 	$LOCALHOST = true;
@@ -12,14 +15,14 @@ if ($_SERVER['SERVER_PORT']=='8080') {
 $EMPRESA = 'giusoft';
 $AMBIENTE_TESTE = false;
 $gBASE = "emitenota/$EMPRESA";
-
-$gPathClasses = "/var/www/html/emitenota/" . $EMPRESA . "/src/Model/";
+$gPathClasses = "/var/www/html/emitenota/" . $EMPRESA . "/src/Lib/";
 
 define("NOME_CODIGO_EXTERNO","Cód.externo");
 
 $gSETUP = "
 	global
 	{
+		site: $SITE;
 		theme: cosmo;
 		bodyfont: Play;
 		headersfont: Play;
@@ -53,7 +56,7 @@ $gSETUP = "
 
 	database
 	{
-		name: wms_$EMPRESA;
+		name: wms_logiclog;
 		transaction: true;
 		charset: utf8mb4;
 		user: web;
@@ -69,6 +72,7 @@ $gSETUP = "
 		system: gfw_;
 		stoponerror: true;
 	}
+
 
 	google {
 		key: AIzaSyAFvZGR9LxG6MLGGxgYc47Jui-bclt6SWY;
@@ -122,7 +126,7 @@ $gSETUP = "
 		jquery: jquery-2.1.0/jquery-2.1.0.min.js;
 		xfont_awesome5: fonts/fontawesome-5.0.2/;
 		font_awesome5: fonts/fontawesome-pro-5.3.1-web/;
-		fpdf: fpdf181/;
+		fpdf: fpdf186/;
 		webcamjs: webcamjs-master/;
 		jquery_mask: jquery-mask/dist/;
 	}
