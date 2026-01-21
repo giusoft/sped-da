@@ -32,7 +32,7 @@ $sp['combo_fornecedores']="SELECT id,apelido FROM pessoas WHERE situacao='Ativo'
 $sp['combo_motoristas']="SELECT id,apelido FROM pessoas WHERE tipo='F' AND situacao='Ativo' AND motorista=1 AND apelido <> '' ORDER BY nome";
 $sp['combo_empresas']="SELECT id,apelido FROM pessoas WHERE tipo='J' AND situacao='Ativo' AND apelido <> '' ORDER BY apelido";
 $sp['combo_transportadora']="SELECT id,apelido FROM pessoas WHERE situacao='Ativo' AND transportadora=1 ORDER BY nome";
-$sp["combo_setores"]="SELECT id,descricao FROM setores ORDER BY descricao";
+// $sp["combo_setores"]="SELECT id,descricao FROM setores ORDER BY descricao";
 // Endereços
 $sp["combo_cidades"]="SELECT id,descricao FROM enderecos_cidades ORDER BY descricao";
 $sp["combo_estados"]="SELECT id,descricao FROM enderecos_estados ORDER BY descricao";
@@ -81,7 +81,7 @@ $sp["combo_informacoes_nfe"] = "SELECT id, descricao FROM nfe_informacoes ORDER 
 // Estoque
 $sp["armazens"]="SELECT * FROM armazens ORDER BY descricao";
 $sp["cfops"]="SELECT * FROM cfops WHERE codigo ORDER BY codigo";
-$sp["setores"]="SELECT * FROM setores ORDER BY descricao";
+// $sp["setores"]="SELECT * FROM setores ORDER BY descricao";
 $sp["grupos"]="SELECT id,descricao FROM grupos ORDER BY descricao";
 $sp["unidades"]="SELECT * FROM unidades ORDER BY descricao";
 $sp["tipos"]="SELECT id,descricao FROM tipos ORDER BY descricao";

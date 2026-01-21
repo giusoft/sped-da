@@ -234,11 +234,11 @@ if (($g == "login")) {
 
 				//Armazens
 				$usrArmazens = array();
-				$sql="SELECT id_armazens FROM pessoas_armazens WHERE id_pessoas=$usrId AND cancelado=0";
-				if($id_armazens > 0)
-					$sql.=" AND id_armazens=".(int) $id_armazens;
-				//echo $sql;exit;
-				$rsA= dbQuery($sql);
+				// $sql="SELECT id_armazens FROM pessoas_armazens WHERE id_pessoas=$usrId AND cancelado=0";
+				// if($id_armazens > 0)
+				// 	$sql.=" AND id_armazens=".(int) $id_armazens;
+				// //echo $sql;exit;
+				// $rsA= dbQuery($sql);
                 if(is_array($rsA)) {
                     foreach ($rsA as $row) {
                         $usrArmazens[] = $row['id_armazens'];
@@ -247,22 +247,22 @@ if (($g == "login")) {
 
 				// equipamentos
 				// Operador
-				$sql = "SELECT E.*
+				/*$sql = "SELECT E.*
 						FROM equipamentos E
 						INNER JOIN equipamentos_pessoas EP ON E.id=EP.id_equipamentos
 						WHERE E.id=".$usrEquip;
 				$rse = dbQuery($sql);
-				$_SESSION['empilhadeira'] = $rse[0];
+				$_SESSION['empilhadeira'] = $rse[0];*/
 
 				// Operador
-				$sql = "SELECT EP.*
+				/*$sql = "SELECT EP.*
 						FROM equipamentos_posicoes EP
 						WHERE EP.id_equipamentos=".$usrEquip;
 				$rse = dbQuery($sql);
-				$_SESSION['empilhadeiraPosicoes'] = $rse;
+				$_SESSION['empilhadeiraPosicoes'] = $rse;*/
 
 				// Definindo armazem
-				if ($usrCliente==1)
+				/*if ($usrCliente==1)
 				{
 					$sql="SELECT
 							A.id, A.descricao
@@ -276,7 +276,7 @@ if (($g == "login")) {
 						$amz=dbQuery("SELECT * FROM armazens WHERE id = $id_armazens");
 					else
 						$amz=dbQuery("SELECT * FROM armazens LIMIT 1");
-				}
+				}*/
 
 				$_SESSION['armazemAtualId'] = $amz[0]["id"];
 				$_SESSION['armazemAtualDescricao'] = $amz[0]["descricao"];
