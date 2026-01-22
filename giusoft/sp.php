@@ -76,6 +76,7 @@ $sp["combo_imp_pis_cst"] = "SELECT id, CONCAT(codigo,' - ',descricao) FROM imp_p
 $sp["combo_imp_cofins_cst"] = "SELECT id, CONCAT(codigo,' - ',descricao) FROM imp_cofins_cst WHERE ativo = 1 ORDER BY codigo";
 $sp["combo_imp_ibs_cbs_cst"] = "SELECT id, CONCAT(codigo,' - ',descricao) FROM imp_ibs_cbs_cst WHERE ativo = 1 ORDER BY codigo";
 $sp["combo_informacoes_nfe"] = "SELECT id, descricao FROM nfe_informacoes ORDER BY descricao ASC";
+$sp['combo_tipos_ocorrencias']="SELECT id,descricao FROM tipos_ocorrencias WHERE ativo=1 ORDER BY id";
 
 
 // Estoque

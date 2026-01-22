@@ -58,16 +58,13 @@ define("FILIAL_CANCELAR", 112);
 
 define("CANCELAR", 120);
 
-define("PRIORIDADES", 130);
-define("PRIORIDADES_ATIVAR", 131);
-define("PRIORIDADES_ORDENAR", 132);
 
 define("CFOPS", 200);
 define("CFOPS_SALVAR", 201);
 define("CFOPS_EXCLUIR", 202);
 
-define("OPERACAO", 300);
-define("SALVAR_ABA_OPERACAO", 301);
+define("CONFIGURACAO", 300);
+define("SALVAR_ABA_CONFIGURACAO", 301);
 
 define("IMPORTACAO", 400);
 define("IMPORTACAO_SALVAR", 401);
@@ -143,7 +140,7 @@ switch ($gPage) {
             }
             $html .= $o->tableBegin('big', true, true);
             $mtz = [];
-            $mtz[] = "<-Opções";
+            $mtz[] = "<>Opções";
             $mtz[] = "<>Id";
             $mtz[] = "<>Situação";
             $mtz[] = "<-Apelido";
@@ -156,13 +153,13 @@ switch ($gPage) {
             $mtz[] = "<>Transport.";
             $html .= $o->tableRow($mtz, 'header');
             foreach ($rs as $pessoa) {
-                $btns = [];
+                $btns = '';
                 $btns .= $o->button("{icon: folder-open; hint: Abrir a ficha da pessoa; size:tiny; href: " . $o->page . "&gPage=" . CAPA . "&gId=" . $pessoa['id'] . "}");
 
                 $btns .= $o->button("{style:danger; icon:trash; hint:Cancelar pessoa; size:tiny; onClick:btnAbrirModal(" . $pessoa["id"] . ");}");
 
                 $mtz = [];
-                $mtz[] = '<-' . $btns;
+                $mtz[] = '<>' . $btns;
                 $mtz[] = "<>" . $pessoa["id"];
                 $mtz[] = '<>' . $pessoa['situacao'];
                 $mtz[] = '<-' . $pessoa['apelido'];
@@ -334,7 +331,7 @@ switch ($gPage) {
 
             $html .= '<div class="col-lg-9 col-md-9 col-sm-8 col-xl-6">';
             $html .= $o->msgSubTitle("Pendências");
-            $erros = "";
+            $erros = [];
 
             $sql = "SELECT
                         count(p.id) p,
@@ -403,17 +400,17 @@ switch ($gPage) {
         }
 
         if ($ok) {
-            if (($nomeAntigo != $_REQUEST['nome']) && $_REQUEST['nome'] != '') {
-                $dadosGatilho = [
-                    'empresa' => [
-                        'nome' => $_REQUEST['nome'],
-                        'apelido' => $_REQUEST['apelido']
-                    ],
-                    'idPessoasProprietario' => 1
-                ];
+            // if (($nomeAntigo != $_REQUEST['nome']) && $_REQUEST['nome'] != '') {
+            //     $dadosGatilho = [
+            //         'empresa' => [
+            //             'nome' => $_REQUEST['nome'],
+            //             'apelido' => $_REQUEST['apelido']
+            //         ],
+            //         'idPessoasProprietario' => 1
+            //     ];
 
-                dispararGatilho('sincronizarProprietario', $dadosGatilho);
-            }
+            //     dispararGatilho('sincronizarProprietario', $dadosGatilho);
+            // }
             $persistencia->atualizarPessoasSituacao($gId);
 
             redirect($o->page . '&gPage=' . DADOS . '&gId=' . $gId);
@@ -1284,6 +1281,7 @@ switch ($gPage) {
     case FILIAL:
         $sql = "SELECT id,apelido FROM pessoas WHERE situacao='Ativo' AND cliente=1 ORDER BY nome";
         $rs = dbQuery($sql);
+
         foreach ($rs as $row) {
             $sql = "SELECT * FROM pessoas_filial WHERE id_pessoas=" . intval($row["id"]) . " AND id_filial=" . $_SESSION["filialAtualId"];
             $existe = dbQuery($sql);
@@ -1424,149 +1422,16 @@ switch ($gPage) {
         break;
 
 
-    case PRIORIDADES:
-        $html .= mostraCabecalho($gId);
-        $sql = "SELECT * FROM pessoas_prioridades_reservas WHERE id_pessoas=$gId ORDER BY ordem";
-        $rs = dbQuery($sql);
-        if (count($rs) == 0) {
-            $sql = "SELECT * FROM pessoas_prioridades_reservas WHERE id_pessoas=0 ORDER BY ordem";
-            $rs = dbQuery($sql);
-            foreach ($rs as $row) {
-                $mtz = [];
-                $mtz['id_pessoas'] = $gId;
-                $mtz['id_prioridade'] = $row['id'];
-                $mtz['ativo'] = $row['ativo'];
-                $mtz['ordem'] = $row['ordem'];
-                $mtz['descricao'] = $row['descricao'];
-                dbInsert('pessoas_prioridades_reservas', $mtz);
-            }
-            $sql = "SELECT * FROM pessoas_prioridades_reservas WHERE id_pessoas=$gId ORDER BY ordem";
-            $rs = dbQuery($sql);
-        }
-
-        if ($rs[0]['ativo']) {
-            $btns = $o->button("{icon: thumbs-up; style: success; size: small; href:" . $o->page . "&gId=$gId&gIdd=" . $rs[0]['id'] . "&gPage=" . PRIORIDADES_ATIVAR . "}");
-        } else {
-            $btns = $o->button("{icon: thumbs-down; style: danger; size: small; href:" . $o->page . "&gId=$gId&gIdd=" . $rs[0]['id'] . "&gPage=" . PRIORIDADES_ATIVAR . "}");
-        }
-
-        $html .= $btns . "Respeitar a ordem de prioridades abaixo para reservas deste cliente";
-        $html .= $o->hr();
-
-        $html .= $o->tableBegin("medium", true);
-        $mtz = [];
-        $mtz[] = "<-Opções";
-        $mtz[] = "<-Prioridade";
-        $html .= $o->tableRow($mtz, "header");
-        $id = 0;
-        foreach ($rs as $row) {
-            if ($id > 0) {
-                $mtz = [];
-                if ($row['ativo']) {
-                    $btns = $o->button("{icon: thumbs-up; style: success; size: small; href:" . $o->page . "&gId=$gId&gIdd=" . $row['id'] . "&gPage=" . PRIORIDADES_ATIVAR . "}");
-                } else {
-                    $btns = $o->button("{icon: thumbs-down; style: danger; size: small; href:" . $o->page . "&gId=$gId&gIdd=" . $row['id'] . "&gPage=" . PRIORIDADES_ATIVAR . "}");
-                }
-
-                if ($id > 1) {
-                    $btns .= $o->button("{icon: arrow-up; style: info; size: small; href:" . $o->page . "&gId=$gId&gIdd=" . $row['id'] . "&gPage=" . PRIORIDADES_ORDENAR . "&sinal=0}");
-                } else {
-                    $btns .= $o->button("{icon: arrow-up; disabled: true; style: info; size: small; href:" . $o->page . "&gId=$gId&gIdd=" . $row['id'] . "&gPage=" . PRIORIDADES_ORDENAR . "&sinal=0}");
-                }
-
-                if ($id < count($rs) - 1) {
-                    $btns .= $o->button("{icon: arrow-down; style: info; size: small; href:" . $o->page . "&gId=$gId&gIdd=" . $row['id'] . "&gPage=" . PRIORIDADES_ORDENAR . "&sinal=2}");
-                } else {
-                    $btns .= $o->button("{icon: arrow-down; style: info; disabled: true; size: small; href:" . $o->page . "&gId=$gId&gIdd=" . $row['id'] . "&gPage=" . PRIORIDADES_ORDENAR . "&sinal=2}");
-                }
-
-                $mtz[] = "<-" . $btns;
-                $mtz[] = "<-" . $row['descricao'];
-                $html .= $o->tableRow($mtz, "detail");
-            }
-            $id++;
-        }
-        $html .= $o->tableEnd();
-        break;
-
-
-    case PRIORIDADES_ATIVAR:
-        $sql = "SELECT
-                    pessoas_juridicas.priorizar_palete_aberto,
-                    pessoas_juridicas.priorizar_palete_fechado
-                FROM pessoas_juridicas WHERE id_pessoas = " . $gId;
-        $buscaFlags = dbFastQuery($sql)[0];
-
-        if ($buscaFlags['priorizar_palete_aberto'] == 1 || $buscaFlags['priorizar_palete_fechado'] == 1) {
-            $html .= $o->msgDanger("Para ativar a prioridade da reserva, é necessário desativar previamente a prioridade de palete fechado/aberto na aba Operação do cadastro desta empresa");
-            $html .= $backButton;
-            break;
-        }
-
-        dbQuery("UPDATE pessoas_prioridades_reservas SET ativo=1-ativo WHERE id = " . intval($_REQUEST['gIdd']));
-        redirect($o->page . "&gPage=" . PRIORIDADES . "&gId=" . $gId);
-        break;
-
-
-    case PRIORIDADES_ORDENAR:
-        $gIdd = intval($_REQUEST['gIdd']);
-        $sinal = intval($_REQUEST['sinal']) - 1;
-        $sql = "SELECT * FROM pessoas_prioridades_reservas WHERE id_pessoas=$gId ORDER BY ordem";
-        $rs = dbQuery($sql);
-        foreach ($rs as $key => $row) {
-            if ($gIdd == $row['id']) {
-                $idAntes = $key - 1;
-                $idAtual = $key;
-                $idDepois = $key + 1;
-            }
-        }
-
-        $novaOrdem = 0;
-        if ($sinal == -1) {
-            $novaOrdem = $rs[$idAntes]['ordem'];
-            $sql = "UPDATE pessoas_prioridades_reservas SET ordem=ordem+1 WHERE id=" . $rs[$idAntes]['id'];
-            gDR($sql);
-            dbQuery($sql);
-        }
-
-        if ($sinal == 1) {
-            $novaOrdem = $rs[$idDepois]['ordem'];
-            $sql = "UPDATE pessoas_prioridades_reservas SET ordem=ordem-1 WHERE id=" . $rs[$idDepois]['id'];
-            gDR($sql);
-            dbQuery($sql);
-        }
-
-        if ($novaOrdem > 0) {
-            $sql = "UPDATE pessoas_prioridades_reservas SET ordem=$novaOrdem WHERE id=$gIdd";
-            gDR($sql);
-            dbQuery($sql);
-        }
-
-        redirect($o->page . "&gPage=" . PRIORIDADES . "&gId=" . $gId);
-        break;
-
-
-    case OPERACAO:
+    case CONFIGURACAO:
         $html .= mostraCabecalho($gId);
 
         $rs = $persistencia->obtemRegistros("p.id=" . $gId)[0];
         $frm = new gForm();
-        $html .= $persistencia->gerarCamposAbaOperacao($frm, $rs, SALVAR_ABA_OPERACAO);
+        $html .= $persistencia->gerarCamposAbaConfiguracao($frm, $rs, SALVAR_ABA_CONFIGURACAO);
         break;
 
 
-    case SALVAR_ABA_OPERACAO:
-
-        $sql = "SELECT ativo
-                FROM pessoas_prioridades_reservas
-                WHERE id_prioridade = 1 AND id_pessoas = " . $gId . " LIMIT 1";
-        $buscaPrioridadeReserva = dbFastQuery($sql)[0]['ativo'];
-
-        if ($buscaPrioridadeReserva && (gDBCheck($_REQUEST['priorizar_palete_aberto']) || gDBCheck($_REQUEST['priorizar_palete_fechado']))) {
-            $html .= $o->msgDanger("Para ativar a prioridade de palete fechado/aberto, é necessário desativar previamente a prioridade da reserva na aba Prioridades do cadastro desta empresa");
-            $html .= $backButton;
-            break;
-        }
+    case SALVAR_ABA_CONFIGURACAO:
 
         $idPessoaJuridica = dbQuery("SELECT id FROM pessoas_juridicas WHERE id_pessoas = {$gId}")[0]['id'];
         if (!$idPessoaJuridica) {
@@ -1576,28 +1441,11 @@ switch ($gPage) {
         }
 
         $flds = [];
-        $flds['faz_segunda_separacao'] = gDBCheck($_REQUEST['segunda_separacao']);
-        $flds['exigir_sku_separacao'] = gDBCheck($_REQUEST['exigir_sku_separacao']);
-        $flds['lote_xprod'] = gDBCheck($_REQUEST['lote_xprod']);
-        $flds['fiscal'] = gDBCheck($_REQUEST['fiscal']);
-        $flds['indicar_posicao'] = gDBCheck($_REQUEST['indicar_posicao']);
-        $flds['priorizar_palete_aberto'] = gDBCheck($_REQUEST['priorizar_palete_aberto']);
-        $flds['priorizar_palete_fechado'] = gDBCheck($_REQUEST['priorizar_palete_fechado']);
-        $flds['exige_uma_entrada_convencional'] = gDBCheck($_REQUEST['exige_uma_entrada_convencional']);
         $flds['codigo_sistema_externo'] = gCleanField($_REQUEST['codigo_sistema_externo']);
-        $flds['foto_obrigatoria'] = gDBCheck($_REQUEST['foto_obrigatoria']);
-        $flds['tipo_separacao'] = intval($_REQUEST['tipo_separacao']);
-        $flds['prazo'] = gCleanField($_REQUEST['prazo']);
-        $flds['lead_time'] = gCleanField($_REQUEST['leadTime']);
-        $flds['permitir_portaria_sem_os'] = gDBCheck($_REQUEST['permitirPortariaSemOs']);
-        $flds['quantidade_posicoes'] = intval($_REQUEST['quantidade_posicoes']);
-        $flds['variacao_divergencia'] = gDBFloat(gCleanField($_REQUEST['variacao_divergencia']));
         dbUpdate('pessoas_juridicas', $flds, $idPessoaJuridica);
 
         $persistencia->atualizarPessoasSituacao($gId);
-
-        $persistencia->persistirTiposEntrada($_REQUEST['id_tipos_entrada']);
-        redirect($o->page . "&gPage=" . OPERACAO . "&gId=" . $gId);
+        redirect($o->page . "&gPage=" . CONFIGURACAO . "&gId=" . $gId);
         break;
 
     case IMPORTACAO:
@@ -1839,10 +1687,7 @@ function mostraCabecalho($gId)
             case CFOPS:
                 $active7 = 'true';
                 break;
-            case PRIORIDADES:
-                $active8 = 'true';
-                break;
-            case OPERACAO:
+            case CONFIGURACAO:
                 $active9 = 'true';
                 break;
         }
@@ -1855,7 +1700,7 @@ function mostraCabecalho($gId)
                 $o->button("{icon: arrow-right; style: info; hint: Próximo registro; href: " . $o->page . "&gPage=" . REGISTRO_AVANCAR . "&gId=" . $gId . "&gIdRel=" . $gPage . "}") .
             '</div>';
         $btns[] = $o->button("{active: " . $active1 . "; icon: file-alt; caption: Dados pessoais; hint: Alterar os dados pessoais; href: " . $o->page . "&gPage=" . DADOS . "&gId=" . $gId . "}");
-        $btns[] = $o->button("{active: " . $active9 . "; icon: person-carry; caption: Operação; hint: Controle de operações; href: " . $o->page . "&gPage=" . OPERACAO . "&gId=" . $gId . "}");
+        $btns[] = $o->button("{active: " . $active9 . "; icon: person-carry; caption: Configuração; hint: Controle de configurações; href: " . $o->page . "&gPage=" . CONFIGURACAO . "&gId=" . $gId . "}");
         $btns[] = $o->button("{active: " . $active2 . "; icon: map-marker; caption: Endereços; hint: Incluir ou alterar endereços; href: " . $o->page . "&gPage=" . ENDERECOS . "&gId=" . $gId . "}");
         $btns[] = $o->button("{active: " . $active3 . "; icon: warehouse; caption: Filial; hint: Relacionar pessoa ao filial; href: " . $o->page . "&gPage=" . FILIAL . "&gId=" . $gId . "}");
         $btns[] = $o->button("{active: " . $active4 . "; icon: exclamation-triangle; caption: Ocorrências; hint: Incluir ocorrências; href: " . $o->page . "&gPage=" . OCORRENCIAS . "&gId=" . $gId . "}");
@@ -1863,7 +1708,6 @@ function mostraCabecalho($gId)
         if ($gParam['PERFIL_PRODUCAO']['ativo'] == 1) {
             $btns[] = $o->button("{active: " . $active7 . "; icon: file-alt; caption: CFOPs; hint: CFOPs utilizados na emissão de NFe; href: " . $o->page . "&gPage=" . CFOPS . "&gId=" . $gId . "}");
         }
-        $btns[] = $o->button("{active: " . $active8 . "; icon: tasks; caption: Prioridades; hint: Ordem de prioridades para reserva e separação; href: " . $o->page . "&gPage=" . PRIORIDADES . "&gId=" . $gId . "}");
         $btns[] = $o->button("{active: " . $active6 . "; icon: lock; caption: Permissões; hint: Permissõs de acesso; href: " . $o->page . "&gPage=" . PERMISSOES . "&gId=" . $gId . "}");
         if ($_SESSION['usrId'] == 1) {
             $btns[] = $o->button("{active: " . $active5 . "; icon: sign-out; caption: Gatilhos; hint: Configuração de gatilhos de integração; href: " . $o->page . "&gPage=" . GERENCIADOR_ACCESS_POINT . "&gId=" . $gId . "}");
