@@ -56,23 +56,12 @@ else
 
 	$o = new gPortal('{debug: on}');
 }
-if ($gDevice=="mobile")
-{
-	include 'gfw/inc/gMinimal.php';
-	$o = new gMinimal\gOutput();
-	//$o->out('<link href="' . $http_css .'styleMinimal.css" rel="stylesheet">'."\n", gLOC_PRE);
-	if ($usrId>2 && $g<>'login' && $g<>'logout' && $gParam['ACESSOCOL']['ativo']==0)
-	{
-		$g="logout";
-		$gParam['ACESSO']['ativo']=0;
-	}
-} else {
-	if ($usrId>2 && $g<>'login' && $g<>'logout' && $gParam['ACESSOWEB']['ativo']==0)
-	{
-		$g="logout";
-		$gParam['ACESSO']['ativo']=0;
-	}
+
+if ($usrId>2 && $g<>'login' && $g<>'logout' && $gParam['ACESSOWEB']['ativo']==0) {
+	$g="logout";
+	$gParam['ACESSO']['ativo']=0;
 }
+
 
 if ($_SESSION['gTheme']<>'' && $gId>0){
 	gVar("global.theme",$_SESSION['gTheme']);

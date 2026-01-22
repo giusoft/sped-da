@@ -289,9 +289,7 @@ switch ($gPage) {
         $mtz[] = '<-CNPJ';
         $mtz[] = '<-E-mail';
         $mtz[] = '<-Telefone';
-        if ($gParam['INTEGRACAO_GMI']['ativo']) {
-            $mtz[] = '<-Código externo';
-        }
+        $mtz[] = '<-Código externo';
 
         $html .= $o->tableRow($mtz, 'header');
 
@@ -304,9 +302,7 @@ switch ($gPage) {
             $mtz[] = '<-' . $row['cnpj'];
             $mtz[] = '<-' . $row['email'];
             $mtz[] = '<-' . $row['telefone'];
-            if ($gParam['INTEGRACAO_GMI']['ativo']) {
-                $mtz[] = '<-' . $row['codigo_sistema_externo'];
-            }
+            $mtz[] = '<-' . $row['codigo_sistema_externo'];
             $html .= $o->tableRow($mtz, 'detail');
         }
 
@@ -1705,9 +1701,6 @@ function mostraCabecalho($gId)
         $btns[] = $o->button("{active: " . $active3 . "; icon: warehouse; caption: Filial; hint: Relacionar pessoa ao filial; href: " . $o->page . "&gPage=" . FILIAL . "&gId=" . $gId . "}");
         $btns[] = $o->button("{active: " . $active4 . "; icon: exclamation-triangle; caption: Ocorrências; hint: Incluir ocorrências; href: " . $o->page . "&gPage=" . OCORRENCIAS . "&gId=" . $gId . "}");
         $btns[] = $o->button("{active: " . $active5 . "; icon: paperclip; caption: Anexos; hint: Anexar documentos digitalizados; href: " . $o->page . "&gPage=" . ANEXOS . "&gId=" . $gId . "}");
-        if ($gParam['PERFIL_PRODUCAO']['ativo'] == 1) {
-            $btns[] = $o->button("{active: " . $active7 . "; icon: file-alt; caption: CFOPs; hint: CFOPs utilizados na emissão de NFe; href: " . $o->page . "&gPage=" . CFOPS . "&gId=" . $gId . "}");
-        }
         $btns[] = $o->button("{active: " . $active6 . "; icon: lock; caption: Permissões; hint: Permissõs de acesso; href: " . $o->page . "&gPage=" . PERMISSOES . "&gId=" . $gId . "}");
         if ($_SESSION['usrId'] == 1) {
             $btns[] = $o->button("{active: " . $active5 . "; icon: sign-out; caption: Gatilhos; hint: Configuração de gatilhos de integração; href: " . $o->page . "&gPage=" . GERENCIADOR_ACCESS_POINT . "&gId=" . $gId . "}");

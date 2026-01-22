@@ -38,7 +38,6 @@ define("ATUALIZAR_EM_LOTE_PESQUISAR", 81);
 define("CONFIRMAR_ATUALIZAR_EM_LOTE_PESQUISAR", 82);
 define("FINALIZOU_ATUALIZAR_EM_LOTE_PESQUISAR", 83);
 
-define("LISTAGEM",                     95);
 define("FORNECEDORES",                 100);
 define("ALTERAR_FORNECEDOR",           200);
 
@@ -87,7 +86,6 @@ switch ($gPage) {
 		$html .= '<button type="submit" class="btn btn-default" style="margin-bottom: 4px"><span class="fal fa-search"></span> Pesquisar</button> ';
 		$html .= $o->button("{icon: exchange; caption: Atualização em lote; href: " . $o->page . "&gPage=" . ATUALIZAR_EM_LOTE . "}");
 		$html .= $o->button("{icon: download; caption: Importar; href: " . $o->page . "&gPage=" . IMPORTACOES_DIVERSAS . "}");
-		$html .= $o->button("{icon: tasks; caption: Listagem; href: " . $o->page . "&gPage=" . LISTAGEM . "}");
 		$html .= '</form>';
 		$html .= '<br></div>';
 
@@ -417,13 +415,13 @@ switch ($gPage) {
 		$observacoes = decodificarObservacao($registroAtual['observacoes']);
 
 		$frm->row(
-			$frm->add("{name: observacoes;type: textarea; value: " . $observacoes . "}")
+			$frm->add("{name: observacoes; type: textarea; value: " . $observacoes . "}")
 		);
 		$frm->add("{name: gId;type: hidden; value: ".$gId."}");
 		$frm->add("{name: gPage; type: hidden; value: " . DADOS_SALVAR . "}");
 		$html .= $frm->render($o);
 		$html .= $o->msg("* Campos obrigatórios para tornar o item apto para utilização.");
-	
+
 		break;
 
 
@@ -439,21 +437,19 @@ switch ($gPage) {
 			userLog('Item modificado id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
 		}
 
-		if ($ok)
-		{
+		if ($ok) {
 			redirect($o->page.'&gPage='.DADOS.'&gId='.$gId);
 		} else {
-			$html.=$o->msgDanger(implode("<br>",$persistencia->erros));
-			$html.=$o->backButton;
+			$html .= $o->msgDanger(implode("<br>",$persistencia->erros));
+			$html .= $o->backButton;
 		}
 		break;
 
 
 	/* ----------------------------- SKU ------------------------ */
 	case SKUS:
-		$html.=mostraCabecalho();
-		if ($gIdd==0)
-		{
+		$html .= mostraCabecalho();
+		if ($gIdd == 0) {
 			$sql = "SELECT ik.*, u.descricao unidade
 			FROM itens_skus ik
 			LEFT JOIN unidades u ON ik.id_unidades=u.id
@@ -469,9 +465,6 @@ switch ($gPage) {
 		$gIdd = $row2['id'];
 
 		$frm = new gForm();
-		if ($gParam["EXIBIR_CAMPO_CODIGO2_ITENS"]["ativo"]) {
-			$campoDatasul=$frm->add("{name: codigo2; fieldLabel: Código 2; type: upperText; value: ".$row2['codigo2']."}");
-		}
 
 		$frm->row(
 			$frm->add("{name: nome; fieldLabel: Nome; type: upperText; value:".$row2['nome']."}"),
@@ -506,175 +499,122 @@ switch ($gPage) {
 		$frm->addButton("{icon: box; style: default; title: Novo SKU; href: ".$o->page."&gPage=".SKUS."&gId=".$gId."&gIdd=-1}");
 		$html.=$frm->render($o);
 
-		$sql = "SELECT ik.*, u.descricao unidade
-		FROM itens_skus  ik
-		LEFT JOIN unidades u ON ik.id_unidades=u.id
-		WHERE ik.id_itens=$gId ORDER BY ik.id";
+		$sql = "
+			SELECT ik.*, u.descricao unidade
+			FROM itens_skus  ik
+			LEFT JOIN unidades u ON ik.id_unidades=u.id
+			WHERE ik.id_itens=$gId ORDER BY ik.id";
 		$rs = dbQuery($sql);
 		$o->out($o->modal("{title: Confirme; size: small; content: Excluir este registro?; okCaption: Excluir agora; name: confirmaExclusao; url: excluirRegistro()}"), gLOC_INLINE, 999);
 
 		$html .= $o->msgSubTitle('SKUs deste item');
+
 		$html .= $o->tableBegin("big", true);
+
 		$mtz = [];
-		$mtz[]="<-Opções";
-		$mtz[]="->Id";
-		$mtz[]="<>Ativo";
-		$mtz[]="<-Código";
-		if ($gParam["EXIBIR_CAMPO_CODIGO2_ITENS"]["ativo"]) {
-			$mtz[]="<-Código 2";
-		}
-		$mtz[]="<-Cód.Barras";
-		$mtz[]="<-Cód.Barras 2";
-		$mtz[]="<-Nome";
-		$mtz[]="->Qtd";
-		$mtz[]="<-Unidade";
-		$mtz[]="->P.Líquido";
-		$mtz[]="->P.Bruto";
-		$mtz[]="->Qtd.p/palete";
-		$mtz[]="->Alt.SKU";
-		$mtz[]="->Alt.palete";
-		$mtz[]="->Valor";
-		$html.=$o->tableRow($mtz, "header");
+		$mtz[] = "<-Opções";
+		$mtz[] = "->Id";
+		$mtz[] = "<>Ativo";
+		$mtz[] = "<-Código";
+		$mtz[] = "<-Cód.Barras";
+		$mtz[] = "<-Cód.Barras 2";
+		$mtz[] = "<-Nome";
+		$mtz[] = "->Qtd";
+		$mtz[] = "<-Unidade";
+		$mtz[] = "->P.Líquido";
+		$mtz[] = "->P.Bruto";
+		$mtz[] = "->Qtd.p/palete";
+		$mtz[] = "->Alt.SKU";
+		$mtz[] = "->Alt.palete";
+		$mtz[] = "->Valor";
+		$html .= $o->tableRow($mtz, "header");
 		foreach ($rs as $id=>$row) {
 			$mtz = [];
-			$btns = $o->button("{icon: pencil; caption: Editar;size: tiny; style: default; href: ".$o->page."&gPage=" . SKUS . "&gId=".$gId."&gIdd=".$row['id']."}");
+			$btns = $o->button("{icon: pencil; caption: Editar;size: tiny; style: default; href: " . $o->page . "&gPage=" . SKUS . "&gId=" . $gId . "&gIdd=" . $row['id'] . "}");
 			if ($id > 0) {
 				// Verifica se o SKU já foi utilizado. Só permite excluir se nunca foi utilizado
-				$sql = "SELECT id FROM umas_itens WHERE cancelada=0 AND id_itens_skus=".$row['id']." LIMIT 1";
-				$rst = dbQuery($sql);
 				$sql = "
 					SELECT notas_itens.id
 					FROM notas_itens
 					LEFT JOIN notas ON notas.id = notas_itens.id_notas
 					WHERE notas.cancelada = 0
 						AND notas_itens.id_itens_skus = ".$row['id']." LIMIT 1;";
-				$existeNotaComSKU = dbQuery($sql);
+				$existeNotaComSku = dbQuery($sql);
 
-				$sql = "
-					SELECT programacao_itens.id
-					FROM programacao_itens
-					WHERE programacao_itens.id_itens_skus = ".$row['id']." LIMIT 1;";
-				$existeProgramacaoComSKU = dbQuery($sql);
-				if (
-					!$rst
-					&& !$existeNotaComSKU
-					&& !$existeProgramacaoComSKU
-				) {
-					$btns.=$o->button("{icon: trash; caption: Excluir; style: danger; size: tiny; openModal: confirmaExclusao; }", "javascript:gIdd='" . $row['id'] . "'");
+				if (!$existeNotaComSku) {
+					$btns .= $o->button("{icon: trash; caption: Excluir; style: danger; size: tiny; openModal: confirmaExclusao; }", "javascript:gIdd='" . $row['id'] . "'");
 				}
 			}
 
-			$mtz[]="<-".$btns;
-			$mtz[]="->".$row["id"];
-			$mtz[]="<>".gCheck($row["ativo"]);
-			$mtz[]="<-".$row["codigo"];
-			if ($gParam["EXIBIR_CAMPO_CODIGO2_ITENS"]["ativo"]) {
-				$mtz[]="<-".$row["codigo2"];
-			}
-			$mtz[]="<-".$row["codigo_barras"];
-			$mtz[]="<-".$row["codigo_barras_alternativo"];
-			$mtz[]="<-".$row["nome"];
-			$mtz[]="->".gFloat($row["quantidade"]);
-			$mtz[]="<-".$row["unidade"];
-			$mtz[]="->".gFloat($row["peso_liquido"]);
-			$mtz[]="->".gFloat($row["peso_bruto"]);
-			$mtz[]="->".gFloat($row["palete_altura"]*$row["palete_lastro"]);
-			$mtz[]="->".str_replace(",0000","",gFloat($row["altura"]))."cm";
-			$mtz[]="->".str_replace(",0000","",gFloat($row["altura"]*$row["palete_altura"]))."cm";
-			$mtz[]="->".gFloat($row["valor"]);
+			$mtz[] = "<-" . $btns;
+			$mtz[] = "->" . $row["id"];
+			$mtz[] = "<>" . gCheck($row["ativo"]);
+			$mtz[] = "<-" . $row["codigo"];
+			$mtz[] = "<-" . $row["codigo_barras"];
+			$mtz[] = "<-" . $row["codigo_barras_alternativo"];
+			$mtz[] = "<-" . $row["nome"];
+			$mtz[] = "->" . gFloat($row["quantidade"]);
+			$mtz[] = "<-" . $row["unidade"];
+			$mtz[] = "->" . gFloat($row["peso_liquido"]);
+			$mtz[] = "->" . gFloat($row["peso_bruto"]);
+			$mtz[] = "->" . str_replace(",0000","",gFloat($row["altura"]))."cm";
+			$mtz[] = "->" . str_replace(",0000","",gFloat($row["altura"]*$row["palete_altura"]))."cm";
+			$mtz[] = "->" . gFloat($row["valor"]);
 			if ($gIdd == $row['id']) {
-				$html.=$o->tableRow($mtz, "detail", "style='border: 4px solid #fe6600'");
+				$html .= $o->tableRow($mtz, "detail", "style='border: 4px solid #fe6600'");
 			} else {
-				$html.=$o->tableRow($mtz, "detail");
+				$html .= $o->tableRow($mtz, "detail");
 			}
 		}
-		$html.=$o->tableEnd();
-		if (!$aptoSKUs)
-		{
-			$html.=$o->msgDanger("Você deve especificar a norma de paletização e a altura do item para o SKU");
-		}
-		$o->addJavascript('gIdd=0;function excluirRegistro(){document.location.href="'.$o->page."&gPage=".SKUS_EXCLUIR."&gId=$gId&gIdd=".'"+gIdd;}');
+
+		$html .= $o->tableEnd();
+
+		$o->addJavascript('
+			gIdd=0;
+			function excluirRegistro(){
+				document.location.href="'.$o->page."&gPage=".SKUS_EXCLUIR."&gId=$gId&gIdd=".'"+gIdd;
+			}'
+		);
 		break;
 
 
 	case SKUS_SALVAR:
-		$hoje = date('Y-m-d H:i:s');
 		$flds = [];
-		$flds['id_itens']=$gId;
-		$flds['ativo']=gDBCheck($_REQUEST['ativo']);
-		$flds['codigo']=gCleanField($_REQUEST['codigo']);
-		if ($gParam["EXIBIR_CAMPO_CODIGO2_ITENS"]["ativo"]) {
-			$flds['codigo2']=gCleanField($_REQUEST['codigo2']);
+		$flds['id_itens'] = $gId;
+		$flds['ativo'] = gDBCheck($_REQUEST['ativo']);
+		$flds['codigo'] = gCleanField($_REQUEST['codigo']);
+		$flds['codigo_barras'] = gCleanField($_REQUEST['codigo_barras']);
+		$flds['codigo_barras_alternativo'] = gCleanField($_REQUEST['codigo_barras_alternativo']);
+		$flds['codigo_anterior'] = gCleanField($_REQUEST['codigo_anterior']);
+		$flds['nome'] = gCleanField($_REQUEST['nome']);
+		$flds['id_unidades'] = intval($_REQUEST['id_unidades']);
+		$flds['quantidade'] = gDBFloat($_REQUEST['quantidade']);
+		$flds['peso_liquido'] = gDBFloat($_REQUEST['peso_liquido']);
+		$flds['peso_bruto'] = gDBFloat($_REQUEST['peso_bruto']);
+		$flds['largura'] = gDBFloat($_REQUEST['largura']);
+		$flds['altura'] = gDBFloat($_REQUEST['altura']);
+		$flds['comprimento'] = gDBFloat($_REQUEST['comprimento']);
+		$flds['valor'] = gDBFloat($_REQUEST['valor']);
+
+		$validar = $persistencia->validarSKU();
+		if ($validar) {
+			$html.=$o->msgDanger("Erros de validação: ".$o->ul($validar));
+			$html.=$o->button("{icon: arrow-left; caption: Voltar; hint: Voltar; style: info; size: normal; href: ".$o->page . "&gPage=" . SKUS . "&gId=" . $gId);
+			return;
 		}
-		$flds['codigo_barras']=gCleanField($_REQUEST['codigo_barras']);
-		$flds['codigo_barras_alternativo']=gCleanField($_REQUEST['codigo_barras_alternativo']);
-		$flds['codigo_anterior']=gCleanField($_REQUEST['codigo_anterior']);
-		$flds['nome']=gCleanField($_REQUEST['nome']);
-		$flds['id_unidades']=intval($_REQUEST['id_unidades']);
-		$flds['quantidade']=gDBFloat($_REQUEST['quantidade']);
-		$flds['peso_liquido']=gDBFloat($_REQUEST['peso_liquido']);
-		$flds['peso_bruto']=gDBFloat($_REQUEST['peso_bruto']);
-		$flds['largura']=gDBFloat($_REQUEST['largura']);
-		$flds['altura']=gDBFloat($_REQUEST['altura']);
-		$flds['comprimento']=gDBFloat($_REQUEST['comprimento']);
-		$flds['palete_lastro']=gDBFloat($_REQUEST['palete_lastro']);
-		$flds['palete_altura']=gDBFloat($_REQUEST['palete_altura']);
-		$flds['empilhamento_maximo']=intval($_REQUEST['empilhamento_maximo']);
-
-		$flds['valor']=gDBFloat($_REQUEST['valor']);
-
-		// if (!$flds['ativo']) {
-			### UNDONE:: Alguns clientes mantinham skus com saldo duplicados e isto impedia de extinguir o saldo de um dos skus, assim como vinculos com notas
-			/*
-			$sql = "
-				SELECT 1
-				FROM notas_itens
-				JOIN notas ON notas.id = notas_itens.id_notas
-				WHERE notas.cancelada = 0
-					AND notas_itens.id_itens_skus = '{$gIdd}'";
-			$skuExisteEmAlgumaNota = dbQuery($sql)[0];
-			if ($skuExisteEmAlgumaNota) {
-				$html .= $o->msgDanger("Este SKU não pode ser desativado pois existem notas que o referenciam");
-				$html .= $o->backButton;
-				break;
-			}
-			*/
-
-			/*$saldos = $persistencia->obtemUMAsComSaldo("(SK.id = {$gIdd})", 1, 0, '', 1, "", 0, "", 1);
-			if ($saldos) {
-				$html .= $o->msgDanger("Este SKU não pode ser desativado pois possui saldo em alguma(s) UMA ativa no sistema");
-				$html .= $o->backButton;
-				break;
-			}*/
-		// }
-
-		if ($gIdd <= 0) {
-			$validar = $persistencia->validarSKU();
-			if ($validar) {
-				$html.=$o->msgDanger("Erros de validação: ".$o->ul($validar));
-				$html.=$o->button("{icon: arrow-left; caption: Voltar; hint: Voltar; style: info; size: normal; href: ".$o->page . "&gPage=" . SKUS . "&gId=" . $gId);
-				return;
-			}
-
-			$flds['data_cadastro']    = $hoje;
-			$flds['id_pessoas_criou'] = $usrId;
-			$gIdd = dbInsert("itens_skus", $flds, true);
-			userLog('SKU adicionado ao item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
-
-		} else {
-			$validar = $persistencia->validarSKU();
-			if ($validar) {
-				$html .= $o->msgDanger("Erros de validação: ".$o->ul($validar));
-				$html .= $o->button("{icon: arrow-left; caption: Voltar; hint: Voltar; style: info; size: normal; href: ".$o->page . "&gPage=" . SKUS . "&gId=" . $gId);
-				return;
-			}
-
-			$flds['data_alteracao']     = $hoje;
+		if ($gIdd) {
+			$flds['data_alteracao']     = agora();
 			$flds['id_pessoas_alterou'] = $usrId;
 
 			dbUpdate("itens_skus", $flds, $gIdd);
 			userLog('SKU alterado no item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
+		} else {
+			$flds['data_cadastro']    = agora();
+			$flds['id_pessoas_criou'] = $usrId;
+			$gIdd = dbInsert("itens_skus", $flds, true);
+			userLog('SKU adicionado ao item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
 		}
+
 		redirect($o->page.'&gPage='.SKUS.'&gId='.$gId."&gIdd=".$gIdd);
 		break;
 
@@ -684,95 +624,6 @@ switch ($gPage) {
 		dbQuery($sql);
 		userLog('SKU removido do item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
 		redirect($o->page.'&gPage='.SKUS.'&gId='.$gId."&gIdd=".$gIdd);
-		break;
-
-
-	case OCORRENCIAS:
-
-		$gIdEnd=intval($_REQUEST['gIdEnd']);
-		$html.=mostraCabecalho($gId);
-		$rs = $persistencia->obtemRegistrosOcorrencias($gIdEnd);
-		$frm = new gForm();
-		if (count($rs)>0)
-		$frm->addButton("{title: Adicionar outra ocorrência; style: default; href: ".$o->page."&gPage=".OCORRENCIAS_NOVA."&gId=".$gId."}");
-		$html.=$persistencia->geraCamposDoFormularioOcorrencias($frm, $rs[0], OCORRENCIAS_SALVAR, $gIdEnd);
-
-		// Mostra todas as ocorrências que já existem
-		$rs = $persistencia->obtemRegistrosOcorrencias();
-		if (count($rs)>0)
-		{
-			if ($gIdEnd==0)
-			{
-				$gIdEnd=$rs[0]['id'];
-			}
-			$o->out($o->modal("{title: Confirme; size: small; content: Excluir esta ocorrência?; okCaption: Excluir agora; name: confirmaExclusaoOco; url: excluiOco()}"), gLOC_INLINE, 999);
-			$html.=$o->tableBegin('big', true);
-			$mtz = [];
-			$mtz[]='<-Opções';
-			$mtz[]='<-Data digitação';
-			$mtz[]='<-Data ocorrência';
-			$mtz[]='<-Descrição';
-			$mtz[]='<-Tipo';
-			$mtz[]='<-Colaborador';
-			$mtz[]='<-Pública?';
-			$html.=$o->tableRow($mtz, 'header');
-			foreach ($rs as $row) {
-				$mtz = [];
-				$btns=$o->button("{icon: pencil; hint: Alterar ocorrência; caption: Editar; size: small; href: ".$o->page."&gPage=".OCORRENCIAS."&gId=".$gId."&gIdEnd=".$row['id']."}");
-				$btns.=$o->button("{icon: trash; caption: Excluir; style: danger; size: small; openModal: confirmaExclusaoOco; }", "javascript:gIda='" . $row['id'] . "'");
-				$mtz[]='<-'.$btns;
-
-				$mtz[]='<-'.gDate($row['data_digitacao']);
-				$mtz[]='<-'.gDate($row['data_ocorrencia']);
-				$mtz[]='<-'.$o->small(nl2br((string) $row['descricao']));
-				$mtz[]='<-'.$row['tipo_ocorrencia'];
-				$mtz[]='<-'.$row['funcionario'];
-				$mtz[]='<-'.gCheck($row['publica']);
-				if ($row['id']==$gIdEnd) {
-					$html.=$o->tableRow($mtz, 'success');
-				} else {
-					$html.=$o->tableRow($mtz, 'detail');
-				}
-				$primeiro=false;
-			}
-			$html.=$o->tableEnd();
-			$o->addJavascript('gIda=0;function excluiOco(){document.location.href="'.$o->page."&gPage=".OCORRENCIAS_CANCELAR."&gId=$gId&gIdEnd=".'"+gIda;}');
-		}
-		break;
-
-
-	case OCORRENCIAS_SALVAR:
-		$gIdEnd = intval($_REQUEST['gIdEnd']);
-		if ($gIdEnd == 0) {
-			$ok = $persistencia->insereOcorrencia($_REQUEST, $gId);
-			$gIdEnd = $ok;
-		} else {
-			$ok = $persistencia->modificaOcorrencia($_REQUEST, $gId, $gIdEnd);
-		}
-
-		if ($ok) {
-			userLog('Ocorrência alterada no item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
-			redirect($o->page."&gPage=".OCORRENCIAS."&gId=".$gId."&gIdEnd=".$gIdEnd);
-		} else {
-			$html.=$o->msgDanger(implode("<br>",$persistencia->erros));
-			$html.=$o->backButton;
-		}
-
-		break;
-
-
-	case OCORRENCIAS_NOVA:
-		$flds = ['id_pessoas' => $gId];
-		$gIdEnd=dbInsert('itens_ocorrencias', $flds, true);
-		userLog('Ocorrência adicionada ao item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
-		redirect($o->page."&gPage=".OCORRENCIAS."&gId=".$gId."&gIdEnd=".$gIdEnd);
-		break;
-
-
-	case OCORRENCIAS_CANCELAR:
-		dbQuery("DELETE FROM itens_ocorrencias WHERE id_itens=$gId AND id=".$gIdEnd);
-		userLog('Ocorrência cancelada no item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
-		redirect($o->page."&gPage=".OCORRENCIAS."&gId=".$gId."&gIdEnd=".$gIdEnd);
 		break;
 
 
@@ -787,18 +638,20 @@ switch ($gPage) {
 				LEFT JOIN itens I ON a.id_itens=I.id
 				LEFT JOIN itens_skus SK ON I.id=SK.id_itens
 				WHERE a.id_itens=" . $gId ." ORDER BY a.descricao";
-		$rs=dbQuery($sql);
+		$rs = dbQuery($sql);
 
-		$html.=$o->msg($o->big($rs[0]['codigo'])."<br>".$rs[0]['nome']);
-		$frm=new gForm("{columns: 2}");
+		$html .= $o->msg($o->big($rs[0]['codigo'])."<br>".$rs[0]['nome']);
+
+		$frm = new gForm("{columns: 2}");
 		$frm->add("{name: descricao; fieldLabel: Descrição da imagem; type: upperFirstLetterText; }");
 		$frm->add("{name: arquivo; type: file; }");
 		$frm->add("{name: gPage; type: hidden; value: ".IMAGENS_SALVAR."}");
 		$frm->add("{name: gId; type: hidden; value: $gId}");
 		$frm->addButton("{icon: camera; title: Usar webcam; hint: Utilizar a webcam; style: primary; size: small; href:javascript:;;}", "javascript:solicitarCam();");
-		$frm->buttonNextCaption=gT('Incluir');
-		$html.=$frm->render($o);
-		$html.=$o->msgFilter("O tamanho máximo permitido para a inclusão de arquivos é de 4Mb");
+		$frm->buttonNextCaption = gT('Incluir');
+		$html .= $frm->render($o);
+
+		$html .= $o->msgFilter("O tamanho máximo permitido para a inclusão de arquivos é de 4Mb");
 
 		if ($rs) {
 			$http_usr_files.='anexos/';
@@ -830,54 +683,55 @@ switch ($gPage) {
 
 		$o->out('<script src="' . $http_lib . gVar("lib.webcamjs"). 'webcam.min.js"></script>', gLOC_POS,2);
 		$html.='
-		<table>
-		<tr>
-		<td>
-		<div id="my_camera" style="width:320px; height:240px;"></div>
-		</td>
-		<td>&nbsp;</td>
-		<td>
-		<div id="my_result" style="display: inline" class="img img-thumbnail"></div>
-		</td>
-		</tr>
-		</table>';
-		$html.=$o->button("{id:capturarImagem; icon: camera; caption: Capturar imagem; showWait:false;}","javascript:take_snapshot()");
+			<table>
+				<tr>
+					<td>
+						<div id="my_camera" style="width:320px; height:240px;"></div>
+					</td>
+					<td>&nbsp;</td>
+					<td>
+						<div id="my_result" style="display: inline" class="img img-thumbnail"></div>
+					</td>
+				</tr>
+			</table>';
+		$html .= $o->button("{id:capturarImagem; icon: camera; caption: Capturar imagem; showWait:false;}","javascript:take_snapshot()");
 		$js = "
-		$('#capturarImagem').attr('style', 'display:none');
-		function solicitarCam()
-		{
-			$('#capturarImagem').attr('style', '');
-			abrirCam();
-		}
+			$('#capturarImagem').attr('style', 'display:none');
+			function solicitarCam()
+			{
+				$('#capturarImagem').attr('style', '');
+				abrirCam();
+			}
 
-		function abrirCam()
-		{
-			Webcam.attach( '#my_camera' );
-		}
+			function abrirCam()
+			{
+				Webcam.attach( '#my_camera' );
+			}
 
-		function take_snapshot() {
-			Webcam.snap( function(data_uri) {
-				document.getElementById('my_result').innerHTML = '<img src=\"'+data_uri+'\"/>';
-				Webcam.upload( data_uri, 'index.php?g=itens&gPage=".IMAGENS_UPLOAD."&gId=".$gId."', function(code, text) {
-					bootbox.alert('Foto salva no cadastro do item');
+			function take_snapshot() {
+				Webcam.snap( function(data_uri) {
+					document.getElementById('my_result').innerHTML = '<img src=\"'+data_uri+'\"/>';
+					Webcam.upload( data_uri, 'index.php?g=itens&gPage=".IMAGENS_UPLOAD."&gId=".$gId."', function(code, text) {
+						bootbox.alert('Foto salva no cadastro do item');
+					} );
 				} );
-			} );
-		}
+			}
 		";
 		$o->addJavascript($js);
-	break;
-
-
+		break;
 
 	/* ----------------------------- IMAGENS ------------------------ */
 	case IMAGENS:
 		$html .= mostraCabecalho();
 
-		$sql="SELECT a.*, p.nome criou
-		FROM itens_anexos a
-		LEFT JOIN pessoas p on (a.id_pessoas_criou=p.id AND p.cliente=0)
-		WHERE a.id_itens=" . $gId ." ORDER BY a.descricao";
-		$rs=dbQuery($sql);
+		$sql = "
+			SELECT a.*, p.nome criou
+			FROM itens_anexos a
+			LEFT JOIN pessoas p on (a.id_pessoas_criou=p.id AND p.cliente=0)
+			WHERE a.id_itens = {$gId}
+			ORDER BY a.descricao";
+		$rs = dbQuery($sql);
+
 		$frm = new gForm();
 		$frm->addFormMessage("O tamanho máximo permitido para a inclusão de arquivos é de 4Mb");
 		$frm->add("{name: gPage; type: hidden; value: 41}");
@@ -887,7 +741,7 @@ switch ($gPage) {
 
 		$frm->addButton("{icon: camera; title: Usar webcam; hint: Utilizar a webcam; style: primary; size: small; href:javascript:;;}", "javascript:solicitarCam();");
 		$frm->buttonNextCaption=gT('Incluir');
-		$html.=$frm->render($o);
+		$html .= $frm->render($o);
 
 		if ($rs) {
 			$http_usr_files.='anexos/';
@@ -1074,7 +928,7 @@ switch ($gPage) {
 
 
 	case ATIVAR_DESATIVAR:
-		$sql = "UPDATE itens SET ativo=1-ativo,data_alteracao='".date('Y-m-d H:i:s')."',id_pessoas_alterou=".$usrId." WHERE id=".$gId;
+		$sql = "UPDATE itens SET ativo=1-ativo,data_alteracao = NOW(),id_pessoas_alterou=".$usrId." WHERE id=".$gId;
 		dbQuery($sql);
 		if ($_REQUEST['ativo'] == 1) {
 			userLog('Desativou item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
@@ -1311,6 +1165,7 @@ switch ($gPage) {
 		$html.=$imp->processar("itens");
 		break;
 
+
 	case IMPORTACOES_DIVERSAS:
 
 		$html .= $o->button("{icon: download; caption: Itens;  style: primary; size: big; href: " . $o->page . "&gPage=" . IMPORTAR . "}");
@@ -1384,16 +1239,6 @@ switch ($gPage) {
 
 		$opcoesCombo = ['Sim' => 1, 'Não' => 0];
 
-		if ($_REQUEST['faz_picking']) {
-			$filtros[] = "Picking: " . $_REQUEST['faz_picking'];
-			$where[]   = " I.faz_picking = " . $opcoesCombo[$_REQUEST['faz_picking']];
-		}
-
-		if ($critico <> '0') {
-			$filtros[] = "Crítico: " . $critico;
-			$where[]   = " I.critico = " . $opcoesCombo[$_REQUEST['critico']];
-		}
-
 		if ($_REQUEST['ativo']) {
 			$filtros[] = "Ativo: " . $_REQUEST['ativo'];
 			$where[]   = " I.ativo = " . $opcoesCombo[$_REQUEST['ativo']];
@@ -1439,58 +1284,25 @@ switch ($gPage) {
 			$frm->add('{type: number; name:comprimento; fieldLabel:Comprimento; value:;}'),
 			$frm->add('{type: number; name:altura; fieldLabel:Altura (cm); value:;}')
 		);
-		$frm->row(
-			$frm->add('{type: number; fieldLabel:Qtd. no palete - Lastro; name:lastro_palete; value:;}'),
-			$frm->add('{type: number; fieldLabel:Qtd. no palete - Altura; name:altura_palete; value:;}'),
-			$frm->add('{type: number; fieldLabel:Empilhamento máximo; name:empilhamento_maximo; value:;}')
-		);
+
 		$padraoCombo = [];
 		$padraoCombo["0"] = "* Indiferente";
 		$padraoCombo["1"] = "SIM";
 		$padraoCombo["2"] = "NÃO";
 
 		$frm->row(
-			$frm->add("{name: exige_lote; fieldLabel: Exigir Lote na entrada; type: combo; items:'" . json_encode($padraoCombo) . "';}"),
-			$frm->add("{name: exige_data_fabricacao; fieldLabel: Exigir data fabricação na entrada; type: combo; items:'" . json_encode($padraoCombo) . "';}"),
-			$frm->add("{name: exige_data_validade; fieldLabel: Exigir data validade na entrada; type: combo; items:'" . json_encode($padraoCombo) . "';}")
-		);
-
-		$frm->row(
-			$frm->add("{name: id_pessoas_fornecedor; fieldLabel: Fornecedor; type: combo; items: " . $sp['combo_fornecedores' ] . "}"),
-			$frm->add("{type: combo; fieldLabel: Faz Picking; name:faz_picking; allowbank: true; items:{'Sim','Não'}}"),
-			$frm->add("{type: combo; fieldLabel: Crítico; name: critico; allowbank: true; items:{'Sim','Não'}}")
-		);
-
-		$campoPrazoRecebimento = '';
-		if ($gParam['POSSUI_PRAZO_RECEBIMENTO']['ativo']) {
-			$campoPrazoRecebimento = $frm->add("{type: text; fieldLabel: Prazo de recebimento; maxLength: 3; name:prazo_recebimento; allowbank: true;}");
-		}
-
-		$frm->row(
-			$frm->add("{type: combo; fieldLabel: Prioridade de saída; name:prioridadeSaida; items:" . $sp["combo_prioridades_saida"] . ";}"),
-			$frm->add("{type: text; fieldLabel: Qtd Picking Min; name:picking_min; allowbank: true;}"),
-			$campoPrazoRecebimento
-		);
-
-		$frm->row(
-			$frm->add("{type: text; fieldLabel: Qtd Picking Max; name:picking_max; allowbank: true;}"),
-			$frm->add("{name: dias_bloqueio; fieldLabel: Dias Bloqueio; type: number; maxLength: 4; value:;} "),
-			$frm->add("{name: shelf_life; fieldLabel: Shelf Life (dias); type: number; maxLength: 4; value:;} "),
-			$frm->add("{name: prazo_validade; fieldLabel: Prazo validade (dias); type: number; maxLength: 4; value:;} ")
+			$frm->add("{name: id_pessoas_fornecedor; fieldLabel: Fornecedor; type: combo; items: " . $sp['combo_fornecedores' ] . "}")
 		);
 
 		$comboAtivarItem=[];
 		$comboAtivarItem["0"] = "* Indiferente";
 		$comboAtivarItem["1"] = "SIM";
 		$comboAtivarItem["2"] = "NÃO";
-		if (intval($gParam["EXIGE_CONFERENCIA_ARMAZENAR"]["ativo"]) == 0
-			&& intval($gParam["USA_REGRA_PALETIZACAO"]["ativo"] == 0)
-		   )
-		{
-			$frm->row(
-				$frm->add("{name:item_ativar; fieldLabel:Ativo; type:combo; items:'" . json_encode($comboAtivarItem) . "';}")
-			);
-		}
+
+		$frm->row(
+			$frm->add("{name:item_ativar; fieldLabel:Ativo; type:combo; items:'" . json_encode($comboAtivarItem) . "';}")
+		);
+
 
 		$curvas = [
 			'0' => "* Indiferente",
@@ -1503,17 +1315,18 @@ switch ($gPage) {
 			$frm->add("{type: combo; fieldLabel: Grupo; name:id_grupo; items:" . $sp["grupos"] . ";}"),
 			$frm->add("{type: combo; fieldLabel: Tipo; name:id_tipo; items:" . $sp["combo_tipos"] . ";}"),
 			$frm->add("{type: combo; fieldLabel: Unidade; name:id_unidades; items:" . $sp["combo_unidades"] . ";}"),
-			$frm->add("{type: combo; fieldLabel: Curva; name:curva; items:" . json_encode($curvas) . "}")
 		);
 
-		$frm->add('{type: hidden; name:gPage; value:' . CONFIRMAR_ATUALIZAR_EM_LOTE_PESQUISAR . ';}');
+		$frm->add('{type: hidden; name: gPage; value:' . CONFIRMAR_ATUALIZAR_EM_LOTE_PESQUISAR . ';}');
 		$stringItens = implode('|', array_column($itens, 'id'));
 		$frm->add('{type: hidden; name:itens_json; value:' . $stringItens . ';}');
 		$frm->addButton("{icon: arrow-left; title: Voltar; hint: Voltar a página anterior; style: default; href: " . $o->page . "&gPage=" . ATUALIZAR_EM_LOTE . ";}");
 		$html .= $frm->render($o);
 
 		$html .= $o->msg("Itens que serão alterados: ");
+
 		$html .= $o->tableBegin("big", true);
+
 		$mtz   = [];
 		$mtz[] = "<>Ativo";
 		$mtz[] = "<-Nome";
@@ -1521,8 +1334,6 @@ switch ($gPage) {
 		$mtz[] = "<-Unidade";
 		$mtz[] = "<-Tipo";
 		$mtz[] = "<-Grupo";
-		$mtz[] = "<>Faz Picking";
-		$mtz[] = "<>Crítico";
 		$mtz[] = "<-Código";
 		$mtz[] = "->Quantidade SKU";
 		$mtz[] = "->Peso bruto";
@@ -1530,18 +1341,8 @@ switch ($gPage) {
 		$mtz[] = "->Largura";
 		$mtz[] = "->Comprimento";
 		$mtz[] = "->Altura (cm)";
-		$mtz[] = "->Lastro do palete";
-		$mtz[] = "->Altura do palete";
-		$mtz[] = "->Prioridade de saída";
-		$mtz[] = "->Min. picking";
-		$mtz[] = "->Max. picking";
-		if ($gParam['POSSUI_PRAZO_RECEBIMENTO']['ativo']) {
-			$mtz[] = "->Prazo de recebimento";
-		}
-		$mtz[] = "->Dias bloqueio";
-		$mtz[] = "->Shelf life";
-		$mtz[] = "->Prazo validade";
 		$html .=  $o->tableRow($mtz, "header");
+
 		foreach ($itens as $item) {
 			$mtz = [];
 			$mtz[] = "<>" . gCheck($item["ativo"]);
@@ -1550,8 +1351,6 @@ switch ($gPage) {
 			$mtz[] = "<-" . $item["un_descricao"];
 			$mtz[] = "<-" . $item["ti_descricao"];
 			$mtz[] = "<-" . $item["gr_descricao"];
-			$mtz[] = "<>" . gCheck($item["faz_picking"]);
-			$mtz[] = "<>" . gCheck($item["critico"]);
 			$mtz[] = "<-" .  "<a href='" . $o->page."&gPage=" . DADOS . "&gPage=10&gId=" . $item["id_item"] . "'>" . $item["codigo"] . "</a>";
 			$mtz[] = "->" . gFloat($item["quantidade"]);
 			$mtz[] = "->" . gFloat($item["peso_bruto"]);
@@ -1559,17 +1358,6 @@ switch ($gPage) {
 			$mtz[] = "->" . gFloat($item["largura"]);
 			$mtz[] = "->" . gFloat($item["comprimento"]);
 			$mtz[] = "->" . gFloat($item["altura"]);
-			$mtz[] = "->" . $item["palete_lastro"];
-			$mtz[] = "->" . $item["palete_altura"];
-			$mtz[] = "->" . $item["descricao_saida"];
-			$mtz[] = "->" . $item["picking_quantidade_minima"];
-			$mtz[] = "->" . $item["picking_quantidade_maxima"];
-			if ($gParam['POSSUI_PRAZO_RECEBIMENTO']['ativo']) {
-				$mtz[] = "->" . $item["prazo_recebimento"];
-			}
-			$mtz[] = "->" . $item["dias_bloqueio"];
-			$mtz[] = "->" . $item["shelf_life"];
-			$mtz[] = "->" . $item["prazo_validade"];
 			$html .= $o->tableRow($mtz, "detail");
 		}
 		$html .= $o->tableEnd();
@@ -1577,7 +1365,7 @@ switch ($gPage) {
 
 
 	case CONFIRMAR_ATUALIZAR_EM_LOTE_PESQUISAR:
-		$mtz=[];
+		$mtz = [];
 		if ($_REQUEST["quantidade"]) {
 			$mtz["quantidade"] = gDBFloat($_REQUEST["quantidade"]);
 		}
@@ -1602,73 +1390,16 @@ switch ($gPage) {
 			$mtz["altura"] = gDBFloat($_REQUEST["altura"]);
 		}
 
-		if ($_REQUEST["altura_palete"]) {
-			$mtz["palete_altura"] = gDBFloat($_REQUEST["altura_palete"]);
-		}
-
-		if ($_REQUEST["lastro_palete"]) {
-			$mtz["palete_lastro"] = gDBFloat($_REQUEST["lastro_palete"]);
-		}
-
-		if ($_REQUEST["empilhamento_maximo"]) {
-			$mtz["empilhamento_maximo"] = intval($_REQUEST["empilhamento_maximo"]);
-		}
-
 		if ($_REQUEST["id_unidades"]) {
 			$mtz["id_unidades"] = $_REQUEST["id_unidades"];
 		}
 
-		$mtzItem=[];
+		$mtzItem = [];
 		if ($_REQUEST["exige_lote"]) {
 			$exige_lote = (int) ($_REQUEST["exige_lote"] == 1);
 			$mtzItem["exige_lote"] = $exige_lote;
 		}
 
-		if ($_REQUEST["faz_picking"]) {
-			$faz_picking = (int) ($_REQUEST["faz_picking"]=="Sim");
-			$mtzItem["faz_picking"] = $faz_picking;
-		}
-
-		if ($_REQUEST["critico"]) {
-			$mtzItem["critico"] = (int) ($_REQUEST["critico"] == "Sim");
-		}
-
-		if ($_REQUEST["prioridadeSaida"]) {
-			$mtzItem["id_prioridades_saida"] = $_REQUEST["prioridadeSaida"];
-		}
-
-		if ($_REQUEST["picking_min"]) {
-			$mtzItem["picking_quantidade_minima"] = $_REQUEST["picking_min"];
-		}
-
-		if ($_REQUEST["picking_max"]) {
-			$mtzItem["picking_quantidade_maxima"] = $_REQUEST["picking_max"];
-		}
-
-		if ($_REQUEST["prazo_recebimento"]) {
-			$mtzItem["prazo_recebimento"] = $_REQUEST["prazo_recebimento"];
-		}
-
-		if ($_REQUEST["dias_bloqueio"]) {
-			$mtzItem["dias_bloqueio"] = $_REQUEST["dias_bloqueio"];
-		}
-
-		if (isset($_REQUEST["shelf_life"]) && $_REQUEST["shelf_life"] !== "") {
-			$mtzItem["shelf_life"] = $_REQUEST["shelf_life"];
-		}
-
-		if (isset($_REQUEST["prazo_validade"]) && $_REQUEST["prazo_validade"] !== "") {
-			$mtzItem["prazo_validade"] = intval($_REQUEST["prazo_validade"]);
-		}
-
-		if ($_REQUEST["curva"]) {
-			$curvas = [
-				'1' => 'A',
-				'2' => 'B',
-				'3' => 'C'
-			];
-			$mtzItem["curva"] = $curvas[$_REQUEST["curva"]];
-		}
 
 		if ($_REQUEST["id_grupo"]) {
 			$mtzItem["id_grupos"] = $_REQUEST["id_grupo"];
@@ -1676,20 +1407,6 @@ switch ($gPage) {
 
 		if ($_REQUEST["id_tipo"]) {
 			$mtzItem["id_tipos"] = $_REQUEST["id_tipo"];
-		}
-
-		if ($_REQUEST["exige_data_fabricacao"]) {
-			$exige_data_fabricacao = ($_REQUEST["exige_data_fabricacao"] == 2)
-				? 0
-				: 1;
-			$mtzItem["exige_data_fabricacao"] = $exige_data_fabricacao;
-		}
-
-		if ($_REQUEST["exige_data_validade"]) {
-			$exige_data_validade = ($_REQUEST["exige_data_validade"] == 2)
-				? 0
-				: 1;
-			$mtzItem["exige_data_validade"] = $exige_data_validade;
 		}
 
 		if ($_REQUEST["item_ativar"]) {
@@ -1730,123 +1447,9 @@ switch ($gPage) {
 		break;
 
 
-	case LISTAGEM:
-		$html.=$o->msgSubTitle("Listagem");
-		$frm = new gForm("{columns: 3}");
-		$frm->add("{name: id_pessoas_proprietario; fieldLabel: Proprietário; type: combo; items: ".$sp['combo_clientes']."}");
-		$frm->add("{name: insumo; fieldLabel: Insumo; type: checkbox; value: 1}");
-		$frm->add("{name: produto_acabado; fieldLabel: Produto acabado; type: checkbox; value: 0}");
-		$frm->add("{name: gPage; type: hidden; value: ".($gPage+1)."}");
-		$frm->add("{name: gId; type: hidden; value: $gId}");
-		$html.=$frm->render($o);
-		break;
-
-	case (LISTAGEM+1):
-		$idPessoasProprietario = intval($_REQUEST['id_pessoas_proprietario']);
-		$produto_acabado = gDBCheck($_REQUEST['produto_acabado']);
-		$insumo = gDBCheck($_REQUEST['insumo']);
-		$filtro = [];
-		$flt = [];
-		if ($idPessoasProprietario>0)
-		{
-			$filtro[] = gFieldById("pessoas", $idPessoasProprietario,"nome");
-			$flt[] = "i.id_pessoas_proprietario=".$idPessoasProprietario;
-		}
-		if ($produto_acabado>0)
-		{
-			$filtro[] = "Produtos acabados";
-			$flt[] = "i.produto_acabado=1";
-		}
-		if ($insumo>0)
-		{
-			$filtro[] = "Insumos";
-			$flt[] = "i.produto_acabado=0";
-		}
-		$where = [];
-		if ($flt) {
-			$where = "WHERE ".implode(" AND ",$flt);
-		}
-		$sql = "SELECT
-					i.id,
-					ik.id id_itens_skus,
-					i.codigo,
-					i.nome,
-					u.sigla,
-					ik.quantidade qtd_sku,
-					ik.codigo_barras,
-					i.produto_acabado,
-					i.ativo,
-					ik.ativo ativo_sku
-				FROM itens i
-				LEFT JOIN itens_skus ik ON i.id = ik.id_itens
-				LEFT JOIN unidades u ON ik.id_unidades = u.id
-				$where
-				ORDER BY i.nome, ik.quantidade";
-		$rs  = dbQuery($sql);
-		$html.=$o->msgFilter(implode(" • ", $filtro));
-		$html.=$o->tableBegin("big", true);
-		$mtz = [];
-		$mtz[] = "->Id      ";
-		$mtz[] = "<>Ativo       ";
-		$mtz[] = "<>Prod.acabado";
-		$mtz[] = "<-Código       ";
-		$mtz[] = "<-Código barras";
-		$mtz[] = "<-Nome                                                 ";
-		$mtz[] = "->Quantidade   ";
-		$mtz[] = "<-Unidade";
-		$mtz[] = "<-Estrutura                                            ";
-		$html.=$o->tableRow($mtz, "header");
-		foreach($rs as $row) {
-			$mtz = [];
-			if (isset($_REQUEST["gPDF"]) || isset($_REQUEST["gXLS"]) || isset($_REQUEST["gDOC"]) || isset($_REQUEST["gCSV"])) {
-				$mtz[] = "->".$row['id'];
-			} else {
-				$mtz[] = "->"."<a target='_new' href='".$o->page."&gPage=10&gId=".$row['id']."'>".$row['id']."</a>";
-			}
-
-			$mtz[] = "<>".gCheck($row['ativo']+$row['ativo_sku']==2);
-			$mtz[] = "<>".gCheck($row['produto_acabado']);
-			$mtz[] = "<-".$row['codigo'];
-			$mtz[] = "<-".$row['codigo_barras'];
-			$mtz[] = "<-".$row['nome'];
-			$mtz[] = "->".gFloat($row['qtd_sku']);
-			$mtz[] = "<-".$row['sigla'];
-			$estrutura = '';
-			if ($row['produto_acabado']) {
-				$sql = "SELECT ie.grupo, ie.quantidade,
-							i.codigo, i.nome, u.sigla, ik.quantidade qtd_sku
-						FROM itens_estruturas ie
-						LEFT JOIN itens_skus ik ON ie.id_itens_skus_insumo=ik.id
-						LEFT JOIN itens i ON ik.id_itens=i.id
-						LEFT JOIN unidades u ON ik.id_unidades = u.id
-						WHERE ie.id_itens_skus_produto=".$row['id_itens_skus']." ORDER BY ie.grupo";
-				$rsi = dbQuery($sql);
-				$itens = [];
-				foreach ($rsi as $r) {
-					if ($r['grupo']<>'') {
-						$grupo = $o->label($r['grupo'])." ";
-					} else {
-						$grupo = "";
-					}
-					$itens[] = $grupo . intval($r['quantidade'])." de ".$r['codigo']." (".intval($r['qtd_sku'])."x".$r['sigla'].")";
-				}
-				$estrutura = $o->small(implode("<br>",$itens));
-			}
-
-			$mtz[] = "<-".$estrutura;
-			if (($row['produto_acabado'] && $estrutura<>"") || $insumo) {
-				$html .= $o->tableRow($mtz, "detail");
-			}
-
-		}
-
-		$html.=$o->tableEnd();
-	break;
-
-
 	case FORNECEDORES:
-		$html.=mostraCabecalho();
-		$html.=$o->msg("Tabela de conversão de códigos para importação de XML de fornecedor para o cliente");
+		$html .= mostraCabecalho();
+		$html .= $o->msg("Tabela de conversão de códigos para importação de XML de fornecedor para o cliente");
 
 		$frm = new gForm();
 
@@ -1926,10 +1529,7 @@ switch ($gPage) {
 		break;
 
 	case (FORNECEDORES+1):
-		if ($_REQUEST['cnpj']<>'' && $_REQUEST['codigo']<>'' && $_REQUEST['id_itens_skus']>0)
-		{
-
-			$hoje = date('Y-m-d H:i:s');
+		if ($_REQUEST['cnpj']<>'' && $_REQUEST['codigo']<>'' && $_REQUEST['id_itens_skus']>0) {
 			$flds = [];
 			$flds['id_itens']=$gId;
 			$flds['id_itens_skus']=intval($_REQUEST['id_itens_skus']);
@@ -1947,6 +1547,7 @@ switch ($gPage) {
 		userLog('Código de fornecedor removido da estrutura do item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
 		redirect($o->page.'&gPage='.FORNECEDORES.'&gId='.$gId);
 		break;
+
 
 	case ALTERAR_FORNECEDOR:
 		$doc = file('/var/www/html/wms/ga/res/cadastros/produtos_nome_fornecedor_cnpj.csv');
@@ -1991,7 +1592,7 @@ switch ($gPage) {
 					$html.=$o->tableRow($mtz, "detail");
 				} else {
 					$flds = [];
-					$flds["data_cadastro"] = date('Y-m-d H:i:s');
+					$flds["data_cadastro"] = agora();
 					$flds["id_pessoas_criou"] = 1;
 					$flds["tipo"] = 'J';
 					$flds["situacao"] = 'Ativo';
@@ -2172,6 +1773,7 @@ switch ($gPage) {
 		redirect($o->page . "&gPage=" . CONFIRMAÇÃO_IMPORTACAO_DE_FORNECEDORES . "&novosSkus=" . $novosSkus);
 		break;
 
+
 	case CONFIRMAÇÃO_IMPORTACAO_DE_FORNECEDORES:
 		$html .= $o->msgSubTitle("Importação de fornecedores");
 		$html .= $o->msgSuccess("Importação realizada com sucesso");
@@ -2195,7 +1797,9 @@ switch ($gPage) {
 		}
 
 		$html .= $o->button("{icon:arrow-left; caption: Voltar; style: info; size: small; href: " . $o->page . "&gPage=" . FORMULARIO_IMPORTACAO_DE_FORNECEDORES . " ;}");;
-	break;
+ 		break;
+
+
 	case IMPRIMIR_MODELO:
 		downloadModeloImportacao($modelo, $_REQUEST['gId']);
 		break;
@@ -2208,123 +1812,94 @@ function mostraCabecalho()
 
 	global $o, $html, $gPage, $gId, $rs, $row, $gParam, $persistencia, $faz_picking;
 
-	if ($gId > 0) {
-		$sql = "SELECT i.*, p.nome cliente, pf.nome fornecedor, pc.nome criou, pa.nome alterou, g.descricao grupo, t.descricao tipo
-				FROM itens i
-				LEFT JOIN pessoas p ON (i.id_pessoas_proprietario=p.id and p.cliente=1)
-				LEFT JOIN pessoas pf ON (i.id_pessoas_fornecedor=pf.id AND pf.cliente=0)
-				LEFT JOIN pessoas pc ON (i.id_pessoas_criou=pc.id AND pc.cliente=0)
-				LEFT JOIN pessoas pa ON (i.id_pessoas_alterou=pa.id AND pa.cliente=0)
-				LEFT JOIN grupos g ON i.id_grupos = g.id
-				LEFT JOIN tipos t ON i.id_tipos = t.id
-				WHERE i.id=$gId ";
-		$rs = dbQuery($sql);
-		if ($rs) {
-			$row=$rs[0];
-			$cor = 'header';
-			if ($row['ativo'] == 0) {
-				$cor="danger";
-			}
-
-			$html.=$o->tableBegin("big");
-			$mtz=[];
-			$mtz[]='<-'. $o->small('Código').'<br><b>'.$row['codigo'].'</b><br>&nbsp;';
-			if ($gParam["USAR_REGRA_POSICIONAMENTO"]["ativo"] == 1) {
-				$mtz[]='<-'. $o->small('Regra').'<br><b>'.$row['regra_posicionamento'].'</b><br>&nbsp;';
-			}
-			$mtz[]='<-'. $o->small('Empresa').'<br><b>'.$row['cliente'].'<br>'.$row['fornecedor']."</b>&nbsp;";
-			$mtz[]='<-'. $o->small('Nome').'<br><b>'.$row['nome'].'<br><small>'.$row['descricao'].'</small></b>&nbsp;';
-			$mtz[]='<-'. $o->small('Cadastro').'<br><b>'.gDateTime($row['data_cadastro'])."<br><small>".$row['criou']."</small></b>&nbsp;";
-			$mtz[]='<-'. $o->small('Alteração').'<br><b>'.gDateTime($row['data_alteracao'])."<br><small>".$row['alterou']."</small></b>&nbsp;";
-			$html.=$o->tableRow($mtz, $cor);
-			if ($row['produto_acabado']==1) {
-				$mtz = [];
-				$mtz[]='~6<>Produto acabado';
-				$html.=$o->tableRow($mtz, 'warning');
-			}
-			$mtz = [];
-
-			$posicaoFixa = dbQuery("SELECT id FROM itens_areas WHERE id_itens = $gId AND id_posicoes > 0 LIMIT 1")[0]['id'];
-			if ($row['apto']==1) {
-				$mtz[] = '~6<>Cadastro do item suficientemente completo - pode ser utilizado';
-				$html .= $o->tableRow($mtz, 'success');
-			} else {
-				$mtz[] = '~6<>Cadastro do item sem dados suficientes - não poderá ser utilizado';
-				$html .= $o->tableRow($mtz, 'danger');
-			}
-			// if (base64_decode($row['observacoes'])<>"")
-			// {
-			//   $mtz = array();
-			//   $mtz[]='~5<-'. $o->small('Observações').'<br>'.nl2br(base64_decode($row['observacoes'])).'&nbsp;';
-			//   $html.=$o->tableRow($mtz, $cor);
-			// }
-			$html.=$o->tableEnd();
-
-			$active1='false';
-			$active2='false';
-			$active3='false';
-			$active4='false';
-			$active5='false';
-			$active6='false';
-			$active7='false';
-			switch ($gPage) {
-				case DADOS:
-				$active1='true';
-				break;
-				case SKUS:
-				$active2='true';
-				break;
-				case OCORRENCIAS:
-				$active3='true';
-				break;
-				case AREAS:
-				$active4='true';
-				break;
-				case IMAGENS:
-				$active5='true';
-				break;
-				case ESTRUTURA:
-				$active6='true';
-				break;
-				case FORNECEDORES:
-				$active7='true';
-				break;
-				case POSICAO_FIXA:
-				$active8 = 'true';
-				break;
-			}
-
-			$btns = [];
-
-			$btns[]=$o->button("{active: ".$active1."; caption: Dados do item; icon: barcode-read; hint: Dados do item; responsive: true; href: ".$o->page."&gPage=".DADOS."&gId=".$gId."}");
-			if (!$persistencia->aptoSKUs($gId)) {
-				$caption = "SKUs&nbsp&nbsp" . $o->badge("1");
-				$btns[]=$o->button("{active: " . $active2 . "; style:danger; caption: " . $caption . ";icon: box; hint: SKU; responsive: true; href: ".$o->page."&gPage=".SKUS."&gId=".$gId."}");
-			} else {
-				$btns[]=$o->button("{active: " . $active2 . "; caption: SKUs;icon: box; hint: SKU; responsive: true; href: ".$o->page."&gPage=".SKUS."&gId=".$gId."}");
-			}
-			$btns[]=$o->button("{active: ".$active3."; caption: Ocorrências; icon: exclamation-triangle; hint: Ocorrências; responsive: true; href: ".$o->page."&gPage=".OCORRENCIAS."&gId=".$gId."}");
-			if (!$persistencia->aptoAreas($gId)) {
-				$caption = "Áreas&nbsp&nbsp" . $o->badge("1");
-				$btns[]=$o->button("{active: ".$active4."; caption: " . $caption . ";  style: danger; icon: map-signs; hint: Áreas; responsive: true; href: ".$o->page."&gPage=".AREAS."&gId=".$gId."}");
-			} else {
-				$btns[]=$o->button("{active: ".$active4."; caption: Áreas;icon: map-signs; hint: Áreas; responsive: true; href: ".$o->page."&gPage=".AREAS."&gId=".$gId."}");
-			}
-
-			$btns[]=$o->button("{active: ".$active5."; caption: Imagens; icon: image; hint: Imagens; responsive: true; href: ".$o->page."&gPage=".IMAGENS."&gId=".$gId."}");
-			if ($gParam['PERFIL_PRODUCAO']['ativo']==1)
-			{
-				$btns[]=$o->button("{active: ".$active6."; caption: Estrutura; icon: map-marker-alt; hint: Composição deste item; responsive: true; href: ".$o->page."&gPage=".ESTRUTURA."&gId=".$gId."}");
-			}
-
-			if ($gParam['CONVERTER_SKU_AO_IMPORTAR_NF']['ativo']) {
-				$btns[]=$o->button("{active: ".$active7."; caption: Conversão SKUs; icon: random; hint: Relacionamento de códigos entre cliente x fornecedor; responsive: true; href: ".$o->page."&gPage=".FORNECEDORES."&gId=".$gId."}");
-			}
-
-			$html.=implode(" ",$btns);
-		} else {
-			$html.=$o->msgError("Erro ao localizar o item. Pode ter sido excluído de forma inapropriada.");
-		}
+	if (!$gId) {
+		return;
+	}
+	$sql = "SELECT i.*, p.nome cliente, pf.nome fornecedor, pc.nome criou, pa.nome alterou, g.descricao grupo, t.descricao tipo
+			FROM itens i
+			LEFT JOIN pessoas p ON (i.id_pessoas_proprietario=p.id and p.cliente=1)
+			LEFT JOIN pessoas pf ON (i.id_pessoas_fornecedor=pf.id AND pf.cliente=0)
+			LEFT JOIN pessoas pc ON (i.id_pessoas_criou=pc.id AND pc.cliente=0)
+			LEFT JOIN pessoas pa ON (i.id_pessoas_alterou=pa.id AND pa.cliente=0)
+			LEFT JOIN grupos g ON i.id_grupos = g.id
+			LEFT JOIN tipos t ON i.id_tipos = t.id
+			WHERE i.id=$gId ";
+	$rs = dbQuery($sql);
+	if (!$rs) {
+		$html .= $o->msgError("Erro ao localizar o item. Pode ter sido excluído de forma inapropriada.");
+		return;
+	}
+	$row=$rs[0];
+	$cor = 'header';
+	if ($row['ativo'] == 0) {
+		$cor="danger";
 	}
 
+	$html.=$o->tableBegin("big");
+	$mtz=[];
+	$mtz[]='<-'. $o->small('Código').'<br><b>'.$row['codigo'].'</b><br>&nbsp;';
+	$mtz[]='<-'. $o->small('Empresa').'<br><b>'.$row['cliente'].'<br>'.$row['fornecedor']."</b>&nbsp;";
+	$mtz[]='<-'. $o->small('Nome').'<br><b>'.$row['nome'].'<br><small>'.$row['descricao'].'</small></b>&nbsp;';
+	$mtz[]='<-'. $o->small('Cadastro').'<br><b>'.gDateTime($row['data_cadastro'])."<br><small>".$row['criou']."</small></b>&nbsp;";
+	$mtz[]='<-'. $o->small('Alteração').'<br><b>'.gDateTime($row['data_alteracao'])."<br><small>".$row['alterou']."</small></b>&nbsp;";
+	$html.=$o->tableRow($mtz, $cor);
+	if ($row['produto_acabado']==1) {
+		$mtz = [];
+		$mtz[]='~6<>Produto acabado';
+		$html.=$o->tableRow($mtz, 'warning');
+	}
+
+	$mtz = [];
+	$posicaoFixa = dbQuery("SELECT id FROM itens_areas WHERE id_itens = $gId AND id_posicoes > 0 LIMIT 1")[0]['id'];
+	if ($row['apto']==1) {
+		$mtz[] = '~6<>Cadastro do item suficientemente completo - pode ser utilizado';
+		$html .= $o->tableRow($mtz, 'success');
+	} else {
+		$mtz[] = '~6<>Cadastro do item sem dados suficientes - não poderá ser utilizado';
+		$html .= $o->tableRow($mtz, 'danger');
+	}
+	$html .= $o->tableEnd();
+
+	$active1='false';
+	$active2='false';
+	$active3='false';
+	$active4='false';
+	$active5='false';
+	$active6='false';
+	$active7='false';
+	switch ($gPage) {
+		case DADOS:
+			$active1 = 'true';
+			break;
+		case SKUS:
+			$active2 = 'true';
+			break;
+		case IMAGENS:
+			$active5 = 'true';
+			break;
+		case FORNECEDORES:
+			$active7 = 'true';
+			break;
+		case POSICAO_FIXA:
+			$active8 = 'true';
+			break;
+	}
+
+	$btns = [];
+
+	$btns[]=$o->button("{active: ".$active1."; caption: Dados do item; icon: barcode-read; hint: Dados do item; responsive: true; href: ".$o->page."&gPage=".DADOS."&gId=".$gId."}");
+	if (!$persistencia->aptoSKUs($gId)) {
+		$caption = "SKUs&nbsp&nbsp" . $o->badge("1");
+		$btns[] = $o->button("{active: " . $active2 . "; style:danger; caption: " . $caption . ";icon: box; hint: SKU; responsive: true; href: ".$o->page."&gPage=".SKUS."&gId=".$gId."}");
+	} else {
+		$btns[] = $o->button("{active: " . $active2 . "; caption: SKUs;icon: box; hint: SKU; responsive: true; href: ".$o->page."&gPage=".SKUS."&gId=".$gId."}");
+	}
+
+	$btns[] = $o->button("{active: ".$active5."; caption: Imagens; icon: image; hint: Imagens; responsive: true; href: ".$o->page."&gPage=".IMAGENS."&gId=".$gId."}");
+
+	if ($gParam['CONVERTER_SKU_AO_IMPORTAR_NF']['ativo']) {
+		$btns[] = $o->button("{active: ".$active7."; caption: Conversão SKUs; icon: random; hint: Relação de conversões de SKUs; responsive: true; href: ".$o->page."&gPage=".FORNECEDORES."&gId=".$gId."}");
+	}
+
+	$html .= implode(" ", $btns);
 }

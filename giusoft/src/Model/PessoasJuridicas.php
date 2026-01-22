@@ -107,17 +107,7 @@ class PessoasJuridicas extends Pessoas
 	{
 		global $gId, $gPage, $o, $gParam;
 
-		if (
-			$gParam['INTEGRACAO_GMI']['ativo']
-			&& in_array($registroAtual['id'], explode(',', $gParam['INTEGRACAO_GMI']['valor']))
-		) {
-			$campoCodigoExterno = $frm->add("{name: codigo_sistema_externo_show; fieldLabel: Código de sistema externo; type: show; value: " . $registroAtual['codigo_sistema_externo'] .";}");
-			$frm->add("{name: codigo_sistema_externo; type: hidden; value: " . $registroAtual['codigo_sistema_externo'] .";}");
-		} else {
-			$campoCodigoExterno = $frm->add("{name: codigo_sistema_externo; fieldLabel: Código de sistema externo; type: text; maxLength: 9; value: " . $registroAtual['codigo_sistema_externo'] . "}");
-		}
-
-
+		$frm->add("{name: codigo_sistema_externo; fieldLabel: Código de sistema externo; type: text; maxLength: 9; value: " . $registroAtual['codigo_sistema_externo'] . "}");
 		$frm->add("{name: gId; type: hidden; value: ".$gId."}");
 		$frm->add("{name: gPage; type: hidden; value: ".$proximaPagina."}");
 		return($frm->render($o));
@@ -178,18 +168,10 @@ class PessoasJuridicas extends Pessoas
 		global $gParam;
 		$gId = false;
 
-		if (($campos['senha']!=$campos['confirmacao']) ) //|| ($senha=='')
-		{
+		if (($campos['senha']!=$campos['confirmacao']) ) {
 			$this->erros[]="A senha e a confirmação devem ser iguais e diferentes de vazio!";
 			$gId = false;
-		} else
-		{
-			if ($gParam['EXTRAIR_LOTE_TAG_XPROD']['ativo']) {
-				if ($this->verificarItensAtivosExigeLote() && gDBCheck($campos['lote_xprod'])) {
-					$this->erros[] = 'Este cliente possui itens ativos que exigem lote na entrada. Desative a exigência de lote para todos os itens deste cliente para ativar esta funcionalidade';
-					return false;
-				}
-			}
+		} else {
 			// Primeiro obtém o próximo id
 			$gId=dbInsert('pessoas',$this->preparaCampos($campos), true);
 			$campos['id_pessoas']=$gId;
@@ -234,70 +216,55 @@ class PessoasJuridicas extends Pessoas
 		return($gId);
 	}
 
-	function modifica($campos, $gId)
+
+	public function modifica($campos, $gId)
 	{
 		global $gParam;
-		$sucesso = true;
 
-		if (($campos['senha']!=$campos['confirmacao']) ) //|| ($senha=='')
-		{
+		if (($campos['senha']!=$campos['confirmacao']) ) {
 			$this->erros[]="A senha e a confirmação devem ser iguais e diferentes de vazio!";
-			$sucesso = false;
-		} else
-		{
-			$sql="SELECT * FROM pessoas WHERE id>2 AND id=".$gId;
-			$rs=dbQuery($sql);
-
-			if ($gParam['EXTRAIR_LOTE_TAG_XPROD']['ativo']) {
-				if ($this->verificarItensAtivosExigeLote() && gDBCheck($campos['lote_xprod'])) {
-					$this->erros[] = 'Este cliente possui itens ativos que exigem lote na entrada. Desative a exigência de lote para todos os itens deste cliente para ativar esta funcionalidade';
-					return false;
-				}
-			}
-			if (count($rs)>0)
-			{
-				dbUpdate('pessoas', $this->preparaCampos($campos, $gId), $gId);
-				$campos['id_pessoas'] = $gId;
-
-				$rs=dbQuery("SELECT id FROM pessoas_juridicas WHERE id_pessoas=".$gId);
-				if (count($rs)==0)
-				{
-					dbInsert("pessoas_juridicas", $this->preparaCamposAdicionais($campos));
-				} else {
-					dbUpdate('pessoas_juridicas', $this->preparaCamposAdicionais($campos), $rs[0]['id']);
-				}
-
-				if (isset($campos["transportadora"]) && intval($campos["transportadora"])==1)
-				{
-					if (strlen($campos["cnpj"])<14)
-					{
-						$sql="SELECT id FROM pessoas_fisicas WHERE id_pessoas=".$gId;
-						$existe_rs=dbQuery($sql);
-						if (count($existe_rs)==0)
-						{
-							$mtz=array();
-							$mtz["cpf"]=$campos["cnpj"];
-							$mtz["id_pessoas"]=$gId;
-							dbInsert("pessoas_fisicas", $mtz);
-						} else
-						{
-							$id_pessoas_fisica=$existe_rs[0]["id"];
-							$mtz=array();
-							$mtz["cpf"]=$campos["cnpj"];
-							$mtz["id_pessoas"]=$gId;
-							dbUpdate("pessoas_fisicas", $mtz, $id_pessoas_fisica);
-						}
-						$sqlu="UPDATE pessoas_juridicas SET cnpj='' WHERE id_pessoas=".$gId;
-						dbQuery($sqlu);
-					}
-				}
-			} else
-			{
-				$this->erros[]="A pessoa selecionada não foi encontrada no banco de dados.";
-				$sucesso = false;
-			}
+			return false;
 		}
-		return($sucesso);
+
+		$sql = "SELECT id FROM pessoas WHERE id>2 AND id=" . $gId;
+		$rs = dbQuery($sql);
+		if (!$rs) {
+			$this->erros[] = "A pessoa selecionada não foi encontrada no banco de dados.";
+			return false;
+		}
+
+		dbUpdate('pessoas', $this->preparaCampos($campos, $gId), $gId);
+		$campos['id_pessoas'] = $gId;
+
+		$rs = dbQuery("SELECT id FROM pessoas_juridicas WHERE id_pessoas = {$gId} LIMIT 1");
+		if ($rs) {
+			dbUpdate('pessoas_juridicas', $this->preparaCamposAdicionais($campos), $rs[0]['id']);
+		} else {
+			dbInsert("pessoas_juridicas", $this->preparaCamposAdicionais($campos));
+		}
+
+		if (
+			$campos["transportadora"]
+			&& strlen($campos["cnpj"]) < 14
+		) {
+			$sql = "SELECT id FROM pessoas_fisicas WHERE id_pessoas = {$gId} LIMIT 1";
+			$idPessoaFisica = dbQuery($sql)[0]['id'];
+			if ($idPessoaFisica) {
+				$mtz = array();
+				$mtz["cpf"] = $campos["cnpj"];
+				$mtz["id_pessoas"] = $gId;
+				dbUpdate("pessoas_fisicas", $mtz, $idPessoaFisica);
+			} else {
+				$mtz = array();
+				$mtz["cpf"] = $campos["cnpj"];
+				$mtz["id_pessoas"] = $gId;
+				dbInsert("pessoas_fisicas", $mtz);
+			}
+			$sqlu = "UPDATE pessoas_juridicas SET cnpj='' WHERE id_pessoas=".$gId;
+			dbFastQuery($sqlu);
+		}
+
+		return true;
 	}
 
 

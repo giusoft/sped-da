@@ -253,69 +253,6 @@ function linkParaGoogle($query, $modoIa = false)
 }
 
 
-function tabelaSkuUmas($rs)
-{
-	global $o;
-
-	$html = "";
-	if (!$rs) {
-		return $html;
-	}
-
-	$html .= $o->msgFilter("UMAs com saldo apto");
-	$html .= $o->tableBegin("big", true, true);
-	$mtz = [];
-	$mtz[] = "<-Pos.";
-	$mtz[] = "<-UMA";
-	$mtz[] = "<-Proprietário";
-	$mtz[] = "<-Código";
-	$mtz[] = "<-SKU";
-	$mtz[] = "->Quantidade";
-	$mtz[] = "<-Lote";
-	$mtz[] = "<>Fabricação";
-	$mtz[] = "<>Validade";
-	$html .= $o->tableRow($mtz, "header");
-	$tQuantidade=0;
-	foreach ($rs as $uma) {
-		if ($uma["quantidade"] <= 0) {
-			continue;
-		}
-
-		if (!in_array($uma["codigo_barras"], $tUMA)) {
-			$tUMA[$uma["codigo_barras"]] = 1;
-		}
-
-		$tQuantidade+=$uma["quantidade"];
-		$descricaoProprietario = (!empty($uma["proprietario"])) ?  $uma["proprietario"] : "--";
-		$mtz = [];
-		$mtz[] = "<-".$uma['local'].' '.linkParaPosicao($uma["posicao"]);
-		$mtz[] = "<-".linkParaUMA($uma["codigo_barras"]);
-		$mtz[] = "<-".$descricaoProprietario;
-		$mtz[] = "<-".linkParaCodigoItem($uma["codigo"]);
-		$mtz[] = "<-".$uma["item_descricao"];
-		$mtz[] = "->".gFloat($uma["quantidade"]);
-		$mtz[] = "<-".$uma["lote"];
-		$mtz[] = "<>".gDate($uma["data_fabricacao"]);
-		$mtz[] = "<>".gDate($uma["data_validade"]);
-		$html .= $o->tableRow($mtz, "detail");
-	}
-
-	$mtz = [];
-	$mtz[] = "<---";
-	$mtz[] = "<-TOTAL DE UMAs: ".count($tUMA);
-	$mtz[] = "<---";
-	$mtz[] = "--";
-	$mtz[] = "<---";
-	$mtz[] = "->".gFloat($tQuantidade);
-	$mtz[] = "--";
-	$mtz[] = "--";
-	$mtz[] = "--";
-	$html .= $o->tableRow($mtz, "footer");
-
-	return $html;
-}
-
-
 function linkParaCodigoItem($codigo="")
 {
 	global $o, $usrCliente;

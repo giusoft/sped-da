@@ -143,13 +143,6 @@ class Itens extends Pessoas
 	}
 
 
-	/*function geraCamposDoFormulario(&$frm, $registroAtual, $proximaPagina="") {
-		// O formulário de edição de dados usa este método
-		global $proximaPagina, $gId, $gPage, $o, $sp, $gParam;
-return $html;
-	}*/
-
-
 
 	function preparaCampos($todosOsCampos, $gId = 0) {
 
