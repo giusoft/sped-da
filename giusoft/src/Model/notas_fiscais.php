@@ -69,15 +69,15 @@ class NotasFiscais
             return ['sucesso' => false, 'msg' => 'Nota fiscal não encontrada.'];
         }
 
-        $idArmazemNota = (int)$rs[0]['id_filial'];
-        $idArmazemSessao = (int)$_SESSION['filialAtualId'];
+        $idFilialNota = (int)$rs[0]['id_filial'];
+        $idFilialSessao = (int)$_SESSION['filialAtualId'];
 
-        if ($idArmazemNota != $idArmazemSessao) {
-            $nomeArmazemNota = dbFastQuery("SELECT descricao FROM filial WHERE id = $idArmazemNota")[0]['descricao'];
+        if ($idFilialNota != $idFilialSessao) {
+            $nomeFilialNota = dbFastQuery("SELECT descricao FROM filial WHERE id = $idFilialNota")[0]['descricao'];
 
             return [
                 'sucesso' => false,
-                'msg' => "Esta nota pertence ao armazém: <b>{$nomeArmazemNota}</b><br>".
+                'msg' => "Esta nota pertence ao armazém: <b>{$nomeFilialNota}</b><br>".
                          "Por favor, troque para o armazém correto antes de realizar operações nesta nota"
             ];
         }
@@ -94,9 +94,9 @@ class NotasFiscais
 
 		$mtz = array();
 		if ($row['cancelada'] == 1) {
-			$mtz[] = '~2<-' . $o->small('Armazém') . "<br><b>" . $row['armazem'] . "</b>&nbsp;";
+			$mtz[] = '~2<-' . $o->small('Filial') . "<br><b>" . $row['filial'] . "</b>&nbsp;";
 		} else {
-			$mtz[] = '<-' . $o->small('Armazém') . "<br><b>" . $row['armazem'] . "</b>&nbsp;";
+			$mtz[] = '<-' . $o->small('Filial') . "<br><b>" . $row['filial'] . "</b>&nbsp;";
 		}
 
 		$mtz[] = '<-' . $o->small('Proprietário') . '<br><b>'
@@ -1778,7 +1778,7 @@ class NotasFiscais
 				$armazen = gCleanField($req["armazen"]);
 				$nomeArmazen = dbQuery("SELECT descricao FROM filial WHERE id = $armazen")[0]["descricao"];
 				$where .= " AND N.id_filial={$armazen}";
-				$cabecalho[] = "Armazém: {$nomeArmazen}";
+				$cabecalho[] = "Filial: {$nomeArmazen}";
 			}
 			if ($req["chave"]) {
 				$chave=gCleanField($req["chave"]);
@@ -1885,10 +1885,10 @@ class NotasFiscais
 			$frm->add("{name:tipoNota; type:hidden; value:E;}");
 		}
 
-		$idArmazem = $registroAtual['id_filial'] ?: $_SESSION['filialAtualId'];
+		$idFilial = $registroAtual['id_filial'] ?: $_SESSION['filialAtualId'];
 
 		$frm->row(
-			$frm->add("{name: id_filial; fieldLabel: Armazém; allowBlank: false; type: combo; value: " . $idArmazem . "; items: ".$sp['combo_filial']."}"),
+			$frm->add("{name: id_filial; fieldLabel: Filial; allowBlank: false; type: combo; value: " . $idFilial . "; items: ".$sp['combo_filial']."}"),
 			$frm->add("{name: id_cfops; fieldLabel: CFOP; allowBlank: false; type: combo; items: " . $sp["combo_cfop"] . "; value:".$registroAtual["id_cfops"].";}")
 		);
 
@@ -2360,7 +2360,7 @@ class NotasFiscais
 			N.id_cfops,
 			PC.nome nome_proprietario,
 			PC.apelido apelido_proprietario,
-			A.descricao armazem,
+			A.descricao filial,
 			PT.nome nome_transportadora,
 			N.id_filial,
 			N.volume,
@@ -2833,21 +2833,21 @@ class NotasFiscais
 	}
 
 
-	function obtemDadosEmpresa($idArmazem)
+	function obtemDadosEmpresa($idFilial)
 	{
 		$sql="SELECT
 			filial.razao_social AS razaoSocial,
-			filial.razao_social AS nomeArmazem,
-			filial.cnpj AS cnpjArmazem,
-			filial.insc_estadual AS inscricaoEstadualArmazem,
-			filial.insc_municipal AS inscricaoMunicipalArmazem,
-			filial.cnae AS cnaeArmazem,
-			filial.endereco AS enderecoArmazem,
-			filial.numero AS numeroArmazem,
-			filial.complemento AS enderecoComplementoArmazem,
-			filial.bairro AS enderecoBairroArmazem,
-			filial.cep AS cepArmazem,
-			filial.telefone AS telefoneArmazem,
+			filial.razao_social AS nomeFilial,
+			filial.cnpj AS cnpjFilial,
+			filial.insc_estadual AS inscricaoEstadualFilial,
+			filial.insc_municipal AS inscricaoMunicipalFilial,
+			filial.cnae AS cnaeFilial,
+			filial.endereco AS enderecoFilial,
+			filial.numero AS numeroFilial,
+			filial.complemento AS enderecoComplementoFilial,
+			filial.bairro AS enderecoBairroFilial,
+			filial.cep AS cepFilial,
+			filial.telefone AS telefoneFilial,
 			est.codigo_ibge AS codigoIbgeEstado,
 			est.sigla AS siglaUf,
 			mun.codigo_ibge AS codigoIbgeMunicipio,
@@ -2858,7 +2858,7 @@ class NotasFiscais
 		LEFT JOIN enderecos_estados est ON filial.id_enderecos_estados = est.id
 		LEFT JOIN enderecos_cidades mun ON filial.id_enderecos_cidades = mun.id
 		LEFT JOIN enderecos_paises pais ON pais.id = est.id_enderecos_paises
-		WHERE filial.id = '{$idArmazem}';";
+		WHERE filial.id = '{$idFilial}';";
 		return (dbQuery($sql)[0]);
 	}
 
@@ -2989,12 +2989,12 @@ class NotasFiscais
 	}
 
 
-	public function obterDadosNfeNumeroEOperacao($dadosArmazemNotas)
+	public function obterDadosNfeNumeroEOperacao($dadosFilialNotas)
 	{
-        if ($dadosArmazemNotas['ativar_modo_contingencia']) {
+        if ($dadosFilialNotas['ativar_modo_contingencia']) {
 			// (Depois precisaremos colocar uma tratativa para quando tivermos estados que não usam o 7, atualmente era fixo esse 7)
             $dados['modoOperacao'] = "7"; // 3 = SCAN, 6 = SVCAN, 7 = SVCRS
-            $dados['dataHoraContingencia'] = str_replace(" ", "T", $dadosArmazemNotas['data_alteracao_operacao']).date("P");
+            $dados['dataHoraContingencia'] = str_replace(" ", "T", $dadosFilialNotas['data_alteracao_operacao']).date("P");
         } else {
             $dados['dataHoraContingencia'] = "";
             $dados['modoOperacao'] = "1"; // 1 = Normal
@@ -3003,7 +3003,7 @@ class NotasFiscais
 
         $sql = "SELECT id, numero, serie
 				FROM nfe_numeros
-				WHERE id_filial = " . $_SESSION['filialAtualId'] . " AND serie = '" . $dadosArmazemNotas['serie'] . "'";
+				WHERE id_filial = " . $_SESSION['filialAtualId'] . " AND serie = '" . $dadosFilialNotas['serie'] . "'";
         $dadosNfeNumeros = dbFastQuery($sql)[0];
 
         $numero = (int) $dadosNfeNumeros['numero'] + 1;
@@ -3012,7 +3012,7 @@ class NotasFiscais
 			$mtz = array();
 			$mtz['id_filial'] = $_SESSION['filialAtualId'];
 			$mtz['numero'] = $numero;
-			$mtz['serie'] = $dadosArmazemNotas['serie'];
+			$mtz['serie'] = $dadosFilialNotas['serie'];
 			dbInsert('nfe_numeros', $mtz);
 		} else {
 			$sql = "UPDATE nfe_numeros SET numero = {$numero} WHERE id = " . $dadosNfeNumeros['id'];
@@ -3021,7 +3021,7 @@ class NotasFiscais
 
         $dados['idNfeNumeros'] = $dadosNfeNumeros['id'];
         $dados['numeroNota'] = $numero;
-        $dados['serie'] = $dadosNfeNumeros['serie'] ?: $dadosArmazemNotas['serie'];
+        $dados['serie'] = $dadosNfeNumeros['serie'] ?: $dadosFilialNotas['serie'];
 
 		return $dados;
 	}
@@ -3183,7 +3183,7 @@ class NotasFiscais
 				NF.xml,
 				N.id_pessoas_proprietario,
 				NF.data_recibo,
-				A.descricao armazem
+				A.descricao filial
 			FROM nfe NF
 			JOIN notas N ON NF.id = N.id_nfe
 			LEFT JOIN pessoas P ON P.id = N.id_pessoas_proprietario
@@ -3220,7 +3220,7 @@ class NotasFiscais
         $dadosDanfe['chave'] = $nota['chave'];
         $dadosDanfe['idPessoasProprietario'] = 1;
         $dadosDanfe['empresa'] = $this->obtemDadosEmpresa(obtemIdEmpresa($nota['id_pessoas_proprietario']));
-        $dadosDanfe['config'] = $this->buscarConfiguracoes($dadosDanfe['empresa']['cnpjArmazem']);
+        $dadosDanfe['config'] = $this->buscarConfiguracoes($dadosDanfe['empresa']['cnpjFilial']);
         $retornoGerarDanfe = dispararGatilho('gerarDanfe', $dadosDanfe);
 
         if ($retornoGerarDanfe['erroCurl'] && !$retornoGerarDanfe['resposta']) {
@@ -3252,7 +3252,7 @@ class NotasFiscais
 			. "\nChave: " . $nota["chave"]
 			. "\n" . $dadosDanfe['empresa']['razaoSocial']
 			. "\n<font size=1>E-mail enviado automaticamente. Gentileza não responder.</font></i>";
-		$assunto = gVar("global.site") . " " . $nota["armazem"] . " NFe";
+		$assunto = gVar("global.site") . " " . $nota["filial"] . " NFe";
 		$emailFoiEnviado = gSendEmail($remetente, $para, $cc, $assunto, $conteudo, $anexo);
 		if (!$emailFoiEnviado) {
 			$erros[] = 'Erro ao enviar email';
@@ -3734,7 +3734,7 @@ class ImportacaoNFE
 		$existeCliente = ($cliente) ? "SIM" : "NÃO";
 		$destinatario=$ni->checarDestinatario(gCleanField($xml->NFe->infNFe->dest->CNPJ));
 		if(!$destinatario){
-			$alertas[] = "A NF-e não tem como destinatário o armazém atual. <br/>CNPJ Armazém : ".gFieldById("filial",$_SESSION['filialAtualId'],'cnpj')."<br/>CNPJ NF-e&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: ".gCleanField($xml->NFe->infNFe->dest->CNPJ);
+			$alertas[] = "A NF-e não tem como destinatário o armazém atual. <br/>CNPJ Filial : ".gFieldById("filial",$_SESSION['filialAtualId'],'cnpj')."<br/>CNPJ NF-e&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: ".gCleanField($xml->NFe->infNFe->dest->CNPJ);
 		}
 		if ($this->nota['venda']) {
 			$alertas[] = 'Esta nota fiscal utilizará os itens do fornecedor';
@@ -4104,15 +4104,15 @@ class ImportacaoNFE
 		}
 	}
 
-	public function checarDestinatario($cnpj, $idfilial=0){
-		if (!empty($idfilial))
+	public function checarDestinatario($cnpj, $idFilial=0){
+		if (!empty($idFilial))
 		{
-			$where=" A.id = '{$idfilial}' ";
+			$where=" A.id = '{$idFilial}' ";
 		} else
 		{
 			$where= " A.cnpj='{$cnpj}'";
 		}
-		$sql="SELECT id FROM filial WHERE ((cnpj='{$cnpj}' AND id=".$_SESSION['filialAtualId'].") OR (cnpj='{$cnpj}' AND id=".(int) $idfilial.")) ";
+		$sql="SELECT id FROM filial WHERE ((cnpj='{$cnpj}' AND id=".$_SESSION['filialAtualId'].") OR (cnpj='{$cnpj}' AND id=".(int) $idFilial.")) ";
 		$rs=dbQuery($sql);
 		if($rs)
 			return true;

@@ -299,7 +299,7 @@ if ($_REQUEST['gAjax']) {
         if (!$validaFilial['sucesso']) {
             echo json_encode([
                 'sucesso' => false,
-                'mensagem' => strip_tags($validaArmazem['msg'])
+                'mensagem' => strip_tags($validaFilial['msg'])
             ]);
             exit;
         }
