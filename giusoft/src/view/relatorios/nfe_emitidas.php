@@ -1,4 +1,6 @@
 <?php
+define('INICIO', 0);
+define('PESQUISAR', 1);
 
 $debug = false;
 if ($gPage == 10) {
@@ -9,6 +11,7 @@ if ($gPage == 10) {
 }
 
 $html .= $o->msgTitle("NFe emitidas");
+
 switch($gPage) {
 	case INICIO:
 		$frm = new gForm("{columns: 2}");
@@ -21,7 +24,6 @@ switch($gPage) {
 				ORDER BY P.apelido";
 		$frm->add('{type: combo; name: id_proprietario; fieldLabel: Proprietário; items:' . $sql . ';}');
 		$frm->add('{type: combo; name: id_cfop; fieldLabel: CFOP; items:'.$sp["combo_cfop"].';}');
-		$frm->add('{type: text; name: os; fieldLabel: OS;}');
 		$frm->add('{type: text; name: numero; fieldLabel: Número;}');
 		$frm->add('{type: date; name: data_emissao_de; fieldLabel: Data de emissão de;}');
 		$frm->add('{type: date; name: data_emissao_ate; fieldLabel: Data de emissão até;}');
@@ -30,8 +32,7 @@ switch($gPage) {
 		$frm->row(
 			$frm->add("{name: exibirTotais; fieldLabel: Exibir totais; type: checkbox; value:1;}"),
 			$frm->add('{name: exibir_canceladas; fieldLabel:Exibir canceladas?; type: checkbox;}'),
-			$frm->add('{name: exibir_itens; fieldLabel:Exibir Itens?; type: checkbox;}'),
-			$frm->add("{name: nota_avulsa; fieldLabel: Apenas avulsas:; type: checkbox;")
+			$frm->add('{name: exibir_itens; fieldLabel:Exibir Itens?; type: checkbox;}')
 		);
 
 		$frm->add('{type:hidden; name:gPage; value:'.PESQUISAR.';}');
@@ -84,15 +85,6 @@ switch($gPage) {
 			$where[] = "N.numero='".gCleanField($_REQUEST["numero"])."'";
 		}
 
-		if ($_REQUEST["os"]) {
-			$flt[] = "OS = ".$_REQUEST["os"];
-			$where[] = "(PR.os like '%".gCleanField($_REQUEST["os"])."%')";
-		}
-
-		if (isset($_REQUEST["nota_avulsa"])) {
-			$where[] = "(N.id_programacao=0)";
-		}
-
 		if (count($where)<=1) {
 			$html.=$o->msgDanger("Informe ao menos um filtro antes de tentar gerar um relatório");
 		} else {
@@ -105,7 +97,6 @@ switch($gPage) {
 						C.descricao_resumida cfop,
 						PP.apelido proprietario,
 						PP.nome nome_completo_proprietario,
-						PR.os,
 						T.descricao tipo,
 						NFE.situacao,
 						NFE.chave
@@ -113,7 +104,6 @@ switch($gPage) {
 					LEFT JOIN nfe NFE ON NFE.id = N.id_nfe
 					LEFT JOIN pessoas PP ON PP.id = N.id_pessoas_proprietario
 					LEFT JOIN cfops C ON C.id = N.id_cfops
-					LEFT JOIN programacao PR ON PR.id = N.id_programacao
 					LEFT JOIN tipos_programacao T ON PR.id_tipos_programacao = T.id
 					WHERE {$where}
 					ORDER BY N.data_emissao DESC";
@@ -130,7 +120,6 @@ switch($gPage) {
 				$html .= $o->tableBegin("big", true, true);
 				$mtz = [];
 		        $mtz[] = "<-Id";
-		        $mtz[] = "<-OS";
 		        $mtz[] = "<-Tipo";
 		        $mtz[] = "<-Situação";
 		        $mtz[] = "<-Chave                                             ";
@@ -165,7 +154,7 @@ switch($gPage) {
 						&& ((intval($sTotalValor) > 0) && gDBCheck($_REQUEST['exibirTotais']))
 					) {
 						$mtz = [];
-						$mtz[] = "~8->Sub-total";
+						$mtz[] = "~7->Sub-total";
 						$mtz[] = "->".gFloat($sTotalQuantidade);
 						$mtz[] = "->".gFloat($sTotalPesoB);
 						$mtz[] = "->".gFloat($sTotalPesoL);
@@ -193,7 +182,6 @@ switch($gPage) {
 
 					$mtz = [];
 					$mtz[] = "<-".$row["id"];
-					$mtz[] = "<-".$row["os"];
 					$mtz[] = "<-".$row["tipo"];
 			        $mtz[] = "<-".$row["situacao"];
 			        $mtz[] = "<-".$row["chave"];
@@ -256,7 +244,7 @@ switch($gPage) {
 				if (gDBCheck($_REQUEST['exibirTotais'])) {
 					/* Último subtotal */
 					$mtz = [];
-					$mtz[] = "~8->Sub-total";
+					$mtz[] = "~7->Sub-total";
 					$mtz[] = "->".gFloat($sTotalQuantidade);
 					$mtz[] = "->".gFloat($sTotalPesoB);
 					$mtz[] = "->".gFloat($sTotalPesoL);
@@ -265,7 +253,7 @@ switch($gPage) {
 
 					/* Total */
 					$mtz = [];
-					$mtz[] = "~8->Total";
+					$mtz[] = "~7->Total";
 					$mtz[] = "->".gFloat($totalQuantidade);
 					$mtz[] = "->".gFloat($totalPesoB);
 					$mtz[] = "->".gFloat($totalPesoL);

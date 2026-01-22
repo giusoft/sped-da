@@ -369,14 +369,7 @@ function createMenu()
 					}
 
 					$bar .= '<div id="barraDeAtalhos" class="btn-group hidden-xs hidden-sm" role="group" style="padding-left: 6px; padding-right: 6px">';
-					$bar .= $o->button("{size: small; icon: clock; style: info; caption: Programação; href: index.php?g=programacao}");
-					$bar .= $o->button("{size: small; icon: calendar; style: info; caption: Agenda; href: index.php?g=agenda}");
-					$bar .= $o->button("{size: small; icon: tasks; style: info; caption: Eventos; href: index.php?g=admin_eventos}");
-					$bar .= $o->button("{size: small; icon: barcode-read; style: info; caption: Informações; href: index.php?g=informacoes}");
-					// $bar .= $o->button("{size: small; icon: monitor-heart-rate; style: info; caption: Painel; href: index.php?g=painel}");
-					$bar .= $o->button("{size: small; icon: map; style: info; caption: Mapa; href: index.php?g=mapa_umas}");
-					$bar .= $o->button("{size: small; icon: box; style: info; caption: Saldo; href: index.php?g=saldos&gPage=0&gTipo=1}");
-					$bar .= $o->button("{size: small; icon: barcode; style: info; caption: Saldo UMAs; href: index.php?g=umas&gPage=20}");
+					$bar .= $o->button("{size: small; icon: doc; style: info; caption: NFe; href: index.php?g=nf_saida&gPage=0}");
 
 					if ($_SESSION['key_user'] && $usrId) {
 						$bar .= $o->button("{id: toggleChatBtn; size: small; icon: " . ($_SESSION['chatAtivo'] ? 'comment' : 'comment-slash') . "; style: info; caption: " . ($_SESSION['chatAtivo'] ? 'Ocultar Chats' : 'Exibir Chats') . "; href: 'javascript:void(0);'}");

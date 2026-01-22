@@ -2,7 +2,8 @@
 
 include_once 'Pagination.php';
 
-class NotasFiscais {
+class NotasFiscais
+{
 
 	public $tipo;
 	public $inner_item=false;
@@ -17,7 +18,7 @@ class NotasFiscais {
 
 	/**
 	* Obtem o cabecalho da nota fiscal com os principais atributos.
-	* 
+	*
 	* @param  array  $row   Array com informações da nota fiscal.
 	* @return string $html  string com código html do cabeçalho.
 	*/
@@ -31,8 +32,8 @@ class NotasFiscais {
 	{
         $sql = "
         	SELECT data_vencimento_certificado data
-        	FROM armazens_notas
-			WHERE id_armazens = " . $_SESSION['armazemAtualId'];
+        	FROM filial_notas
+			WHERE id_filial = " . $_SESSION['filialAtualId'];
         $dataVencimento = dbQuery($sql)[0]['data'];
         if ($dataVencimento == '0000-00-00') {
         	return;
@@ -59,24 +60,24 @@ class NotasFiscais {
 	}
 
 
-    public function validarArmazemSessao($idNota)
+    public function validarFilialSessao($idNota)
     {
-        $sql = "SELECT id_armazens FROM notas WHERE id = " . (int)$idNota;
+        $sql = "SELECT id_filial FROM notas WHERE id = " . (int)$idNota;
         $rs = dbFastQuery($sql);
 
         if (!$rs) {
             return ['sucesso' => false, 'msg' => 'Nota fiscal não encontrada.'];
         }
 
-        $idArmazemNota = (int)$rs[0]['id_armazens'];
-        $idArmazemSessao = (int)$_SESSION['armazemAtualId'];
+        $idFilialNota = (int)$rs[0]['id_filial'];
+        $idFilialSessao = (int)$_SESSION['filialAtualId'];
 
-        if ($idArmazemNota != $idArmazemSessao) {
-            $nomeArmazemNota = dbFastQuery("SELECT descricao FROM armazens WHERE id = $idArmazemNota")[0]['descricao'];
+        if ($idFilialNota != $idFilialSessao) {
+            $nomeFilialNota = dbFastQuery("SELECT descricao FROM filial WHERE id = $idFilialNota")[0]['descricao'];
 
             return [
                 'sucesso' => false,
-                'msg' => "Esta nota pertence ao armazém: <b>{$nomeArmazemNota}</b><br>".
+                'msg' => "Esta nota pertence ao armazém: <b>{$nomeFilialNota}</b><br>".
                          "Por favor, troque para o armazém correto antes de realizar operações nesta nota"
             ];
         }
@@ -93,9 +94,9 @@ class NotasFiscais {
 
 		$mtz = array();
 		if ($row['cancelada'] == 1) {
-			$mtz[] = '~2<-' . $o->small('Armazém') . "<br><b>" . $row['armazem'] . "</b>&nbsp;";
+			$mtz[] = '~2<-' . $o->small('Filial') . "<br><b>" . $row['filial'] . "</b>&nbsp;";
 		} else {
-			$mtz[] = '<-' . $o->small('Armazém') . "<br><b>" . $row['armazem'] . "</b>&nbsp;";
+			$mtz[] = '<-' . $o->small('Filial') . "<br><b>" . $row['filial'] . "</b>&nbsp;";
 		}
 
 		$mtz[] = '<-' . $o->small('Proprietário') . '<br><b>'
@@ -385,14 +386,13 @@ class NotasFiscais {
 
 		$sql="SELECT id FROM notas WHERE id=".intval($id)." AND (id_programacao <> 0 AND id_programacao IS NOT NULL)";
 		$programacao_associada=dbQuery($sql);
-		
-		if (count($programacao_associada)>0)
-		{
+
+		if ($programacao_associada) {
 			$sai=true;
 		}
 		return ($sai);
 	}
-	
+
 	/**
 	* Obtem a tabela principal com os registros de notas.
 	* @param  Array  $rs   Array com itens de uma nota fiscal.
@@ -512,6 +512,9 @@ class NotasFiscais {
 
 		$colspan = count($mtz);
 		$html .= $o->tableRow($mtz,"header");
+		$a = '<div id="modalMedicamento_content">Carregando dados...</div>';
+		$html .= $o->modal("{title: Medicamentos ; cancelCaption: Fechar; confirm: false; name: modalMedicamento; size:big; }",$a);
+		$o->addJavascript($js);
 
 		$tQuantidade = 0;
 		$tPesoLiquido = 0;
@@ -536,12 +539,12 @@ class NotasFiscais {
 			$mtz = array();
 
 			// $btnImpostos = $o->button("{icon: coins; caption: ; hint: Informações de tributação; style: success; size: small;openModal:modalImpostos}",'modalImpostos('.$row['id'].', '. $gId .')');
-			$btnImpostos = $o->button("{icon: coins; caption: ; hint: Informações de tributação; style: success; size: small;openModal:modalImpostos}", "modalImpostos(".$row['id'].", ". $gId .", '".$row['situacao']."')");
+			$btnImpostos = $o->button("{icon: coins; caption: ; hint: Informações de tributação; style: success; size: small; openModal: modalImpostos}", "modalImpostos(".$row['id'].", ". $gId .", '".$row['situacao']."')");
 
 			$btnMedicamento = '';
-			// if ($gParam['MEDICAMENTOS_EM_NOTA_FISCAL']['ativo']) {
-			// 	$btnMedicamento = $o->button("{icon: ambulance;caption:; hint:Informações do medicamento; style: danger; size: small;openModal:modalMedicamento}",'modalMedicamento(' . $row['id'] . ', ' . $gId . ')');
-			// }
+			if ($gParam['MEDICAMENTOS_EM_NOTA_FISCAL']['ativo']) {
+				$btnMedicamento = $o->button("{icon: ambulance;caption:; hint:Informações do medicamento; style: danger; size: small;openModal:modalMedicamento}",'modalMedicamento(' . $row['id'] . ', ' . $gId . ')');
+			}
 
 			if ($row["tipo"]=="S" && intval($row["id_programacao"])>0) {
 				if (in_array($row["situacao"], array('Aprovada', 'Cancelada'))) {
@@ -977,6 +980,24 @@ class NotasFiscais {
                     error: function(){
                         hideWait();
                         $('#impostosmodal_content').html('Erro ao carregar dados. Tente novamente mais tarde');
+                    }
+                });
+            }
+
+
+			function modalMedicamento(id_notas_itens,id_notas)
+			{
+                showWait();
+                $.ajax({
+                    url: '".$o->page."&gAjs=1&gPage=" . MEDICAMENTO . "&id_notas='+ id_notas+'&id_notas_itens='+id_notas_itens,
+                    type: 'GET',
+                    success: function(data){
+                        hideWait();
+                        document.querySelector('#modalMedicamento_content').innerHTML = data;
+                    },
+                    error: function(){
+                        hideWait();
+                        document.querySelector('#modalMedicamento_content').innerHTML = 'Erro ao carregar dados. Tente novamente mais tarde';
                     }
                 });
             }
@@ -1651,7 +1672,7 @@ class NotasFiscais {
 			if ($req["pesquisa"]) {
 				$pesquisa = $req["pesquisa"];
 				$where .= " AND (N.id='{$pesquisa}' OR C.codigo LIKE '%{$pesquisa}%' OR N.numero LIKE '%{$pesquisa}%' OR PC.nome LIKE '%{$pesquisa}%' OR PR.os LIKE '%{$pesquisa}%')";
-				$where.=" AND (N.id_armazens=".intval($_SESSION["armazemAtualId"]).")";
+				$where.=" AND (N.id_filial=".intval($_SESSION["filialAtualId"]).")";
 			}
 
 			if ($req['pesquisaGeral']) {
@@ -1755,9 +1776,9 @@ class NotasFiscais {
 			}
 			if ($req["armazen"]) {
 				$armazen = gCleanField($req["armazen"]);
-				$nomeArmazen = dbQuery("SELECT descricao FROM armazens WHERE id = $armazen")[0]["descricao"];
-				$where .= " AND N.id_armazens={$armazen}";
-				$cabecalho[] = "Armazém: {$nomeArmazen}";
+				$nomeArmazen = dbQuery("SELECT descricao FROM filial WHERE id = $armazen")[0]["descricao"];
+				$where .= " AND N.id_filial={$armazen}";
+				$cabecalho[] = "Filial: {$nomeArmazen}";
 			}
 			if ($req["chave"]) {
 				$chave=gCleanField($req["chave"]);
@@ -1822,7 +1843,7 @@ class NotasFiscais {
 				$cabecalho[] = "Data cancelamento até: ".$req["dtCancelamentoAte"];
 			}
 
-			$where.=" AND ( N.id_armazens=".intval($_SESSION["armazemAtualId"]).")";
+			$where.=" AND ( N.id_filial=".intval($_SESSION["filialAtualId"]).")";
 
 			$return["where"] = $where;
 			$return["cabecalho"] = $cabecalho;
@@ -1864,10 +1885,10 @@ class NotasFiscais {
 			$frm->add("{name:tipoNota; type:hidden; value:E;}");
 		}
 
-		$idArmazem = $registroAtual['id_armazens'] ?: $_SESSION['armazemAtualId'];
+		$idFilial = $registroAtual['id_filial'] ?: $_SESSION['filialAtualId'];
 
 		$frm->row(
-			$frm->add("{name: id_armazens; fieldLabel: Armazém; allowBlank: false; type: combo; value: " . $idArmazem . "; items: ".$sp['combo_armazens']."}"),
+			$frm->add("{name: id_filial; fieldLabel: Filial; allowBlank: false; type: combo; value: " . $idFilial . "; items: ".$sp['combo_filial']."}"),
 			$frm->add("{name: id_cfops; fieldLabel: CFOP; allowBlank: false; type: combo; items: " . $sp["combo_cfop"] . "; value:".$registroAtual["id_cfops"].";}")
 		);
 
@@ -2079,7 +2100,7 @@ class NotasFiscais {
 		$campos['id_pessoas_transportadora'] = intval($todosOsCampos['id_pessoas_transportadora']);
 		$campos['id_pessoas_fornecedor'] =  (int) $todosOsCampos['id_pessoas_fornecedor'];
 		$campos['id_pessoas_cliente']  =  intval($todosOsCampos['id_pessoas_proprietario']);
-		$campos['id_armazens'] = intval($todosOsCampos['id_armazens']);
+		$campos['id_filial'] = intval($todosOsCampos['id_filial']);
 		$campos['id_cfops'] = intval($todosOsCampos['id_cfops']);
 		$campos['serie'] = intval($todosOsCampos['serie']);
 		$campos['numero'] = $todosOsCampos['numero'];
@@ -2115,25 +2136,28 @@ class NotasFiscais {
 	function modificaNota($campos)
 	{
 		global $o;
+
 		$gId = $campos["gId"];
 		$sucesso = true;
-		$sql="SELECT notas_itens.id,
-		notas.id_pessoas_proprietario
-		FROM notas
-		LEFT JOIN notas_itens ON notas_itens.id_notas = notas.id
-		WHERE notas.id=$gId";
-		
+		$sql = "SELECT
+					notas_itens.id,
+					notas.id_pessoas_proprietario
+				FROM notas
+				LEFT JOIN notas_itens ON notas_itens.id_notas = notas.id
+				WHERE notas.id=$gId";
 		$rs = dbQuery($sql);
-		$row=$rs[0];
-		if((int) $row['id'] == 0 || $campos['id_pessoas_proprietario'] == $row['id_pessoas_proprietario'])
-		{
+
+		$row = $rs[0];
+		if (
+			(int) $row['id'] == 0
+			|| $campos['id_pessoas_proprietario'] == $row['id_pessoas_proprietario']
+		) {
 			$campos = $this->preparaCamposNota($campos, $gId);
 			dbUpdate('notas', $campos, $gId);
-			if((int) $campos['id_cfops'] > 0)
+			if ((int) $campos['id_cfops'] > 0) {
 				dbUpdate('notas_itens', ['id_cfops' => $campos['id_cfops']], $gId, "id_notas");
-		}
-		else
-		{
+			}
+		} else {
 			$this->defineErros("Está nota já possui itens cadastrados, não é possível alterar o proprietário.");
 			$sucesso = true;
 		}
@@ -2218,7 +2242,6 @@ class NotasFiscais {
 		itens.descricao,
 		unidades.sigla,
 		notas_itens.id_notas,
-		notas.id_programacao,
 		notas.tipo,
 		itens.ncm,
 		itens.apto,
@@ -2334,13 +2357,12 @@ class NotasFiscais {
 			N.cancelada,
 			N.venda,
 			NE.situacao,
-			N.id_programacao,
 			N.id_cfops,
 			PC.nome nome_proprietario,
 			PC.apelido apelido_proprietario,
-			A.descricao armazem,
+			A.descricao filial,
 			PT.nome nome_transportadora,
-			N.id_armazens,
+			N.id_filial,
 			N.volume,
 			NOTA_AGRUPADA.id AS id_nota_agrupada,
 			'0' AS agrupada,
@@ -2353,9 +2375,8 @@ class NotasFiscais {
 		LEFT JOIN pessoas P ON P.id = N.id_pessoas_criou
 		LEFT JOIN cfops C ON C.id = N.id_cfops
 		LEFT JOIN pessoas PC ON PC.id = N.id_pessoas_proprietario
-		LEFT JOIN armazens A ON A.id = N.id_armazens
-		LEFT JOIN pessoas PT ON PT.id = N.id_pessoas_transportadora
-		";
+		LEFT JOIN filial A ON A.id = N.id_filial
+		LEFT JOIN pessoas PT ON PT.id = N.id_pessoas_transportadora";
 		if ($this->inner_item)
 		{
 			$sql.=" INNER JOIN notas_itens ON notas_itens.id_notas = N.id ";
@@ -2366,9 +2387,6 @@ class NotasFiscais {
 
 	function obtemRegistros($orderBy = null, $where = null, $limit = "")
 	{
-
-		// echo "<pre>";
-		// var_dump(get_class_methods($this)); exit;
 		global $gParam;
 		$sql = $this->obtemQuery();
 		if (!is_null($where) && !empty($where)) {
@@ -2815,32 +2833,32 @@ class NotasFiscais {
 	}
 
 
-	function obtemDadosEmpresa($idArmazem)
+	function obtemDadosEmpresa($idFilial)
 	{
 		$sql="SELECT
-			armazens.razao_social AS razaoSocial,
-			armazens.razao_social AS nomeArmazem,
-			armazens.cnpj AS cnpjArmazem,
-			armazens.insc_estadual AS inscricaoEstadualArmazem,
-			armazens.insc_municipal AS inscricaoMunicipalArmazem,
-			armazens.cnae AS cnaeArmazem,
-			armazens.endereco AS enderecoArmazem,
-			armazens.numero AS numeroArmazem,
-			armazens.complemento AS enderecoComplementoArmazem,
-			armazens.bairro AS enderecoBairroArmazem,
-			armazens.cep AS cepArmazem,
-			armazens.telefone AS telefoneArmazem,
+			filial.razao_social AS razaoSocial,
+			filial.razao_social AS nomeFilial,
+			filial.cnpj AS cnpjFilial,
+			filial.insc_estadual AS inscricaoEstadualFilial,
+			filial.insc_municipal AS inscricaoMunicipalFilial,
+			filial.cnae AS cnaeFilial,
+			filial.endereco AS enderecoFilial,
+			filial.numero AS numeroFilial,
+			filial.complemento AS enderecoComplementoFilial,
+			filial.bairro AS enderecoBairroFilial,
+			filial.cep AS cepFilial,
+			filial.telefone AS telefoneFilial,
 			est.codigo_ibge AS codigoIbgeEstado,
 			est.sigla AS siglaUf,
 			mun.codigo_ibge AS codigoIbgeMunicipio,
 			mun.descricao AS municipioDescricao,
 			pais.nome AS xPais,
 			pais.codigo AS cPais
-		FROM armazens
-		LEFT JOIN enderecos_estados est ON armazens.id_enderecos_estados = est.id
-		LEFT JOIN enderecos_cidades mun ON armazens.id_enderecos_cidades = mun.id
+		FROM filial
+		LEFT JOIN enderecos_estados est ON filial.id_enderecos_estados = est.id
+		LEFT JOIN enderecos_cidades mun ON filial.id_enderecos_cidades = mun.id
 		LEFT JOIN enderecos_paises pais ON pais.id = est.id_enderecos_paises
-		WHERE armazens.id = '{$idArmazem}';";
+		WHERE filial.id = '{$idFilial}';";
 		return (dbQuery($sql)[0]);
 	}
 
@@ -2858,7 +2876,7 @@ class NotasFiscais {
 					ativar_modo_contingencia,
 					data_alteracao_operacao,
 					serie
-                FROM armazens_notas WHERE cnpj = '{$cnpj}'";
+                FROM filial_notas WHERE cnpj = '{$cnpj}'";
 		return dbFastQuery($sql)[0];
 	}
 
@@ -2955,26 +2973,28 @@ class NotasFiscais {
         $sql = "SELECT * FROM notas_itens_ibs_cbs WHERE id_notas_itens IN (" . $idsNotasItensOrigem . ") ORDER BY id";
         $notasItensIbsCbsSelecionados = dbFastQuery($sql);
 
-        $sqlItens = '';
-        foreach ($notasItensIbsCbsSelecionados as $key => $itemIbsCbs) {
-            $itemIbsCbs = excluirIndicesNumericos($itemIbsCbs);
-            unset($itemIbsCbs['id']);
-            $itemIbsCbs['id_notas_itens'] = $idsNotasItensNovo[$key];
-            $sqlItens .= "('" . implode("','", array_values($itemIbsCbs)) . "'),";
-        }
+        if ($notasItensIbsCbsSelecionados) {
+	        $sqlItens = '';
+	        foreach ($notasItensIbsCbsSelecionados as $key => $itemIbsCbs) {
+	            $itemIbsCbs = excluirIndicesNumericos($itemIbsCbs);
+	            unset($itemIbsCbs['id']);
+	            $itemIbsCbs['id_notas_itens'] = $idsNotasItensNovo[$key];
+	            $sqlItens .= "('" . implode("','", array_values($itemIbsCbs)) . "'),";
+	        }
 
-        $sql = "INSERT INTO notas_itens_ibs_cbs (".implode(',', array_keys($itemIbsCbs)).") VALUES ";
-        $sql = $sql . substr($sqlItens, 0, -1);
-        dbFastQuery($sql);
+	        $sql = "INSERT INTO notas_itens_ibs_cbs (".implode(',', array_keys($itemIbsCbs)).") VALUES ";
+	        $sql = $sql . substr($sqlItens, 0, -1);
+	        dbFastQuery($sql);
+        }
 	}
 
 
-	public function obterDadosNfeNumeroEOperacao($dadosArmazemNotas)
+	public function obterDadosNfeNumeroEOperacao($dadosFilialNotas)
 	{
-        if ($dadosArmazemNotas['ativar_modo_contingencia']) {
+        if ($dadosFilialNotas['ativar_modo_contingencia']) {
 			// (Depois precisaremos colocar uma tratativa para quando tivermos estados que não usam o 7, atualmente era fixo esse 7)
             $dados['modoOperacao'] = "7"; // 3 = SCAN, 6 = SVCAN, 7 = SVCRS
-            $dados['dataHoraContingencia'] = str_replace(" ", "T", $dadosArmazemNotas['data_alteracao_operacao']).date("P");
+            $dados['dataHoraContingencia'] = str_replace(" ", "T", $dadosFilialNotas['data_alteracao_operacao']).date("P");
         } else {
             $dados['dataHoraContingencia'] = "";
             $dados['modoOperacao'] = "1"; // 1 = Normal
@@ -2983,16 +3003,16 @@ class NotasFiscais {
 
         $sql = "SELECT id, numero, serie
 				FROM nfe_numeros
-				WHERE id_armazens = " . $_SESSION['armazemAtualId'] . " AND serie = '" . $dadosArmazemNotas['serie'] . "'";
+				WHERE id_filial = " . $_SESSION['filialAtualId'] . " AND serie = '" . $dadosFilialNotas['serie'] . "'";
         $dadosNfeNumeros = dbFastQuery($sql)[0];
 
         $numero = (int) $dadosNfeNumeros['numero'] + 1;
 		if (!$dadosNfeNumeros) {
 			$numero = 1;
 			$mtz = array();
-			$mtz['id_armazens'] = $_SESSION['armazemAtualId'];
+			$mtz['id_filial'] = $_SESSION['filialAtualId'];
 			$mtz['numero'] = $numero;
-			$mtz['serie'] = $dadosArmazemNotas['serie'];
+			$mtz['serie'] = $dadosFilialNotas['serie'];
 			dbInsert('nfe_numeros', $mtz);
 		} else {
 			$sql = "UPDATE nfe_numeros SET numero = {$numero} WHERE id = " . $dadosNfeNumeros['id'];
@@ -3001,7 +3021,7 @@ class NotasFiscais {
 
         $dados['idNfeNumeros'] = $dadosNfeNumeros['id'];
         $dados['numeroNota'] = $numero;
-        $dados['serie'] = $dadosNfeNumeros['serie'] ?: $dadosArmazemNotas['serie'];
+        $dados['serie'] = $dadosNfeNumeros['serie'] ?: $dadosFilialNotas['serie'];
 
 		return $dados;
 	}
@@ -3102,7 +3122,7 @@ class NotasFiscais {
 			mun.codigo_ibge enderecoIbgeMunicipio,
 			mun.descricao enderecoMunicipio,
 			est.sigla enderecoUf
-			FROM armazens A
+			FROM filial A
 			LEFT JOIN enderecos_estados est ON A.id_enderecos_estados = est.id
 			LEFT JOIN enderecos_cidades mun ON A.id_enderecos_cidades = mun.id
 			WHERE A.id=".$idProprietario;
@@ -3163,11 +3183,11 @@ class NotasFiscais {
 				NF.xml,
 				N.id_pessoas_proprietario,
 				NF.data_recibo,
-				A.descricao armazem
+				A.descricao filial
 			FROM nfe NF
 			JOIN notas N ON NF.id = N.id_nfe
 			LEFT JOIN pessoas P ON P.id = N.id_pessoas_proprietario
-			LEFT JOIN armazens A ON A.id = N.id_armazens
+			LEFT JOIN filial A ON A.id = N.id_filial
 			WHERE NF.id = " . $idNfe;
 		$nota = dbQuery($sql)[0];
 
@@ -3200,7 +3220,7 @@ class NotasFiscais {
         $dadosDanfe['chave'] = $nota['chave'];
         $dadosDanfe['idPessoasProprietario'] = 1;
         $dadosDanfe['empresa'] = $this->obtemDadosEmpresa(obtemIdEmpresa($nota['id_pessoas_proprietario']));
-        $dadosDanfe['config'] = $this->buscarConfiguracoes($dadosDanfe['empresa']['cnpjArmazem']);
+        $dadosDanfe['config'] = $this->buscarConfiguracoes($dadosDanfe['empresa']['cnpjFilial']);
         $retornoGerarDanfe = dispararGatilho('gerarDanfe', $dadosDanfe);
 
         if ($retornoGerarDanfe['erroCurl'] && !$retornoGerarDanfe['resposta']) {
@@ -3232,7 +3252,7 @@ class NotasFiscais {
 			. "\nChave: " . $nota["chave"]
 			. "\n" . $dadosDanfe['empresa']['razaoSocial']
 			. "\n<font size=1>E-mail enviado automaticamente. Gentileza não responder.</font></i>";
-		$assunto = gVar("global.site") . " " . $nota["armazem"] . " NFe";
+		$assunto = gVar("global.site") . " " . $nota["filial"] . " NFe";
 		$emailFoiEnviado = gSendEmail($remetente, $para, $cc, $assunto, $conteudo, $anexo);
 		if (!$emailFoiEnviado) {
 			$erros[] = 'Erro ao enviar email';
@@ -3425,6 +3445,7 @@ class ImportacaoNFE
 	private $ipi;
 	private $pis;
 	private $cofins;
+	private $ibsCbs;
 
 	private $idProprietario;
 	private $idPessoasFornecedor;
@@ -3444,11 +3465,15 @@ class ImportacaoNFE
 		$this->informacoesXML = $xml->NFe->infNFe->ide;
 		$this->clienteXML= $xml->NFe->infNFe->emit;
 		$this->transporteXML = $xml->NFe->infNFe->transp;
-		
-		$this->xml= $xml;
+		$this->xml = $xml;
+
+		/* IMPOSTOS */
 		$this->icms=array();
 		$this->ipi=array();
-		
+		$this->pis=array();
+		$this->cofins=array();
+		$this->ibsCbs=array();
+
 		$this->registros=array();
 		$this->cliente=array();
 		$this->endereco=array();
@@ -3461,7 +3486,7 @@ class ImportacaoNFE
 		$this->notaItem=array();
 		$this->programacao=array();
 		$this->programacaoItem=array();
-		
+
 		/* INFORMATIVOS */
 		$this->erros=array();
 		$this->itens=array();
@@ -3470,7 +3495,7 @@ class ImportacaoNFE
 		/* id do proprietário */
 		$this->idProprietario=$idProprietario;
 	}
-	
+
 	public function conferirNota($chave)
 	{
 		$sql = "
@@ -3697,7 +3722,8 @@ class ImportacaoNFE
 			$this->defineErros("Nota fiscal de chave {$chave} já foi carregada anteriormente.");
 		}
 	}
-	
+
+
 	public function montarCabecalhoConfirmacao($nota, $nfe, $cliente, $xml, $idProprietario=0)
 	{
 		global $o,$gPage, $gParam, $gId;
@@ -3708,7 +3734,7 @@ class ImportacaoNFE
 		$existeCliente = ($cliente) ? "SIM" : "NÃO";
 		$destinatario=$ni->checarDestinatario(gCleanField($xml->NFe->infNFe->dest->CNPJ));
 		if(!$destinatario){
-			$alertas[] = "A NF-e não tem como destinatário o armazém atual. <br/>CNPJ Armazém : ".gFieldById("armazens",$_SESSION['armazemAtualId'],'cnpj')."<br/>CNPJ NF-e&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: ".gCleanField($xml->NFe->infNFe->dest->CNPJ);
+			$alertas[] = "A NF-e não tem como destinatário o armazém atual. <br/>CNPJ Filial : ".gFieldById("filial",$_SESSION['filialAtualId'],'cnpj')."<br/>CNPJ NF-e&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: ".gCleanField($xml->NFe->infNFe->dest->CNPJ);
 		}
 		if ($this->nota['venda']) {
 			$alertas[] = 'Esta nota fiscal utilizará os itens do fornecedor';
@@ -3752,19 +3778,18 @@ class ImportacaoNFE
 		$html.=$o->tableEnd();
 		return ($html);
 	}
-	
-	
-	
+
+
 	public function defineErros($erro)
 	{
 		$this->erros[] = $erro;
 	}
-	
+
 	public function obtemErros()
 	{
 		return ($this->erros);
 	}
-	
+
 	public function obtemCidade($codIbge)
 	{
 		$sql = "SELECT EC.id, EE.id as idEstado
@@ -3847,7 +3872,7 @@ class ImportacaoNFE
 		P.id
 		FROM programacao P
 		LEFT JOIN tipos_programacao TP ON P.id_tipos_programacao = TP.id
-		LEFT JOIN armazens A  ON P.id_armazens =  A.id
+		LEFT JOIN filial A  ON P.id_filial =  A.id
 		LEFT JOIN pessoas PC ON P.id_pessoas_criou = PC.id
 		WHERE P.id = '{$id}'";
 		return (dbQuery($sql)[0]);
@@ -4079,157 +4104,296 @@ class ImportacaoNFE
 		}
 	}
 
-	public function checarDestinatario($cnpj, $idArmazens=0){
-		if (!empty($idArmazens))
+	public function checarDestinatario($cnpj, $idFilial=0){
+		if (!empty($idFilial))
 		{
-			$where=" A.id = '{$idArmazens}' ";
+			$where=" A.id = '{$idFilial}' ";
 		} else
 		{
 			$where= " A.cnpj='{$cnpj}'";
 		}
-		$sql="SELECT id FROM armazens WHERE ((cnpj='{$cnpj}' AND id=".$_SESSION['armazemAtualId'].") OR (cnpj='{$cnpj}' AND id=".(int) $idArmazens.")) ";
+		$sql="SELECT id FROM filial WHERE ((cnpj='{$cnpj}' AND id=".$_SESSION['filialAtualId'].") OR (cnpj='{$cnpj}' AND id=".(int) $idFilial.")) ";
 		$rs=dbQuery($sql);
 		if($rs)
 			return true;
 		else
 			return false;
 	}
-	
+
+
 	public function obtemChave()
 	{
 		return ($this->nfe["chave"]);
 	}
-	
+
+
 	private function validarChave($chave)
 	{
 		return str_replace("NFe", "", gCleanField($chave));
 	}
-	
-	private function validarGlobalICMS($icms)
+
+
+	public function validarGlobalICMS($icms)
 	{
-		$this->icms = [];
-		if (isset($icms->ICMS00))
-		{
-			$this->icms["descricao"] = "ICMS00";
-			$this->validarICMS($icms->ICMS00);
-		} else if (isset($icms->ICMS10))
-		{
-			$this->icms["descricao"] = "ICMS10";
-			$this->validarICMS($icms->ICMS10);
-		} else if (isset($icms->ICMS20))
-		{
-			$this->icms["descricao"] = "ICMS20";
-			$this->validarICMS($icms->ICMS20);
-		} else if (isset($icms->ICMS30))
-		{
-			$this->icms["descricao"] = "ICMS30";
-			$this->validarICMS($icms->ICMS30);
-		} else if (isset($icms->ICMS40))
-		{
-			$this->icms["descricao"] = "ICMS40";
-			$this->validarICMS($icms->ICMS40);
-		} else if (isset($icms->ICMS51))
-		{
-			$this->icms["descricao"] = "ICMS51";
-			$this->validarICMS($icms->ICMS51);
-		} else if (isset($icms->ICMS60))
-		{
-			$this->icms["descricao"] = "ICMS60";
-			$this->validarICMS($icms->ICMS60);
-		} else if (isset($icms->ICMS70))
-		{
-			$this->icms["descricao"] = "ICMS70";
-			$this->validarICMS($icms->ICMS70);
-		} else if (isset($icms->ICMS90))
-		{
-			$this->icms["descricao"] = "ICMS90";
-			$this->validarICMS($icms->ICMS90);
+		$this->icms = array();
+
+		$grupos = array(
+			'ICMS00', 'ICMS10', 'ICMS20', 'ICMS30', 'ICMS40',
+			'ICMS51', 'ICMS60', 'ICMS70', 'ICMS90', 'ICMSPart',
+			'ICMSSN101', 'ICMSSN102', 'ICMSSN201', 'ICMSSN202',
+			'ICMSSN500', 'ICMSSN900', 'ICMSST'
+		);
+
+		foreach ($grupos as $grupo) {
+			if (isset($icms->$grupo)) {
+				$this->validarICMS($icms->$grupo);
+				return;
+			}
 		}
 	}
-	
-	private function validarICMS($icms)
+
+
+	public function validarICMS($dadosICMS)
 	{
-		
-		if (isset($icms->CST))
-		{
-			$codigoCst=gCleanField($icms->CST);
-			$cst=dbQuery("SELECT id FROM imp_icms_cst WHERE codigo = '{$codigoCst}'");
-			if (count($cst)>0)
-			{
-				$this->icms["id_imp_icms_cst"]=$cst[0]["id"];
-			}
+		if (isset($dadosICMS->CST)) {
+			$codigoCst = gCleanField($dadosICMS->CST);
+			$rs = dbQuery("SELECT id FROM imp_icms_cst WHERE codigo = '{$codigoCst}'");
+			if (count($rs) > 0) $this->icms["id_imp_icms_cst"] = $rs[0]["id"];
 		}
-		
-		if (isset($icms->orig))
-		{
-			$codigoOrigem=gCleanField($icms->orig);
-			$ori=dbQuery("SELECT id FROM imp_icms_origem WHERE codigo = '{$codigoOrigem}'");
-			if (count($ori)>0)
-			{
-				$this->icms["id_imp_icms_origem"]=$ori[0]["id"];
-			}
+
+		if (isset($dadosICMS->orig)) {
+			$codigoOrigem = gCleanField($dadosICMS->orig);
+			$rs = dbQuery("SELECT id FROM imp_icms_origem WHERE codigo = '{$codigoOrigem}'");
+			if (count($rs) > 0) $this->icms["id_imp_icms_origem"] = $rs[0]["id"];
 		}
-		
-		if (isset($icms->modBC))
-		{
-			$codigoMod=gCleanField($icms->modBC);
-			$mod=dbQuery("SELECT id FROM imp_icms_mod WHERE codigo = '{$codigoMod}'");
-			if (count($mod)>0)
-			{
-				$this->icms["id_imp_icms_mod"]=$mod[0]["id"];
+
+		if (isset($dadosICMS->modBC)) {
+			$codigoMod = gCleanField($dadosICMS->modBC);
+			$rs = dbQuery("SELECT id FROM imp_icms_mod WHERE codigo = '{$codigoMod}'");
+			if (count($rs) > 0) $this->icms["id_imp_icms_mod"] = $rs[0]["id"];
+		}
+
+		$mapaCampos = array(
+			'vBC' => 'vBC',
+			'pICMS' => 'pICMS',
+			'pRedBC' => 'pRedBC',
+			'pICMSST' => 'pICMSST',
+			'vICMSST' => 'vICMSST',
+			'vBCSTRet' => 'vBCSTRet',
+			'vICMSSTRet' => 'vICMSSTRet',
+			'modBCST' => 'modBCST',
+			'pMVAST' => 'pMVAST',
+			'pRedBCST' => 'pRedBCST',
+			'vBCST' => 'vBCST',
+			'vBCFCP' => 'vBCFCP',
+			'pFCP' => 'pFCP',
+			'vBCFCPST' => 'vBCFCPST',
+			'pFCPST' => 'pFCPST'
+		);
+
+		foreach ($mapaCampos as $tagXML => $colunaBanco) {
+			if (isset($dadosICMS->$tagXML)) {
+				if ($tagXML == 'modBCST') {
+					$this->icms[$colunaBanco] = gCleanField($dadosICMS->$tagXML);
+				} else {
+					$this->icms[$colunaBanco] = (float)($dadosICMS->$tagXML);
+				}
 			}
 		}
 
-		$camposICMS = array("vBC",
-					"pICMS",
-					"pRedBC",
-					"pICMSST",
-					"vBCSTRet",
-					"vICMSSTRet",
-					"modBCST",
-					"pMVAST",
-					"pRedBCST",
-					"vBCST",
-					"vBCFCP",
-					"pFCP",
-					"vBCFCPST",
-					"pFCPST"
-				);
-		foreach ($camposICMS as $cmp) {
-			if(isset($icms->{$cmp})){
-				$this->icms[$cmp] = gCleanField($icms->{$cmp});
+		if (isset($dadosICMS->pRedBC)) {
+			$this->icms['reducao_icms_aliquota'] = (float)($dadosICMS->pRedBC);
+		}
+	}
+
+
+	public function validarIPI($ipi)
+	{
+		$this->ipi = array();
+
+		if (isset($ipi->cEnq)) {
+			$this->ipi["cEnq"] = gCleanField($ipi->cEnq);
+		}
+
+		$dadosIPI = null;
+		if (isset($ipi->IPITrib)) {
+			$dadosIPI = $ipi->IPITrib;
+		} elseif (isset($ipi->IPINT)) {
+			$dadosIPI = $ipi->IPINT;
+		}
+
+		if ($dadosIPI) {
+			if (isset($dadosIPI->CST)) {
+				$codigoCst = gCleanField($dadosIPI->CST);
+				$rs = dbQuery("SELECT id FROM imp_ipi_cst WHERE codigo = '{$codigoCst}'");
+				if (count($rs) > 0) $this->ipi["id_imp_ipi_cst"] = $rs[0]["id"];
+			}
+
+			if (isset($dadosIPI->vBC))  $this->ipi["vBC"]  = (float)($dadosIPI->vBC);
+			if (isset($dadosIPI->pIPI)) $this->ipi["pIPI"] = (float)($dadosIPI->pIPI);
+			if (isset($dadosIPI->vIPI)) $this->ipi["vIPI"] = (float)($dadosIPI->vIPI);
+		}
+	}
+
+
+	public function validarPIS($pis)
+	{
+		$this->pis = array();
+
+		$grupos = array('PISAliq', 'PISQtde', 'PISNT', 'PISOutr', 'PIS99');
+		$dadosPIS = null;
+
+		foreach ($grupos as $grupo) {
+			if (isset($pis->$grupo)) {
+				$dadosPIS = $pis->$grupo;
+				break;
 			}
 		}
-	}
-	
-	private function validarIPI($ipi)
-	{
-		$this->ipi = [];
-		if (isset($ipi->IPITrib))
-		{
-			if (isset($ipi->IPITrib->vIPI))
-			$this->ipi["ipi"] = gCleanField($ipi->IPITrib->vIPI);
-			
-			if (isset($ipi->IPITrib->pIPI))
-			$this->ipi["aliquota_ipi"] = gCleanField($ipi->IPITrib->pIPI);
-		} else if (isset($ipi->IPINT))
-		{
-			/* VERIFICAR */
+
+		if ($dadosPIS) {
+			if (isset($dadosPIS->CST)) {
+				$codigoCst = gCleanField($dadosPIS->CST);
+				$rs = dbQuery("SELECT id FROM imp_pis_cst WHERE codigo = '{$codigoCst}'");
+				if (count($rs) > 0) $this->pis["id_imp_pis_cst"] = $rs[0]["id"];
+			}
+
+			if (isset($dadosPIS->vBC))  $this->pis["vBC"]  = (float)($dadosPIS->vBC);
+			if (isset($dadosPIS->pPIS)) $this->pis["pPIS"] = (float)($dadosPIS->pPIS);
+			if (isset($dadosPIS->vPIS)) $this->pis["vPIS"] = (float)($dadosPIS->vPIS);
 		}
 	}
-	
-	private function validarPIS($pis)
+
+
+	public function validarCOFINS($cofins)
 	{
-		$this->pis = [];
+		$this->cofins = array();
+
+		$grupos = array('COFINSAliq', 'COFINSQtde', 'COFINSNT', 'COFINSOutr', 'COFINS99');
+		$dadosCOFINS = null;
+
+		foreach ($grupos as $grupo) {
+			if (isset($cofins->$grupo)) {
+				$dadosCOFINS = $cofins->$grupo;
+				break;
+			}
+		}
+
+		if ($dadosCOFINS) {
+			if (isset($dadosCOFINS->CST)) {
+				$codigoCst = gCleanField($dadosCOFINS->CST);
+				$rs = dbQuery("SELECT id FROM imp_cofins_cst WHERE codigo = '{$codigoCst}'");
+				if (count($rs) > 0) $this->cofins["id_imp_cofins_cst"] = $rs[0]["id"];
+			}
+
+			if (isset($dadosCOFINS->vBC))     $this->cofins["vBC"]     = (float)($dadosCOFINS->vBC);
+			if (isset($dadosCOFINS->pCOFINS)) $this->cofins["pCOFINS"] = (float)($dadosCOFINS->pCOFINS);
+			if (isset($dadosCOFINS->vCOFINS)) $this->cofins["vCOFINS"] = (float)($dadosCOFINS->vCOFINS);
+		}
 	}
-	
-	private function validarCOFINS()
-	{
-		
-	}
-	
-	
-	
+
+
+	public function validarGlobalIBSCBS($nodeIBSCBS)
+    {
+        $this->ibsCbs = array();
+
+        $cst = null;
+        if (isset($nodeIBSCBS->CST)) {
+            $cst = gCleanField($nodeIBSCBS->CST);
+            $rs = dbQuery("SELECT id FROM imp_ibs_cbs_cst WHERE codigo = '{$cst}' LIMIT 1");
+            if (count($rs) > 0) {
+                $this->ibsCbs["id_imp_ibs_cbs_cst"] = $rs[0]["id"];
+            }
+        }
+
+        if (isset($nodeIBSCBS->cClassTrib)) {
+            $codigoClass = gCleanField($nodeIBSCBS->cClassTrib);
+            $rs = dbQuery("SELECT id FROM cclasstrib_ibs_cbs WHERE codigo = '{$codigoClass}' LIMIT 1");
+            if (count($rs) > 0) {
+                $this->ibsCbs["id_cclasstrib_ibs_cbs"] = $rs[0]["id"];
+            }
+        }
+
+        if (isset($nodeIBSCBS->indDoacao)) {
+            $this->ibsCbs["indDoacao"] = (int) $nodeIBSCBS->indDoacao;
+        }
+
+        if (isset($nodeIBSCBS->gIBSCBS)) {
+            $grupo = $nodeIBSCBS->gIBSCBS;
+
+            if (isset($grupo->vBC)) $this->ibsCbs["vBC"] = (float)($grupo->vBC);
+
+            if (isset($grupo->gIBSUF)) {
+                $uf = $grupo->gIBSUF;
+                if (isset($uf->pIBSUF))     $this->ibsCbs["gIBSUF_pIBSUF"]     = (float)($uf->pIBSUF);
+                if (isset($uf->vIBSUF))     $this->ibsCbs["gIBSUF_vIBSUF"]     = (float)($uf->vIBSUF);
+                if (isset($uf->pDif))       $this->ibsCbs["gIBSUF_pDif"]       = (float)($uf->pDif);
+                if (isset($uf->vDif))       $this->ibsCbs["gIBSUF_vDif"]       = (float)($uf->vDif);
+                if (isset($uf->vDevTrib))   $this->ibsCbs["gIBSUF_vDevTrib"]   = (float)($uf->vDevTrib);
+
+                if (isset($uf->gRed)) {
+                    if (isset($uf->gRed->pRedAliq))  $this->ibsCbs["gIBSUF_pRedAliq"]  = (float)($uf->gRed->pRedAliq);
+                    if (isset($uf->gRed->pAliqEfet)) $this->ibsCbs["gIBSUF_pAliqEfet"] = (float)($uf->gRed->pAliqEfet);
+                }
+            }
+
+            if (isset($grupo->gIBSMun)) {
+                $mun = $grupo->gIBSMun;
+                if (isset($mun->pIBSMun))     $this->ibsCbs["gIBSMun_pIBSMun"]     = (float)($mun->pIBSMun);
+                if (isset($mun->vIBSMun))     $this->ibsCbs["gIBSMun_vIBSMun"]     = (float)($mun->vIBSMun);
+                if (isset($mun->pDif))        $this->ibsCbs["gIBSMun_pDif"]        = (float)($mun->pDif);
+                if (isset($mun->vDif))        $this->ibsCbs["gIBSMun_vDif"]        = (float)($mun->vDif);
+                if (isset($mun->vDevTrib))    $this->ibsCbs["gIBSMun_vDevTrib"]    = (float)($mun->vDevTrib);
+
+                if (isset($mun->gRed)) {
+                    if (isset($mun->gRed->pRedAliq))  $this->ibsCbs["gIBSMun_pRedAliq"]  = (float)($mun->gRed->pRedAliq);
+                    if (isset($mun->gRed->pAliqEfet)) $this->ibsCbs["gIBSMun_pAliqEfet"] = (float)($mun->gRed->pAliqEfet);
+                }
+            }
+
+            if (isset($grupo->gCBS)) {
+                $cbs = $grupo->gCBS;
+                if (isset($cbs->pCBS))      $this->ibsCbs["gCBS_pCBS"]      = (float)($cbs->pCBS);
+                if (isset($cbs->vCBS))      $this->ibsCbs["gCBS_vCBS"]      = (float)($cbs->vCBS);
+                if (isset($cbs->pDif))      $this->ibsCbs["gCBS_pDif"]      = (float)($cbs->pDif);
+                if (isset($cbs->vDif))      $this->ibsCbs["gCBS_vDif"]      = (float)($cbs->vDif);
+                if (isset($cbs->vDevTrib))  $this->ibsCbs["gCBS_vDevTrib"]  = (float)($cbs->vDevTrib);
+
+                if (isset($cbs->gRed)) {
+                    if (isset($cbs->gRed->pRedAliq))  $this->ibsCbs["gCBS_pRedAliq"]  = (float)($cbs->gRed->pRedAliq);
+                    if (isset($cbs->gRed->pAliqEfet)) $this->ibsCbs["gCBS_pAliqEfet"] = (float)($cbs->gRed->pAliqEfet);
+                }
+            }
+        }
+
+        if (isset($nodeIBSCBS->qBCMono))      $this->ibsCbs["qBCMono"]      = (float)($nodeIBSCBS->qBCMono);
+        if (isset($nodeIBSCBS->adRemIBS))     $this->ibsCbs["adRemIBS"]     = (float)($nodeIBSCBS->adRemIBS);
+        if (isset($nodeIBSCBS->vIBSMono))     $this->ibsCbs["vIBSMono"]     = (float)($nodeIBSCBS->vIBSMono);
+        if (isset($nodeIBSCBS->adRemCBS))     $this->ibsCbs["adRemCBS"]     = (float)($nodeIBSCBS->adRemCBS);
+        if (isset($nodeIBSCBS->vCBSMono))     $this->ibsCbs["vCBSMono"]     = (float)($nodeIBSCBS->vCBSMono);
+
+        if (isset($nodeIBSCBS->gTransfCred)) {
+            $transf = $nodeIBSCBS->gTransfCred;
+            if (isset($transf->vIBS)) $this->ibsCbs["vIBSTransf"] = (float)($transf->vIBS);
+            if (isset($transf->vCBS)) $this->ibsCbs["vCBSTransf"] = (float)($transf->vCBS);
+        }
+
+        if (isset($nodeIBSCBS->gCredPresIBSZFM)) {
+            $zfm = $nodeIBSCBS->gCredPresIBSZFM;
+            if (isset($zfm->competApur))       $this->ibsCbs["competApur"]       = gCleanField($zfm->competApur);
+            if (isset($zfm->vCredPresIBSZFM))  $this->ibsCbs["vCredPresIBSZFM"]  = (float)($zfm->vCredPresIBSZFM);
+            if (isset($zfm->tpCredPresIBSZFM)) $this->ibsCbs["tpCredPresIBSZFM"] = gCleanField($zfm->tpCredPresIBSZFM);
+        }
+
+        if (isset($nodeIBSCBS->gAjusteCompet)) {
+            $ajuste = $nodeIBSCBS->gAjusteCompet;
+            if (isset($ajuste->competApur)) $this->ibsCbs["competApur"] = gCleanField($ajuste->competApur);
+
+            if (isset($ajuste->vIBS)) $this->ibsCbs["vIBSAjuste"] = (float)($ajuste->vIBS);
+            if (isset($ajuste->vCBS)) $this->ibsCbs["vCBSAjuste"] = (float)($ajuste->vCBS);
+        }
+    }
+
+
 	private function preparaCliente ()
 	{
 		global $usrId;
@@ -4243,10 +4407,10 @@ class ImportacaoNFE
 		$this->cliente["cliente"]     = 1;
 		$this->cliente["tipo"]        = 'J'; // F-FÍSICA, J-JURÍDICA.;
 	}
-	
+
+
 	private function inserirCliente ()
 	{
-		
 		$this->preparaCliente();
 		$this->cliente["id"] = dbInsert("pessoas", $this->cliente, true);
 		$this->preparaEndereco();
@@ -4256,7 +4420,8 @@ class ImportacaoNFE
 		$this->clienteBD = $this->checarEmitente(intval($this->clienteJuridico["cnpj"]), $this->idProprietario);
 		$this->cliente["automatico"] = true;
 	}
-	
+
+
 	private function preparaClienteJuridico()
 	{
 		$cliente = $this->clienteXML;
@@ -4265,7 +4430,8 @@ class ImportacaoNFE
 		$this->clienteJuridico["cnpj"] = gCleanField($this->clienteXML->CNPJ);
 		$this->clienteJuridico["razao_social"] = gCleanField($this->clienteXML->xNome);
 	}
-	
+
+
 	private function preparaEndereco ()
 	{
 		$cliente = $this->clienteXML;
@@ -4289,13 +4455,15 @@ class ImportacaoNFE
 			$this->endereco["id_enderecos_estados"] = $estado["id"];
 		}
 	}
-	
+
+
 	function tiraEstranhos($var)
 	{
 		$var = $this->tiraAcentos($var);
 		return(preg_replace('/[^a-z0-9\+\-\=\.\,\!\?\:\;\@\%\&\(\)\{\}\<\>\[\]\s\'\$\/]+/i ', '', $var));
 	}
-	
+
+
 	function tiraAcentos($t)
 	{
 		global $gPathLib;
@@ -4334,18 +4502,17 @@ class ImportacaoNFE
 		$t = iconv('ISO-8859-1', 'ASCII//TRANSLIT//IGNORE', $t);
 		return $t;
 	}
-	
-	
+
+
 	private function preparaUnidade($item)
 	{
-		
 		$sigla=$this->tiraEstranhos(gCleanField($item->prod->uCom));
 		$sigla=substr($sigla, 0, 3);
 		$this->unidade=array();
 		$this->unidade["sigla"]=$sigla;
 		$this->unidade["descricao"]=$sigla;
 	}
-	
+
 	public function inserirUnidade($item)
 	{
 		$this->preparaUnidade($item);
@@ -4353,7 +4520,7 @@ class ImportacaoNFE
 		$this->unidade["novo"] = true;
 		$this->unidades[] = true;
 	}
-	
+
 	private function preparaSKUMinimo()
 	{
 		global $usrId;
@@ -4370,7 +4537,8 @@ class ImportacaoNFE
 		$sku["quantidade"] = 1;
 		return ($sku);
 	}
-	
+
+
 	private function preparaSKU($item)
 	{
 		global $usrId;
@@ -4381,43 +4549,43 @@ class ImportacaoNFE
 		$this->sku["id_pessoas_criou"]= $usrId;
 		$this->sku["data_cadastro"]	  = date('Y-m-d H:i:s');
 		$this->sku["codigo"] 		  = gCleanField($item->prod->cProd);
-		if (isset($item->prod->cEAN) && (!empty($item->prod->cEAN) && !is_null($item->prod->cEAN) && trim($item->prod->cEAN)<> "SEM GTIN"))
-		{
+		if (isset($item->prod->cEAN) && (!empty($item->prod->cEAN) && !is_null($item->prod->cEAN) && trim($item->prod->cEAN)<> "SEM GTIN")) {
 			$this->sku["codigo_barras"]= gCleanField($item->prod->cEAN);
-		} else
-		{
+		} else {
 			$this->sku["codigo_barras"]=gCleanField($item->prod->cProd);
 		}
-		
+
 		if (empty($this->sku["codigo"])
 		|| is_null($this->sku["codigo"]))
 		{
 			$this->sku["codigo"]=$item["codigo"];
 		}
-		if (empty($this->sku["codigo_barras"])
-		|| is_null($this->sku["codigo_barras"]))
-		{
-			
-			if (isset($item["codigo_barras"]) && (!empty($item["codigo_barras"]) && !is_null($item["codigo_barras"]) && trim($item["codigo_barras"])<> "SEM GTIN"))
-			{
+
+		if (
+			empty($this->sku["codigo_barras"])
+			|| is_null($this->sku["codigo_barras"])
+		) {
+
+			if (isset($item["codigo_barras"]) && (!empty($item["codigo_barras"]) && !is_null($item["codigo_barras"]) && trim($item["codigo_barras"])<> "SEM GTIN")) {
 				$this->sku["codigo_barras"]=$item["codigo_barras"];
-			} else
-			{
+			} else {
 				$this->sku["codigo_barras"]=$item["codigo"];
 			}
 		}
 		$this->sku["quantidade"]=1;
 	}
-	
+
+
 	private function inserirSKUMinimo($item)
 	{
 		$skuMinimo = $this->preparaSKUMinimo();
 		dbInsert("itens_skus", $skuMinimo, true);
 	}
-	
+
+
 	private function inserirSKU ($item)
 	{
-		
+
 		$this->preparaSKU($item);
 		/* Checar SKU */
 		$liberar=true;
@@ -4476,15 +4644,16 @@ class ImportacaoNFE
 		}
 
 	}
-	
+
+
 	private function inserirNFE()
 	{
 		$this->preparaNFE();
 		/* framework não aceita a string completa do xml, por enquanto usar sql comum */
 		$this->nfe["id"] = dbInsert("nfe", $this->nfe, true);
 	}
-	
-	
+
+
 	private function preparaNotaFiscal()
 	{
 		global $usrId;
@@ -4493,7 +4662,7 @@ class ImportacaoNFE
 		$this->nota["tipo"]       = 'E';
 		$this->nota["confirmada"] = 0;
 		$this->nota["cancelada"]  = 0;
-		
+
 		/* Tratando data de emissão */
 		if (isset($this->informacoesXML->dhEmi))
 		{
@@ -4505,7 +4674,7 @@ class ImportacaoNFE
 		{
 			$dataEmissao="0000-00-00";
 		}
-		
+
 		/* tratando data de movimento */
 		if (isset($this->informacoesXML->dhSaiEnt))
 		{
@@ -4522,13 +4691,13 @@ class ImportacaoNFE
 		$this->nota["data_emissao"]   =  $dataEmissao;
 		$this->nota["data_movimento"] =  $dataMovimento;
 		$this->nota["data_criou"]     =  date('Y-m-d H:i:s');
-		$this->nota["id_armazens"]    =  obtemIdEmpresa();
+		$this->nota["id_filial"]    =  obtemIdEmpresa();
 		$this->nota["id_cfops"]       =  (count($cfops) > 0) ? $cfops["id"] : 0;
 		$this->nota["id_pessoas_cliente"]      = $this->cliente["id"];
 		$this->nota["id_nfe"] = $this->nfe["id"];
 		$this->nota["id_pessoas_criou"] = $usrId;
 		$this->nota['id_pessoas_fornecedor'] = $this->idPessoasFornecedor;
-		
+
 		/* CAMPOS QUE PODEM NÃO EXISTIR */
 		if (isset($this->transporteXML->vol->qVol))
 		{
@@ -4539,43 +4708,43 @@ class ImportacaoNFE
 		{
 			$this->nota["pesoL"] = (float) $this->xml->NFe->infNFe->transp->vol->pesoL;
 		}
-		
+
 		if (isset($this->xml->NFe->infNFe->transp->vol->pesoB))
 		{
 			$this->nota["pesoB"] = (float) $this->xml->NFe->infNFe->transp->vol->pesoB;
 		}
-		
+
 		if (isset($this->xml->NFe->infNFe->total->ICMSTot->vOutro))
 		{
 			$this->nota["vOutro"] = gDBFloat($this->xml->NFe->infNFe->total->ICMSTot->vOutro);
 		}
-		
+
 		if (isset($this->xml->NFe->infNFe->total->ICMSTot->vFrete))
 		{
 			$this->nota["vFrete"] = gDBFloat($this->xml->NFe->infNFe->total->ICMSTot->vFrete);
 		}
-		
+
 		if (isset($this->xml->NFe->infNFe->total->ICMSTot->vSeg))
 		{
 			$this->nota["vSeg"] = gDBFloat($this->xml->NFe->infNFe->total->ICMSTot->vSeg);
 		}
-		
+
 		if (isset($this->xml->NFe->infNFe->total->ICMSTot->vDesc))
 		{
 			$this->nota["vDesc"] = gDBFloat($this->xml->NFe->infNFe->total->ICMSTot->vDesc);
 		}
-		
+
 		if (isset($this->xml->NFe->infNFe->total->ICMSTot->vProd))
 		{
 			$this->nota["vProd"] = gDBFloat($this->xml->NFe->infNFe->total->ICMSTot->vProd);
 		}
-		
+
 		if (isset($this->xml->NFe->infNFe->infAdic->infCpl))
 		{
 			$this->nota["infCpl"] = gCleanField($this->xml->NFe->infNFe->infAdic->infCpl);
 			$this->nota["infCpl"] = str_replace(array("{}","{","}"),"",$this->nota["infCpl"]);
 		}
-		
+
 		if (isset($this->xml->NFe->infNFe->infAdic->infAdFisco))
 		{
 			$this->nota["infCpl"] = gCleanField($this->xml->NFe->infNFe->infAdic->infAdFisco);
@@ -4590,134 +4759,149 @@ class ImportacaoNFE
 		}
 
 	}
-	
+
+
 	private function inserirNota()
 	{
 		$this->preparaNotaFiscal();
 		$this->nota["id"] = dbInsert("notas", $this->nota, true);
 	}
-	
+
+
 	private function preparaNotaItem($registro)
 	{
 		global $gParam;
-		$this->notaItem=array();
+		$this->notaItem = array();
 		$this->notaItem["id_notas"]      = $this->nota["id"];
 		$this->notaItem["id_itens_skus"] = $this->sku["id"];
 		$this->notaItem["id_unidades"]	 = $this->unidade["id"];
 		$this->notaItem["quantidade"]    = gCleanField($registro->prod->qCom);
 		$this->notaItem["valor"]         = gCleanField($registro->prod->vUnCom);
 
-		$sql = "SELECT lote_xprod FROM pessoas_juridicas WHERE id_pessoas =".$this->cliente["id"];
-		$rs = dbQuery($sql)[0]['lote_xprod'];
-		if ($rs) {
-			$loteExtraido = $this->extrairLoteTagXprod($registro->prod->xProd);
+		// Lote
+		$sql = "SELECT lote_xprod FROM pessoas_juridicas WHERE id_pessoas =" . $this->cliente["id"];
+		$rs = dbQuery($sql);
+		$loteXprod = isset($rs[0]['lote_xprod']) ? $rs[0]['lote_xprod'] : false;
+
+		if ($loteXprod) {
+			$loteExtraido = $this->extrairLoteTagXprod($registro->prod->xProd, false);
 			$this->notaItem["lote"] = gCleanField($loteExtraido);
 		} else {
-			$this->notaItem["lote"] = gCleanField($registro->prod->Rastro->RastroItem->nLote) ?: '';
+			$this->notaItem["lote"] = isset($registro->prod->Rastro->RastroItem->nLote) ? gCleanField($registro->prod->Rastro->RastroItem->nLote) : '';
 		}
 
 		if (isset($registro->prod->Rastro->RastroItem->dFab))
-		$this->notaItem["data_fabricacao"] = gCleanField($registro->prod->Rastro->RastroItem->dFab);
-		
-		if (isset($registro->prod->Rastro->RastroItem->dVal))
-		$this->notaItem["prazo_validade"] = gCleanField($registro->prod->Rastro->RastroItem->dVal);
+			$this->notaItem["data_fabricacao"] = gCleanField($registro->prod->Rastro->RastroItem->dFab);
 
-		/* VALIDAR OS CAMPOS ICMS */
-		if (isset($registro->imposto->ICMS))
-		{
+		if (isset($registro->prod->Rastro->RastroItem->dVal))
+			$this->notaItem["prazo_validade"] = gCleanField($registro->prod->Rastro->RastroItem->dVal);
+
+		// --- IMPOSTOS ---
+
+		/* ICMS */
+		if (isset($registro->imposto->ICMS)) {
 			$this->validarGlobalICMS($registro->imposto->ICMS);
 		}
-		
-		/* VALIDAR OS CAMPOS IPI */
-		if (isset($registro->imposto->IPI))
-		{
-			
-			//$this->validarIPI($registro->imposto->IPI);
-			/*
+
+		/* IPI */
+		if (isset($registro->imposto->IPI)) {
 			$this->validarIPI($registro->imposto->IPI);
-			if (isset($this->ipi["ipi"]))
-			$this->notaItem["ipi"] = $this->ipi["ipi"];
-			if (isset($this->ipi["aliquota_ipi"]))
-			$this->notaItem["aliquota_ipi"] = $this->ipi["aliquota_ipi"];
-			*/
 		}
-		if (isset($registro->imposto->PIS))
-		{
-			
+
+		/* PIS */
+		if (isset($registro->imposto->PIS)) {
+			$this->validarPIS($registro->imposto->PIS);
 		}
-		if (isset($registro->imposto->COFINS))
-		{
-			
+
+		/* COFINS */
+		if (isset($registro->imposto->COFINS)) {
+			$this->validarCOFINS($registro->imposto->COFINS);
 		}
-		if (isset($registro->prod->comb))
-		{
-			if (isset($registro->prod->comb->cProdANP))
-			{
-				$this->notaItem["cProdANP"]=gCleanField($registro->prod->comb->cProdANP);
-			}
-			
-			if (isset($registro->prod->comb->descANP))
-			{
-				$this->notaItem["descANP"]=gCleanField($registro->prod->comb->descANP);
-			}
-			
-			if (isset($registro->prod->comb->CODIF))
-			{
-				$this->notaItem["CODIF"]=gCleanField($registro->prod->comb->CODIF);
-			}
-			
-			if (isset($registro->prod->comb->UFCons))
-			{
-				$this->notaItem["UFCons"]=gCleanField($registro->prod->comb->UFCons);
-			}
+
+		/* IBS_CBS */
+		if (isset($registro->imposto->IBSCBS)) {
+    		$this->validarGlobalIBSCBS($registro->imposto->IBSCBS);
+		}
+
+		// Combustível
+		if (isset($registro->prod->comb)) {
+			if (isset($registro->prod->comb->cProdANP)) $this->notaItem["cProdANP"] = gCleanField($registro->prod->comb->cProdANP);
+			if (isset($registro->prod->comb->descANP))  $this->notaItem["descANP"]  = gCleanField($registro->prod->comb->descANP);
+			if (isset($registro->prod->comb->CODIF))    $this->notaItem["CODIF"]    = gCleanField($registro->prod->comb->CODIF);
+			if (isset($registro->prod->comb->UFCons))   $this->notaItem["UFCons"]   = gCleanField($registro->prod->comb->UFCons);
 		}
 	}
 
-	
-	
+
 	private function inserirNotaItem($registro)
 	{
 		$this->preparaNotaItem($registro);
 		$this->notaItem["id"] = dbInsert("notas_itens", $this->notaItem, true);
-		if ($this->notaItem["id"]>0)
+
+		if ($this->notaItem["id"] > 0)
 		{
-			if (isset($this->icms["descricao"]) && !empty($this->icms["descricao"]))
-			{
-				unset($this->icms["descricao"]);
-				$this->icms["id_notas_itens"]=$this->notaItem["id"];
-				dbInsert("notas_itens_icms", $this->icms);
+			// --- GRAVAÇÃO ICMS ---
+			if (!empty($this->icms)) {
+				// Remove campos auxiliares que não existem no banco
+				if (isset($this->icms["descricao"])) unset($this->icms["descricao"]);
+
+				if (count($this->icms) > 0) {
+					$this->icms["id_notas_itens"] = $this->notaItem["id"];
+					dbInsert("notas_itens_icms", $this->icms);
+				}
 			}
-			
-			// Salvando no item
+
+			// --- GRAVAÇÃO IPI ---
+			if (!empty($this->ipi)) {
+				$this->ipi["id_notas_itens"] = $this->notaItem["id"];
+				dbInsert("notas_itens_ipi", $this->ipi);
+			}
+
+			// --- GRAVAÇÃO PIS ---
+			if (!empty($this->pis)) {
+				$this->pis["id_notas_itens"] = $this->notaItem["id"];
+				dbInsert("notas_itens_pis", $this->pis);
+			}
+
+			// --- GRAVAÇÃO COFINS ---
+			if (!empty($this->cofins)) {
+				$this->cofins["id_notas_itens"] = $this->notaItem["id"];
+				dbInsert("notas_itens_cofins", $this->cofins);
+			}
+
+			// --- GRAVAÇÃO IBS/CBS ---
+			if (!empty($this->ibsCbs)) {
+				$this->ibsCbs["id_notas_itens"] = $this->notaItem["id"];
+				dbInsert("notas_itens_ibs_cbs", $this->ibsCbs);
+			}
+
+			// --- GRAVAÇÃO COMBUSTIVEL ---
 			if (isset($registro->prod->comb))
 			{
-				$grupoCombustivel=array();
-				$item=array();
-				if (isset($registro->prod->comb->cProdANP))
-				{
-					$grupoCombustivel["codigo"]=gCleanField($registro->prod->comb->cProdANP);
+				$grupoCombustivel = array();
+				$item = array();
+
+				$codigoAnp = isset($registro->prod->comb->cProdANP) ? gCleanField($registro->prod->comb->cProdANP) : '';
+
+				if (!empty($codigoAnp)) {
+					$grupoCombustivel["codigo"] = $codigoAnp;
 				}
-				if (isset($registro->prod->comb->descANP))
-				{
-					$grupoCombustivel["descricao"]=gCleanField($registro->prod->comb->cProdANP);
+				if (isset($registro->prod->comb->descANP)) {
+					$grupoCombustivel["descricao"] = gCleanField($registro->prod->comb->descANP);
 				}
-				
-				// Verificar se não existe
-				$sql="SELECT * FROM grupos_combustivel WHERE codigo='".gCleanField($registro->prod->comb->cProdANP)."'";
-				$rs=dbQuery($sql);
-				if (count($rs)==0)
-				{
-					$id=dbInsert("grupos_combustivel", $grupoCombustivel, true);
-				} else
-				{
-					$id=$rs[0]["id"];
+
+				$rs = dbQuery("SELECT * FROM grupos_combustivel WHERE codigo='".$codigoAnp."'");
+				if (count($rs) == 0) {
+					$id = dbInsert("grupos_combustivel", $grupoCombustivel, true);
+				} else {
+					$id = $rs[0]["id"];
 				}
-				$item["id_grupos_combustivel"]=$id;
+
+				$item["id_grupos_combustivel"] = $id;
 				dbUpdate("itens", $item, $this->item["id"]);
 
-				// Atualizando tabela de notas_itens..
-				$mtz=array();
-				$mtz["id_grupos_combustivel"]=$id;
+				$mtz = array();
+				$mtz["id_grupos_combustivel"] = $id;
 				dbUpdate("notas_itens", $mtz, $this->notaItem["id"]);
 			}
 		}
@@ -4787,7 +4971,7 @@ class ImportacaoNFE
 		$programacao = new Programacao();
 		$os = $programacao->novaOS();
 		$this->programacao=array();
-		$this->programacao["id_armazens"]=obtemIdEmpresa();
+		$this->programacao["id_filial"]=obtemIdEmpresa();
 		$this->programacao["os"] = $os;
 		$this->programacao["ativo"]=0;
 		$this->programacao["iniciada"]=0;
