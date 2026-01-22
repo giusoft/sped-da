@@ -110,7 +110,7 @@ class NotasFiscais extends ImportacaoNFE
 			in_array($row["situacao"], array("Aprovada", "Reprovada", "Cancelada"))
 			&& $row["tipo"] == "S" || !$row["tipo"]
 		) {
-			$mtz[] = "~2<-" . $o->small("OS") . '<br><b>' . $row["os"] . "</b>&nbsp<br></b>";
+			$mtz[] = "~2<-" . "</b>&nbsp<br></b>"; // Aqui ficava a OS
 		}
 
 		if (
@@ -155,13 +155,6 @@ class NotasFiscais extends ImportacaoNFE
 			$mtz[] = '<-' . $o->small('Chave') . '<br><b>' . $row['chave'] . '</b>&nbsp;<br/>';
 			$mtz[] = '<-' . $o->small('Série') . '<br><b>' . $row['serie'] . "</b>&nbsp;";
 			$mtz[] = '<-' . $o->small('Protocolo') . '<br><b>'.$row["protocolo"] . "</b>&nbsp;";
-			$html .= $o->tableRow($mtz, 'header');
-
-			$mtz = [];
-			$mtz[] = '<-' . $o->small('OS') . "<br><b>" . $row['os'] . "</b>&nbsp;";
-			$mtz[] = '';
-			$mtz[] = '';
-			$mtz[] = '';
 			$html .= $o->tableRow($mtz, 'header');
 		}
 
@@ -306,7 +299,6 @@ class NotasFiscais extends ImportacaoNFE
 		$mtz = [];
 		$mtz[] = "<-Opções";
 		$mtz[] = "<-Id";
-		$mtz[] = "<-OS";
 		$mtz[] = "<-Número";
 		$mtz[] = "<-Tipo";
 		$mtz[] = "<-Proprietário";
@@ -354,7 +346,6 @@ class NotasFiscais extends ImportacaoNFE
 
 			$mtz[] = "<-" . $btns;
 			$mtz[] = "<-" . $row['id'];
-			$mtz[] = "<-" . $row['os'];
 			$mtz[] = "<-" . $row['numero'];
 			$mtz[] = "<-" . $tiposNota[$siglaTipo];
 			$mtz[] = "<-" . $row['nome_cliente'];
