@@ -631,7 +631,7 @@ class Saldos extends Relatorios
 		}
 
 		$frm->row(
-			$frm->add("{ name: id_pessoas_proprietario; fieldLabel: Proprietário; type: combo; items:" . $sp["combo_proprietarios"] . "; value: " . $idPessoasProprietario . "; onChange: changeProprietario;}"),
+			$frm->add("{ name: id_pessoas_proprietario; fieldLabel: Proprietário; type: combo; items:" . $sp["combo_clientes"] . "; value: " . $idPessoasProprietario . "; onChange: changeProprietario;}"),
 			$frm->add(renderComboItem($sp["combo_itens"]))
 		);
 

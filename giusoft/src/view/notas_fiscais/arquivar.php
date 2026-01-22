@@ -166,7 +166,7 @@ switch ($gPage) {
         $mtz[2] = 'Canceladas e aprovadas';
 
         $frm->row(
-            $frm->add('{type: combo; allowBlank: true; name: id_pessoas_proprietario; fieldLabel: Proprietário; items: ' . $sp["combo_proprietarios"] . ';}'),
+            $frm->add('{type: combo; allowBlank: true; name: id_pessoas_proprietario; fieldLabel: Proprietário; items: ' . $sp["combo_clientes"] . ';}'),
             $frm->add("{type: combo; allowBlank: true; name: tipo_nota; fieldLabel: Tipo; items: '" . json_encode($combo_tipo_nota) . "'; value: 1;}"),
             $frm->add("{type: combo; allowBlank: false; name: situacao; fieldLabel: Situação; items: '" . json_encode($mtz) . "'; value: 0;}")
         );

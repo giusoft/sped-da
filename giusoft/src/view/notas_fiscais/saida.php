@@ -2802,7 +2802,7 @@ switch ($gPage) {
     case LISTAR_CLIENTES_AGRUPAMENTO:
         $form = new gForm();
         $form->row(
-            $form->add('{type: combo; id: id_proprietarios; name:id_pessoas_proprietario; allowBlank: true; fieldLabel:Proprietário; items:'.$sp["combo_proprietarios"].';}')
+            $form->add('{type: combo; id: id_proprietarios; name:id_pessoas_proprietario; allowBlank: true; fieldLabel:Proprietário; items:'.$sp["combo_clientes"].';}')
         );
         $form->row(
             $form->add('{name: dataCadastroDe; fieldLabel: Data cadastro de; type: date;}'),
