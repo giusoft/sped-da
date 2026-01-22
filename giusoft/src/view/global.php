@@ -1017,7 +1017,7 @@ function iniciarChatwoot() {
 	$o->addJavascript($js);
 }
 
-$AESKEY = "gWms";
+$AESKEY = "emiteNota";
 function dispararGatilho($momento, $dados) {
 	global $EMPRESA;
 	if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
