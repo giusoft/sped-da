@@ -869,9 +869,6 @@ class NotasFiscais extends ImportacaoNFE
                                 $(\"input[name='replicar']\").closest(\"div\").prev(\"label\").remove();
                                 $(\"input[name='replicar']\").closest(\"div\").remove();
 
-                                $(\"input[name='indDoacao']\").closest(\"div\").prev(\"label\").remove();
-                                $(\"input[name='indDoacao']\").closest(\"div\").remove();
-
                             });
                         }
 
@@ -1403,7 +1400,7 @@ class NotasFiscais extends ImportacaoNFE
 					obj.id_ibs_cbs = getFieldValue('id_ibs_cbs', '');
 					obj.replicar = replicar;
 
-					obj.indDoacao = Number($('#formIbsCbs input[name=\"indDoacao\"]').is(':checked'));
+					obj.indDoacao = getFieldValue('indDoacao', '0');
 
 					obj.vBC_IBS_CBS = getFieldValue('vBC_IBS_CBS', '0');
 
