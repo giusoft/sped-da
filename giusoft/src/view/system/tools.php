@@ -2,206 +2,33 @@
 
 include_once __DIR__ . "/res/_classes/classes.php";
 
-define('INICIO'             ,0);
+define('INICIO'             			     , 0);
+define('IMPORTAR_DOCUMENTACAO'				 , 1);
+define('PROCESSAR_DOCUMENTACAO'				 , 2);
+define('CONFIRMACAO_IMPORTACAO_DOCUMENTACAO' , 3);
+define('IMPORTACAO_GWMS'    			  	 , 10);
+define('IMPORTACAO_GWMS_0'  			  	 , 20);
+define('EXPURGO'           					 , 700);
 
-define('IMPORTAR_DOCUMENTACAO', 1);
-define('PROCESSAR_DOCUMENTACAO', 2);
-define('CONFIRMACAO_IMPORTACAO_DOCUMENTACAO', 3);
-
-define('IMPORTACAO_GWMS'    ,10);
-define('IMPORTACAO_GWMS_0'  ,20);
-define('IMPORTACAO_GWMS_1'  ,21);
-define('IMPORTACAO_GWMS_2'  ,22);
-define('IMPORTACAO_GWMS_3'  ,23);
-define('IMPORTACAO_GWMS_4'  ,24);
-define('IMPORTACAO_GWMS_5'  ,25);
-define('IMPORTACAO_GWMS_6'  ,26);
-define('IMPORTACAO_GWMS_7'  ,27);
-define('IMPORTACAO_GWMS_8'  ,28);
-define('IMPORTACAO_GWMS_9'  ,29);
-
-define('CRIAR_UMAS'         ,30);
-define('CRIAR_UMAS_TNL'     ,31);
-
-define('IMPORTAR_SALDO'     ,40);
-define('IMPORTAR_SALDO_TNL' ,41);
-
-define('IMPORTAR_SENIOR'    ,50);
-define('IMPORTAR_SENIOR_TNL',51);
-
-define('RECALCULAR_SALDO', 60);
-define('RECALCULAR_SALDO_TNL', 61);
-
-define('TESTAR_JUNG'        ,70);
-define('TESTAR_JUNG_TNL'    ,71);
-
-define('BOMIX_LOTE_FABRICACAO',80);
-
-define('BOMIX_POSICOES'		,90);
-define('BOMIX_POSICOES_TNL'	,91);
-
-define('CORRIGIR'           ,200);
-define('LIMPA_PROGRAMACAO'  ,210);
-
-define('IMPORTAR_CONSOLIDADO',     300);
-define('IMPORTAR_CONSOLIDADO_TNL', 301);
-
-define('LIMPAR_SALDO_WMS_NAO_TEM_PROTHEUS',     400);
-define('LIMPAR_SALDO_WMS_NAO_TEM_PROTHEUS_TNL', 401);
-
-define('IMPORTAR_ITENS_GWMS_ANTIGO', 500);
-define('IMPORTAR_NOTAS_YPE', 600);
-
-define('EXPURGO'           ,700);
-define('CAPTURAR_UMAS_PRESAS_RESERVA', 800);
-
-define('CORRIGE_SALDO_ANALITICO_NEGATIVO', 801);
-define('DESATIVAR_UMAS_SEM_SALDO', 802);
-define('AJUSTE_POSICAO_SIEMENS', 803);
-
-define("FILTRO_ALIMENTACAO_UMA", 850);
-define("ALIMENTACAO_UMA", 851);
-
-if (in_array($gPage, [
-	IMPORTAR_DOCUMENTACAO,
-	PROCESSAR_DOCUMENTACAO,
-	CONFIRMACAO_IMPORTACAO_DOCUMENTACAO]
+if (
+	in_array($gPage,
+		[
+			IMPORTAR_DOCUMENTACAO,
+			PROCESSAR_DOCUMENTACAO,
+			CONFIRMACAO_IMPORTACAO_DOCUMENTACAO
+		]
 	)
 ) {
 	$html .= $o->msgTitle("Importação de documentação do WMS");
 }
 
-$mesesDeExpurgo=(intval($_REQUEST['mesesDeExpurgo']) ? intval($_REQUEST['mesesDeExpurgo']) : "12");
+$mesesDeExpurgo = (intval($_REQUEST['mesesDeExpurgo']) ? intval($_REQUEST['mesesDeExpurgo']) : "12");
 
 if ($_REQUEST['gAjax']) {
 	$limite = "100";
-	$tabelas['umas'] = sprintf("FROM umas WHERE data < DATE_SUB(NOW(), INTERVAL %s MONTH) AND data_desativacao < DATE_SUB(NOW(), INTERVAL %s MONTH) AND data_desativacao<>'0000-00-00 00:00:00' AND ativo=0", $mesesDeExpurgo, $mesesDeExpurgo);
-	$tabelas['programacao'] = sprintf('FROM programacao WHERE data_cadastro < DATE_SUB(NOW(), INTERVAL %s MONTH)', $mesesDeExpurgo);
-	$tabelas['veiculos'] = sprintf('FROM veiculos_acessos WHERE data_chegada < DATE_SUB(NOW(), INTERVAL %s MONTH)', $mesesDeExpurgo);
-	$tabelas['inventarios'] = sprintf('FROM inventarios WHERE data < DATE_SUB(NOW(), INTERVAL %s MONTH)', $mesesDeExpurgo);
-	$tabelas['log'] = sprintf('FROM gfw_log WHERE date < DATE_SUB(NOW(), INTERVAL %s MONTH)', $mesesDeExpurgo);
-	$tabelas['contagens'] = sprintf('FROM contagens_umas WHERE data < DATE_SUB(NOW(), INTERVAL %s MONTH)', $mesesDeExpurgo);
+	$tabelas['log'] = "FROM gfw_log WHERE date < DATE_SUB(NOW(), INTERVAL $mesesDeExpurgo MONTH)";
 
 	switch ($cmd) {
-		case 'umas_inativas':
-			$sql = "SELECT * ".$tabelas['umas'].(' LIMIT ' . $limite);
-			$rs = dbQuery($sql);
-			$ids = [];
-			foreach($rs as $row) {
-				$flds = [];
-				foreach ($row as $key => $value) {
-					if (!is_numeric($key)) {
-						$flds[$key] = str_replace("'"," ",str_replace("'"," ",$value));
-					}
-				}
-
-				dbInsert('expurgo_umas', $flds);
-				$ids[] = $row['id'];
-			}
-
-			if ($ids) {
-				$sql = "INSERT INTO expurgo_umas_itens (SELECT * FROM umas_itens WHERE id_umas IN (".implode(",",$ids)."))";
-				dbQuery($sql);
-				$sql = "DELETE FROM umas_itens WHERE id_umas IN (".implode(",",$ids).")";
-				dbQuery($sql);
-				$sql = "INSERT INTO expurgo_umas_movimentos (SELECT * FROM umas_movimentos WHERE id_umas IN (".implode(",",$ids)."))";
-				dbQuery($sql);
-				$sql = "DELETE FROM umas_movimentos WHERE id_umas IN (".implode(",",$ids).")";
-				dbQuery($sql);
-				$sql = "DELETE FROM umas WHERE id IN (".implode(",",$ids).")";
-				dbQuery($sql);
-			}
-
-			$sql = "SELECT count(id) ttl ".$tabelas['umas'];
-			echo dbQuery($sql)[0]['ttl'];
-			break;
-
-		case 'programacoes_antigas':
-			$sql = "SELECT * " . $tabelas['programacao'] . (" LIMIT " . $limite);
-			$rs = dbQuery($sql);
-			$ids = [];
-			foreach($rs as $row) {
-				$flds = [];
-				foreach ($row as $key => $value) {
-					if (!is_numeric($key)) {
-						$flds[$key] = $value;
-					}
-				}
-
-				dbInsert('expurgo_programacao', $flds);
-				$ids[] = $row['id'];
-			}
-
-			if ($ids) {
-				$sql = "INSERT INTO expurgo_programacao_itens (SELECT * FROM programacao_itens WHERE id_programacao IN (".implode(",",$ids)."))";
-				dbQuery($sql);
-				$sql = "DELETE FROM programacao_itens WHERE id_programacao IN (".implode(",",$ids).")";
-				dbQuery($sql);
-				$sql = "INSERT INTO expurgo_programacao_atividades (SELECT * FROM programacao_atividades WHERE id_programacao IN (".implode(",",$ids)."))";
-				dbQuery($sql);
-				$sql = "DELETE FROM programacao_atividades WHERE id_programacao IN (".implode(",",$ids).")";
-				dbQuery($sql);
-				$sql = "DELETE FROM programacao WHERE id IN (".implode(",",$ids).")";
-				dbQuery($sql);
-			}
-
-			$sql = "SELECT count(id) ttl ".$tabelas['programacao'];
-			echo dbQuery($sql)[0]['ttl'];
-		break;
-
-
-		case 'veiculos_antigos':
-			$sql = "SELECT * " . $tabelas['veiculos'] . (" LIMIT " . $limite);
-			$rs = dbQuery($sql);
-			$ids = [];
-			foreach($rs as $row) {
-				$flds = [];
-				foreach ($row as $key => $value) {
-					if (!is_numeric($key)) {
-						$flds[$key] = $value;
-					}
-				}
-
-				dbInsert('expurgo_veiculos_acessos', $flds);
-				$ids[] = $row['id'];
-			}
-
-			if ($ids) {
-				$sql = "INSERT INTO expurgo_veiculos_acessos_programacoes (SELECT * FROM veiculos_acessos_programacoes WHERE id_veiculos_acessos IN (".implode(",",$ids)."))";
-				dbQuery($sql);
-				$sql = "DELETE FROM veiculos_acessos WHERE id IN (".implode(",",$ids).")";
-				dbQuery($sql);
-			}
-
-			$sql = "SELECT count(id) ttl ".$tabelas['veiculos'];
-			echo dbQuery($sql)[0]['ttl'];
-		break;
-
-		case 'inventarios_antigos':
-			$sql = "SELECT * " . $tabelas['inventarios'] . (" LIMIT " . $limite);
-			$rs = dbQuery($sql);
-			$ids = [];
-			foreach($rs as $row) {
-				$flds = [];
-				foreach ($row as $key => $value) {
-					if (!is_numeric($key)) {
-						$flds[$key] = $value;
-					}
-				}
-
-				$ids[] = $row['id'];
-			}
-
-			if ($ids) {
-				$sql = "DELETE FROM inventarios_skus WHERE id_inventarios IN (".implode(",",$ids).")";
-				dbQuery($sql);
-				$sql = "DELETE FROM inventarios WHERE id IN (".implode(",",$ids).")";
-				dbQuery($sql);
-			}
-
-			$sql = "SELECT count(id) ttl ".$tabelas['inventarios'];
-			echo dbQuery($sql)[0]['ttl'];
-		break;
 
 		case 'log':
 			$sql = "DELETE ".$tabelas['log'];
@@ -210,57 +37,15 @@ if ($_REQUEST['gAjax']) {
 			$sql = "SELECT count(id) ttl ".$tabelas['log'];
 			echo dbQuery($sql)[0]['ttl'];
 		break;
-
-		case 'tabelas_temporarias':
-			$sql = "SELECT * " . $tabelas['contagens'] . (" LIMIT " . $limite);
-			$rs = dbQuery($sql);
-			$ids = [];
-			foreach($rs as $row) {
-				$flds = [];
-				foreach ($row as $key=>$value) {
-					if (!is_numeric($key)) {
-						$flds[$key] = $value;
-					}
-				}
-
-				$ids[] = $row['id'];
-			}
-
-			if ($ids) {
-				$sql = "DELETE FROM contagens_umas_itens WHERE id_contagens_umas IN (".implode(",",$ids).")";
-				dbQuery($sql);
-				$sql = "DELETE FROM contagens_umas WHERE id IN (".implode(",",$ids).")";
-				dbQuery($sql);
-			}
-
-			$sql = "SELECT count(id) ttl ".$tabelas['contagens'];
-			echo dbQuery($sql)[0]['ttl'];
-		break;
-
-
 	}
 
 	exit;
 }
 
-
-switch($gPage)
-{
+switch($gPage) {
 	case INICIO:
 		$html .= $o->msgTitle("Ferramentas");
-		$html .= $o->button("{title: Recalcular umas_saldos; icon: calculator; style: primary; size: big; href: ".$o->page."&gPage=".RECALCULAR_SALDO."}");
-		$html .= $o->button("{title: Criar UMAs em lote; icon: barcode; style: primary; size: big; href: ".$o->page."&gPage=".CRIAR_UMAS."}");
-		$html .= $o->button("{title: Importar UMAs gWMS antigo; icon: random; style: primary; size: big; href: ".$o->page."&gPage=".IMPORTAR_SALDO."}");
 		$html .= $o->button("{title: Importar Documentação; icon: download; style: primary; size: big; href: " . $o->page . "&gPage=" . IMPORTAR_DOCUMENTACAO . "}");
-		$html .= $o->button("{title: Importar Senior/SILT; icon: file-import; style: primary; size: big; href: ".$o->page."&gPage=".IMPORTAR_SENIOR."}");
-		$html .= $o->button("{title: Testar Jungheinrich; icon: forklift; style: primary; size: big; href: ".$o->page."&gPage=".TESTAR_JUNG."}");
-		$html .= $o->button("{title: Data Fab.Bomix; hint: Recalcular data_fabricacao de acordo com o lote (Bomix); icon: check; style: primary; size: big; href: ".$o->page."&gPage=".BOMIX_LOTE_FABRICACAO."}");
-		$html .= $o->button("{title: Corrigir; icon: check; style: primary; size: big; href: ".$o->page."&gPage=".CORRIGIR."}");
-		$html .= $o->button("{title: Posicoes Bomix; icon: map; style: primary; size: big; href: ".$o->page."&gPage=".BOMIX_POSICOES."}");
-		$html .= $o->button("{title: Consolidado Bomix; icon: download; style: primary; size: big; href: ".$o->page."&gPage=".IMPORTAR_CONSOLIDADO."}");
-		$html .= $o->button("{title: Limpa programação; hint: Limpa registros não relacionados entre programacao e programacao_itens; icon: trash; style: primary; size: big; href: ".$o->page."&gPage=".LIMPA_PROGRAMACAO."}");
-		$html .= $o->button("{title: Limpa saldo wms; hint: Limpa saldo que tem no wms, mas não existe no protheus; icon: ban; style: primary; size: big; href: ".$o->page."&gPage=".LIMPAR_SALDO_WMS_NAO_TEM_PROTHEUS."}");
-		$html .= $o->button("{title: Alimentação UMA; hint: Alimentação de UMA; icon: file-import; style: primary; size: big; href: ".$o->page."&gPage=" . FILTRO_ALIMENTACAO_UMA . "}");
 		$html .= $o->button("{title: Expurgo; hint: Transferir dados antigos para arquivo morto; icon: trash; style: danger; size: big; href: ".$o->page."&gPage=".EXPURGO."}");
 		break;
 
@@ -275,12 +60,10 @@ switch($gPage)
 		$frm->add("{name: itens; fieldLabel: Itens; type: checkbox;}");
 		$frm->add("{name: saldos; fieldLabel: Saldo inventário; type: checkbox;}");
 		$frm->add("{name: nfs; fieldLabel: Notas fiscais; type: checkbox;}");
-		$frm->add("{name: umas; fieldLabel: UMAs; type: checkbox;}");
-		$frm->add("{name: programacoes; fieldLabel: Programações ativas; type: checkbox;}");
 		$frm->add("{name: gPage; type: hidden; value: ".IMPORTACAO_GWMS_0.";}");
 
 		$html.=$frm->render($o);
-		break;
+	break;
 
 	case IMPORTACAO_GWMS_0:
 		$html.=$o->msgTitle("Importação gWMS Antigo");
@@ -377,7 +160,7 @@ switch($gPage)
 				}
 
 				$html.=$o->msgInfo($msg);
-				$html.=$o->button("{title: Próximo; icon: arrow-right; href: ".$o->page.sprintf('&bd=%s&gPage=', $bd).IMPORTACAO_GWMS_1."&gIdVelho=".$camposVelho['id']."&gId=".$gId.sprintf('&cnpj=%s&itens=%s&umas=%s&saldos=%s&nfs=%s}', $cnpj, $itens, $umas, $saldos, $nfs));
+				$html.=$o->button("{title: Próximo; icon: arrow-right; href: ".$o->page."&bd=$bd&gPage=".IMPORTACAO_GWMS_1."&gIdVelho=".$camposVelho['id']."&gId=".$gId."&cnpj=$cnpj&itens=$itens&saldos=$saldos&nfs=$nfs}");
 			} else {
 				$html.=$o->msgDanger("Cliente inativo");
 			}
@@ -385,9 +168,7 @@ switch($gPage)
 			$html.=$o->msgDanger("Cliente não encontrado");
 		}
 
-		break;
-
-
+	break;
 
 	case IMPORTAR_DOCUMENTACAO:
 
@@ -403,7 +184,7 @@ switch($gPage)
         $html .= $frm->render($o);
 
         $html .= $o->msgFilter("O tamanho máximo permitido para a inclusão de arquivos é de 5Mb");
-        break;
+	break;
 
     case PROCESSAR_DOCUMENTACAO:
 
@@ -473,14 +254,179 @@ switch($gPage)
         chmod($destino, 0664);
 
         redirect($o->page . '&gPage=' . CONFIRMACAO_IMPORTACAO_DOCUMENTACAO . '&gId=' . $gId);
-        break;
-
+	break;
 
     case CONFIRMACAO_IMPORTACAO_DOCUMENTACAO:
         $html .= $o->msgSuccess("Importação realizada com sucesso");
         $html .= $o->button('{hint: Voltar; title: Voltar; sytle: info; icon: arrow-left; url: ' . $o->page . '&gPage=' . IMPORTAR_DOCUMENTACAO . '&gId=' . $gId . '}');
-        break;
+	break;
 
+	case EXPURGO:
+		$html.=$o->msgTitle("Expurgo");
+		$html.=$o->msgSubTitle("Transferir dados não utilizados há $mesesDeExpurgo meses para arquivo morto");
+		$html.=$o->msg("Selecione quais tipos de dados deverão ser expurgados:");
+		$frm = new gForm("{columns: 6}");
+		$frm->add("{name: gPage; type: hidden; value: ".(EXPURGO+1)."}");
+		//$frm->add("{name: notas_fiscais_antigas; type: checkbox; value: 0}");
+		$frm->add("{name: log; type: checkbox; value: 0}");
+		$frm->add("{name: mesesDeExpurgo; fieldLabel: Meses a ignorar; type: text; value: 12}");
+		$html.=$frm->render($o);
+	break;
+
+	case (EXPURGO+1):
+		$notas_fiscais_antigas = gDBCheck($_REQUEST['notas_fiscais_antigas']);
+		$tabelas_temporarias = gDBCheck($_REQUEST['tabelas_temporarias']);
+		$mesesDeExpurgo = intval($_REQUEST['mesesDeExpurgo']);
+		$log = gDBCheck($_REQUEST['log']);
+
+		$html .= $o->msgTitle("Expurgo");
+		$html .= $o->msgSubTitle("Transferir dados não utilizados há " . $mesesDeExpurgo . " meses para arquivo morto");
+		$html .= $o->hr();
+
+		// Primeiro verifica se tabelas existem e se são iguais:
+		$tabelas = [""]; // Aqui coloca as tabelas que desejar
+		$todosIguais = true;
+		$erros = array();
+		$PDO  = new PDO( 'mysql:host=localhost;dbname=wms_'.$EMPRESA, 'web', 'web' ); // Configura o banco
+		$sql  = "SHOW TABLES";
+		$rs   = $PDO->query( $sql );
+		$tabelasNoBanco= $rs->fetchAll( PDO::FETCH_ASSOC );
+		foreach ($tabelas as $tabela) {
+			$tabelaExiste = false;
+			foreach($tabelasNoBanco as $row) {
+				if ($row["Tables_in_wms_".$EMPRESA]==$tabela) {
+					$tabelaExiste = true;
+				}
+			}
+
+			if ($tabelaExiste) {
+				$sql = "describe ".$tabela;
+				$rs = $PDO->query( $sql );
+				$rsO = $rs->fetchAll( PDO::FETCH_ASSOC );
+				$sql = "describe expurgo_".$tabela;
+				$rs = $PDO->query( $sql );
+				$rsD = $rs->fetchAll( PDO::FETCH_ASSOC );
+
+				foreach ($rsO as $key=>$value) {
+					if ($rsO[$key]['Field']!=$rsD[$key]['Field']) {
+						$todosIguais = false;
+						$erros[] = "Estruturas diferentes: ".$tabela." e expurgo_".$tabela;
+					}
+				}
+
+			} else {
+				$erros[] = "Tabela não existe: expurgo_$tabela";
+			}
+
+		}
+
+		if (count($erros))
+		{
+			$html.=$o->msgDanger("Infelizmente não será possível expurgar pois ocorreram alguns erros: <br><br> ".$o->ul($erros));
+			$html.=$o->msg("Edite a estrutura das tabelas para que fiquem iguais, <b>com excessão do campo ID que não pode ser autonumerado</b>.");
+
+		} else {
+			$html.="<div class='row'>";
+
+			// $html.="	<div class='col-xs-2 col-sm-2 col-md-2 col-lg-2'>";
+			// $html.="		NFs antigas";
+			// $html.="	</div>";
+			// $html.="	<div class='col-xs-2 col-sm-2 col-md-2 col-lg-2'>";
+			// $html.='		<div id="notas_fiscais_antigas_num">---</div>';
+			// $html.="	</div>";
+			// $html.="	<div class='col-xs-8 col-sm-8 col-md-8 col-lg-8'>";
+			// $html.='		<div class="progress"><div id="notas_fiscais_antigas" class="progress-bar" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div></div>';
+			// $html.="	</div>";
+
+			$html.="	<div class='col-xs-2 col-sm-2 col-md-2 col-lg-2'>";
+			$html.="		Tabelas temporárias";
+			$html.="	</div>";
+			$html.="	<div class='col-xs-2 col-sm-2 col-md-2 col-lg-2'>";
+			$html.='		<div id="tabelas_temporarias_num">---</div>';
+			$html.="	</div>";
+			$html.="	<div class='col-xs-8 col-sm-8 col-md-8 col-lg-8'>";
+			$html.='		<div class="progress"><div id="tabelas_temporarias" class="progress-bar" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div></div>';
+			$html.="	</div>";
+
+			$html.="	<div class='col-xs-2 col-sm-2 col-md-2 col-lg-2'>";
+			$html.="		Logs";
+			$html.="	</div>";
+			$html.="	<div class='col-xs-2 col-sm-2 col-md-2 col-lg-2'>";
+			$html.='		<div id="logs_num">---</div>';
+			$html.="	</div>";
+			$html.="	<div class='col-xs-8 col-sm-8 col-md-8 col-lg-8'>";
+			$html.='		<div class="progress"><div id="logs" class="progress-bar" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div></div>';
+			$html.="	</div>";
+
+
+			$html.="</div>";
+
+			if ($tabelas_temporarias) {
+				$js = "
+					tabelas_temporarias_ttl = 0;
+
+					function tabelas_temporarias()
+					{
+						$.ajax({
+							url: '".$o->page."&gAjax=1&mesesDeExpurgo=$mesesDeExpurgo&cmd=tabelas_temporarias',
+							context: document.body
+						})
+						.done(function(data,textStatus){
+							valor = parseInt(data);
+							if (tabelas_temporarias_ttl==0)
+							{
+								tabelas_temporarias_ttl = valor;
+							} else {
+								x = Math.round((100*valor)/tabelas_temporarias_ttl);
+								$('#tabelas_temporarias').css('width', x +'%').attr('aria-valuenow', x);
+								$('#tabelas_temporarias_num').html(data+' ('+x+'%)');
+							}
+							if (valor>0)
+							{
+								tabelas_temporarias();
+							}
+						});
+					}
+					tabelas_temporarias();
+				";
+				$o->addJavascript($js);
+			}
+
+			if ($log) {
+				$js = "
+					log_ttl = 0;
+
+					function log()
+					{
+						$.ajax({
+							url: '".$o->page."&gAjax=1&mesesDeExpurgo=$mesesDeExpurgo&cmd=log',
+							context: document.body
+						})
+						.done(function(data,textStatus){
+							valor = parseInt(data);
+							if (log_ttl==0)
+							{
+								log_ttl = valor;
+							} else {
+								x = Math.round((100*valor)/log_ttl);
+								$('#log').css('width', x +'%').attr('aria-valuenow', x);
+								$('#log_num').html(data+' ('+x+'%)');
+							}
+							if (valor>0)
+							{
+								log();
+							}
+						});
+					}
+					log();
+				";
+				$o->addJavascript($js);
+			}
+
+
+		}
+
+	break;
 }
 
 
