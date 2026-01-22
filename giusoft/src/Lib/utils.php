@@ -207,6 +207,23 @@ if (!function_exists("formatarDecimal")) {
 }
 
 
+if (!function_exists("extrairNumeros")) {
+    function extrairNumeros($texto)
+    {
+        return preg_replace('/[^0-9]+/i ', '', $texto);
+    }
+}
+
+
+if (!function_exists("descriptografar")) {
+    function decriptBanco($nomeCampo) {
+        global $AESKEY;
+
+        return 'CAST(AES_DECRYPT(UNHEX(' . $nomeCampo . '),"' . $AESKEY . '") AS CHAR(150))';
+    }
+}
+
+
 if (!function_exists("buscarErroSSL")) {
     function buscarErroSSL()
     {
