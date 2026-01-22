@@ -427,8 +427,6 @@ function linkParaNota($id = '', $numero = '', $tipo = '')
 
 		if ($nota['tipo'] == 'E') {
 			$rota = 'index.php?g=nf_entrada&gPage=1&gId=' . $nota['id']; // aba Dados
-		} elseif ($nota['tipo'] == 'M') {
-			$rota = 'index.php?g=nf_maquina&gPage=131&gId=' . $nota['id']; // aba DADOS_MAQUINA
 		} else {
 			$rota = 'index.php?g=nf_saida&gPage=1&gId=' . $nota['id']; // aba Dados
 		}
