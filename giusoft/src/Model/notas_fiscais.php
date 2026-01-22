@@ -4342,6 +4342,7 @@ class ImportacaoNFE
 		$this->unidades[] = true;
 	}
 
+
 	private function preparaSKUMinimo()
 	{
 		global $usrId;
