@@ -98,48 +98,14 @@ class PessoasJuridicas extends Pessoas
 		$frm->add("{name: observacoes; fieldLabel: Observações; type: textarea; value: ".base64_decode($registroAtual['observacoes'])."}");
 		$frm->add("{name: gId; type: hidden; value: ".$gId."}");
 		$frm->add("{name: gPage; type: hidden; value: ".$proximaPagina."}");
-		
+
 		return($frm->render($o));
 	}
 
 
-	public function gerarCamposAbaOperacao(&$frm, $registroAtual, $proximaPagina="")
+	public function gerarCamposAbaConfiguracao(&$frm, $registroAtual, $proximaPagina="")
 	{
 		global $gId, $gPage, $o, $gParam;
-
-		if ($gParam['PERMITIR_TRANSFERIR_CONFERENCIA_UMA']['ativo']) {
-			$segunda_separacao = $frm->add("{name: segunda_separacao; fieldLabel: Segunda Separação; type: checkbox; value: ".$registroAtual['faz_segunda_separacao']."}");
-		}
-
-		$exigirSkuSeparacao = $frm->add("{name: exigir_sku_separacao; fieldLabel: Exigir SKU na separação; type: checkbox; value: ".$registroAtual['exigir_sku_separacao']."}");
-
-		if ($gParam['EXTRAIR_LOTE_TAG_XPROD']['ativo']==1) {
-			$usaLoteProduto	= $frm->add("{name: lote_xprod; fieldLabel: Lote junto ao nome do produto;type: checkbox; value:".$registroAtual['lote_xprod']." }");
-		}
-
-		$frm->row(
-			$frm->add("{name: fiscal; fieldLabel: Tratamento fiscal; type: checkbox; value: ".$registroAtual['fiscal']."}"),
-			$frm->add("{name: indicar_posicao; fieldLabel: Indicar pos. na entrada; type: checkbox; value: ".$registroAtual['indicar_posicao']."}"),
-			$frm->add("{name: priorizar_palete_aberto; fieldLabel: Priorizar palete aberto; type: checkbox; value: " . $registroAtual['priorizar_palete_aberto'] . "}"),
-			$frm->add("{name: priorizar_palete_fechado; fieldLabel: Priorizar palete fechado; type: checkbox; value: " . $registroAtual['priorizar_palete_fechado'] . "}")
-		);
-
-		if ($gParam['TIRAR_FOTO_NA_OPERACAO']['ativo']) {
-			$fotoObrigatoria = $frm->add("{name: foto_obrigatoria; fieldLabel: Obrigar fotos;type: checkbox; value:".$registroAtual['foto_obrigatoria']." }");
-		}
-
-		$frm->row(
-			$frm->add("{name: exige_uma_entrada_convencional; fieldLabel: Exige UMA ent. convencional; type: checkbox; value: " . $registroAtual['exige_uma_entrada_convencional'] . "}"),
-			$segunda_separacao,
-			$usaLoteProduto,
-			$exigirSkuSeparacao,
-			$fotoObrigatoria
-		);
-		if ($gParam['PERSISTIR_NOTA_PORTARIA']['ativo']) {
-			$frm->row(
-				$frm->add("{name: permitirPortariaSemOs; fieldLabel: Permitir portaria sem OS; type: checkbox; value:" . $registroAtual['permitir_portaria_sem_os'] . ";}")
-			);
-		}
 
 		if (
 			$gParam['INTEGRACAO_GMI']['ativo']
@@ -149,33 +115,6 @@ class PessoasJuridicas extends Pessoas
 			$frm->add("{name: codigo_sistema_externo; type: hidden; value: " . $registroAtual['codigo_sistema_externo'] .";}");
 		} else {
 			$campoCodigoExterno = $frm->add("{name: codigo_sistema_externo; fieldLabel: Código de sistema externo; type: text; maxLength: 9; value: " . $registroAtual['codigo_sistema_externo'] . "}");
-		}
-
-		if ($gParam['INTEGRACAO_GPAT']['ativo']) {
-			$variacaoDivergencia = $frm->add("{name: variacao_divergencia; fieldLabel: Variação de divergência; type:number; value: " . $registroAtual['variacao_divergencia'] .";}");
-		}
-
-		$comboTipoSeparacao = array();
-		$comboTipoSeparacao["1"] = "Separar por rua";
-		$comboTipoSeparacao["2"] = "Separar por item";
-
-		$sql = "SELECT GROUP_CONCAT(id_tipos_entrada) ids_tipos_entrada FROM tipos_entrada_proprietario WHERE id_pessoas_proprietario = {$gId}";
-		$rs  = dbFastQuery($sql)[0]['ids_tipos_entrada'];
-		$sql = "SELECT id, descricao FROM tipos_entrada WHERE id IN (" . $gParam['ENTRADAS_HABILITADAS']['valor'] . ")";
-
-		$frm->row(
-			$campoCodigoExterno,
-			$variacaoDivergencia,
-			$frm->add("{allowBlank:false; name: tipo_separacao; fieldLabel: Tipo de separação; type: combo; items:'" . json_encode($comboTipoSeparacao) . "'; value:".$registroAtual['tipo_separacao'] . ";}"),
-			$frm->add("{name: id_tipos_entrada; type: comboMultiSelection; fieldLabel: Tipos de entrada; items:'" . $sql . "'; allowBlank: false; value: " . $rs . ";}"),
-			$frm->add("{name: quantidade_posicoes; fieldLabel: Quantidade de posições contratadas; type: number; value: " . $registroAtual['quantidade_posicoes'] . "}")
-		);
-
-		if ($gParam['RESERVAR_VALIDANDO_PRAZO_MINIMO']['ativo']) {
-			$frm->row(
-				$frm->add("{name: prazo; fieldLabel: Prazo (%); type: number; value:" . $registroAtual['prazo'] . ";}"),
-				$frm->add("{name: leadTime; fieldLabel: Lead time (d); type: integer; value: " . $registroAtual['lead_time'] . "}")
-			);
 		}
 
 
@@ -229,7 +168,7 @@ class PessoasJuridicas extends Pessoas
 		$campos['insc_estadual']=gJustNumbers($todosOsCampos['insc_estadual']);
 		$campos['matriz']=gDBCheck($todosOsCampos['matriz']);
 		$campos['site']=gCleanField($todosOsCampos['site']);
-		$campos['unidade']=gDBCheck($todosOsCampos['unidade']);
+		$campos['unidade']=gCleanField($todosOsCampos['unidade']);
 		$campos['observacoes']=base64_encode($todosOsCampos['observacoes']);
 		return($campos);
 	}
@@ -238,7 +177,7 @@ class PessoasJuridicas extends Pessoas
 	{
 		global $gParam;
 		$gId = false;
-		
+
 		if (($campos['senha']!=$campos['confirmacao']) ) //|| ($senha=='')
 		{
 			$this->erros[]="A senha e a confirmação devem ser iguais e diferentes de vazio!";
@@ -373,38 +312,6 @@ class PessoasJuridicas extends Pessoas
 		$rs = dbQuery($sql);
 		return (bool) $rs;
 	}
-
-
-	public function persistirTiposEntrada($idTiposEntrada)
-	{
-		global $gId;
-
-		$sql = "SELECT id, id_tipos_entrada FROM tipos_entrada_proprietario WHERE id_pessoas_proprietario = {$gId}";
-		$rs  = dbFastQuery($sql);
-		$idExcluir = "";
-		foreach ($rs as $tipoEntradaAtual) {
-			if (!in_array($tipoEntradaAtual['id_tipos_entrada'], $idTiposEntrada)) {
-				//tem no banco e nao tem na aplicacao
-				$idExcluir .= $tipoEntradaAtual['id'] . ",";
-			}
-		}
-		if ($idExcluir) {
-			$idExcluir = substr($idExcluir, 0, -1);
-			dbFastQuery("DELETE FROM tipos_entrada_proprietario WHERE id IN ({$idExcluir})");
-		}
-
-		$rs = array_column($rs, 'id_tipos_entrada');
-		foreach ($idTiposEntrada as $id) {
-			if (!in_array($id, $rs)) {
-				// tem na aplicacao e nao tem no banco
-				$sql = "INSERT INTO tipos_entrada_proprietario (id_pessoas_proprietario, id_tipos_entrada)
-					VALUES ('{$gId}', '{$id}')";
-				dbFastQuery($sql);
-			}
-		}
-	}
-
-
 
 
 	public function validarDadosEmpresa($dados, $linha)
