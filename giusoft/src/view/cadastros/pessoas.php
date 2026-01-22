@@ -673,15 +673,15 @@ switch ($gPage)
 				WHERE u.id_gfw_users = " . $gId . " ORDER BY name";
 		$rs = dbQuery($sql);
 
-		if ($rs) {
+		if ($rs && $rs[0]['idu'] !== null) {
 			$html .= $o->tableBegin("medium", true);
-			$mtz   = "";
+			$mtz   = [];
 			$mtz[] = "<-Opções";
 			$mtz[] = "<-Nome";
 			$mtz[] = "<-Acessos";
 			$html .= $o->tableRow($mtz, "header");
 			foreach ($rs as $row) {
-				$mtz   = "";
+				$mtz   = [];
 				$mtz[] = "<-" . $o->button("{icon: trash; title: Excluir; hint: Excluir permissão; style: danger; size: small; href: " . $o->page . "&gPage=" . PERMISSOES_EXCLUIR . "&gId=" . $gId . "&gIdu=" . $row['idu'] . "}");;
 				$mtz[] = "<-" . $row["name"];
 				$mtz[] = "<-" . $row["permissoes"];
