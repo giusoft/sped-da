@@ -1,4 +1,4 @@
-<?
+<?php
 define('IMPORTAR_CERTIFICADO', 10);
 define('IMPORTAR_NOVO_CERTIFICADO', 11);
 define('PROCESSAR_NOVO_CERTIFICADO', 12);
@@ -13,7 +13,7 @@ if ($usrId != 1) {
     $permissao = "SIU";
 }
 
-$ui = new gUI("{title: Armazéns; table: filial; permissions: $permissao}");
+$ui = new gUI("{title: Filiais; table: filial; permissions: $permissao}");
 
 $ui->addDictionary("{name: id_enderecos_estados; fieldLabel: Estado; type: combo; items: ".$sp['combo_estados']."}");
 $ui->addDictionary("{name: id_enderecos_cidades; fieldLabel: Cidade; type: combo; items: ".$sp['combo_cidades']."}");
@@ -88,15 +88,11 @@ switch ($_REQUEST['gPage']) {
         $dataVencimento = date('Y-m-d', strtotime($certificado['Validade']));
         if ($dataAtual >= $dataVencimento) {
             $html .= $o->msgDanger("Este certificado venceu em " . gDate($dataVencimento));
-            $html .= $backButton;
-            break;
         }
 
         $diferencaDias = (int) date_diff(date_create($dataAtual), date_create($dataVencimento))->format("%a");
         if ($diferencaDias > 0 && $diferencaDias <= 60) {
             $html .= $o->msgWarning("Restam apenas " . $diferencaDias . " dias para vencimento deste certificado");
-            $html .= $backButton;
-            break;
         }
 
 		$html .= $o->tableBegin("big", true);
