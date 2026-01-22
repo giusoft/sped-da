@@ -50,7 +50,7 @@ class PontoAcesso
     }
 
 
-    public function executarRequest($verboHttp, $url, $dados = [], $headers = [], $dadosRequisicao = '')
+    public function executarRequest($verboHttp, $url, $dados = [], $headers = [], $dadosRequisicao = [])
     {
         global $usrId;
 
@@ -73,7 +73,7 @@ class PontoAcesso
         $dadosEnviar = $this->integracao->salvarRequisicao($this->dadosEnviar, $requisicaoEnviar);
 
         if (!$enviarTempoReal && !$this->parametros['task']) {
-            return null;
+            return;
         }
 
         $resposta = curl_exec($curl);
@@ -118,7 +118,7 @@ class PontoAcesso
     }
 
 
-    public function configurarCurl($verboHttp, $url, $dadosParaEnvio = [], $headers = [])
+    public function configurarCurl($verboHttp, $url, $dadosParaEnvio = array(), $headers = array())
     {
         $curl = curl_init();
         $this->responseHeaders = [];
@@ -142,7 +142,7 @@ class PontoAcesso
         curl_setopt($curl, CURLOPT_TIMEOUT, (int) $this->objetoGenerico->tempoLimiteCurl);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
 
-        $verboHttp = strtoupper((string) $verboHttp);
+        $verboHttp = strtoupper($verboHttp);
         if (in_array($verboHttp, ['GET', 'DELETE']) && !empty($dadosParaEnvio)) {
             $url .= '?' . http_build_query($dadosParaEnvio);
         }
@@ -232,7 +232,7 @@ class PontoAcesso
         $sql = "SELECT
                     gatilhos.*,
                     gatilhos_configuracoes.usuario,
-                    " . desencriptar('senha') . " AS senha,
+                    " . decriptBanco('senha') . " AS senha,
                     gatilhos_configuracoes.url_base,
                     gatilhos_configuracoes.tempo_limite
                 FROM
@@ -299,27 +299,26 @@ class PontoAcesso
             }
         }
 
-        if (in_array('teste', explode("/", (string) $_SERVER['REQUEST_URI']))) {
+        if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
             $ambiente = '/teste';
         }
-
-        $basePath = $_SERVER["DOCUMENT_ROOT"] . $ambiente . '/wms/giusoft/res';
-        $pathClassesIntegracao = $basePath . '/_classes/integracao/*';
+        $basePath = $_SERVER["DOCUMENT_ROOT"] . $ambiente . '/emitenota/giusoft/src';
+        $pathClassesIntegracao = $basePath . '/Model/integracao/*';
         $classesIntegracao = [];
 
         foreach (glob($pathClassesIntegracao) as $subPath) {
-            $classesIntegracao[] = str_replace($basePath . '/_classes/integracao/', '', $subPath);
+            $classesIntegracao[] = str_replace($basePath . '/Model/integracao/', '', $subPath);
         }
 
-        if (in_array($classe, $classesAuxiliares) && $dir === "") {
-            $dir = __DIR__ . sprintf('/%s.php', $classe);
+        if (in_array($classe, $classesAuxiliares) && $dir == "") {
+            $dir = __DIR__ . "/{$classe}.php";
             if ($classe == "index") {
                 $classe = "Api";
             }
         }
 
-        if (in_array(lcfirst((string) $classe), $classesIntegracao) && $dir === "") {
-            $dir = $basePath . "/_classes/integracao/" . lcfirst((string) $classe) . "/" . lcfirst((string) $classe) . ".php";
+        if (in_array(lcfirst($classe), $classesIntegracao) && $dir == "") {
+            $dir = $basePath . "/Model/integracao/" . lcfirst($classe) . "/" . lcfirst($classe) . ".php";
         }
 
         if (file_exists($dir)) {
@@ -327,8 +326,7 @@ class PontoAcesso
             if ($classe == "api_wms") {
                 $classe = "Api";
             }
-
-            if (class_exists(ucfirst((string) $classe))) {
+            if (class_exists(ucfirst($classe))) {
                 return new $classe($parametroClasse);
             }
         }
