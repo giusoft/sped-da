@@ -192,25 +192,18 @@ class NotasFiscais extends ImportacaoNFE
 			case NFE:
 				$btn4=true;
 			break;
-			case DADOS_MAQUINA:
-				$btn5=true;
-			break;
 		}
-		$html.=$o->button("{title: Dados; active: ".($btn0 ? "true" : "false").";icon: clock; href: ".$o->page."&gPage=".DADOS."&gId=".$gId." }");
-		$html.=$o->button("{title: Itens; active: ".($btn1 ? "true" : "false").";icon: tasks; href: ".$o->page."&gPage=".ITENS."&gId=".$gId." }");
-		if ($this->tipo=='S') {
-			$html .= $o->button("{title: NF-e; active: ".($btn4 ? "true" : "false")."; href: ".$o->page."&gPage=".NFE ."&gId=".$gId." }");
-		}
+		$html .= $o->button("{title: Dados; active: ".($btn0 ? "true" : "false").";icon: clock; href: ".$o->page."&gPage=".DADOS."&gId=".$gId." }");
+		$html .= $o->button("title: Itens; active: ".($btn1 ? "true" : "false").";icon: tasks; href: ".$o->page."&gPage=".ITENS."&gId=".$gId." }");
 
-		if ($row["tipo"]=="M")
-		{
-			$html= $this->obtemDetalhesCabecalho($row);
-			$html.=$o->button("{title: Dados; active: ".($btn5 ? "true" : "false")."; href: ".$o->page."&gPage=".DADOS_MAQUINA."&gId=".$gId." }");
+		if ($this->tipo == 'S') {
+			$html .= $o->button("{title: NF-e; active: ".($btn4 ? "true" : "false")."; href: ".$o->page."&gPage=".NFE ."&gId=".$gId." }");
 		}
 
 		if ($_REQUEST['importado']) {
             $html .= $o->msgSuccess('Itens importados com sucesso');
         }
+
 		return ($html);
 	}
 	/**
@@ -2485,67 +2478,6 @@ class NotasFiscais extends ImportacaoNFE
 			91 => "91 - Pagamento Posterior",
 			99 => "99 - Outros"
 		));
-	}
-
-
-	public function obtemDadosMaquinaNFE($idNota)
-	{
-		$dadosNotaNFE = $this->obtemDadosNFE($idNota);
-		$totais = $this->totaisNota($idNota);
-		$ttlItens = count(dbQuery("SELECT * FROM notas_itens where id_notas='{$idNota}'"));
-		$vSegItem  	= $dadosNotaNFE["vSeg"]/$ttlItens;
-		$vOutroItem	= $dadosNotaNFE["vOutro"]/$ttlItens;
-		$vDescItem	= $dadosNotaNFE["vDesc"]/$ttlItens;
-		$vFreteItem	= $dadosNotaNFE["vFrete"]/$ttlItens;
-		$sql =" SELECT
-					n.id_pessoas_cliente,
-					n.id_pessoas_proprietario,
-					ma.cProd codigo,
-					'' as ean,
-					ma.NCM ncm,
-					cf.codigo cfop,
-					ma.xProd descricao,
-					'".$totais["pesoL"]."' pesoLiquido,
-					'".$totais["pesoB"]."' pesoBruto,
-					ni.quantidade,
-					u.sigla unidade,
-					ni.valor,
-					iic.codigo as icms_cst,
-					ico.codigo as origem,
-					icm.codigo as icms_modalidadebc,
-					niic.reducao_icms_aliquota,
-					niic.pICMS aliquotaICMS,
-					niic.vICMSSTRet,
-					niic.pICMSST,
-					nii.pIPI aliquotaIPI,
-					nii.id_imp_ipi_cst as icmsIpi,
-					nic.id_imp_cofins_cst as icmsCofins,
-					nic.pCOFINS as aliquotaCOFINS,
-					nip.id_imp_pis_cst as icmsPIS,
-					nip.pPIS as aliquotaPIS,
-					'$vDescItem' desconto,
-					'$vFreteItem' frete,
-					'$vSegItem' seguro,
-					'$vOutroItem' outrasDespesas,
-					n.pesoB totalPesoLiquido,
-					n.pesoL totalPesoBruto,
-					ne.numero NumeroEntrada,
-					ne.serie SerieEntrada
-				FROM notas n
-				LEFT JOIN notas_itens ni on n.id=ni.id_notas
-				LEFT JOIN notas_itens_ipi nii on nii.id_notas_itens = ni.id
-				LEFT JOIN notas ne ON ni.id_notas_associada = ne.id
-				LEFT JOIN notas_itens_icms niic on niic.id_notas_itens = ni.id AND niic.id = (SELECT id FROM notas_itens_icms WHERE id_notas_itens=ni.id ORDER BY id DESC limit 1)
-				LEFT JOIN imp_icms_cst iic on iic.id = niic.id_imp_icms_cst
-				LEFT JOIN imp_icms_origem ico on ico.id = niic.id_imp_icms_origem
-				LEFT JOIN imp_icms_mod icm on icm.id = niic.id_imp_icms_mod
-				LEFT JOIN notas_itens_pis nip on nip.id_notas_itens = ni.id
-				LEFT JOIN notas_itens_cofins nic on nic.id_notas_itens = nic.id
-				LEFT JOIN cfops cf on n.id_cfops=cf.id
-				LEFT JOIN maquina ma on ni.id_maquinas=ma.id
-				LEFT JOIN unidades u on ma.id_unidades=u.id
-				WHERE ni.id_notas=".intval($idNota)." order by ni.id";
-		return dbQuery($sql);
 	}
 
 
