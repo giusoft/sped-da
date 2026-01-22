@@ -1226,7 +1226,7 @@ class Importacoes
 				$html .= $o->msg("Utilize esta opção para importar dados de outro sistema/cliente para processamento no gWMS.");
 				$frm   = new gForm("{columns: 2}");
 				$sql   = "SELECT id, descricao FROM importacoes WHERE grupo = '" . $grupo . "'";
-				$frm->add("{onChange:mudouProprietario; fieldLabel:Proprietário; name:id_pessoas_proprietario; type:combo; allowBlank:true; items:" . $sp["combo_proprietarios"] . ";}");
+				$frm->add("{onChange:mudouProprietario; fieldLabel:Proprietário; name:id_pessoas_proprietario; type:combo; allowBlank:true; items:" . $sp["combo_clientes"] . ";}");
 				$frm->add("{name: modelo; type: combo; allowBlank: false; items: " . $sql . " }");
 				//$frm->add("{name: formato; type: combo; allowBlank: false; items:{XML,JSON,CSV} }");
 				$frm->add("{name: arquivo; fieldLabel: Principal (.inf, .anf, .csv, .xml, .json);type: file;}");

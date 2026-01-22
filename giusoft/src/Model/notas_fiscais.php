@@ -1926,7 +1926,7 @@ class NotasFiscais
 
 		$frm->row(
 			$frm->add("{name: numero; fieldLabel: Número; type: text;"),
-			$frm->add("{name: proprietario; fieldLabel: Proprietário; items: ". $sp["combo_proprietarios"] .";type: combo;"),
+			$frm->add("{name: proprietario; fieldLabel: Proprietário; items: ". $sp["combo_clientes"] .";type: combo;"),
 			$frm->add("{name: codigo; fieldLabel:Código item; value:; type:text;}"),
 			$frm->add("{name: os; fieldLabel: OS; type:text;}")
 		);

@@ -19,7 +19,7 @@ switch ($gPage) {
 
 	case INICIO:
 		$frm = new gForm("{columns: 2}");
-		$frm->add('{type:combo; name:id_proprietario; fieldLabel:Proprietário; items:'.$sp["combo_proprietarios"].';}');
+		$frm->add('{type:combo; name:id_proprietario; fieldLabel:Proprietário; items:'.$sp["combo_clientes"].';}');
 		$frm->add('{type:text; name:numero; fieldLabel:Número;}');
 		$frm->add('{type:date; name:data_importacao_de; fieldLabel:Data de importação de;}');
 		$frm->add('{type:date; name:data_importacao_ate; fieldLabel:Data de importação até;}');

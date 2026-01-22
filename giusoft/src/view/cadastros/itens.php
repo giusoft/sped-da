@@ -1434,7 +1434,7 @@ switch ($gPage) {
 		$form->add("{allowBlank:true; type: combo; fieldLabel: Unidade; name:id_unidades; items:" . $sp["combo_unidades"] . ";}");
 		$form->add("{type: text; fieldLabel: Nome do item; name:nome;}");
 		$form->add("{type: text; fieldLabel: Código; hint: Separar com vígula; name: codigo;}");
-		$form->add("{type: combo; fieldLabel: Proprietário; name:id_pessoas_proprietario; items:" . $sp["combo_proprietarios"] . "}");
+		$form->add("{type: combo; fieldLabel: Proprietário; name:id_pessoas_proprietario; items:" . $sp["combo_clientes"] . "}");
 		$form->add("{type: combo; fieldLabel: Grupo; name:id_grupos; items:" . $sp["combo_grupos"] . " }");
 		$form->add("{type: combo; fieldLabel: Tipo; name:id_tipos; items:" . $sp["combo_tipos"] . ";}");
 		$form->add("{type: combo; fieldLabel: Fornecedor; name:id_pessoas_fornecedor; items:" . $sp["combo_fornecedores"] . ";}");
@@ -1858,7 +1858,7 @@ switch ($gPage) {
 	case LISTAGEM:
 		$html.=$o->msgSubTitle("Listagem");
 		$frm = new gForm("{columns: 3}");
-		$frm->add("{name: id_pessoas_proprietario; fieldLabel: Proprietário; type: combo; items: ".$sp['combo_proprietarios']."}");
+		$frm->add("{name: id_pessoas_proprietario; fieldLabel: Proprietário; type: combo; items: ".$sp['combo_clientes']."}");
 		$frm->add("{name: insumo; fieldLabel: Insumo; type: checkbox; value: 1}");
 		$frm->add("{name: produto_acabado; fieldLabel: Produto acabado; type: checkbox; value: 0}");
 		$frm->add("{name: gPage; type: hidden; value: ".($gPage+1)."}");

@@ -13,7 +13,7 @@ $ui->addTable("{title: Campos para o cabecalho; name: importacoes_cabecalho; for
 $ui->addTable("{title: Campos para os registros; name: importacoes_registros; foreignKey: id_importacoes; relationship: one-to-many; permissions: SIUD}");
 $ui->addDictionary("{name: tipo; fieldLabel: Tipo; type: combo; items: {'Texto','Texto maiúsculas','Número inteiro','Número decimal','Data','Data hora','Lógico', 'CNPJ','CPF','Carácter inicial','Unidade do Item'}}");
 $ui->addDictionary("{name: validacao; fieldLabel: Validação; type: lowerText; allowBlank: true}");
-$ui->addDictionary("{name: id_pessoas_proprietario; fieldLabel: Proprietário; type:combo; items: ".$sp['combo_proprietarios']."; allowBlank: true}");
+$ui->addDictionary("{name: id_pessoas_proprietario; fieldLabel: Proprietário; type:combo; items: ".$sp['combo_clientes']."; allowBlank: true}");
 $ui->addDictionary("{name: grupo; fieldLabel: Grupo; type:combo; items:'{programacao_entrada,programacao_saida,itens}'; allowBlank: false}");
 $ui->run($o, $html);
 

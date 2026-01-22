@@ -25,7 +25,7 @@ switch ($gPage) {
         $html .= $o->msgTitle("Consumo de API");
 
         $frm = new gForm("columns: 2");
-        $frm->add("{type: combo; name: id_pessoas_proprietario; fieldLabel: Proprietário; items: ".$sp['combo_proprietarios']."; value: " . $idPessoasProprietario . ";}");
+        $frm->add("{type: combo; name: id_pessoas_proprietario; fieldLabel: Proprietário; items: ".$sp['combo_clientes']."; value: " . $idPessoasProprietario . ";}");
         $frm->add("{type: month; name: mes; allowBlank: false; fieldLabel: Mês;}");
 
         $frm->add('{type: hidden; name:gPage; value:' . RELATORIO_CONSUMO_API . ';}');
