@@ -49,12 +49,13 @@ define("IMPRIMIR_MODELO", 410);
 
 
 // Removendo paginação e limit quando for exportação
-if (isset($_REQUEST["gPDF"])
-	|| isset($_REQUEST["gXLS"])
-	|| isset($_REQUEST["gDOC"])
-	|| isset($_REQUEST["gCSV"])
-	|| $gPage == INICIO_PESQUISAR_RESULTADO)
-{
+if (
+	$_REQUEST["gPDF"]
+	|| $_REQUEST["gXLS"]
+	|| $_REQUEST["gDOC"]
+	|| $_REQUEST["gCSV"]
+	|| $gPage == INICIO_PESQUISAR_RESULTADO
+) {
 	$gParam["PAGINACAO"]["ativo"] = 0;
 	$gParam["LIMITAR_VISUALIZACAO"]["ativo"] = 0;
 }
@@ -66,30 +67,16 @@ if ($gPage<10 || $gPage>=LISTAGEM) {
 	$o->CSVEnabled = true;
 }
 
-$gIdd = intval($_REQUEST['gIdd']);
-$gPathUsrFiles = $gPath."files/itens/";
-$http_usr_files = $http_base."files/itens/";
-$agora = date('Y-m-d H:i:s');
-gVar("global.numformat","0.000,0000");
+$gIdd = (int) $_REQUEST['gIdd'];
+$gPathUsrFiles = $gPath . "files/itens/";
+$http_usr_files = $http_base . "files/itens/";
+
+gVar("global.numformat", "0.000,0000");
 
 include_once __DIR__ . "/../../Model/itens_antigo.php";
 $persistencia = new Itens();
+
 $html .= $o->msgTitle("Cadastro de itens");
-
-if ($gId>0) {
-	$aptoNoBanco = gFieldById("itens", $gId, "apto");
-	$aptoSKUs = $persistencia->aptoSKUs($gId);
-
-	$faz_picking = dbQuery("SELECT faz_picking FROM itens WHERE id = $gId")[0]['faz_picking'];
-	if ($aptoNoBanco<>$aptoSKUs) {
-		if ($aptoSKUs==1) {
-			$apto=1;
-		} else {
-			$apto=0;
-		}
-		$persistencia->aptoAtualiza($gId, $apto);
-	}
-}
 
 
 switch ($gPage) {
@@ -103,117 +90,97 @@ switch ($gPage) {
 		$html .= $o->button("{icon: tasks; caption: Listagem; href: " . $o->page . "&gPage=" . LISTAGEM . "}");
 		$html .= '</form>';
 		$html .= '<br></div>';
+
 		$js = "
-		$('#pesquisaRapida').keydown(function(event) {
-			if (event.keyCode == 13) {
-				this.form.submit();
-				return false;
-			}
-		});
+			$('#pesquisaRapida').keydown(function(event) {
+				if (event.keyCode == 13) {
+					this.form.submit();
+					return false;
+				}
+			});
 		";
-
 		$o->addJavascript($js);
-		if ($gParam['INTEGRACAO_WINTHOR']['ativo']) {
-			$agrupaSku = ' , itens_skus.id';
-		}
 
-		$persistencia->agrupamento="p.id, pf.id, pc.id, pa.id, g.id, t.id, i.id {$agrupaSku}";
+		$persistencia->agrupamento = "p.id, pf.id, pc.id, pa.id, g.id, t.id, i.id {$agrupaSku}";
 
-		$persistencia->filtro="((a.id_filial=".intval($_SESSION["filialAtualId"]).") OR (a.id_filial IS NULL))";
+		$persistencia->filtro = "((a.id_filial=" . intval($_SESSION["filialAtualId"]) . ") OR (a.id_filial IS NULL))";
 
 		$rs = $persistencia->obtemRegistros();
 
-		if (count($rs)>0)
-		{
-			if ($gParam["PAGINACAO"]["ativo"]==1) {
-				$html.=$persistencia->pagination->render('{style:margin-top:-1.6%;}');
-			}
-			$html.=$o->tableBegin('big', true, true);
+		if (!$rs) {
+			$html .= $o->msgWarning("Nenhum item cadastrado ainda");
+			break;
+		}
+
+		if ($gParam["PAGINACAO"]["ativo"]) {
+			$html .= $persistencia->pagination->render('{style:margin-top:-1.6%;}');
+		}
+
+		$html .= $o->tableBegin('big', true, true);
+
+		$mtz = [];
+		$mtz[] = "<-Opções";
+		$mtz[] = "<>Ativo";
+		$mtz[] = "<>Apto";
+		$mtz[] = "<-Nome      	               ";
+		$mtz[] = "<-Código";
+		$mtz[] = "<-Proprietário     ";
+		$mtz[] = "<-Fornecedor       ";
+		$mtz[] = "<-Grupo         ";
+		$mtz[] = "<-Tipo          ";
+		if (!$gPDF) {
+			$mtz[] = "<>Cadastro      ";
+			$mtz[] = "<>Alteração     ";
+		}
+
+		$html .= $o->tableRow($mtz, 'header');
+
+		foreach ($rs as $id => $row) {
 			$mtz = [];
-			$mtz[]="<-Opções";
-			$mtz[]="<>Ativo";
-			$mtz[]="<>Apto";
-			$mtz[]="<-Nome      	               ";
-			$mtz[]="<-Código";
-			if ($gParam['INTEGRACAO_WINTHOR']['ativo']) {
-				$mtz[]="<-Código de barras";
-			}
-			$mtz[]="<-Proprietário     ";
-			$mtz[]="<-Fornecedor       ";
-			$mtz[]="<-Grupo         ";
-			$mtz[]="<-Tipo          ";
+			$mtz[] = '<-' . $o->button("{icon: folder-open; caption: Abrir; hint: Abrir a ficha do item; size: small; href: " . $o->page . "&gPage=" . CAPA . "&gId=" . $row['id'] . "}");
+			$mtz[] = '<>' . gCheck($row['ativo']);
+			$mtz[] = '<>' . gCheck($row['apto']);
+			$mtz[] = '<-' . $row['nome'] . '<br>' . $o->small($row['descricao']);
+			$mtz[] = '<-' . $row['codigo'];
+			$mtz[] = '<-' . $row['proprietario'];
+			$mtz[] = '<-' . $row['fornecedor'];
+			$mtz[] = '<-' . $row['grupo'];
+			$mtz[] = '<-' . $row['tipo'];
 			if (!$gPDF) {
-				$mtz[] = "<>Cadastro      ";
-				$mtz[] = "<>Alteração     ";
+				$mtz[] = '<>' . gDateTime($row['data_cadastro']) . '<br><small>' . $row['criou'] . '</small>';
+				$mtz[] = '<>' . gDateTime($row['data_alteracao']) . '<br><small>' . $row['alterou'] . '</small>';
 			}
 
-			$html.=$o->tableRow($mtz,'header');
-			$cnt=0;
-			foreach ($rs as $id => $row) {
-				$mtz = [];
-				$mtz[]='<-'.$o->button("{icon: folder-open; caption: Abrir; hint: Abrir a ficha do item; size: small; href: ".$o->page."&gPage=".CAPA."&gId=".$row['id']."}");
-				$mtz[]='<>'.gCheck($row['ativo']);
-				$mtz[]='<>'.gCheck($row['apto']);
-				$mtz[]='<-'.$row['nome'].'<br>'.$o->small($row['descricao']);
-				$mtz[]='<-'.$row['codigo'];
-				if ($gParam['INTEGRACAO_WINTHOR']['ativo']) {
-					$codigoBarrasSku = explode('•', (string) $row['codigos_barras']);
-					if ($codigoBarrasSku[1] <> '') {
-						$codigoBarrasSku = implode(' • ', $codigoBarrasSku);
-					} else {
-						$codigoBarrasSku = $codigoBarrasSku[0];
-					}
+			$html .= $o->tableRow($mtz,'detail');
+		}
 
-					$mtz[]='<-'.$codigoBarrasSku;
-				}
-				$mtz[]='<-'.$row['proprietario'];
-				$mtz[]='<-'.$row['fornecedor'];
-				$mtz[]='<-'.$row['grupo'];
-				$mtz[]='<-'.$row['tipo'];
-				if (!$gPDF) {
-					$mtz[] = '<>' . gDateTime($row['data_cadastro']) . '<br><small>' . $row['criou'] . '</small>';
-					$mtz[] = '<>' . gDateTime($row['data_alteracao']) . '<br><small>' . $row['alterou'] . '</small>';
-				}
+		$html .= $o->tableEnd();
 
-				$html .= $o->tableRow($mtz,'detail');
-				$cnt++;
-			}
-			$html.=$o->tableEnd();
-			if ($gParam["PAGINACAO"]["ativo"]==1)
-			{
-				$html.=$persistencia->pagination->render('{id:o; style:margin-top:-1.4%;;}');
-			}
-		} else {
-			$html.=$o->msgWarning("Nenhum item cadastrado ainda");
+		if ($gParam["PAGINACAO"]["ativo"]) {
+			$html .= $persistencia->pagination->render('{id:o; style:margin-top:-1.4%;;}');
 		}
 
 		break;
 
 
 	case INICIO_PESQUISAR:
-		$comboOpcoes = [
-			'*Indiferente',
-			'Sim',
-			'Não'
-		];
-
 		$frm   = new gForm("columns: 3;");
 		$html .= $o->msgSubTitle("Pesquisar itens");
 		$frm->addFormMessage("Informe uma ou mais opções abaixo para a busca");
 		$frm->add("{name: nome}");
 		$frm->add("{name: codigo_barras; type: text;}");
 		$frm->add("{name: codigo; fieldLabel: Código; type: text;}");
+		$comboOpcoes = [
+			'*Indiferente',
+			'Sim',
+			'Não'
+		];
 		$frm->add("{name: situacao; fieldLabel: Ativo; allowBlank: true; type: combo; items: " . json_encode($comboOpcoes) . ";}");
 		$frm->add("{name: id_pessoas_proprietario; fieldLabel: Cliente; type: combo; items: " . $sp['combo_clientes'] . "}");
 		$frm->add("{name: id_pessoas_fornecedor; fieldLabel: Fornecedor; type: combo; items: " . $sp['combo_fornecedores'] . "}");
 		$frm->add("{name: id_grupos; fieldLabel: Grupo; type: combo; items: " . $sp['combo_grupos'] . "}");
 		$frm->add("{name: id_tipos; fieldLabel: Tipos; type: combo; items: " . $sp['combo_tipos'] . "}");
 		$frm->add("{name: id_prioridades_saida; fieldLabel: Prioridade saída; type: combo; items: " . $sp['combo_prioridades_saida'] . "}");
-		$frm->add("{name: faz_picking; fieldLabel: Picking; type: combo; items: " . json_encode($comboOpcoes) . ";}");
-		$frm->add("{name: exige_lote; fieldLabel: Lote; type: combo; items: " . json_encode($comboOpcoes) . ";}");
-		$frm->add("{name: critico; fieldLabel: Item crítico; type: combo; items: " . json_encode($comboOpcoes) . ";}");
-		$frm->add("{name: exige_data_validade; fieldLabel: Exige validade; type: combo; items: " . json_encode($comboOpcoes) . ";}");
-		$frm->add("{name: exige_data_fabricacao; fieldLabel: Exige fabricação; type: combo; items: " . json_encode($comboOpcoes) . ";}");
 		$frm->add("{name: mostrarDetalhesSku; fieldLabel: Mostrar detalhes SKU; type: checkbox;}");
 		$frm->add("{name: gPDFOrientation; type: hidden; value: L;}");
 		$frm->add("{name: gPage; type: hidden; value: " . INICIO_PESQUISAR_RESULTADO . "}");
@@ -223,23 +190,16 @@ switch ($gPage) {
 
 
 	case INICIO_PESQUISAR_RESULTADO:
-		$where = [];
-		$filtro = [];
-		$nome  = gCleanField($_REQUEST['nome']);
 		$pesquisaRapida  = gCleanField($_REQUEST['pesquisaRapida']);
+		$nome = gCleanField($_REQUEST['nome']);
 		$codigo = gCleanField($_REQUEST['codigo']);
-		$codigo_barras = gCleanField($_REQUEST['codigo_barras']);
-		$id_pessoas_proprietario = intval($_REQUEST['id_pessoas_proprietario']);
-		$id_pessoas_fornecedor = intval($_REQUEST['id_pessoas_fornecedor']);
-		$situacao = intval($_REQUEST['situacao']);
-		$id_grupos = intval($_REQUEST['id_grupos']);
-		$id_tipos = intval($_REQUEST['id_tipos']);
-		$id_prioridades_saida = intval($_REQUEST['id_prioridades_saida']);
-		$faz_picking = intval($_REQUEST['faz_picking']);
-		$exige_lote = intval($_REQUEST['exige_lote']);
-		$critico = intval($_REQUEST['critico']);
-		$exige_data_validade = intval($_REQUEST['exige_data_validade']);
-		$exige_data_fabricacao = intval($_REQUEST['exige_data_fabricacao']);
+		$codigoBarras = gCleanField($_REQUEST['codigo_barras']);
+		$idPessoasProprietario = (int) $_REQUEST['id_pessoas_proprietario'];
+		$idPessoasFornecedor = (int) $_REQUEST['id_pessoas_fornecedor'];
+		$situacao = (int) $_REQUEST['situacao'];
+		$idGrupos = (int) $_REQUEST['id_grupos'];
+		$idTipos = (int) $_REQUEST['id_tipos'];
+		$idPrioridadesSaida = (int) $_REQUEST['id_prioridades_saida'];
 
 		$html .= '<div class="hidden-print"><form class="form-inline" method="POST" action="index.php?g=itens">';
 		$html .= $o->button("{icon: plus; caption: Novo; hint: Cadastrar um novo item; style: info; size: normal; href: index.php?g=itens&gPage=" . DADOS . "}");
@@ -251,33 +211,35 @@ switch ($gPage) {
 		$html .= '</form>';
 		$html .= '<br></div>';
 		$js = "
-		$('#pesquisaRapida').keydown(function(event) {
-			if (event.keyCode == 13) {
-				this.form.submit();
-				return false;
-			}
-		});
+			$('#pesquisaRapida').keydown(function(event) {
+				if (event.keyCode == 13) {
+					this.form.submit();
+					return false;
+				}
+			});
 		";
 
 		$o->addJavascript($js);
 
+		$where = [];
+		$filtro = [];
+
 		if ($pesquisaRapida) {
-			$where[] = "(i.nome like '%$pesquisaRapida%' OR p.nome like '%$pesquisaRapida%' OR pf.nome like '%$pesquisaRapida%' OR i.codigo like '%$pesquisaRapida%' OR i.codigo_barras like '%$pesquisaRapida%')";
+			$where[] = "(i.nome LIKE '%$pesquisaRapida%' OR p.nome LIKE '%$pesquisaRapida%' OR pf.nome LIKE '%$pesquisaRapida%' OR i.codigo LIKE '%$pesquisaRapida%' OR i.codigo_barras LIKE '%$pesquisaRapida%')";
 			$html .= $o->msgFilter('Pesquisar por: ' . $pesquisaRapida);
 		} else {
 			if (
-				trim($nome.$codigo.$codigo_barras) == ''
+				trim($nome.$codigo.$codigoBarras) == ''
 				&& (
-					(int) $id_pessoas_proprietario.$id_pessoas_fornecedor.$situacao
-					.$id_grupos.$id_tipos.$id_prioridades_saida.$faz_picking
-					.$exige_lote.$critico.$exige_data_validade.$exige_data_fabricacao
+					(int) $idPessoasProprietario.$idPessoasFornecedor.$situacao
+					.$idGrupos.$idTipos
 				) == 0
 			) {
 				redirect($o->page . '&gPage=' . INICIO_PESQUISAR);
 			}
 
 			if ($nome<>'') {
-				$where[] = "(i.nome like '%{$nome}%')";
+				$where[] = "(i.nome LIKE '%{$nome}%')";
 				$filtro[] = "Nome: {$nome}";
 			}
 
@@ -286,34 +248,29 @@ switch ($gPage) {
 				$filtro[] = "Código: {$codigo}";
 			}
 
-			if ($codigo_barras <> "") {
-				$where[] = "i.codigo_barras = '{$codigo_barras}'";
-				$filtro[] = "Código de barras: {$codigo_barras}";
+			if ($codigoBarras <> "") {
+				$where[] = "i.codigo_barras = '{$codigoBarras}'";
+				$filtro[] = "Código de barras: {$codigoBarras}";
 			}
 
-			if ($id_pessoas_proprietario>0) {
-				$where[] = "i.id_pessoas_proprietario = {$id_pessoas_proprietario}";
-				$filtro[] = "Proprietário: " . gFieldById("pessoas", $id_pessoas_proprietario, "apelido");
+			if ($idPessoasProprietario>0) {
+				$where[] = "i.id_pessoas_proprietario = {$idPessoasProprietario}";
+				$filtro[] = "Proprietário: " . gFieldById("pessoas", $idPessoasProprietario, "apelido");
 			}
 
-			if ($id_pessoas_fornecedor>0) {
-				$where[] = "i.id_pessoas_fornecedor = {$id_pessoas_fornecedor}";
-				$filtro[] = "Fornecedor: " . gFieldById("pessoas", $id_pessoas_fornecedor, "apelido");
+			if ($idPessoasFornecedor>0) {
+				$where[] = "i.id_pessoas_fornecedor = {$idPessoasFornecedor}";
+				$filtro[] = "Fornecedor: " . gFieldById("pessoas", $idPessoasFornecedor, "apelido");
 			}
 
-			if ($id_grupos) {
-				$where[] = "i.id_grupos = " . $id_grupos;
-				$filtro[] = "Grupo: " . gFieldById("grupos", $id_grupos, "descricao");
+			if ($idGrupos) {
+				$where[] = "i.id_grupos = " . $idGrupos;
+				$filtro[] = "Grupo: " . gFieldById("grupos", $idGrupos, "descricao");
 			}
 
-			if ($id_tipos) {
-				$where[] = "i.id_tipos = " . $id_tipos;
-				$filtro[] = "Tipo: " . gFieldById("tipos", $id_tipos, "descricao");
-			}
-
-			if ($id_prioridades_saida) {
-				$where[] = "i.id_prioridades_saida = " . $id_prioridades_saida;
-				$filtro[] = "Prioridade de saída: " . gFieldById("prioridades_saida", $id_prioridades_saida, "descricao");
+			if ($idTipos) {
+				$where[] = "i.id_tipos = " . $idTipos;
+				$filtro[] = "Tipo: " . gFieldById("tipos", $idTipos, "descricao");
 			}
 
 			$comboCondicional = [
@@ -332,56 +289,6 @@ switch ($gPage) {
 				}
 			}
 
-			if ($faz_picking) {
-				$where[] = "i.faz_picking = " . $comboCondicional[$faz_picking];
-
-				if ($faz_picking == 1) {
-					$filtro[] = "Faz picking";
-				} else {
-					$filtro[] = "Não faz picking";
-				}
-			}
-
-			if ($exige_lote) {
-				$where[] = "i.exige_lote = " . $comboCondicional[$exige_lote];
-
-				if ($exige_lote == 1) {
-					$filtro[] = "Exige lote";
-				} else {
-					$filtro[] = "Não exige lote";
-				}
-			}
-
-			if ($critico) {
-				$where[] = "i.critico = " . $comboCondicional[$critico];
-
-				if ($critico == 1) {
-					$filtro[] = "Item crítico";
-				} else {
-					$filtro[] = "Item não crítico";
-				}
-			}
-
-			if ($exige_data_validade) {
-				$where[] = "i.exige_data_validade = " . $comboCondicional[$exige_data_validade];
-
-				if ($exige_data_validade == 1) {
-					$filtro[] = "Exige data de validade";
-				} else {
-					$filtro[] = "Não exige data de validade";
-				}
-			}
-
-			if ($exige_data_fabricacao) {
-				$where[] = "i.exige_data_fabricacao = " . $comboCondicional[$exige_data_fabricacao];
-
-				if ($exige_data_fabricacao == 1) {
-					$filtro[] = "Exige data de fabricação";
-				} else {
-					$filtro[] = "Não exige data de fabricação";
-				}
-			}
-
 			$filtro[] = "Mostrar detalhes dos SKUs: " . gCheck($_REQUEST['mostrarDetalhesSku']);
 		}
 
@@ -393,7 +300,7 @@ switch ($gPage) {
 
 		$persistencia->agrupamento = "p.id, pf.id, pc.id, pa.id, g.id, t.id, i.id";
 		$rs = $persistencia->obtemRegistros(implode(" AND ",$where), "", "", 1);
-		if (!$rs[0][0]) {
+		if (!$rs[0]) {
 			$html .= $o->msgWarning("Nada encontrado a partir dos filtros especificados");
 			break;
 		}
@@ -402,19 +309,14 @@ switch ($gPage) {
 			"&gId=0
 			&nome=$nome
 			&codigo=$codigo
-			&codigo_barras=$codigo_barras
-			&id_pessoas_proprietario=$id_pessoas_proprietario
-			&id_pessoas_fornecedor=$id_pessoas_fornecedor
+			&codigo_barras=$codigoBarras
+			&id_pessoas_proprietario=$idPessoasProprietario
+			&id_pessoas_fornecedor=$idPessoasFornecedor
 			&id_grupos=" . $_REQUEST['id_grupos'] . "
 			&id_tipos=" . $_REQUEST['id_tipos'] . "
-			&id_prioridades_saida=" . $_REQUEST['id_prioridades_saida'] . "
-			&faz_picking=" . $_REQUEST['faz_picking'] . "
-			&exige_lote=" . $_REQUEST['exige_lote'] . "
-			&critico=" . $_REQUEST['critico'] . "
-			&exige_data_validade=" . $_REQUEST['exige_data_validade'] . "
-			&exige_data_fabricacao=" . $_REQUEST['exige_data_fabricacao'] . "
 			&situacao=$situacao
-		}");
+			}"
+		);
 
 		$html .= $o->tableBegin('big', true);
 		$mtz   = [];
@@ -436,16 +338,9 @@ switch ($gPage) {
 		$mtz[] = '<-Proprietário                    ';
 		$mtz[] = '<-Fornecedor                      ';
 		if (gDBCheck($_REQUEST['mostrarDetalhesSku'])) {
-			$mtz[] = '->Palete lastro';
-			$mtz[] = '->Palete altura';
-			$mtz[] = '->Regra paletização';
 			$mtz[] = '->Peso líquido';
 			$mtz[] = '->Peso bruto';
 			$mtz[] = '<-Cód. barras - SKU';
-			$mtz[] = '->Prazo val.';
-			$mtz[] = '->Shelf life';
-			$mtz[] = '->Data crítica';
-			$mtz[] = '->Dias Bloqueio';
 		}
 		$html .= $o->tableRow($mtz, 'header');
 
@@ -455,12 +350,12 @@ switch ($gPage) {
 
 			if (!$gXLS && !$gCSV && !$gXML && !$gPDF && !$gDOC) {
 				$btns  = '<-' . $o->button("{icon: search; caption: Abrir; size: small; href: " . $o->page . "&gPage=" . DADOS . "&gId=" . $row['id'] . "}");
-				$btns .= $o->button("{icon: copy; caption: Copiar; style: info; size: small; href: " . $o->page . "&gPage=" . COPIAR . "&gId=" . $row['id'] . "&nome=$nome&codigo=$codigo&codigo_barras=$codigo_barras&id_pessoas_proprietario=$id_pessoas_proprietario&id_pessoas_fornecedor=$id_pessoas_fornecedor}");
+				$btns .= $o->button("{icon: copy; caption: Copiar; style: info; size: small; href: " . $o->page . "&gPage=" . COPIAR . "&gId=" . $row['id'] . "&nome=$nome&codigo=$codigo&codigo_barras=$codigoBarras&id_pessoas_proprietario=$idPessoasProprietario&id_pessoas_fornecedor=$idPessoasFornecedor}");
 				$btns .= $o->button("{icon: image; caption: Imagem; size: small; style: info; hint: Cadastro rápido de imagens; href: " . $o->page . "&gPage=" . IMAGENS_RAPIDO . "&gId=" . $row['id'] . "}");
 				if ($row['ativo']==1) {
-					$btns .= $o->button("{icon: thumbs-up; caption: Ativado; style: success; size: small; href: " . $o->page . "&gPage=" . ATIVAR_DESATIVAR . "&gId=" . $row['id'] . "&nome=$nome&codigo=$codigo&codigo_barras=$codigo_barras&id_pessoas_proprietario=$id_pessoas_proprietario&id_pessoas_fornecedor=$id_pessoas_fornecedor&ativo=" . $row['ativo'] . "&pesquisaRapida=$pesquisaRapida" . "}");
+					$btns .= $o->button("{icon: thumbs-up; caption: Ativado; style: success; size: small; href: " . $o->page . "&gPage=" . ATIVAR_DESATIVAR . "&gId=" . $row['id'] . "&nome=$nome&codigo=$codigo&codigo_barras=$codigoBarras&id_pessoas_proprietario=$idPessoasProprietario&id_pessoas_fornecedor=$idPessoasFornecedor&ativo=" . $row['ativo'] . "&pesquisaRapida=$pesquisaRapida" . "}");
 				} else {
-					$btns .= $o->button("{icon: thumbs-down; caption: Desativado; style: danger; size: small; href: " . $o->page . "&gPage=" . ATIVAR_DESATIVAR . "&gId=" . $row['id'] . "&nome=$nome&codigo=$codigo&codigo_barras=$codigo_barras&id_pessoas_proprietario=$id_pessoas_proprietario&id_pessoas_fornecedor=$id_pessoas_fornecedor&ativo=" . $row['ativo'] . "&pesquisaRapida=$pesquisaRapida" . "}");
+					$btns .= $o->button("{icon: thumbs-down; caption: Desativado; style: danger; size: small; href: " . $o->page . "&gPage=" . ATIVAR_DESATIVAR . "&gId=" . $row['id'] . "&nome=$nome&codigo=$codigo&codigo_barras=$codigoBarras&id_pessoas_proprietario=$idPessoasProprietario&id_pessoas_fornecedor=$idPessoasFornecedor&ativo=" . $row['ativo'] . "&pesquisaRapida=$pesquisaRapida" . "}");
 				}
 				$mtz[] = $btns;
 			}
@@ -480,16 +375,9 @@ switch ($gPage) {
 			$mtz[] = '<-' . $row['proprietario'];
 			$mtz[] = '<-' . $row['fornecedor'];
 			if (gDBCheck($_REQUEST['mostrarDetalhesSku'])) {
-				$mtz[] = '->' . gFloat($row['palete_lastro']);
-				$mtz[] = '->' . gFloat($row['palete_altura']);
-				$mtz[] = '->' . gFloat($row['regra_paletizacao']);
 				$mtz[] = '->' . gFloat($row['peso_liquido']);
 				$mtz[] = '->' . gFloat($row['peso_bruto']);
 				$mtz[] = '<-' . $row['codigo_barras_1'];
-				$mtz[] = '->' . $row['prazo_validade'];
-				$mtz[] = '->' . $row['shelf_life'];
-				$mtz[] = '->' . $row['data_critica'];
-				$mtz[] = '->' . $row['dias_bloqueio'];
 			}
 			$html .= $o->tableRow($mtz, 'detail');
 		}
@@ -498,15 +386,44 @@ switch ($gPage) {
 		break;
 
 
-	/* ----------------------------- FORMULÁRIO ------------------------ */
 	case DADOS:
-		if ($gId>0)
-		{
-			$html.=mostraCabecalho();
+		if ($gId) {
+			$html .= mostraCabecalho();
+			$registroAtual = $persistencia->obtemRegistros("i.id=" . $gId)[0];
 		}
+
 		$frm = new gForm();
-		$rs = $persistencia->obtemRegistros("i.id=".$gId);
-		$html.=$persistencia->geraCamposDoFormulario($frm, $rs[0], DADOS_SALVAR);
+		$frm->row(
+			$frm->add("{name: nome; fieldLabel: Nome *; type: upperText; value: " . $registroAtual['nome'] . "; allowBlank: false;}"),
+			$frm->add("{name: descricao; fieldLabel: Descrição; type: text; value: " . $registroAtual['descricao'] . "}")
+		);
+		$frm->row(
+			$frm->add("{name: id_pessoas_proprietario; fieldLabel: Cliente *; allowBlank: false; type: combo; value: " . $registroAtual['id_pessoas_proprietario'].  "; items: " . $sp['combo_clientes'] . "; allowBlank: false;}"),
+			$frm->add("{name: id_pessoas_fornecedor; fieldLabel: Fornecedor; allowBlank: true; type: combo; value: " . $registroAtual['id_pessoas_fornecedor'] . "; items: " . $sp['combo_fornecedores'] . "}"),
+			$frm->add("{name: id_grupos; fieldLabel: Grupo; type: combo; value: " . $registroAtual['id_grupos'] . "; items: " . $sp['combo_grupos'] . "}"),
+			$frm->add("{name: id_tipos; fieldLabel: Tipo; allowBlank: false; type: combo; value: " . $registroAtual['id_tipos'] . "; items: " . $sp['combo_tipos'] . "}")
+		);
+
+		$comboGrupo = "SELECT id, CONCAT(codigo, ' • ', descricao) descricao FROM grupos_combustivel";
+		$frm->row(
+			$frm->add("{name: id_grupos_combustivel; fieldLabel: Grupo do combustível; type: combo; items:" . $comboGrupo . "; value: " . $registroAtual['id_grupos_combustivel'] . "}"),
+			$frm->add("{name: ncm; fieldLabel: NCM*; type: text; maxLength: 8; value: " . $registroAtual['ncm'] . "; allowBlank: false;}")
+		);
+
+		$frm->row(
+			$frm->add("{name: ativo; fieldLabel: Ativo; type: checkbox; value: " . ($gId==0 ? 1 : $registroAtual['ativo']) . "}")
+		);
+
+		$observacoes = decodificarObservacao($registroAtual['observacoes']);
+
+		$frm->row(
+			$frm->add("{name: observacoes;type: textarea; value: " . $observacoes . "}")
+		);
+		$frm->add("{name: gId;type: hidden; value: ".$gId."}");
+		$frm->add("{name: gPage; type: hidden; value: " . DADOS_SALVAR . "}");
+		$html .= $frm->render($o);
+		$html .= $o->msg("* Campos obrigatórios para tornar o item apto para utilização.");
+	
 		break;
 
 
@@ -550,25 +467,6 @@ switch ($gPage) {
 		$rs = dbQuery($sql);
 		$row2 = $rs[0];
 		$gIdd = $row2['id'];
-
-		if ($gParam['USA_POSICAO_COMO_UMA']['ativo']) {
-			$js = "
-				let camposNulos = ['peso_liquido', 'peso_bruto'];
-				let camposUnitarios = ['largura', 'altura', 'comprimento'];
-				let camposPalets = ['palete_lastro', 'palete_altura', 'empilhamento_maximo'];
-
-				function inserirValoresCampos(campos, valor, p) {
-					for (i = 0; i < campos.length; i++) {
-						document.getElementById(campos[i]).value = valor;
-						$('#' + campos[i]).attr('readonly', true);
-					}
-				}
-				inserirValoresCampos(camposNulos, 0);
-				inserirValoresCampos(camposUnitarios, 1);
-				inserirValoresCampos(camposPalets, 10000);
-			";
-			$o->addJavascript($js);
-		}
 
 		$frm = new gForm();
 		if ($gParam["EXIBIR_CAMPO_CODIGO2_ITENS"]["ativo"]) {
@@ -1091,7 +989,7 @@ switch ($gPage) {
 					$html.=$backButton;
 				} else {
 					$flds = [
-						'data'             => $agora,
+						'data'             => agora(),
 						'id_itens'         => $gId,
 						'id_pessoas_criou' => $usrId,
 						'descricao'        => gCleanField($_REQUEST['descricao']),
@@ -1150,7 +1048,7 @@ switch ($gPage) {
 			/* Reculperando arquivo */
 			$arquivo=$_FILES['webcam'];
 			$flds = [
-				'data'             => $agora,
+				'data'             => agora(),
 				'id_itens'         => $gId,
 				'id_pessoas_criou' => $usrId,
 				'descricao'        => 'Imagem do item',
@@ -1192,13 +1090,13 @@ switch ($gPage) {
 
 		$nome = gCleanField($_REQUEST['nome']);
 		$codigo = gCleanField($_REQUEST['codigo']);
-		$codigo_barras = gCleanField($_REQUEST['codigo_barras']);
-		$id_pessoas_proprietario = intval($_REQUEST['id_pessoas_proprietario']);
-		$id_pessoas_fornecedor = intval($_REQUEST['id_pessoas_fornecedor']);
+		$codigoBarras = gCleanField($_REQUEST['codigo_barras']);
+		$idPessoasProprietario = intval($_REQUEST['id_pessoas_proprietario']);
+		$idPessoasFornecedor = intval($_REQUEST['id_pessoas_fornecedor']);
 		$situacao = intval($_REQUEST['situacao']);
-		$id_grupos = intval($_REQUEST['id_grupos']);
-		$id_tipos = intval($_REQUEST['id_tipos']);
-		$id_prioridades_saida = intval($_REQUEST['id_prioridades_saida']);
+		$idGrupos = intval($_REQUEST['id_grupos']);
+		$idTipos = intval($_REQUEST['id_tipos']);
+		$idPrioridadesSaida = intval($_REQUEST['id_prioridades_saida']);
 		$faz_picking = intval($_REQUEST['faz_picking']);
 		$exige_lote = intval($_REQUEST['exige_lote']);
 		$critico = intval($_REQUEST['critico']);
@@ -1218,13 +1116,13 @@ switch ($gPage) {
 		$frm->add("{name: formulario; type: hidden; value: $formulario}");
 		$frm->add("{name: nome; type: hidden; value: $nome}");
 		$frm->add("{name: codigo; type: hidden; value: $codigo}");
-		$frm->add("{name: codigo_barras; type: hidden; value: $codigo_barras}");
-		$frm->add("{name: id_pessoas_proprietario; type: hidden; value: $id_pessoas_proprietario}");
-		$frm->add("{name: id_pessoas_fornecedor; type: hidden; value: $id_pessoas_fornecedor}");
+		$frm->add("{name: codigo_barras; type: hidden; value: $codigoBarras}");
+		$frm->add("{name: id_pessoas_proprietario; type: hidden; value: $idPessoasProprietario}");
+		$frm->add("{name: id_pessoas_fornecedor; type: hidden; value: $idPessoasFornecedor}");
 		$frm->add("{name: situacao; type: hidden; value: $situacao}");
-		$frm->add("{name: id_grupos; type: hidden; value: $id_grupos}");
-		$frm->add("{name: id_tipos; type: hidden; value: $id_tipos}");
-		$frm->add("{name: id_prioridades_saida; type: hidden; value: $id_prioridades_saida}");
+		$frm->add("{name: id_grupos; type: hidden; value: $idGrupos}");
+		$frm->add("{name: id_tipos; type: hidden; value: $idTipos}");
+		$frm->add("{name: id_prioridades_saida; type: hidden; value: $idPrioridadesSaida}");
 		$frm->add("{name: faz_picking; type: hidden; value: $faz_picking}");
 		$frm->add("{name: exige_lote; type: hidden; value: $exige_lote}");
 		$frm->add("{name: critico; type: hidden; value: $critico}");
@@ -1245,12 +1143,12 @@ switch ($gPage) {
 		//Dados da pesquisa
 		$nome = gCleanField($_REQUEST['nome']);
 		$codigo = gCleanField($_REQUEST['codigo']);
-		$codigo_barras = gCleanField($_REQUEST['codigo_barras']);
-		$id_pessoas_proprietario = intval($_REQUEST['id_pessoas_proprietario']);
-		$id_pessoas_fornecedor = intval($_REQUEST['id_pessoas_fornecedor']);
-		$id_grupos = intval($_REQUEST['id_grupos']);
-		$id_tipos = intval($_REQUEST['id_tipos']);
-		$id_prioridades_saida = intval($_REQUEST['id_prioridades_saida']);
+		$codigoBarras = gCleanField($_REQUEST['codigo_barras']);
+		$idPessoasProprietario = intval($_REQUEST['id_pessoas_proprietario']);
+		$idPessoasFornecedor = intval($_REQUEST['id_pessoas_fornecedor']);
+		$idGrupos = intval($_REQUEST['id_grupos']);
+		$idTipos = intval($_REQUEST['id_tipos']);
+		$idPrioridadesSaida = intval($_REQUEST['id_prioridades_saida']);
 		$situacao = intval($_REQUEST['situacao']);
 		$faz_picking = intval($_REQUEST['faz_picking']);
 		$exige_lote = intval($_REQUEST['exige_lote']);
@@ -1287,28 +1185,28 @@ switch ($gPage) {
 			$where[] = "i.codigo = '{$codigo}'";
 		}
 
-		if ($codigo_barras <> '') {
-			$where[] = "i.codigo_barras = '{$codigo_barras}'";
+		if ($codigoBarras <> '') {
+			$where[] = "i.codigo_barras = '{$codigoBarras}'";
 		}
 
-		if ($id_pessoas_proprietario) {
-			$where['id_pessoas_proprietario'] = "i.id_pessoas_proprietario = {$id_pessoas_proprietario}";
+		if ($idPessoasProprietario) {
+			$where['id_pessoas_proprietario'] = "i.id_pessoas_proprietario = {$idPessoasProprietario}";
 		}
 
-		if ($id_pessoas_fornecedor) {
-			$where['id_pessoas_fornecedor'] = "i.id_pessoas_fornecedor = {$id_pessoas_fornecedor}";
+		if ($idPessoasFornecedor) {
+			$where['id_pessoas_fornecedor'] = "i.id_pessoas_fornecedor = {$idPessoasFornecedor}";
 		}
 
-		if ($id_grupos) {
-			$where[] = "i.id_grupos = {$id_grupos}";
+		if ($idGrupos) {
+			$where[] = "i.id_grupos = {$idGrupos}";
 		}
 
-		if ($id_tipos) {
-			$where[] = "i.id_tipos = {$id_tipos}";
+		if ($idTipos) {
+			$where[] = "i.id_tipos = {$idTipos}";
 		}
 
-		if ($id_prioridades_saida) {
-			$where[] = "i.id_prioridades_saida = {$id_prioridades_saida}";
+		if ($idPrioridadesSaida) {
+			$where[] = "i.id_prioridades_saida = {$idPrioridadesSaida}";
 		}
 
 		$comboCondicional = [
@@ -1416,10 +1314,6 @@ switch ($gPage) {
 	case IMPORTACOES_DIVERSAS:
 
 		$html .= $o->button("{icon: download; caption: Itens;  style: primary; size: big; href: " . $o->page . "&gPage=" . IMPORTAR . "}");
-
-		if ($gParam['USA_POSICAO_FIXA_PICKING']['ativo']) {
-			$html .= $o->button("{icon: download; caption: Posição fixa em lote; style: primary; size: big; href: " . $o->page . "&gPage=" . POSICAO_FIXA_LOTE . "}");
-		}
 
 		if ($gParam['CONVERTER_SKU_AO_IMPORTAR_NF']['ativo']) {
 			$html .= $o->button("{icon: download; caption: Importar fornecedores; style: primary; size: big; href: " . $o->page . "&gPage=" . FORMULARIO_IMPORTACAO_DE_FORNECEDORES . "}");
@@ -1532,25 +1426,6 @@ switch ($gPage) {
 			$html .= $o->msgWarning("Nenhum registro encontrado a partir dos filtros selecionados");
 			$html .= $backButton;
 			break;
-		}
-
-		if ($gParam['USA_POSICAO_COMO_UMA']['ativo']) {
-			$js = "
-				let camposNulos  = ['peso_liquido', 'peso_bruto'];
-				let camposPalets = ['lastro_palete', 'altura_palete', 'empilhamento_maximo'];
-				let camposUnitarios = ['largura', 'altura', 'comprimento'];
-
-				function inserirValoresCampos(campos, valor, p) {
-					for (i = 0; i < campos.length; i++) {
-						document.getElementById(campos[i]).value = valor;
-						$('#' + campos[i]).attr('readonly', true);
-					}
-				}
-				inserirValoresCampos(camposNulos, 0);
-				inserirValoresCampos(camposUnitarios, 1);
-				inserirValoresCampos(camposPalets, 10000);
-			";
-			$o->addJavascript($js);
 		}
 
 		$frm = new gForm('{columns: 3}');
@@ -1867,15 +1742,15 @@ switch ($gPage) {
 		break;
 
 	case (LISTAGEM+1):
-		$id_pessoas_proprietario = intval($_REQUEST['id_pessoas_proprietario']);
+		$idPessoasProprietario = intval($_REQUEST['id_pessoas_proprietario']);
 		$produto_acabado = gDBCheck($_REQUEST['produto_acabado']);
 		$insumo = gDBCheck($_REQUEST['insumo']);
 		$filtro = [];
 		$flt = [];
-		if ($id_pessoas_proprietario>0)
+		if ($idPessoasProprietario>0)
 		{
-			$filtro[] = gFieldById("pessoas", $id_pessoas_proprietario,"nome");
-			$flt[] = "i.id_pessoas_proprietario=".$id_pessoas_proprietario;
+			$filtro[] = gFieldById("pessoas", $idPessoasProprietario,"nome");
+			$flt[] = "i.id_pessoas_proprietario=".$idPessoasProprietario;
 		}
 		if ($produto_acabado>0)
 		{
@@ -2435,14 +2310,7 @@ function mostraCabecalho()
 			} else {
 				$btns[]=$o->button("{active: ".$active4."; caption: Áreas;icon: map-signs; hint: Áreas; responsive: true; href: ".$o->page."&gPage=".AREAS."&gId=".$gId."}");
 			}
-			if ($gParam['USA_POSICAO_FIXA_PICKING']['ativo']) {
-				if (!$persistencia->aptoPosicaoFixa($gId, $faz_picking)) {
-					$caption = "Posições fixas&nbsp&nbsp" . $o->badge("1");
-					$btns[] = $o->button("{active: " . $active8 . "; caption: " . $caption . "; style: danger; icon: map-marker-alt; hint: Cadastro de posições fixas; responsive: true; href: " . $o->page . "&gPage=" . POSICAO_FIXA . "&gId=" . $gId . ";}");
-				} else {
-					$btns[] = $o->button("{active: " . $active8 . "; caption: Posições fixas;icon: map-marker-alt; hint: Cadastro de posições fixas; responsive: true; href: " . $o->page . "&gPage=" . POSICAO_FIXA . "&gId=" . $gId . ";}");
-				}
-			}
+
 			$btns[]=$o->button("{active: ".$active5."; caption: Imagens; icon: image; hint: Imagens; responsive: true; href: ".$o->page."&gPage=".IMAGENS."&gId=".$gId."}");
 			if ($gParam['PERFIL_PRODUCAO']['ativo']==1)
 			{

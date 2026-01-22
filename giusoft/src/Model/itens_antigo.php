@@ -106,14 +106,6 @@ class Itens extends Pessoas
 	{
 		global $gParam;
 
-		if ($gParam['INTEGRACAO_WINTHOR']['ativo'] || $joinSku) {
-			$outrosAtributos = ", itens_skus.id_unidades , CONCAT(itens_skus.codigo_barras, '•', itens_skus.codigo_barras_alternativo) AS codigos_barras ";
-			if ($camposSku) {
-				$outrosAtributos = ", {$camposSku}";
-			}
-			$leftSkus = ' LEFT JOIN itens_skus ON itens_skus.id_itens = i.id';
-		}
-
 		if (gDBCheck($_REQUEST['mostrarDetalhesSku'])) {
 			$leftSkus = "
 				LEFT JOIN itens_skus ON itens_skus.id_itens = i.id
@@ -151,50 +143,11 @@ class Itens extends Pessoas
 	}
 
 
-	function geraCamposDoFormulario(&$frm, $registroAtual, $proximaPagina="") {
+	/*function geraCamposDoFormulario(&$frm, $registroAtual, $proximaPagina="") {
 		// O formulário de edição de dados usa este método
 		global $proximaPagina, $gId, $gPage, $o, $sp, $gParam;
-
-		if ($proximaPagina=="") {
-			$proximaPagina=$gPage+1;
-		}
-
-		$spSKUs = "SELECT id,nome FROM itens_skus WHERE id_itens=".$gId." ORDER BY id";
-
-		$frm->row(
-			$frm->add("{name: nome; fieldLabel: Nome *; type: upperText; value: ".$registroAtual['nome']."; allowBlank: false;}"),
-			$frm->add("{name: descricao; fieldLabel: Descrição; type: text; value: ".$registroAtual['descricao']."}")
-		);
-		$frm->row(
-			$frm->add("{name: id_pessoas_proprietario; fieldLabel: Cliente *; allowBlank: false; type: combo; value: ".$registroAtual['id_pessoas_proprietario']."; items: ".$sp['combo_clientes']."; allowBlank: false;}"),
-			$frm->add("{name: id_pessoas_fornecedor; fieldLabel: Fornecedor; allowBlank: true; type: combo; value: ".$registroAtual['id_pessoas_fornecedor']."; items: ".$sp['combo_fornecedores']."}"),
-			$frm->add("{name: id_grupos; fieldLabel: Grupo; type: combo; value: ".$registroAtual['id_grupos']."; items: ".$sp['combo_grupos']."}"),
-			$frm->add("{name: id_tipos; fieldLabel: Tipo; allowBlank: false; type: combo; value: ".$registroAtual['id_tipos']."; items: ".$sp['combo_tipos']."}")
-		);
-
-
-		$comboGrupo="SELECT id, CONCAT(codigo, ' • ', descricao) descricao FROM grupos_combustivel";
-		$frm->row(
-			$frm->add("{name: id_grupos_combustivel; fieldLabel: Grupo do combustível; type: combo; items:".$comboGrupo."; value: ".$registroAtual['id_grupos_combustivel']."}"),
-			$frm->add("{name: ncm; fieldLabel: NCM *; type: text; maxLength: 8; value: ".$registroAtual['ncm']."; allowBlank: false;}")
-		);
-
-
-		$frm->row(
-			$frm->add("{name: ativo; fieldLabel: Ativo; type: checkbox; value: ".($gId==0?1:$registroAtual['ativo'])."}")
-		);
-
-		$observacoes = decodificarObservacao($registroAtual['observacoes']);
-
-		$frm->row(
-			$frm->add("{name: observacoes;type: textarea; value: ".$observacoes."}")
-		);
-		$frm->add("{name: gId;type: hidden; value: ".$gId."}");
-		$frm->add("{name: gPage; type: hidden; value: ".$proximaPagina."}");
-		$html = $frm->render($o);
-		$html .= $o->msg("* Campos obrigatórios para tornar o item apto para utilização.");
-		return $html;
-	}
+return $html;
+	}*/
 
 
 

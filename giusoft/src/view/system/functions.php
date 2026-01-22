@@ -659,3 +659,10 @@ function gerarModeloImportacao($modelo = '', $gId = '')
 
 	return;
 }
+
+
+
+function agora()
+{
+	return date('Y-m-d H:i:s');
+}

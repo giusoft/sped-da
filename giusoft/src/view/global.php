@@ -1,6 +1,5 @@
 <?php
 $backButton = $o->button('{title: Voltar; icon: arrow-left; url: javascript:history.back(-1)}');
-
 /**
  * Cria menu da página
  * @global type $gLang
@@ -736,48 +735,6 @@ function editarOuNovo()
 }
 
 
-function formataUMA($uma)
-{
-	global $gParam;
-
-	$digitosDaUma = ($gParam['DIGITOS_UMA']['ativo']) ? (int) $gParam['DIGITOS_UMA']['valor'] : 12;
-
-	if ($gParam['USA_POSICAO_COMO_UMA']['ativo']) {
-		return str_replace('UMA', '', $uma);
-	}
-
-	if ($uma<>"" && !strpos($uma, '.'))
-	{
-		if (is_numeric($uma) && $uma > 0) {
-			return "UMA" . str_pad($uma, $digitosDaUma,'0', STR_PAD_LEFT);
-		}
-
-		if ((int) substr($uma, 3) > 0) {
-			if (strlen($uma)<=$digitosDaUma+5) {
-				return "UMA" . str_pad(intval(substr($uma,3)), $digitosDaUma,'0', STR_PAD_LEFT);
-			} else {
-				return strtoupper($uma);
-			}
-		}
-	}
-
-	return NULL;
-}
-
-
-function desformataUMA($uma)
-{
-	global $gParam;
-	if ($gParam['USA_POSICAO_COMO_UMA']['ativo']) {
-		return str_replace('UMA', '', $uma);
-	}
-
-	if (!is_numeric($uma)) {
-		$uma = substr($uma, 3);
-	}
-	return (int) $uma;
-}
-
 function formataDataSemSeparadores($dataTxt)
 {
 	$dataTxt=str_replace(['-'],'',$dataTxt);
@@ -796,154 +753,11 @@ function formataDataTirandoSeparadores($dataDB)
 }
 
 
-function calculaSituacaoVeiculo($veiculo)
-{
-	$situacaoVeiculo = "Aguardando...";
-	if ($veiculo['data_chegada']<>'0000-00-00 00:00:00')
-	{
-		$situacaoVeiculo = "Veículo chegou";
-	}
-	if ($veiculo['data_entrada']<>'0000-00-00 00:00:00')
-	{
-		$situacaoVeiculo = "Veículo entrou";
-		if ($row['executada']==1)
-		{
-			if ($veiculo['data_autorizacao_saida']=='0000-00-00 00:00:00')
-			{
-				$situacaoVeiculo = "Aguardando autorização saída";
-			} else {
-				$situacaoVeiculo = "Aguardando saída";
-			}
-
-		}
-		if ($veiculo['data_saida']<>'0000-00-00 00:00:00')
-		{
-			$situacaoVeiculo = "Veículo já saiu";
-		}
-	} else {
-		if ($veiculo['data_autorizacao_entrada']=='0000-00-00 00:00:00')
-		{
-			$situacaoVeiculo = "Aguardando autorização entrada";
-		} else {
-			$situacaoVeiculo = "Aguardando entrada";
-		}
-	}
-	return($situacaoVeiculo);
-}
-
-
-function estaImobilizada($umaFormatada)
-{
-	$sql   = "SELECT imobilizada FROM umas WHERE codigo_barras = '{$umaFormatada}' LIMIT 1";
-	return (bool) dbFastQuery($sql)[0]['imobilizada'];
-}
-
-
 function formatarParaCabecalho($titulo, $dado)
 {
 	global $o;
 	$dado = $dado ?: 'Indefinido';
 	return $o->small($titulo) . '<br><b>' . $dado . '</b>&nbsp;';
-}
-
-
-function atualizarAtivacaoUMA()
-{
-	global $gParam;
-
-	$idUmas = array_filter(func_get_args(), function($idUma) {
-		return $idUma > 0;
-	});
-
-	if (!$idUmas) {
-		return;
-	}
-
-	if (is_array($idUmas[0]) && !func_get_args()[1]) {
-		$idUmas = array_filter($idUmas[0]);
-	}
-
-	$idUmas = implode(', ', $idUmas);
-	if (!$idUmas) {
-		return;
-	}
-
-	$sql = "
-		SELECT
-			umas.id,
-			umas.ativo,
-			umas.id_posicoes,
-			IFNULL(SUM(umas_itens.quantidade), 0) quantidade
-		FROM
-			umas
-		LEFT JOIN umas_itens ON (
-			umas_itens.id_umas = umas.id
-			AND umas_itens.cancelada = 0
-		)
-		WHERE
-			umas.id IN ({$idUmas})
-			AND EXISTS (SELECT 1 FROM umas_itens WHERE id_umas = umas.id LIMIT 1)
-		GROUP BY umas.id";
-	$umas  = dbFastQuery($sql);
-
-	if (!$umas[0]['id']) {
-		return;
-	}
-
-	$umasDesativar = '';
-	$umasAtivar = '';
-
-	foreach ($umas as $uma) {
-		$idUmas = $uma['id'] . ',';
-		if ($uma['quantidade'] == 0 && $uma['ativo']) {
-			$umasDesativar .= $idUmas;
-			continue;
-		}
-
-		if ($uma['quantidade'] != 0 && !$uma['ativo']) {
-			$umasAtivar .= $idUmas;
-			continue;
-		}
-	}
-
-	$umasDesativar = substr($umasDesativar, 0, -1);
-	$umasAtivar = substr($umasAtivar, 0, -1);
-
-	if ($umasDesativar) {
-		$sql = "UPDATE umas SET data_desativacao = NOW(), ativo = 0, posicionada = 0 WHERE id IN ({$umasDesativar})";
-		dbFastQuery($sql);
-
-		$sql = "INSERT INTO log_umas (id_umas, data, ativo)
-				SELECT id, NOW(), 0 FROM umas WHERE id IN ({$umasDesativar})";
-		dbFastQuery($sql);
-	}
-
-	if ($umasAtivar) {
-		$sql = "UPDATE umas SET data_desativacao = '0000-00-00 00:00:00', ativo = 1, posicionada = (id_posicoes > 0) WHERE id IN ({$umasAtivar})";
-		dbFastQuery($sql);
-
-		$sql = "INSERT INTO log_umas (id_umas, data, ativo)
-				SELECT id, NOW(), 1 FROM umas WHERE id IN ({$umasAtivar})";
-		dbFastQuery($sql);
-	}
-}
-
-
-/*BLOQUEAR COLAGEM DOS CAMPOS TIPO BARCODE NO COLETOR*/
-$GLOBALS['pasteInBarcode'] = 1;
-if ($GLOBALS['gParam']['BLOQUEAR_COLAGEM_NO_COLETOR']['ativo']) {
-	$GLOBALS['pasteInBarcode'] = !(
-		$_SESSION['usrId'] > 2 &&
-		preg_match(
-				"/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i",
-				$_SERVER["HTTP_USER_AGENT"])
-	);
-}
-
-if ($gParam['INTEGRACAO_WINTHOR']['ativo']) {
-	define('ID_GA', 3098);
-	define('ID_VETBR', 3384);
-	$gParam['INTEGRACAO_WINTHOR']['valor'] = explode(',', $gParam['INTEGRACAO_WINTHOR']['valor']);
 }
 
 
@@ -980,8 +794,8 @@ function iniciarChatwoot() {
 	) return;
 
 	$nomeUsuario = $_SESSION['usrName']
-		. ' - WMS - ' . $GLOBALS['EMPRESA']
-		. '/ARM ' .	$_SESSION['filialAtualDescricao'];
+		. ' - EMITENOTA - ' . $GLOBALS['EMPRESA']
+		. '/FILIAL ' .	$_SESSION['filialAtualDescricao'];
 
 	$js = "
 		var nome = '" . $nomeUsuario . "';
