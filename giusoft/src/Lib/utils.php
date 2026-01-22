@@ -59,6 +59,31 @@ if (!function_exists('check_utf8')) {
 }
 
 
+if (!function_exists("montarParametrosIntegracao")) {
+    function montarParametrosIntegracao($empresa = '')
+    {
+        $uri = $_SERVER['REQUEST_URI'];
+
+        $ambiente = '';
+        if (stripos((string) $uri, 'teste')) {
+            $ambiente = '/teste';
+        }
+
+        if (!$empresa) {
+            $partesUri = array_filter(explode('/emitenota/', (string) $uri))[1];
+            $empresa = explode('/', $partesUri)[0];
+        }
+
+        return [
+            "caminhoSetup"   => $_SERVER['DOCUMENT_ROOT'] . sprintf('%s/emitenota/%s/setup.php', $ambiente, $empresa),
+            "idPessoasCriou" => 1,
+            "empresa" => $empresa,
+            "transacao" => true
+        ];
+    }
+}
+
+
 // if (!function_exists('emitirErro')) {
 //     function emitirErro($mensagem, $codigoHttp = 400, $dadosExtras = [])
 //     {

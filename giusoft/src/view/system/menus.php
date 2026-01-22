@@ -145,7 +145,7 @@ switch($gPage) {
 		break;
 
 	case 1: // Nova página
-		$rs = '';
+		$rs = array();
 		$title = '';
 		$date_publication = date("Y-m-d H:i:s");
 		$content = '';

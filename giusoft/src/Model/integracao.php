@@ -2,7 +2,7 @@
 if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
     $ambiente = '/teste';
 }
-require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/wms/giusoft/res/api/utils.php";
+require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/emitenota/giusoft/src/Lib/utils.php";
 
 date_default_timezone_set('America/Bahia');
 
@@ -255,7 +255,7 @@ class Integracao
 
 	public function cssDecode($css)
 	{
-		$sai = "";
+		$sai = array();
 		$css = html_entity_decode($css, ENT_NOQUOTES, 'UTF-8');
 		if (strpos($css, "[") !== false) {
 			$b = strpos($css, "[") + 1;
@@ -299,6 +299,7 @@ class Integracao
 			$value = trim(str_replace("'", "", substr($value, strpos($value, ":") + 1)));
 			$new = array($key, $value);
 			if (trim($new[0]) <> "") {
+				$val = '';
 				$val = trim($new[1]);
 				$val = str_replace("`", "'", $val);
 				$val = str_replace("^", "{", $val);
@@ -320,7 +321,7 @@ class Integracao
 			}
 		}
 
-		return ($sai);
+		return $sai;
 	}
 
 
@@ -407,7 +408,8 @@ class Integracao
 		return $gParam;
 	}
 
-	public function debug($mensagem, $dados, $erro = 0)
+
+	public function debug($mensagem, $dados = "", $erro = 0)
 	{
 		if (!$this->exibirDebug && $this->parametro['idPessoasCriou'] <> 1) {
 			return '';
@@ -504,9 +506,11 @@ class Integracao
 						$logMessage = $logHeader . "\tLOG:\t" . $lpre . $deb . $cpos . "\t" . $cpre . $txt . $cpos;
 					}
 					$path = fopen($logfile, 'a');
-					$logMessage = preg_replace('/\s+/', ' ', $logMessage);
-					fputs($path, $logMessage . PHP_EOL);
-					fclose($logfile);
+					if ($path) {
+						$logMessage = preg_replace('/\s+/', ' ', $logMessage);
+						fputs($path, $logMessage . PHP_EOL);
+						fclose($logfile);
+					}
 			}
 		}
 	}

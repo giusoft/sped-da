@@ -5,7 +5,7 @@ if (in_array('teste', explode("/", (string) $_SERVER['REQUEST_URI']))) {
     $ambiente = '/teste';
 }
 
-require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/emitenota/giusoft/src/view/classe/integracao.php";
+require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/emitenota/giusoft/src/Model/integracao.php";
 
 class PontoAcesso
 {

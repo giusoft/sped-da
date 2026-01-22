@@ -1023,7 +1023,8 @@ function dispararGatilho($momento, $dados) {
 	if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
 	    $ambiente = '/teste';
 	}
-	require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/wms/giusoft/res/api/accesspoint.php";
+
+	require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/emitenota/giusoft/src/Model/accesspoint.php";
 	$persistencia = new PontoAcesso(['empresa' => $EMPRESA]);
 
 	$resultado = $persistencia->acionarEventoMomento($momento, $dados);
