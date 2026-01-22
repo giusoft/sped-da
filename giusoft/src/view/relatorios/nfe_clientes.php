@@ -1,4 +1,8 @@
 <?php
+
+define('INICIO', 0);
+define('PESQUISAR', 1);
+
 gVar("global.numformat","0.000,0000");
 
 $debug = false;
@@ -14,12 +18,9 @@ $html .= $o->msgTitle("NFe de clientes");
 switch ($gPage) {
 
 	case INICIO:
-		$combo_tipo = "SELECT id, descricao FROM tipos_programacao WHERE ativo = 1";
 		$frm = new gForm("{columns: 2}");
 		$frm->add('{type:combo; name:id_proprietario; fieldLabel:Proprietário; items:'.$sp["combo_proprietarios"].';}');
 		$frm->add('{type:text; name:numero; fieldLabel:Número;}');
-		$frm->add('{type:combo; name:id_tipos_programacao; fieldLabel:Tipo programação; items:'.$combo_tipo.';}');
-		$frm->add('{type:text; name:os; fieldLabel:OS; value:;}');
 		$frm->add('{type:date; name:data_importacao_de; fieldLabel:Data de importação de;}');
 		$frm->add('{type:date; name:data_importacao_ate; fieldLabel:Data de importação até;}');
 		$frm->add('{type:combo; name:id_cfop; fieldLabel:CFOP; items:'.$sp["combo_cfop"].';}');
@@ -77,15 +78,6 @@ switch ($gPage) {
 			$where[]="N.numero='".gCleanField($_REQUEST["numero"])."'";
 		}
 
-		if ($_REQUEST["id_tipos_programacao"]) {
-			$flt[]="Tipo da programação: ".gFieldById("tipos_programacao", $_REQUEST["id_tipos_programacao"], "descricao");
-			$where[]="PR.id_tipos_programacao=".intval($_REQUEST["id_tipos_programacao"]);
-		}
-
-		if ($_REQUEST["os"]) {
-			$flt[]="OS = ".$_REQUEST["os"];
-			$where[]="PR.os like '%".$_REQUEST["os"]."%'";
-		}
 
 		if (count($where) <= 1) {
 			$html.=$o->msgDanger("Informe ao menos um filtro antes de tentar gerar um relatório");
@@ -102,8 +94,6 @@ switch ($gPage) {
 						C.descricao_resumida cfop,
 						PP.apelido proprietario,
 						PP.nome nome_completo_proprietario,
-						PR.os,
-						T.descricao tipo_programacao,
 						NFE.situacao,
 						I.codigo codigo_item,
 						U.descricao unidade,
@@ -121,8 +111,6 @@ switch ($gPage) {
 					LEFT JOIN nfe NFE ON NFE.id = N.id_nfe
 					LEFT JOIN pessoas PP ON PP.id = N.id_pessoas_proprietario
 					LEFT JOIN cfops C ON C.id = N.id_cfops
-					LEFT JOIN programacao PR ON PR.id = N.id_programacao
-					LEFT JOIN tipos_programacao T ON PR.id_tipos_programacao = T.id
 					WHERE {$where}
 					GROUP BY N.id, NI.id_itens_skus
 					ORDER BY PP.apelido ASC, N.numero ASC, N.data_emissao DESC";
@@ -239,10 +227,6 @@ switch ($gPage) {
 
 					if ($nf_numero != $row["numero"]) {
 						$descNota=linkParaNFEntrada($row["numero"], 60);
-						if ($row["os"] != "") {
-							$descNota .= " • ".$row["tipo_programacao"];
-							$descNota .= " • ".$row["os"];
-						}
 
 						$mtz = [];
 						$mtz[] = sprintf('~%d<-NF: %s', $colspan, $descNota);

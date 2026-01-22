@@ -1,10 +1,10 @@
 <?php
 
-define('FORMULARIO_NFE_TODAS', 0);
-define('RELATORIO_NFE_TODAS', 1);
+define('INICIO', 0);
+define('PESQUISAR', 1);
 define('DOWNLOAD_XML', 2);
 
-$paginasPodeExportar = [RELATORIO_NFE_TODAS];
+$paginasPodeExportar = [PESQUISAR];
 
 if (in_array($gPage, $paginasPodeExportar)) {
 	$o->PDFEnabled = true;
@@ -27,7 +27,6 @@ switch ($gPage) {
 	case INICIO:
 		$frm = new gForm("{columns: 2}");
 		$frm->add('{type: combo; name: id_proprietario; fieldLabel: Proprietário; items: ' . $sp['combo_clientes'] . ';}');
-		$frm->add('{type: text; name: os; fieldLabel: OS;}');
 		$frm->add('{type: text; name: numero_de; fieldLabel: Número de;}');
 		$frm->add('{type: text; name: numero_ate; fieldLabel: Número até;}');
 		$frm->add('{type: date; name: data_cadastro_de; fieldLabel: Data de cadastro de;}');
@@ -67,10 +66,6 @@ switch ($gPage) {
 			$where[] = "nfe.numero <= '" . gCleanField($_REQUEST["numero_ate"]) . "'";
 		}
 
-		if ($_REQUEST["os"]) {
-			$filtros[] = "OS: " . $_REQUEST["os"];
-			$where[] = "programacao.os LIKE '%" . gCleanField($_REQUEST["os"]) . "%'";
-		}
 
 		if ($_REQUEST['situacao']) {
 			$situacoes = '';
@@ -106,7 +101,6 @@ switch ($gPage) {
 					SUBSTR(nfe.xml, 1, 1) AS tem_xml,
 					nfe.chave AS chave,
 					nfe.situacao,
-					programacao.os AS os_saida,
 					nfe.id_notas,
 					nfe.mensagens,
 					nfe.protocolo,
@@ -116,7 +110,6 @@ switch ($gPage) {
 				FROM nfe
 				LEFT JOIN pessoas pessoa_emitiu ON pessoa_emitiu.id = nfe.id_pessoa
 				LEFT JOIN pessoas pessoa_cancelou ON pessoa_cancelou.id = nfe.id_pessoas_cancelou
-				LEFT JOIN programacao ON programacao.id = nfe.id_os
 				LEFT JOIN notas ON notas.id = nfe.id_notas
 				WHERE {$where}
 				ORDER BY nfe.numero";
@@ -164,7 +157,6 @@ switch ($gPage) {
 			$mtz[] = '<-' . $row['chave'];
 			$mtz[] = '<-' . $row['resposta'];
 			$mtz[] = '->' . $row['protocolo'];
-			$mtz[] = '<-' . linkParaOS($row['os_saida']);
 			$mtz[] = '<-' . linkParaNota($row['id_notas'], $row['numero'], ($row['situacao'] == 'Importada' ? 'E' : 'S'));
 			$mtz[] = '<-' . $row['colaborador_emitiu'];
 			$mtz[] = '<>' . gCheck($row['cancelada'], true);

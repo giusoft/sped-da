@@ -1,8 +1,6 @@
 
 <?
-include_once "res/_classes/classes.php";
-include_once $gPath . "/res/_classes/padrao/operacao_programacao.php";
-class Relatorios extends Persistencia {}
+class Relatorios{}
 
 class Saldos extends Relatorios
 {
