@@ -147,7 +147,7 @@ class Itens extends Pessoas
 				pa.nome alterou, g.descricao grupo, t.descricao tipo {$outrosAtributos}
 			FROM itens i
 			JOIN pessoas p ON i.id_pessoas_proprietario = p.id
-			JOIN pessoas_armazens a ON a.id_pessoas = p.id
+			JOIN pessoas_filial a ON a.id_pessoas = p.id
 			LEFT JOIN pessoas pc ON i.id_pessoas_criou = pc.id
 			LEFT JOIN pessoas pf ON i.id_pessoas_fornecedor = pf.id
 			LEFT JOIN pessoas pa ON i.id_pessoas_alterou = pa.id

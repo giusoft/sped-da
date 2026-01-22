@@ -94,7 +94,7 @@ switch ($gPage) {
 			$flt[] = "Motrar canceladas: " . gCheck($_REQUEST['exibir_canceladas']);
 			$html .= $o->msgFilter("Filtros selecionados: " . implode(" • ", $flt));
 			$where[] = "(N.tipo='E')";
-			$where[] = "(N.id_armazens='".intval($_SESSION["armazemAtualId"])."')";
+			$where[] = "(N.id_filial='".intval($_SESSION["filialAtualId"])."')";
 			$where = implode(" AND ", $where);
 			$sql = "SELECT
 						N.*,

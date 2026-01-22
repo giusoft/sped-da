@@ -286,7 +286,7 @@ switch($gPage) {
 				$rs = $nf->obtemRegistros("N.id desc", $where);
 			}
 		} else {
-			$where = "(N.tipo='E') AND (N.cancelada='0') AND (N.id_armazens=".intval($_SESSION["armazemAtualId"]).")";
+			$where = "(N.tipo='E') AND (N.cancelada='0') AND (N.id_filial=".intval($_SESSION["filialAtualId"]).")";
 			$rs = $nf->obtemRegistros("N.id desc", $where);
 		}
 
@@ -1128,7 +1128,7 @@ switch($gPage) {
 
 			$campos = [];
 			$campos['ativo'] = 0;
-			$campos['id_armazens'] = $_SESSION['armazemAtualId'];
+			$campos['id_filial'] = $_SESSION['filialAtualId'];
 			$campos['id_itens_skus_kit'] = 0;
 			$campos['id_areas'] = 0;
 			$campos['id_areas_direcionar'] = 0;

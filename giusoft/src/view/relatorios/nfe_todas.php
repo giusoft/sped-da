@@ -32,7 +32,7 @@ switch ($gPage) {
 		$frm->add('{type: text; name: numero_ate; fieldLabel: Número até;}');
 		$frm->add('{type: date; name: data_cadastro_de; fieldLabel: Data de cadastro de;}');
 		$frm->add('{type: date; name: data_cadastro_ate; fieldLabel: Data de cadastro até;}');
-		$frm->add('{name: id_armazens; type: combo; fieldLabel: Armazém;  value: 1; allowBlank: true; items:' . $sp['combo_armazens'] . ';}');
+		$frm->add('{name: id_filial; type: combo; fieldLabel: Filial;  value: 1; allowBlank: true; items:' . $sp['combo_filial'] . ';}');
 		$frm->add('{name: situacao; type: comboMultiSelection; fieldLabel: Situação; allowBlank: true; value: 0, 1, 2;}', $situacoesNfe);
 		$frm->add('{type: hidden; name: gPage; value: ' . PESQUISAR . ';}');
 		$html .= $frm->render($o);

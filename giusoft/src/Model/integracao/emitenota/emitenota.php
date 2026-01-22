@@ -78,7 +78,7 @@ class Emitenota
     public function cancelarNfe($dados)
     {
         $dadosCancelarNfe = array(
-            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjArmazem']),
+            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjFilial']),
             'chave' => extrairNumeros($dados['chave']),
             'protocolo' => extrairNumeros($dados['protocolo']),
             'justificativa' => removerAcentos($dados['justificativa']),
@@ -92,7 +92,7 @@ class Emitenota
     public function inutilizarNfe($dados)
     {
         $dadosInutilizarNfe = array(
-            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjArmazem']),
+            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjFilial']),
             'serie' => (int) $dados['serie'],
             'numero_inicial' => (int) $dados['numero_inicial'],
             'numero_final' => (int) $dados['numero_final'],
@@ -107,7 +107,7 @@ class Emitenota
     public function cartaCorrecao($dados)
     {
         $dadosCartaCorrecao = array(
-            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjArmazem']),
+            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjFilial']),
             'chave' => extrairNumeros($dados['chave']),
             'correcao' => removerAcentos($dados['correcao']),
             'sequencial' => (int) $dados['sequencial'],
@@ -143,7 +143,7 @@ class Emitenota
     public function gerarDanfe($dados)
     {
         $dadosGerarDanfe = array(
-            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjArmazem']),
+            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjFilial']),
             'chave' => extrairNumeros($dados['chave']),
             'xml' => base64_encode($dados['xml']),
             'empresa' => $this->montarDadosEmpresa($dados['empresa'], $dados['config'])
@@ -156,7 +156,7 @@ class Emitenota
     public function gerarDanfeCancelamento($dados)
     {
         $dadosGerarDanfe = array(
-            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjArmazem']),
+            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjFilial']),
             'chave' => extrairNumeros($dados['chave']),
             'xml' => base64_encode($dados['xml']),
             'xml_cancelamento' => base64_encode($dados['xml_cancelamento']),
@@ -170,7 +170,7 @@ class Emitenota
     public function gerarDanfeCce($dados)
     {
         $dadosGerarDanfeCce = array(
-            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjArmazem']),
+            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjFilial']),
             'chave' => extrairNumeros($dados['chave']),
             'xml' => base64_encode($dados['xml']),
             'empresa' => $this->montarDadosEmpresa($dados['empresa'], $dados['config'])
@@ -202,7 +202,7 @@ class Emitenota
         }
 
         $dadosRequest = array(
-            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjArmazem']),
+            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjFilial']),
             'empresa' => $dadosEmpresaApi,
             'documentos' => $documentosFormatados,
             'id_lote' => $dados['id_lote'],
@@ -220,21 +220,21 @@ class Emitenota
         return array(
             "razaosocial" => $dadosEmpresa['razaoSocial'],
             "siglaUF" => $dadosEmpresa['siglaUf'],
-            "cnpj" => $dadosEmpresa['cnpjArmazem'],
+            "cnpj" => $dadosEmpresa['cnpjFilial'],
             "cmun" => $dadosEmpresa['codigoIbgeMunicipio'],
             "cPais" => $dadosEmpresa['cPais'],
             "xPais" => $dadosEmpresa['xPais'],
             "cUF" => $dadosEmpresa['codigoIbgeEstado'],
-            "cnae" => $dadosEmpresa['cnaeArmazem'],
+            "cnae" => $dadosEmpresa['cnaeFilial'],
             "xmun" => $dadosEmpresa['municipioDescricao'],
-            "ie" => $dadosEmpresa['inscricaoEstadualArmazem'],
-            "im" => $dadosEmpresa['inscricaoMunicipalArmazem'],
-            "logradouro" => $dadosEmpresa['enderecoArmazem'],
-            "numero" => $dadosEmpresa['numeroArmazem'],
-            "complemento" => $dadosEmpresa['enderecoComplementoArmazem'],
-            "bairro" => $dadosEmpresa['enderecoBairroArmazem'],
-            "cep" => $dadosEmpresa['cepArmazem'],
-            "fone" => $dadosEmpresa['telefoneArmazem'],
+            "ie" => $dadosEmpresa['inscricaoEstadualFilial'],
+            "im" => $dadosEmpresa['inscricaoMunicipalFilial'],
+            "logradouro" => $dadosEmpresa['enderecoFilial'],
+            "numero" => $dadosEmpresa['numeroFilial'],
+            "complemento" => $dadosEmpresa['enderecoComplementoFilial'],
+            "bairro" => $dadosEmpresa['enderecoBairroFilial'],
+            "cep" => $dadosEmpresa['cepFilial'],
+            "fone" => $dadosEmpresa['telefoneFilial'],
             "schemes" => $dadosConfigEmpresa['schemes'],
             "tpAmb" => (int) $dadosConfigEmpresa['tpAmb'],
             "regime" => $dadosConfigEmpresa['regime'],
@@ -408,7 +408,7 @@ class Emitenota
 
         // Monta JSON final
         $dadosNfe = array(
-            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjArmazem']),
+            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjFilial']),
             'naturezaOperacao' => removerAcentos($dados['operacao']),
             'sistema' => $dados['sistema'],
             'informacoesAdicionais' => removerAcentos($dados['infAdFisco']),
@@ -475,7 +475,7 @@ class Emitenota
     public function importarPfx($dados)
     {
         $dadosCertificado = array(
-            'cnpj_emitente' => extrairNumeros($dados['cnpj_armazem']),
+            'cnpj_emitente' => extrairNumeros($dados['cnpj_filial']),
             'certificado' => $dados['certificado']
         );
 
@@ -486,7 +486,7 @@ class Emitenota
     public function buscarDadosCertificado($dados)
     {
         $dadosCertificado = array(
-            'cnpj_emitente' => extrairNumeros($dados['cnpj_armazem']),
+            'cnpj_emitente' => extrairNumeros($dados['cnpj_filial']),
             'senhaCertificado' => $dados['senhaCertificado'],
             'certificado' => $dados['certificado'] ?: ''
         );

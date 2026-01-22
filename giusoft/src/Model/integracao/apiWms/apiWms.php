@@ -33,7 +33,7 @@ class ApiWms
     {
         $args['usuario'] = $usuario;
         $args['senha']   = $senha;
-        $args['codigoArmazem'] = $_SESSION['armazemAtualDescricao'];
+        $args['codigoFilial'] = $_SESSION['filialAtualDescricao'];
 
         $user = $this->api->obterUsuario($args);
         $dataToken = $this->api->obterDadosToken($user["id"]);
@@ -44,7 +44,7 @@ class ApiWms
             $args = [];
             $args['token']          = $dataToken['token'];
             $args['expirado']       = $dataToken['expirado'];
-            $args['idArmazens']     = $user['armazem'];
+            $args['idFilial']     = $user['filial'];
             $args['hora_criacao']   = $dataToken['hora_criacao'];
             $args['data_criacao']   = $dataToken['data_criacao'];
             $args['hora_expiracao'] = $dataToken['hora_expiracao'];

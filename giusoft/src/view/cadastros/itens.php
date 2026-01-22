@@ -139,7 +139,7 @@ switch ($gPage) {
 
 		$persistencia->agrupamento="p.id, pf.id, pc.id, pa.id, g.id, t.id, i.id {$agrupaSku}";
 
-		$persistencia->filtro="((a.id_armazens=".intval($_SESSION["armazemAtualId"]).") OR (a.id_armazens IS NULL))";
+		$persistencia->filtro="((a.id_filial=".intval($_SESSION["filialAtualId"]).") OR (a.id_filial IS NULL))";
 
 		$rs = $persistencia->obtemRegistros();
 
@@ -406,7 +406,7 @@ switch ($gPage) {
 			$filtro[] = "Mostrar detalhes dos SKUs: " . gCheck($_REQUEST['mostrarDetalhesSku']);
 		}
 
-		$where[] = "((a.id_armazens=" . intval($_SESSION["armazemAtualId"]) . ") OR (a.id_armazens IS NULL))";
+		$where[] = "((a.id_filial=" . intval($_SESSION["filialAtualId"]) . ") OR (a.id_filial IS NULL))";
 
 		if ($filtro) {
 			$html .= $o->msgFilter('Filtros selecionados: ' . implode(" • ", $filtro));

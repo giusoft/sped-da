@@ -314,7 +314,7 @@ class Saldos extends Relatorios
 					U.ativo = 1
 					AND UI.cancelada = 0
 					AND P.cliente = 1
-					AND UI.id_armazens = '" . $_SESSION['armazemAtualId'] . "'
+					AND UI.id_filial = '" . $_SESSION['filialAtualId'] . "'
 					{$where}
 				GROUP BY
 					U.id,
@@ -323,7 +323,7 @@ class Saldos extends Relatorios
 					U.codigo_externo,
 					U.conferida_saida,
 					U.id_programacao,
-					U.id_armazens,
+					U.id_filial,
 					PP.codigo_barras,
 					U.posicionada,
 					U.data,
@@ -1658,7 +1658,7 @@ class RelatorioEntradas extends Relatorios
 				LEFT JOIN tipos_programacao TP ON TP.id = P.id_tipos_programacao
 				LEFT JOIN notas NS ON (NS.id_programacao = P.id AND NS.tipo='S' AND NS.cancelada=0)
 				LEFT JOIN nfe NFE ON (NFE.id= NS.id_nfe AND NFE.situacao='Aprovada' AND NFE.cancelada=0)
-				WHERE P.id_armazens=" . $_SESSION['armazemAtualId'] . " AND P.cancelada=0 AND P.executada=1 " . $this->filtroTipoProgramacao . " AND {$filtro}
+				WHERE P.id_filial=" . $_SESSION['filialAtualId'] . " AND P.cancelada=0 AND P.executada=1 " . $this->filtroTipoProgramacao . " AND {$filtro}
 				GROUP BY P.id, PI.id
 				ORDER BY C.apelido, P.data_execucao_final, P.os, PI.id";
 
@@ -1761,7 +1761,7 @@ class RelatorioSaidas extends RelatorioEntradas
 				LEFT JOIN tipos_programacao TP ON TP.id = P.id_tipos_programacao
 				LEFT JOIN notas NS ON (NS.id_programacao = P.id AND NS.tipo='S' AND NS.cancelada=0)
 				LEFT JOIN nfe NFE ON (NFE.id= NS.id_nfe AND NFE.situacao='Aprovada' AND NFE.cancelada=0)
-				WHERE P.id_armazens=" . $_SESSION['armazemAtualId'] . " AND P.cancelada=0 AND P.executada=1 " . $this->filtroTipoProgramacao . " AND {$filtro}
+				WHERE P.id_filial=" . $_SESSION['filialAtualId'] . " AND P.cancelada=0 AND P.executada=1 " . $this->filtroTipoProgramacao . " AND {$filtro}
 				GROUP BY P.id
 				ORDER BY C.apelido, P.data_execucao_final";
 
@@ -1917,7 +1917,7 @@ class RelatoriosProducoes extends Relatorios
 				LEFT JOIN tipos_programacao TP ON TP.id = P.id_tipos_programacao
 				LEFT JOIN notas NS ON (NS.id_programacao = P.id AND NS.tipo='S' AND NS.cancelada=0)
 				LEFT JOIN nfe NFE ON (NFE.id= NS.id_nfe AND NFE.situacao='Aprovada' AND NFE.cancelada=0)
-				WHERE P.id_armazens=" . $_SESSION['armazemAtualId'] . " AND P.cancelada=0 AND P.executada=1 AND P.id_tipos_programacao=32 AND P.divergencia=1 {$filtro}
+				WHERE P.id_filial=" . $_SESSION['filialAtualId'] . " AND P.cancelada=0 AND P.executada=1 AND P.id_tipos_programacao=32 AND P.divergencia=1 {$filtro}
 				GROUP BY P.id, P.os, PI.id
 				ORDER BY P.data_execucao_inicio, P.os, PI.id";
 		$rs = dbQuery($sql);

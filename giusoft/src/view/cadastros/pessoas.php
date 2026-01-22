@@ -10,9 +10,9 @@ define("ENDERECOS", 						30);
 define("ENDERECOS_SALVAR", 					31);
 define("ENDERECOS_NOVO", 					32);
 define("ENDERECOS_EXCLUIR", 				33);
-define("ARMAZEM", 							40);
-define("ARMAZEM_SALVAR", 					41);
-define("ARMAZEM_CANCELAR", 					42);
+define("FILIAL", 							40);
+define("FILIAL_SALVAR", 					41);
+define("FILIAL_CANCELAR", 					42);
 define("OCORRENCIAS", 						50);
 define("OCORRENCIAS_SALVAR", 				51);
 define("OCORRENCIAS_NOVA", 					52);
@@ -434,26 +434,26 @@ switch ($gPage)
 	break;
 
 
-	case ARMAZEM:
+	case FILIAL:
 		$html.=mostraCabecalho($gId);
 		$frm = new gForm("{columns: 2}");
-		$frm->add("{name: id_armazens; fieldLabel: Armazém; type: combo; items: ".$sp['combo_armazens'].";allowBlank:false}");
-		$frm->add("{name: gPage; type: hidden; value: ".ARMAZEM_SALVAR."}");
+		$frm->add("{name: id_filial; fieldLabel: Filial; type: combo; items: ".$sp['combo_filial'].";allowBlank:false}");
+		$frm->add("{name: gPage; type: hidden; value: ".FILIAL_SALVAR."}");
 		$frm->add("{name: gId; type: hidden; value: ".$gId."}");
 		$html.=$frm->render($o);
 		$sql = "SELECT
-					armazens.descricao armazemNome,
-					pessoas_armazens.*
-				FROM pessoas_armazens
-				INNER JOIN armazens ON armazens.id = pessoas_armazens.id_armazens
-				WHERE pessoas_armazens.id_pessoas=$gId
-				ORDER BY pessoas_armazens.cancelado ASC,armazens.descricao";
+					filial.descricao filialNome,
+					pessoas_filial.*
+				FROM pessoas_filial
+				INNER JOIN filial ON filial.id = pessoas_filial.id_filial
+				WHERE pessoas_filial.id_pessoas=$gId
+				ORDER BY pessoas_filial.cancelado ASC,filial.descricao";
 		$rs = dbQuery($sql);
 
 		if ($rs) {
 			$mtz = [];
 			$mtz[]="<-Cancelar";
-			$mtz[]="<-Armazém";
+			$mtz[]="<-Filial";
 			$mtz[]="<-Informações";
 			$html.=$o->tableBegin("big",true);
 			$html.=$o->tableRow($mtz,"header");
@@ -467,10 +467,10 @@ switch ($gPage)
 					$dados.="<BR>Cancelado por ".gFieldById("pessoas",$row['id_pessoas_cancelou'],"nome")." - ".gDateTime($row['data_cancelou']);
 					$mtz[]="";
 				} else {
-					$mtz[]="<-".$o->button("{active: ".$active1."; icon: trash; style: danger; size: small; caption: Cancelar; hint: Cancelar registro; href: ".$o->page."&gPage=".ARMAZEM_CANCELAR."&gId=".$gId."&gIdDel=".$row['id']."}");;
+					$mtz[]="<-".$o->button("{active: ".$active1."; icon: trash; style: danger; size: small; caption: Cancelar; hint: Cancelar registro; href: ".$o->page."&gPage=".FILIAL_CANCELAR."&gId=".$gId."&gIdDel=".$row['id']."}");;
 				}
 
-				$mtz[]="<-".$row['armazemNome'];
+				$mtz[]="<-".$row['filialNome'];
 				$mtz[]="<-".$dados;
 				$html.=$o->tableRow($mtz,$style);
 			}
@@ -479,34 +479,34 @@ switch ($gPage)
 		}
 		break;
 
-	case ARMAZEM_SALVAR:
+	case FILIAL_SALVAR:
 		if($_SERVER['REQUEST_METHOD'] == 'POST') {
-			$sql = "SELECT id FROM pessoas_armazens WHERE id_pessoas=$gId AND id_armazens=".intval($_REQUEST["id_armazens"])." AND cancelado=0 ";
+			$sql = "SELECT id FROM pessoas_filial WHERE id_pessoas=$gId AND id_filial=".intval($_REQUEST["id_filial"])." AND cancelado=0 ";
 			$rs = dbQuery($sql);
 			if ($rs) {
-				$html.=$o->msgDanger("Falhas de validação: ".$o->ul(["Não é possível adicionar o mesmo armazem"]));
-				$html.=$o->button("{icon: arrow-left; caption: Voltar; hint: Voltar; style: info; size: normal; href: ".$o->page . "&gPage=" . ARMAZEM . "&gId=" . $gId);
+				$html.=$o->msgDanger("Falhas de validação: ".$o->ul(["Não é possível adicionar o mesmo filial"]));
+				$html.=$o->button("{icon: arrow-left; caption: Voltar; hint: Voltar; style: info; size: normal; href: ".$o->page . "&gPage=" . FILIAL . "&gId=" . $gId);
 				return;
 			} else {
 				$mtz=[];
-				$mtz['id_armazens']      = $_REQUEST['id_armazens'];
+				$mtz['id_filial']      = $_REQUEST['id_filial'];
 				$mtz['id_pessoas_criou'] = $usrId;
 				$mtz['id_pessoas']       = $gId;
 				$mtz['data_criou']       = date("Y-m-d H:i:s");
-				dbInsert('pessoas_armazens',$mtz);
+				dbInsert('pessoas_filial',$mtz);
 				userLog('Pessoa - armazém adicionado - id <a href="pessoas.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
 			}
 		}
-		redirect($o->page."&gPage=".ARMAZEM."&gId=".$gId);
+		redirect($o->page."&gPage=".FILIAL."&gId=".$gId);
 		break;
 
-	case ARMAZEM_CANCELAR:
+	case FILIAL_CANCELAR:
 		if((int) $gIdDel > 0){
-			$sql="UPDATE pessoas_armazens SET data_cancelou='".date("Y-m-d H:i:s")."',id_pessoas_cancelou=$usrId,cancelado=1 WHERE id=$gIdDel";
+			$sql="UPDATE pessoas_filial SET data_cancelou='".date("Y-m-d H:i:s")."',id_pessoas_cancelou=$usrId,cancelado=1 WHERE id=$gIdDel";
 			dbQuery($sql);
 			userLog('Pessoa - armazém cancelado - id <a href="pessoas.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
 		}
-		redirect($o->page."&gPage=".ARMAZEM."&gId=".$gId);
+		redirect($o->page."&gPage=".FILIAL."&gId=".$gId);
 	break;
 
 
@@ -849,7 +849,7 @@ function mostraCabecalho($gId)
 			case ENDERECOS:
 				$active2='true';
 				break;
-			case ARMAZEM:
+			case FILIAL:
 				$active3='true';
 				break;
 			case OCORRENCIAS:
@@ -872,7 +872,7 @@ function mostraCabecalho($gId)
 			'</div>';
 		$btns[]=$o->button("{active: ".$active1."; icon: file-alt; caption: Dados pessoais; hint: Alterar os dados pessoais; href: ".$o->page."&gPage=".DADOS."&gId=".$gId."}");
 		$btns[]=$o->button("{active: ".$active2."; icon: map-marker; caption: Endereços; hint: Incluir ou alterar endereços; href: ".$o->page."&gPage=".ENDERECOS."&gId=".$gId."}");
-		$btns[]=$o->button("{active: ".$active3."; icon: warehouse; caption: Armazém; hint: Relacionar pessoa ao armazém; href: ".$o->page."&gPage=".ARMAZEM."&gId=".$gId."}");
+		$btns[]=$o->button("{active: ".$active3."; icon: warehouse; caption: Filial; hint: Relacionar pessoa ao armazém; href: ".$o->page."&gPage=".FILIAL."&gId=".$gId."}");
 		$btns[]=$o->button("{active: ".$active4."; icon: exclamation-triangle; caption: Ocorrências; hint: Incluir ocorrências; href: ".$o->page."&gPage=".OCORRENCIAS."&gId=".$gId."}");
 		$btns[]=$o->button("{active: ".$active5."; icon: paperclip; caption: Anexos; hint: Anexar documentos digitalizados; href: ".$o->page."&gPage=".ANEXOS."&gId=".$gId."}");
 		$btns[]=$o->button("{active: ".$active6."; icon: lock; caption: Permissões; hint: Permissõs de acesso; href: ".$o->page."&gPage=".PERMISSOES."&gId=".$gId."}");

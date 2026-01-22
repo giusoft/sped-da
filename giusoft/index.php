@@ -20,7 +20,7 @@ $data 	= date('Y-m-d H:i:s');
 $macros	= '';
 $do 	= true;
 
-$id_armazens = (int) $_POST['id_armazens'] ?? 1; // Armazém padrão
+$id_filial = (int) $_POST['id_filial'] ?? 1; // Filial padrão
 $oldDebug = $debug;
 $debug = false;
 
@@ -107,10 +107,10 @@ if ($gLang == "en") {
 	gVar("global.numformat", "0,000.00");
 }
 
-if ($_REQUEST['mudaArmazemPara']<>'')
+if ($_REQUEST['mudaFilialPara']<>'')
 {
-	$_SESSION['armazemAtualId'] = intval($_REQUEST['mudaArmazemPara']);
-	$_SESSION['armazemAtualDescricao'] = $_REQUEST['mudarDescArmazemPara'];
+	$_SESSION['filialAtualId'] = intval($_REQUEST['mudaFilialPara']);
+	$_SESSION['filialAtualDescricao'] = $_REQUEST['mudarDescFilialPara'];
 }
 
 if ($_REQUEST['action'] == 'toggleChat') {
@@ -141,7 +141,7 @@ if (($g == "login")) {
 		$acessoAoEquipamento = true;
 		if ($rs[0]['id']) {
 			if ($gParam['RESTRINGIR_ACESSO_POR_IP']['ativo']) {
-				$ipsLiberados = dbFastQuery("SELECT ips FROM armazens WHERE id = {$id_armazens} LIMIT 1")[0]['ips'];
+				$ipsLiberados = dbFastQuery("SELECT ips FROM filial WHERE id = {$id_filial} LIMIT 1")[0]['ips'];
 				if (
 					!$rs[0]['acesso_remoto']
 					&& $rs[0]['id'] >= 2
@@ -232,16 +232,15 @@ if (($g == "login")) {
 				$_SESSION['gLang'] = "pt_BR";
 				$_SESSION['key_user'] = (isset($rs[0]['key_user']) && $rs[0]['key_user'] || $usrId == 1);
 
-				//Armazens
-				$usrArmazens = array();
-				// $sql="SELECT id_armazens FROM pessoas_armazens WHERE id_pessoas=$usrId AND cancelado=0";
-				// if($id_armazens > 0)
-				// 	$sql.=" AND id_armazens=".(int) $id_armazens;
-				// //echo $sql;exit;
-				// $rsA= dbQuery($sql);
+				//filial
+				$usrfilial = array();
+				$sql="SELECT id_filial FROM pessoas_filial WHERE id_pessoas=$usrId AND cancelado=0";
+				if($id_filial > 0)
+					$sql.=" AND id_filial=".(int) $id_filial;
+				$rsA= dbQuery($sql);
                 if(is_array($rsA)) {
                     foreach ($rsA as $row) {
-                        $usrArmazens[] = $row['id_armazens'];
+                        $usrfilial[] = $row['id_filial'];
                     }
                 }
 
@@ -261,28 +260,26 @@ if (($g == "login")) {
 				$rse = dbQuery($sql);
 				$_SESSION['empilhadeiraPosicoes'] = $rse;*/
 
-				// Definindo armazem
-				/*if ($usrCliente==1)
-				{
+				// Definindo filial
+				if ($usrCliente==1) {
 					$sql="SELECT
 							A.id, A.descricao
-						  FROM pessoas_armazens PA
-						  LEFT JOIN armazens A ON A.id = PA.id_armazens
+						  FROM pessoas_filial PA
+						  LEFT JOIN filial A ON A.id = PA.id_filial
 						  WHERE id_pessoas=".intval($_SESSION["usrId"]);
 					$amz=dbQuery($sql);
-				} else
-				{
-					if($id_armazens > 0)
-						$amz=dbQuery("SELECT * FROM armazens WHERE id = $id_armazens");
+				} else {
+					if($id_filial > 0)
+						$amz=dbQuery("SELECT * FROM filial WHERE id = $id_filial");
 					else
-						$amz=dbQuery("SELECT * FROM armazens LIMIT 1");
-				}*/
+						$amz=dbQuery("SELECT * FROM filial LIMIT 1");
+				}
 
-				$_SESSION['armazemAtualId'] = 1;
-				$_SESSION['armazemAtualDescricao'] = 1;
+				$_SESSION['filialAtualId'] = 1;
+				$_SESSION['filialAtualDescricao'] = 1;
 
 				// echo "<pre>";
-				// var_dump($id_armazens,$amz);exit;
+				// var_dump($id_filial,$amz);exit;
 
 
 				//Permissões
@@ -550,7 +547,7 @@ if ($usrId > 0) {
 				$campoExtra .= '</div>' . $o->n;
 
 				$campoExtra = "{name: equipamento; type: text; allowBlank: true; hint: Equipamento; fieldLabel: Equipamento}";
-				$signin.= $o->login("{url: index.php?g=login; forceSubmit: true; style: inline; esqueceuSenha:false; loginMethod:nickname;armazens:true}", $campoExtra);
+				$signin.= $o->login("{url: index.php?g=login; forceSubmit: true; style: inline; esqueceuSenha:false; loginMethod:nickname;filial:true}", $campoExtra);
 			}
 			else
 			{
@@ -560,10 +557,10 @@ if ($usrId > 0) {
 				$frm=new gMinimal\gForm("{ name: login; action: index.php?g=login;}");
 				$frm->add("{fieldLabel: APELIDO ; type: text; name:email}");
 				$frm->add("{fieldLabel: SENHA; type: text; inputType:password; name:password;}");
-				$sql="SELECT id,descricao FROM armazens ORDER BY descricao";
+				$sql="SELECT id,descricao FROM filial ORDER BY descricao";
 				$rsa=dbQuery($sql);
 				if(count($rsa)>1)
-					$frm->add("{fieldLabel: UNIDADE; type:combo; name:id_armazens; items:$sql}");
+					$frm->add("{fieldLabel: UNIDADE; type:combo; name:id_filial; items:$sql}");
 				$frm->add("{fieldLabel: EQUIPAMENTO ; type: text; name:equipamento}");
 				$signin.=$frm->render();
 			}

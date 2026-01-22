@@ -19,7 +19,7 @@ if ($gPage === NFE_ALTERNAR_MODO) {
         $mtz = [];
         $mtz['id_geral_pessoas_ativou'] = $_REQUEST['id_geral_pessoas_ativou'];
         $mtz['data']  = date('Y-m-d H:i:s');
-        $mtz['serie'] = dbQuery("SELECT serie FROM nfe_numeros WHERE id_armazens = {$armazemAtualId} AND serie > 0 LIMIT 1")[0]['serie'] ?: 1;
+        $mtz['serie'] = dbQuery("SELECT serie FROM nfe_numeros WHERE id_filial = {$filialAtualId} AND serie > 0 LIMIT 1")[0]['serie'] ?: 1;
         $mtz['modo_operacao'] = ($contigencia) ? 7 : 1;//7=ativa contigencia; 1=desativa contigencia
         dbInsert('nfe_operacao', $mtz);
         $o->addJavaScript('bootbox.alert("Modo de operação alternado com sucesso!");');

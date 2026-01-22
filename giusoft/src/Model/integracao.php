@@ -29,12 +29,12 @@ class Integracao
 
 		$this->conectarBanco($this->parametro['conexaoBanco'] ?: $this->setup);
 		$this->gParam = $this->gParam();
-		$sql = "SELECT armazens.id
-					FROM pessoas_armazens
-					JOIN armazens ON armazens.id = pessoas_armazens.id_armazens
-					WHERE pessoas_armazens.cancelado = 0
+		$sql = "SELECT filial.id
+					FROM pessoas_filial
+					JOIN filial ON filial.id = pessoas_filial.id_filial
+					WHERE pessoas_filial.cancelado = 0
 					LIMIT 1";
-		$this->parametro['idArmazens'] = $this->parametro['idArmazens'] ?: $this->executarQuery($sql)[0]['id'];
+		$this->parametro['idFilial'] = $this->parametro['idFilial'] ?: $this->executarQuery($sql)[0]['id'];
 	}
 
 	public function carregarSetup()
@@ -192,7 +192,7 @@ class Integracao
 		$mtz['id_tipos_programacao'] = 7;
 		$mtz['os'] = $this->numeroOS();
 		$mtz['numseq'] = gCleanField($mtz['numseq']);
-		$mtz['id_armazens'] = $mtz['id_armazens'] ?: $this->parametro['idArmazens'];
+		$mtz['id_filial'] = $mtz['id_filial'] ?: $this->parametro['idFilial'];
 		$mtz['id_pessoas_criou'] = $mtz['id_pessoas_criou'] ?: $this->parametro['idPessoasCriou'];
 		$mtz['id_pessoas_proprietario'] = $mtz['id_pessoas_proprietario'] ?: $this->parametro['idPessoasProprietario'];
 		$mtz['observacoes'] = $mtz['observacoes'];
@@ -370,12 +370,12 @@ class Integracao
 			$this->insertTable('pessoas_enderecos', $endereco);
 		}
 
-		$pessoasArmazens = array();
-		$pessoasArmazens['id_armazens'] = $this->parametro['idArmazens'];
-		$pessoasArmazens['id_pessoas'] = $idPessoas;
-		$pessoasArmazens['id_pessoas_criou'] = 1;
-		$pessoasArmazens['data_criou'] = date('Y-m-d H:i:s');
-		$this->insertTable('pessoas_armazens', $pessoasArmazens);
+		$pessoasFilial = array();
+		$pessoasFilial['id_filial'] = $this->parametro['idFilial'];
+		$pessoasFilial['id_pessoas'] = $idPessoas;
+		$pessoasFilial['id_pessoas_criou'] = 1;
+		$pessoasFilial['data_criou'] = date('Y-m-d H:i:s');
+		$this->insertTable('pessoas_filial', $pessoasFilial);
 
 		if ($retornarDetalhes) {
 			return array(
@@ -495,24 +495,24 @@ class Integracao
     public function numeroOS()
 	{
         $ano = date('Y');
-        $idArmazens = $this->parametro['idArmazens'];
-		$sql = "SELECT numero FROM contadores WHERE id_armazens = '{$idArmazens}' AND ano = '{$ano}' ORDER BY numero DESC LIMIT 1";
+        $idFilial = $this->parametro['idFilial'];
+		$sql = "SELECT numero FROM contadores WHERE id_filial = '{$idFilial}' AND ano = '{$ano}' ORDER BY numero DESC LIMIT 1";
 		$rs = $this->executarQuery($sql);
 		$numero = (int) $rs[0]['numero'];
 		$numero++;
 		if ($numero == 1) {
-			$sql = "INSERT into contadores (id_armazens,ano,numero) VALUES ({$idArmazens}, {$ano}, {$numero})";
+			$sql = "INSERT into contadores (id_filial,ano,numero) VALUES ({$idFilial}, {$ano}, {$numero})";
 			$this->executarQuery($sql);
 		} else {
 			// Ano já existe, incrementa numero
-			$sql = "UPDATE contadores SET numero = {$numero} WHERE id_armazens = {$idArmazens} and ano = {$ano}";
+			$sql = "UPDATE contadores SET numero = {$numero} WHERE id_filial = {$idFilial} and ano = {$ano}";
 			$this->executarQuery($sql);
         }
 
 		if ($ano < 100) {
 			$ano = 2000 + $ano;
 		}
-		$sql = "SELECT * FROM armazens WHERE id = {$idArmazens}";
+		$sql = "SELECT * FROM filial WHERE id = {$idFilial}";
         $rs = $this->executarQuery($sql);
 
         $os = strtoupper($rs[0]['prefixo']) . $rs[0]['codigo_barras'] . str_pad($numero, 10, "0", STR_PAD_LEFT) . "/" . $ano;

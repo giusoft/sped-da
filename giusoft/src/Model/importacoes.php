@@ -400,7 +400,7 @@ class Importacoes
 	/* PERSISTENCIA DA PROGRAMAÇÃO */
 	function novaProgramacao ($tipoProgramacao)
 	{
-		global $usrId, $gPath, $id_armazens, $gParam;
+		global $usrId, $gPath, $id_filial, $gParam;
 		include_once $gPath."res/_classes/operacao.php";
 		$programacao = new Programacao();
 
@@ -492,7 +492,7 @@ class Importacoes
 
 						if (count($this->erros)==0)
 						{
-							$id_armazens=$_SESSION["armazemAtualId"];
+							$id_filial=$_SESSION["filialAtualId"];
 							$os = $programacao->novaOS();
 							$cabecalho["id_pessoas_criou"]        = $usrId;
 							$cabecalho["data_cadastro"]           = $agora;
@@ -507,7 +507,7 @@ class Importacoes
 							}
 
 							$cabecalho["id_tipos_programacao"]    = $tipoProgramacao;
-							$cabecalho["id_armazens"]             = $_SESSION["armazemAtualId"];//$_SESSION["UsrArmazens"];
+							$cabecalho["id_filial"]             = $_SESSION["filialAtualId"];//$_SESSION["Usrfilial"];
 							$cabecalho["os"]                      = $os;
 							$cabecalho["numero_cliente"]          = $numero_cliente;
 							$cabecalho["recno"]=$numero_cliente;
@@ -666,7 +666,7 @@ class Importacoes
 
 			if (count($this->erros) == 0) {
 
-				$id_armazens=$_SESSION["armazemAtualId"];
+				$id_filial=$_SESSION["filialAtualId"];
 				$os = $programacao->novaOS();
 				$cabecalho["id_pessoas_criou"]      = $usrId;
 				$cabecalho["data_cadastro"]         = $agora;
@@ -681,8 +681,7 @@ class Importacoes
 				}
 
 				$cabecalho["id_tipos_programacao"]  = $tipoProgramacao;
-				$cabecalho["id_armazens"]           = $_SESSION["armazemAtualId"];
-				//$_SESSION["UsrArmazens"];
+				$cabecalho["id_filial"]           = $_SESSION["filialAtualId"];
 
 				$cabecalho["os"]                    = $os;
 				$cabecalho["numero_cliente"]        = $this->cabecalho['numero_cliente'];

@@ -373,7 +373,7 @@ switch ($gPage) {
 
 		$nf = new NotasFiscais();
 		$dadosEmpresa = $nf->obtemDadosEmpresa(obtemIdEmpresa());
-		$dadosConfig = $nf->buscarConfiguracoes($dadosEmpresa['cnpjArmazem']);
+		$dadosConfig = $nf->buscarConfiguracoes($dadosEmpresa['cnpjFilial']);
 
 		$sucessos = [];
 		$erros = [];

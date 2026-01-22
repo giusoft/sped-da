@@ -256,12 +256,12 @@ class PessoasJuridicas extends Pessoas
 			$campos['id_pessoas']=$gId;
 			dbInsert('pessoas_juridicas', $this->preparaCamposAdicionais($campos));
 
-			// Inserindo acesso ao armazem atual.
+			// Inserindo acesso ao filial atual.
 			$sql="SELECT
 					id
-				  FROM pessoas_armazens
+				  FROM pessoas_filial
 				  WHERE id_pessoas=$gId
-				  AND id_armazens=".$_SESSION["armazemAtualId"]."
+				  AND id_filial=".$_SESSION["filialAtualId"]."
 				  AND cancelado=0
 				  ";
 			$existe=dbQuery($sql);
@@ -269,10 +269,10 @@ class PessoasJuridicas extends Pessoas
 			{
 				$mtz=array();
 				$mtz["id_pessoas"]=$gId;
-				$mtz["id_armazens"]=$_SESSION["armazemAtualId"];
+				$mtz["id_filial"]=$_SESSION["filialAtualId"];
 				$mtz["id_pessoas_criou"]=$_SESSION["usrId"];
 				$mtz["data_criou"]=date('Y-m-d H:i:s');
-				dbInsert("pessoas_armazens", $mtz);
+				dbInsert("pessoas_filial", $mtz);
 			}
 
 

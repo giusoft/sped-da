@@ -201,7 +201,7 @@ if ($_REQUEST['task'] == 'bloquearSaldoVencer') {
 				UI.codigo_externo,
 				1 AS entrada,
 				1 AS faturar,
-				UI.id_armazens,
+				UI.id_filial,
 				UI.id_areas_direcionar,
 				1 AS id_pessoas_criou,
 				UI.id_pessoas_proprietario,
@@ -258,7 +258,7 @@ if ($_REQUEST['task'] == 'bloquearSaldoVencer') {
 				AND (A.id IS NULL OR (A.avaria = 0 AND A.divergencia = 0 AND A.codigo <> 'RETRABALHO'))
 			GROUP BY
 				U.id,
-				U.id_armazens,
+				U.id_filial,
 				SK.id,
 				UI.lote,
 				UI.data_fabricacao,
@@ -272,7 +272,7 @@ if ($_REQUEST['task'] == 'bloquearSaldoVencer') {
 			HAVING
 				SUM(UI.quantidade) > 0
 			ORDER BY
-				UI.id_armazens
+				UI.id_filial
 		";
 
 		$rs = $integracao->executarQuery($sql);
@@ -339,7 +339,7 @@ if ($_REQUEST['task'] == 'viewUnidadesPorCliente') {
 	include_once $_SERVER['DOCUMENT_ROOT'] . '/wms/giusoft/res/_classes/padrao/integracao.php';
 	$parametro = [
 		'caminhoSetup'   => $_SERVER['DOCUMENT_ROOT'] . '/wms/mmedeiros/setup.php',
-		'idArmazens'     => 1,
+		'idFilial'     => 1,
 		'idPessoasCriou' => 1
 	];
 
@@ -426,7 +426,7 @@ if ($_REQUEST['task'] == 'desativaContainer') {
 
 		$parametro = [
 			'caminhoSetup'   => $caminhoSetup,
-			'idArmazens'     => 1,
+			'idFilial'     => 1,
 			'idPessoasCriou' => 1
 		];
 
@@ -454,7 +454,7 @@ if ($_REQUEST['task'] == 'posicoesContratadas') {
 
 		$parametro = [
 			'caminhoSetup'   => $caminhoSetup,
-			'idArmazens'     => 1,
+			'idFilial'     => 1,
 			'idPessoasCriou' => 1
 		];
 
@@ -699,7 +699,7 @@ if ($_REQUEST['task'] == 'atualizarAtivacaoUMA') {
 
 		$parametro = [
 			'caminhoSetup'   => $caminhoSetup,
-			'idArmazens'     => 1,
+			'idFilial'     => 1,
 			'idPessoasCriou' => 1
 		];
 
@@ -769,7 +769,7 @@ function prepararCamposDoItem($item)
 	$campos['m3']             = $campos['tipo'] . (float) str_replace('-', '', $item['m3']);
 	$campos['temperatura']    = $item['temperatura'];
 	$campos['id_umas']        = (int) $item['id_umas'];
-	$campos['id_armazens']    = (int) $item['id_armazens'];
+	$campos['id_filial']    = (int) $item['id_filial'];
 	$campos['id_notas_itens'] = (int) $item['id_notas_itens'];
 
 	return $campos;

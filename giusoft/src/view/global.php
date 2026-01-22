@@ -43,7 +43,7 @@ function createMenu()
 				$sai.=$o->label(" AMBIENTE LOCALHOST ",'danger');
 			}
 
-			$sai.=$o->label($_SESSION['armazemAtualDescricao'],'success');
+			$sai.=$o->label($_SESSION['filialAtualDescricao'],'success');
 
 			if ($AMBIENTE_TESTE)
 			{
@@ -336,16 +336,16 @@ function createMenu()
 					
 					$bar='<div id="barraDeAtalhos" class="btn-toolbar" role="toolbar" style="float: left">';
 					$bar.= '
-					<div class="btn-group btn-group-sm" role="group" id="botaoArmazens">
-					<button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'.$_SESSION['armazemAtualDescricao'].'
+					<div class="btn-group btn-group-sm" role="group" id="botaoFilial">
+					<button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'.$_SESSION['filialAtualDescricao'].'
 					<span class="caret"></span>
 					</button>
 					<ul class="dropdown-menu">';
-					$sql = "SELECT id, descricao FROM armazens";
+					$sql = "SELECT id, descricao FROM filial";
 					$rsa = dbQuery($sql);
 					foreach ($rsa as $rowa)
 					{
-						$bar.='<li><a href="index.php?g=index&mudaArmazemPara='.$rowa['id'].'&mudarDescArmazemPara='.$rowa['descricao'].'">'.$rowa['descricao'].'</a></li>';
+						$bar.='<li><a href="index.php?g=index&mudaFilialPara='.$rowa['id'].'&mudarDescFilialPara='.$rowa['descricao'].'">'.$rowa['descricao'].'</a></li>';
 					}
 
 					$bar.='</ul></div>';
@@ -355,12 +355,12 @@ function createMenu()
 						|| strpos($_SERVER['HTTP_USER_AGENT'], 'Iphone') !== false //premissas sao validadas assim por causa do retorno da funcao strpos
 					) {
 						$js = '
-							var botaoArmazens = document.querySelector("#botaoArmazens");
+							var botaoFilial = document.querySelector("#botaoFilial");
 							var logo = document.querySelector(".navbar-brand");
 							var barraAtalhos = document.getElementById("barraDeAtalhos");
 
-							botaoArmazens.classList.add("navbar-brand");
-							var copiaBotao = botaoArmazens.outerHTML;
+							botaoFilial.classList.add("navbar-brand");
+							var copiaBotao = botaoFilial.outerHTML;
 							logo.insertAdjacentHTML("afterend", copiaBotao);
 
 							barraAtalhos.style.display = "none";
@@ -988,7 +988,7 @@ function iniciarChatwoot() {
 
 	$nomeUsuario = $_SESSION['usrName']
 		. ' - WMS - ' . $GLOBALS['EMPRESA']
-		. '/ARM ' .	$_SESSION['armazemAtualDescricao'];
+		. '/ARM ' .	$_SESSION['filialAtualDescricao'];
 
 	$js = "
 		var nome = '" . $nomeUsuario . "';

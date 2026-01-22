@@ -22,11 +22,11 @@ function obtemIdEmpresa($idProprietario=0)
 		return (2);
 	}
 
-	if (intval($_SESSION['armazemAtualId']) > 0) {
-		return ($_SESSION['armazemAtualId']);
+	if (intval($_SESSION['filialAtualId']) > 0) {
+		return ($_SESSION['filialAtualId']);
 	}
 
-	return (dbQuery("SELECT id FROM armazens limit 1")[0]["id"]);
+	return (dbQuery("SELECT id FROM filial limit 1")[0]["id"]);
 }
 
 

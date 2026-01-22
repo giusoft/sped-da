@@ -126,7 +126,7 @@ Quantidade de posições contratadas - Quantidades de posições contratadas pel
 ### Aba Endereços
 Nesta aba, cadastre todas as informações do endereço do cliente. Para clientes com tratamento fiscal, esses dados influenciarão na emissão das notas fiscais.
 
-### Aba Armazém
+### Aba Filial
 Nesta aba, cadastre os armazéns aos quais o cadastro pertence.
 
 ### Aba Ocorrência

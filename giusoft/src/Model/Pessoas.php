@@ -243,12 +243,12 @@ class Pessoas
 	}
 
 
-	// Atualiza a situação da pessoa se ela não tiver cadastrado o armazem
+	// Atualiza a situação da pessoa se ela não tiver cadastrado o filial
 	public function atualizarPessoasSituacao($idPessoa) {
-		$sql = "SELECT id FROM pessoas_armazens WHERE cancelado = 0 AND id_pessoas = " . $idPessoa . " LIMIT 1";
-		$verificarPessoasArmazem = dbFastQuery($sql)[0]['id'];
+		$sql = "SELECT id FROM pessoas_filial WHERE cancelado = 0 AND id_pessoas = " . $idPessoa . " LIMIT 1";
+		$verificarPessoasFilial = dbFastQuery($sql)[0]['id'];
 
-		if (!$verificarPessoasArmazem) {
+		if (!$verificarPessoasFilial) {
 			dbFastQuery("UPDATE pessoas SET situacao = 'Inativo' WHERE id = " . $idPessoa);
 		}
 	}

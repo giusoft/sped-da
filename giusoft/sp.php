@@ -79,8 +79,8 @@ $sp["combo_informacoes_nfe"] = "SELECT id, descricao FROM nfe_informacoes ORDER 
 
 
 // Estoque
-$sp["armazens"]="SELECT * FROM armazens ORDER BY descricao";
-$sp["combo_armazens"]="SELECT id,descricao FROM armazens ORDER BY descricao";
+$sp["filial"]="SELECT * FROM filial ORDER BY descricao";
+$sp["combo_filial"]="SELECT id,descricao FROM filial ORDER BY descricao";
 $sp["cfops"]="SELECT * FROM cfops WHERE codigo ORDER BY codigo";
 // $sp["setores"]="SELECT * FROM setores ORDER BY descricao";
 $sp["grupos"]="SELECT id,descricao FROM grupos ORDER BY descricao";

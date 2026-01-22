@@ -62,9 +62,9 @@ $nf = new NotasFiscais('S');
 
 if ($_REQUEST['gAjax']) {
     if ($_REQUEST['emitirNfe']) {
-        $validaArmazem = $nf->validarArmazemSessao($gId);
-        if (!$validaArmazem['sucesso']) {
-            $resultado['msgErro'] = $validaArmazem['msg'];
+        $validaFilial = $nf->validarFilialSessao($gId);
+        if (!$validaFilial['sucesso']) {
+            $resultado['msgErro'] = $validaFilial['msg'];
             echo json_encode($resultado);
             exit;
         }
@@ -84,9 +84,9 @@ if ($_REQUEST['gAjax']) {
         $nota = $nf->obtemDadosNFE($gId);
         $dados['nota'] = $nota;
 
-        // Pega os dados do armazem
+        // Pega os dados do filial
         $dados['empresa'] = $nf->obtemDadosEmpresa(obtemIdEmpresa($nota["id_pessoas_proprietario"]));
-        $dados['config'] = $nf->buscarConfiguracoes($dados['empresa']['cnpjArmazem']);
+        $dados['config'] = $nf->buscarConfiguracoes($dados['empresa']['cnpjFilial']);
 
         $dados['cliente'] = $nf->obtemDadosProprietario($nota["id_pessoas_proprietario"], $nota["tipo"]);
 
@@ -122,7 +122,7 @@ if ($_REQUEST['gAjax']) {
         $dados['idDest'] = $nota["idDestino"];
         $dados['idNotas'] = $gId;
         $dados['sistema'] = "WMS2";
-        $dados['idEmpresa'] = $_SESSION['armazemAtualId'];
+        $dados['idEmpresa'] = $_SESSION['filialAtualId'];
         $dados['indIEDest'] = $nota["IE"];
         $dados['codigoAntt'] = $nota["RNTC"];
         $dados['veiculoPlaca'] = $nota["placa"];
@@ -300,11 +300,11 @@ if ($_REQUEST['gAjax']) {
     }
 
     if ($_REQUEST['cancelarNfeConfirmar']) {
-        $validaArmazem = $nf->validarArmazemSessao($_REQUEST['gIdNota']);
-        if (!$validaArmazem['sucesso']) {
+        $validaFilial = $nf->validarFilialSessao($_REQUEST['gIdNota']);
+        if (!$validaFilial['sucesso']) {
             echo json_encode([
                 'sucesso' => false,
-                'mensagem' => strip_tags((string) $validaArmazem['msg'])
+                'mensagem' => strip_tags((string) $validaFilial['msg'])
             ]);
             exit;
         }
@@ -351,7 +351,7 @@ if ($_REQUEST['gAjax']) {
         $dadosCancelamento['justificativa'] = $motivo;
         $dadosCancelamento['idPessoasProprietario'] = 1;
         $dadosCancelamento['empresa'] = $nf->obtemDadosEmpresa(obtemIdEmpresa($nfeBD["id_pessoas_proprietario"]));
-        $dadosCancelamento['config'] = $nf->buscarConfiguracoes($dadosCancelamento['empresa']['cnpjArmazem']);
+        $dadosCancelamento['config'] = $nf->buscarConfiguracoes($dadosCancelamento['empresa']['cnpjFilial']);
 
         // Disparar gatilho para API
         $retornoCancelamento = dispararGatilho('cancelarNfe', $dadosCancelamento);
@@ -478,7 +478,7 @@ if ($_REQUEST['gAjax']) {
             $dadosDanfe['chave'] = $xml['chave'];
             $dadosDanfe['idPessoasProprietario'] = 1;
             $dadosDanfe['empresa'] = $nf->obtemDadosEmpresa(obtemIdEmpresa($xml['id_pessoas_proprietario']));
-            $dadosDanfe['config'] = $nf->buscarConfiguracoes($dadosDanfe['empresa']['cnpjArmazem']);
+            $dadosDanfe['config'] = $nf->buscarConfiguracoes($dadosDanfe['empresa']['cnpjFilial']);
 
             if ($_REQUEST['cancelamento']) {
                 $dadosDanfe['xml_cancelamento'] = $xml['xml_cancelamento'];
@@ -535,7 +535,7 @@ if ($_REQUEST['gAjax']) {
         $sql = 'SELECT * FROM notas WHERE id = ' . $idNotaOrigem;
         $notaOrigem = dbFastQuery($sql)[0];
 
-        if ($notaOrigem['id_armazens'] != $_SESSION['armazemAtualId']) {
+        if ($notaOrigem['id_filial'] != $_SESSION['filialAtualId']) {
             $return["msgErro"] = "Divergência de armazém: Esta nota pertence a um armazém diferente do que você está logado atualmente. Por favor, troque de armazém para realizar esta operação.";
             echo json_encode($return);
             exit;
@@ -548,7 +548,7 @@ if ($_REQUEST['gAjax']) {
         unset($notaOrigem['data_movimento']);
         $notaOrigem['entrada_interna'] = 1;
         $notaOrigem['data_criou'] = date('Y-m-d H:i:s');
-        $notaOrigem['id_armazens'] = $_SESSION['armazemAtualId'];
+        $notaOrigem['id_filial'] = $_SESSION['filialAtualId'];
         $notaOrigem['id_programacao'] = 0;
         $notaOrigem['id_pessoas_criou'] = $_SESSION['usrId'];
         $notaOrigem['id_notas_origem_estorno'] = $idNotaOrigem;
@@ -569,7 +569,7 @@ if ($_REQUEST['gAjax']) {
 
         $dados['empresa'] = $nf->obtemDadosEmpresa(obtemIdEmpresa($nota["id_pessoas_proprietario"]));
 
-        $dados['config'] = $nf->buscarConfiguracoes($dados['empresa']['cnpjArmazem']);
+        $dados['config'] = $nf->buscarConfiguracoes($dados['empresa']['cnpjFilial']);
 
         $dados['NfeNumeroEOperacao'] = $nf->obterDadosNfeNumeroEOperacao($dados['config']);
 
@@ -783,9 +783,9 @@ if ($_REQUEST['gAjax']) {
     }
 
     if ($_REQUEST['cartaCorrecaoConfirmar']) {
-        $validaArmazem = $nf->validarArmazemSessao($_REQUEST["gIdNota"]);
-        if (!$validaArmazem['sucesso']) {
-             $htm = $o->msgDanger($validaArmazem['msg']);
+        $validaFilial = $nf->validarFilialSessao($_REQUEST["gIdNota"]);
+        if (!$validaFilial['sucesso']) {
+             $htm = $o->msgDanger($validaFilial['msg']);
              $htm .= $o->button("{icon: arrow-left; caption: Voltar; hint: Voltar; style: info; size: normal;}", "javascript: btnCCe(" . $gId . ", " . $_REQUEST["gIdNota"] . ")");
              echo json_encode($htm);
              exit;
@@ -831,7 +831,7 @@ if ($_REQUEST['gAjax']) {
         $dadosCartaCorrecao['sequencial']    = $numeroSequencial;
         $dadosCartaCorrecao['correcao']     = gCleanField($_REQUEST["cce_correcao"]);
         $dadosCartaCorrecao['empresa']      = $nf->obtemDadosEmpresa(obtemIdEmpresa($nfeBD["id_pessoas_proprietario"]));
-        $dadosCartaCorrecao['config']       = $nf->buscarConfiguracoes($dadosCartaCorrecao['empresa']['cnpjArmazem']);
+        $dadosCartaCorrecao['config']       = $nf->buscarConfiguracoes($dadosCartaCorrecao['empresa']['cnpjFilial']);
         $dadosCartaCorrecao['idPessoasProprietario'] = 1;
 
         $retornoCartaCorrecao = dispararGatilho('cartaCorrecao', $dadosCartaCorrecao);
@@ -922,7 +922,7 @@ if ($_REQUEST['gAjax']) {
         $dadosDanfeCartaCorrecao = [];
         $dadosDanfeCartaCorrecao['xml']        = $rs['xml'];
         $dadosDanfeCartaCorrecao['chave']      = $rs['chave'];
-        $dadosDanfeCartaCorrecao['config']     = $nf->buscarConfiguracoes($dadosDanfeCartaCorrecao['empresa']['cnpjArmazem']);
+        $dadosDanfeCartaCorrecao['config']     = $nf->buscarConfiguracoes($dadosDanfeCartaCorrecao['empresa']['cnpjFilial']);
         $dadosDanfeCartaCorrecao['empresa']    = $nf->obtemDadosEmpresa(obtemIdEmpresa($rs['id_pessoas_proprietario']));
         $dadosDanfeCartaCorrecao['temRetorno'] = 1;
         $dadosDanfeCartaCorrecao['idPessoasProprietario'] = 1;
@@ -1329,9 +1329,9 @@ switch ($gPage) {
                     ativar_modo_contingencia,
                     data_alteracao_operacao,
                     pessoas.nome
-                FROM armazens_notas
-                LEFT JOIN pessoas ON pessoas.id = armazens_notas.id_pessoas_alterou
-                WHERE id_armazens = " . $_SESSION['armazemAtualId'] . " LIMIT 1";
+                FROM filial_notas
+                LEFT JOIN pessoas ON pessoas.id = filial_notas.id_pessoas_alterou
+                WHERE id_filial = " . $_SESSION['filialAtualId'] . " LIMIT 1";
         $modoContingencia = dbFastQuery($sql)[0];
 
         if ($modoContingencia['ativar_modo_contingencia']) {
@@ -1393,7 +1393,7 @@ switch ($gPage) {
             }
         } else {
             $where = " (N.tipo='S')
-                        AND (N.id_armazens=".intval($_SESSION["armazemAtualId"]).")
+                        AND (N.id_filial=".intval($_SESSION["filialAtualId"]).")
                         AND N.id_notas_agrupar=0";
             $rs = $nf->obtemRegistros("N.id DESC", $where);
         }
@@ -2392,9 +2392,9 @@ switch ($gPage) {
         //(gVar("nfe.ambiente"));
         //exit;
 
-        $validaArmazem = $nf->validarArmazemSessao($gId);
-        if (!$validaArmazem['sucesso']) {
-            $html .= $o->msgDanger($validaArmazem['msg']);
+        $validaFilial = $nf->validarFilialSessao($gId);
+        if (!$validaFilial['sucesso']) {
+            $html .= $o->msgDanger($validaFilial['msg']);
             $html .= $o->button("{name: back; icon: arrow-left; caption: Voltar; style: default; href: " . $o->page . "&gPage=" . INICIO . "}");
             break;
         }
@@ -2821,14 +2821,14 @@ switch ($gPage) {
         $o->addJavascript($js);
         $where = [];
         $where[] = "(N.cancelada=0)";
-        $where[] = "(N.id_armazens=". $_SESSION["armazemAtualId"] . ")";
+        $where[] = "(N.id_filial=". $_SESSION["filialAtualId"] . ")";
         if (isset($_REQUEST["gFilter"]) && intval($_REQUEST["gFilter"])==1) {
             if ($_REQUEST["id_cfops"]) {
                 $where[] = "(N.id_cfops=".intval($_REQUEST["id_cfops"]).")";
             }
 
-            if ($_REQUEST["id_armazens_destinatario"]) {
-                $where[] = "(NM.id_armazens_destinatario=".intval($_REQUEST["id_armazens_destinatario"]).")";
+            if ($_REQUEST["id_filial_destinatario"]) {
+                $where[] = "(NM.id_filial_destinatario=".intval($_REQUEST["id_filial_destinatario"]).")";
             }
 
             if ($_REQUEST["id_pessoas_transportadora"]) {
@@ -2859,13 +2859,13 @@ switch ($gPage) {
         $where=implode(" AND ", $where);
         $sql = "SELECT
                     N.id,
-                    N.numero, AD.descricao armazem_destinatario,
+                    N.numero, AD.descricao filial_destinatario,
                     N.data_emissao, N.data_movimento, N.data_criou, P.apelido,
                     NM.id_notas,
                     CF.descricao_resumida descricao_cfops
                 FROM notas_maquina NM
                 LEFT JOIN notas N ON N.id= NM.id_notas
-                LEFT JOIN armazens AD ON AD.id = NM.id_armazens_destinatario
+                LEFT JOIN filial AD ON AD.id = NM.id_filial_destinatario
                 LEFT JOIN pessoas P ON P.id = N.id_pessoas_criou
                 LEFT JOIN cfops CF ON CF.id = N.id_cfops
                 WHERE {$where}
@@ -2920,7 +2920,7 @@ switch ($gPage) {
             $mtz[]="<-".$opt;
             $mtz[]="->".$row["id"];
             $mtz[]="<-".$row["numero"];
-            $mtz[]="<-".$row["armazem_destinatario"];
+            $mtz[]="<-".$row["filial_destinatario"];
             $mtz[]="<-".$row["descricao_cfops"];
             $mtz[]="<>".gDate($row["data_emissao"]);
             $mtz[]="<>".gDate($row["data_movimento"]);
@@ -2932,10 +2932,10 @@ switch ($gPage) {
         break;
 
     case INICIO_MAQUINA_PESQUISAR:
-        $combo_armazens="SELECT id, descricao FROM armazens WHERE id <>".$_SESSION["armazemAtualId"];
+        $combo_filial="SELECT id, descricao FROM filial WHERE id <>".$_SESSION["filialAtualId"];
         $frm = new gForm('{columns:2;}');
         $frm->add('{type:combo; name:id_cfops; fieldLabel:CFOP; items:'.$sp["combo_cfop_saida"].';}');
-        $frm->add('{type:combo; name:id_armazens_destinatario; fieldLabel:Armazém de destino; items:'.$combo_armazens.';}');
+        $frm->add('{type:combo; name:id_filial_destinatario; fieldLabel:Filial de destino; items:'.$combo_filial.';}');
         $frm->add('{type:combo; name:id_pessoas_transportadora; fieldLabel:Transportadora; items:'.$sp["combo_transportadora"].';}');
         $frm->add('{type:text; name:numero; fieldLabel:Número;}');
         $frm->add('{type:date; name:cadastro_de; fieldLabel:Cadastro de;}');
@@ -2968,14 +2968,14 @@ switch ($gPage) {
                 $('#emitirNFe').modal('show');
                 document.getElementById('modalEmitirNfeContent').innerHTML='Enviando NFE...';
                 // Tratando campos
-                var id_armazens=document.getElementById('id_armazens').value;
+                var id_filial=document.getElementById('id_filial').value;
                 var id_maquinas=document.getElementById('id_maquinas').value;
                 var gTipoOperacao=2;
 
                 // Montando objeto para enviar dados
                 var data={};
                 data.id_maquinas=id_maquinas;
-                data.id_armazens=id_armazens;
+                data.id_filial=id_filial;
                 data.gTipoOperacao=gTipoOperacao;
 
                 /*
@@ -3112,10 +3112,10 @@ switch ($gPage) {
             $html.=$o->tableEnd();
         }
 
-        $combo_armazens="SELECT id, descricao FROM armazens WHERE id<>".$_SESSION["armazemAtualId"];
+        $combo_filial="SELECT id, descricao FROM filial WHERE id<>".$_SESSION["filialAtualId"];
         $frm = new gForm();
         $frm->row(
-            $frm->add('{allowBlank:false; type:combo; name:id_armazens; fieldLabel:Unidade destino; items:'.$combo_armazens.'; value:'.$nota_maquina['id_armazens_destinatario'].';}'),
+            $frm->add('{allowBlank:false; type:combo; name:id_filial; fieldLabel:Unidade destino; items:'.$combo_filial.'; value:'.$nota_maquina['id_filial_destinatario'].';}'),
             $frm->add('{allowBlank:false; type:combo; name:id_maquinas; fieldLabel:Equipamento; items:'.$sp["combo_maquinas"].'; value:'.$nota_maquina['id_maquinas'].';}')
         );
 
@@ -3162,7 +3162,7 @@ switch ($gPage) {
         $maquina = dbQuery($sql)[0];
         // Gerando notas_maquina.
         $mtz = [];
-        $mtz["id_armazens_destinatario"] = intval($_REQUEST["id_armazens"]);
+        $mtz["id_filial_destinatario"] = intval($_REQUEST["id_filial"]);
         $mtz["id_pessoas_transportadora"] = 230;
         $mtz["id_maquinas"] = intval($_REQUEST["id_maquinas"]);
         if ($gId > 0) {
@@ -3195,9 +3195,9 @@ switch ($gPage) {
         $mtz["data_emissao"]=date('Y-m-d');
         $mtz["data_criou"]=date('Y-m-d H:i:s');
         $mtz["id_cfops"]=intval($maquina["id_cfops"]);
-        $mtz["id_pessoas_proprietario"]=intval($_REQUEST["id_armazens"]);
-        $mtz["id_pessoas_cliente"]=intval($_REQUEST["id_armazens"]);
-        $mtz["id_armazens"]=$_SESSION["armazemAtualId"];
+        $mtz["id_pessoas_proprietario"]=intval($_REQUEST["id_filial"]);
+        $mtz["id_pessoas_cliente"]=intval($_REQUEST["id_filial"]);
+        $mtz["id_filial"]=$_SESSION["filialAtualId"];
         $mtz["id_pessoas_transportadora"]=$id_pessoas_transportadora;
         $mtz["id_nfe"]=0;
         $mtz["id_pessoas_criou"]=$usrId;
@@ -3471,14 +3471,14 @@ switch ($gPage) {
         $nota = dbQuery($sql)[0];
         $html .= $o->msg("Dados da nota");
         $mtz = [];
-        $mtz[] = '<-Armazém';
+        $mtz[] = '<-Filial';
         $mtz[] = '<-Proprietário';
         $mtz[] = '<-Tipo';
         $mtz[] = 'Cadastro';
         $html .= $o->tableRow($mtz, 'header');
 
         $mtz = [];
-        $mtz[] = '<-<b>'.$_SESSION['armazemAtualDescricao'].'</b>';
+        $mtz[] = '<-<b>'.$_SESSION['filialAtualDescricao'].'</b>';
         $mtz[] = '<-<b>'.$nota['proprietario'].'</b>';
         $mtz[] = '<-<b>'.'Saída'.'</b>';
         $mtz[] = '<b>'.gDate(date('Y-m-d')).'<br>'.$_SESSION['usrName'].'</b>';
@@ -3502,7 +3502,7 @@ switch ($gPage) {
         unset($novaNota['numero']);
         unset($novaNota['data_movimento']);
         $novaNota['data_criou'] = date('Y-m-d H:i:s');
-        $novaNota['id_armazens'] = $_SESSION['armazemAtualId'];
+        $novaNota['id_filial'] = $_SESSION['filialAtualId'];
         $novaNota['id_pessoas_criou'] = $_SESSION['usrId'];
         $novaNota['id_programacao'] = 0;
         $novaNota['id_notas_agrupar'] = 0;
@@ -3550,9 +3550,9 @@ switch ($gPage) {
         break;
 
     case ATIVAR_DESATIVAR_CONTINGENCIA:
-        $sql = "UPDATE armazens_notas
+        $sql = "UPDATE filial_notas
                 SET data_alteracao_operacao = NOW(), ativar_modo_contingencia = " . ($_REQUEST['modoContingencia'] ? 0 : 1)
-                . " WHERE id_armazens = " . $_SESSION['armazemAtualId'];
+                . " WHERE id_filial = " . $_SESSION['filialAtualId'];
         dbFastQuery($sql);
 
         redirect($o->page . '&gPage=' . INICIO);

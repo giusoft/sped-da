@@ -14,9 +14,9 @@ define("ENDERECOS_SALVAR", 31);
 define("ENDERECOS_NOVO", 32);
 define("ENDERECOS_EXCLUIR", 33);
 
-// define("ARMAZEM",                    40);
-// define("ARMAZEM_SALVAR",             41);
-// define("ARMAZEM_CANCELAR",           42);
+// define("FILIAL",                    40);
+// define("FILIAL_SALVAR",             41);
+// define("FILIAL_CANCELAR",           42);
 
 define("OCORRENCIAS", 50);
 define("OCORRENCIAS_SALVAR", 51);
@@ -52,9 +52,9 @@ define("REGISTRO_VOLTAR", 101);
 define("WEBCAM", 102);
 define("WEBCAM_SALVAR", 103);
 
-define("ARMAZENS", 110);
-define("ARMAZENS_SALVAR", 111);
-define("ARMAZENS_CANCELAR", 112);
+define("FILIAL", 110);
+define("FILIAL_SALVAR", 111);
+define("FILIAL_CANCELAR", 112);
 
 define("CANCELAR", 120);
 
@@ -1281,31 +1281,31 @@ switch ($gPage) {
         break;
 
 
-    case ARMAZENS:
+    case FILIAL:
         $sql = "SELECT id,apelido FROM pessoas WHERE situacao='Ativo' AND cliente=1 ORDER BY nome";
         $rs = dbQuery($sql);
         foreach ($rs as $row) {
-            $sql = "SELECT * FROM pessoas_armazens WHERE id_pessoas=" . intval($row["id"]) . " AND id_armazens=" . $_SESSION["armazemAtualId"];
+            $sql = "SELECT * FROM pessoas_filial WHERE id_pessoas=" . intval($row["id"]) . " AND id_filial=" . $_SESSION["filialAtualId"];
             $existe = dbQuery($sql);
         }
         $html .= mostraCabecalho($gId);
         $frm = new gForm("{columns: 2}");
-        $frm->add("{name: id_armazens; fieldLabel: Armazém; type: combo; items: " . $sp['combo_armazens'] . ";allowBlank:false}");
-        $frm->add("{name: gPage; type: hidden; value: " . ARMAZENS_SALVAR . "}");
+        $frm->add("{name: id_filial; fieldLabel: Filial; type: combo; items: " . $sp['combo_filial'] . ";allowBlank:false}");
+        $frm->add("{name: gPage; type: hidden; value: " . FILIAL_SALVAR . "}");
         $frm->add("{name: gId; type: hidden; value: " . $gId . "}");
         $html .= $frm->render($o);
         $sql = "SELECT
-                    armazens.descricao armazemNome,
-					pessoas_armazens.*
-				FROM pessoas_armazens
-				INNER JOIN armazens ON armazens.id = pessoas_armazens.id_armazens
-				WHERE pessoas_armazens.id_pessoas=$gId AND cancelado = 0
-				ORDER BY pessoas_armazens.cancelado ASC, armazens.descricao";
+                    filial.descricao filialNome,
+					pessoas_filial.*
+				FROM pessoas_filial
+				INNER JOIN filial ON filial.id = pessoas_filial.id_filial
+				WHERE pessoas_filial.id_pessoas=$gId AND cancelado = 0
+				ORDER BY pessoas_filial.cancelado ASC, filial.descricao";
         $rs = dbQuery($sql);
         if ($rs) {
             $mtz = [];
             $mtz[] = "<-Cancelar";
-            $mtz[] = "<-Armazém";
+            $mtz[] = "<-Filial";
             $mtz[] = "<-Informações";
             $html .= $o->tableBegin("big", true);
             $html .= $o->tableRow($mtz, "header");
@@ -1319,10 +1319,10 @@ switch ($gPage) {
                     $dados .= "<BR>Cancelado por " . gFieldById("pessoas", $row['id_pessoas_cancelou'], "nome") . " - " . gDateTime($row['data_cancelou']);
                     $mtz[] = "";
                 } else {
-                    $mtz[] = "<-" . $o->button("{active: " . $active1 . "; icon: trash; style: danger; size: small; caption: Cancelar; hint: Cancelar registro; href: " . $o->page . "&gPage=" . ARMAZENS_CANCELAR . "&gId=" . $gId . "&gIdDel=" . $row['id'] . "}");
+                    $mtz[] = "<-" . $o->button("{active: " . $active1 . "; icon: trash; style: danger; size: small; caption: Cancelar; hint: Cancelar registro; href: " . $o->page . "&gPage=" . FILIAL_CANCELAR . "&gId=" . $gId . "&gIdDel=" . $row['id'] . "}");
                     ;
                 }
-                $mtz[] = "<-" . $row['armazemNome'];
+                $mtz[] = "<-" . $row['filialNome'];
                 $mtz[] = "<-" . $dados;
                 $html .= $o->tableRow($mtz, $style);
             }
@@ -1331,34 +1331,34 @@ switch ($gPage) {
         break;
 
 
-    case ARMAZENS_SALVAR:
+    case FILIAL_SALVAR:
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $sql = "SELECT id FROM pessoas_armazens WHERE id_pessoas=$gId AND id_armazens=" . intval($_REQUEST["id_armazens"]) . " AND cancelado=0 ";
+            $sql = "SELECT id FROM pessoas_filial WHERE id_pessoas=$gId AND id_filial=" . intval($_REQUEST["id_filial"]) . " AND cancelado=0 ";
             $rs = dbQuery($sql);
             if (count($rs) > 0) {
-                $html .= $o->msgDanger("Falhas de validação: " . $o->ul(["Não é possível adicionar o mesmo armazem"]));
-                $html .= $o->button("{icon: arrow-left; caption: Voltar; hint: Voltar; style: info; size: normal; href: " . $o->page . "&gPage=" . ARMAZENS . "&gId=" . $gId);
+                $html .= $o->msgDanger("Falhas de validação: " . $o->ul(["Não é possível adicionar o mesmo filial"]));
+                $html .= $o->button("{icon: arrow-left; caption: Voltar; hint: Voltar; style: info; size: normal; href: " . $o->page . "&gPage=" . FILIAL . "&gId=" . $gId);
                 return;
             } else {
                 $mtz = [];
-                $mtz['id_armazens']      = $_REQUEST['id_armazens'];
+                $mtz['id_filial']      = $_REQUEST['id_filial'];
                 $mtz['id_pessoas_criou'] = $usrId;
                 $mtz['id_pessoas']       = $gId;
                 $mtz['data_criou']       = date("Y-m-d H:i:s");
-                dbInsert('pessoas_armazens', $mtz);
+                dbInsert('pessoas_filial', $mtz);
                 userLog('Pessoa - armazém adicionado - id <a href="pessoas.php?g=itens&gPage=' . CAPA . '&gId=' . $gId . '">' . $gId . '</a>');
             }
         }
 
         $persistencia->atualizarPessoasSituacao($gId);
 
-        redirect($o->page . "&gPage=" . ARMAZENS . "&gId=" . $gId);
+        redirect($o->page . "&gPage=" . FILIAL . "&gId=" . $gId);
         break;
 
 
-    case ARMAZENS_CANCELAR:
+    case FILIAL_CANCELAR:
         if ((int) $gIdDel > 0) {
-            $sql = "UPDATE pessoas_armazens
+            $sql = "UPDATE pessoas_filial
 				  SET data_cancelou='" . date("Y-m-d H:i:s") . "',id_pessoas_cancelou=$usrId,cancelado=1 WHERE id=$gIdDel";
             dbQuery($sql);
             userLog('Pessoa - armazém cancelado - id <a href="pessoas.php?g=itens&gPage=' . CAPA . '&gId=' . $gId . '">' . $gId . '</a>');
@@ -1366,7 +1366,7 @@ switch ($gPage) {
 
         $persistencia->atualizarPessoasSituacao($gId);
 
-        redirect($o->page . "&gPage=" . ARMAZENS . "&gId=" . $gId);
+        redirect($o->page . "&gPage=" . FILIAL . "&gId=" . $gId);
         break;
 
 
@@ -1799,11 +1799,11 @@ function mostraCabecalho($gId)
         $mtz[] = '<-' . $o->small('Data do cadastro') . '<br>' . gDateTime($row['data_cadastro']) . "&nbsp;";
         $html .= $o->tableRow($mtz, 'header');
 
-        $sql = "SELECT id FROM pessoas_armazens WHERE cancelado = 0 AND id_pessoas = " . $gId . " LIMIT 1";
-        $verificarPessoasArmazem = dbFastQuery($sql)[0]['id'];
+        $sql = "SELECT id FROM pessoas_filial WHERE cancelado = 0 AND id_pessoas = " . $gId . " LIMIT 1";
+        $verificarPessoasFilial = dbFastQuery($sql)[0]['id'];
 
         $mtz = [];
-        if ($verificarPessoasArmazem) {
+        if ($verificarPessoasFilial) {
             $mtz[] = '~6<>Cadastro do pessoas suficientemente completo - pode ser utilizado';
             $html .= $o->tableRow($mtz, 'success');
         } else {
@@ -1824,7 +1824,7 @@ function mostraCabecalho($gId)
             case ENDERECOS:
                 $active2 = 'true';
                 break;
-            case ARMAZEM:
+            case FILIAL:
                 $active3 = 'true';
                 break;
             case OCORRENCIAS:
@@ -1857,7 +1857,7 @@ function mostraCabecalho($gId)
         $btns[] = $o->button("{active: " . $active1 . "; icon: file-alt; caption: Dados pessoais; hint: Alterar os dados pessoais; href: " . $o->page . "&gPage=" . DADOS . "&gId=" . $gId . "}");
         $btns[] = $o->button("{active: " . $active9 . "; icon: person-carry; caption: Operação; hint: Controle de operações; href: " . $o->page . "&gPage=" . OPERACAO . "&gId=" . $gId . "}");
         $btns[] = $o->button("{active: " . $active2 . "; icon: map-marker; caption: Endereços; hint: Incluir ou alterar endereços; href: " . $o->page . "&gPage=" . ENDERECOS . "&gId=" . $gId . "}");
-        $btns[] = $o->button("{active: " . $active3 . "; icon: warehouse; caption: Armazém; hint: Relacionar pessoa ao armazém; href: " . $o->page . "&gPage=" . ARMAZENS . "&gId=" . $gId . "}");
+        $btns[] = $o->button("{active: " . $active3 . "; icon: warehouse; caption: Filial; hint: Relacionar pessoa ao armazém; href: " . $o->page . "&gPage=" . FILIAL . "&gId=" . $gId . "}");
         $btns[] = $o->button("{active: " . $active4 . "; icon: exclamation-triangle; caption: Ocorrências; hint: Incluir ocorrências; href: " . $o->page . "&gPage=" . OCORRENCIAS . "&gId=" . $gId . "}");
         $btns[] = $o->button("{active: " . $active5 . "; icon: paperclip; caption: Anexos; hint: Anexar documentos digitalizados; href: " . $o->page . "&gPage=" . ANEXOS . "&gId=" . $gId . "}");
         if ($gParam['PERFIL_PRODUCAO']['ativo'] == 1) {

@@ -25,7 +25,7 @@ switch($gPage) {
 		$frm->add('{type: text; name: numero; fieldLabel: Número;}');
 		$frm->add('{type: date; name: data_emissao_de; fieldLabel: Data de emissão de;}');
 		$frm->add('{type: date; name: data_emissao_ate; fieldLabel: Data de emissão até;}');
-		$frm->add('{type: combo; name: id_armazens; fieldLabel: Armazém;  value: 1; allowBlank: false; items:' . $sp['combo_armazens'] . ';}');
+		$frm->add('{type: combo; name: id_filial; fieldLabel: Filial;  value: 1; allowBlank: false; items:' . $sp['combo_filial'] . ';}');
 
 		$frm->row(
 			$frm->add("{name: exibirTotais; fieldLabel: Exibir totais; type: checkbox; value:1;}"),
@@ -97,7 +97,7 @@ switch($gPage) {
 			$html.=$o->msgDanger("Informe ao menos um filtro antes de tentar gerar um relatório");
 		} else {
 			$where[]="(N.tipo='S')";
-			$where[] = "(N.id_armazens=" . $_REQUEST['id_armazens'] . ")";
+			$where[] = "(N.id_filial=" . $_REQUEST['id_filial'] . ")";
 			$where = implode(" AND ", $where);
 			$sql = "SELECT
 						N.*,

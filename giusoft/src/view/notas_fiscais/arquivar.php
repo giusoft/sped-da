@@ -107,7 +107,7 @@ if ($_REQUEST['gAjax']) {
         if (isset($retorno['sucesso']) && $retorno['sucesso']) {
             $dadosRetorno = $retorno['detalhes'] ?: $retorno['dados'] ?: [];
             $nomeArquivo = $dadosRetorno['arquivo'] ?: '';
-            $cnpjEmitente = $processo['empresa']['cnpjArmazem'];
+            $cnpjEmitente = $processo['empresa']['cnpjFilial'];
 
             $sql = "SELECT
                         gatilhos.url_rota,
@@ -306,7 +306,7 @@ switch ($gPage) {
 
         $nf = new NotasFiscais();
         $dadosEmpresa = $nf->obtemDadosEmpresa(obtemIdEmpresa($_REQUEST["id_pessoas_proprietario"]));
-        $dadosConfig = $nf->buscarConfiguracoes($dadosEmpresa['cnpjArmazem']);
+        $dadosConfig = $nf->buscarConfiguracoes($dadosEmpresa['cnpjFilial']);
 
         $_SESSION['processo_arquivar']['empresa'] = $dadosEmpresa;
         $_SESSION['processo_arquivar']['config'] = $dadosConfig;

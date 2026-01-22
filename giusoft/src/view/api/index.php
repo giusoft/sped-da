@@ -18,7 +18,7 @@ class Api
 
     public $headers;
 
-    public $idArmazens;
+    public $idFilial;
 
     public $integracao;
 
@@ -103,8 +103,8 @@ class Api
                 $this->emitirErro("Proprietario nao informado", "401 Unauthorized");
             }
 
-            // Eh necessario obter o armazem aqui pois o ambiente de desenvolvimento nao faz a autenticacao
-            $this->obterArmazem();
+            // Eh necessario obter o filial aqui pois o ambiente de desenvolvimento nao faz a autenticacao
+            $this->obterFilial();
 
             return true;
         }
@@ -166,8 +166,8 @@ class Api
         $usuario = $this->obterUsuario($credenciais);
         $dadosToken = $this->obterDadosToken($usuario["id"]);
 
-        if ($credenciais["codigoArmazem"] || !$this->idArmazens) {
-            $this->obterArmazem($credenciais["codigoArmazem"]);
+        if ($credenciais["codigoFilial"] || !$this->idFilial) {
+            $this->obterFilial($credenciais["codigoFilial"]);
         }
 
         if ($dadosToken) {
@@ -192,7 +192,7 @@ class Api
 
         $sql = "SELECT
                     id_pessoas,
-                    id_armazens,
+                    id_filial,
                     hora_criacao,
                     hora_expiracao,
                     data_criacao,
@@ -210,8 +210,8 @@ class Api
 
         if ($dadosToken) {
             $this->idPessoasProprietario = $dadosToken['id_pessoas'];
-            $this->idArmazens = $dadosToken['id_armazens'];
-            unset($dadosToken['id_pessoas'], $dadosToken['id_armazens']);
+            $this->idFilial = $dadosToken['id_filial'];
+            unset($dadosToken['id_pessoas'], $dadosToken['id_filial']);
             return $dadosToken;
         }
 
@@ -237,27 +237,27 @@ class Api
     }
 
 
-    public function obterArmazem($codigoArmazem = "")
+    public function obterFilial($codigoFilial = "")
     {
         $sql = "SELECT id
-            FROM armazens
-            WHERE descricao = '{$codigoArmazem}'
+            FROM filial
+            WHERE descricao = '{$codigoFilial}'
             LIMIT 1";
 
-        if (!$codigoArmazem) {
-            $sql = 'SELECT id_armazens AS id
-                    FROM pessoas_armazens
+        if (!$codigoFilial) {
+            $sql = 'SELECT id_filial AS id
+                    FROM pessoas_filial
                     WHERE cancelado = 0
                         AND id_pessoas = ' . $this->idPessoasProprietario;
         }
 
-        $idArmazem = $this->integracao->executarQuery($sql)[0]['id'];
+        $idFilial = $this->integracao->executarQuery($sql)[0]['id'];
 
-        if (!$idArmazem) {
-            $this->emitirErro("Armazem nao encontrado", "404");
+        if (!$idFilial) {
+            $this->emitirErro("Filial nao encontrado", "404");
         }
 
-        $this->idArmazens = $idArmazem;
+        $this->idFilial = $idFilial;
     }
 
 
@@ -296,7 +296,7 @@ class Api
             "typ" => "Bearer",                // (typ - Type) Tipo do token
             "address" => md5((string) $this->ip),      // (address - IP Address) Endereço IP do usuário
             "date" => date('Y-m-d h:m:s'),    // (date - Date) Data em que o token foi emitido
-            "arm" => $this->idArmazens        // (arm - Armazem) Codigo id do armazem
+            "arm" => $this->idFilial        // (arm - Filial) Codigo id do filial
         ];
 
         $jwt = base64Encode(json_encode($header)) .".". base64Encode(json_encode($payload));
@@ -304,7 +304,7 @@ class Api
 
         $dadosToken = [
             "id_pessoas" => $id,
-            "id_armazens" => $this->idArmazens,
+            "id_filial" => $this->idFilial,
             "hora_criacao" => $payload["iat"],
             "hora_expiracao" => $payload["exp"],
             "token" => $this->token,
