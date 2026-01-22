@@ -33,36 +33,20 @@ define("COPIAR_SALVAR",             52);
 define("IMPORTAR",          		60);
 define('IMPORTACOES_DIVERSAS',      61);
 
-define("AREAS",                     70);
-define("AREAS_NOVO",                71);
-define("AREAS_SALVAR",              72);
-define("AREAS_EXCLUIR",             73);
-define("AREAS_DESATIVAR",           74);
-define("AREAS_PRIORIDADE_SOBE",     75);
-define("AREAS_PRIORIDADE_DESCE",    76);
 define("ATUALIZAR_EM_LOTE", 80);
-define("ATUALIZAR_EM_LOTE_PESQUIAR", 81);
+define("ATUALIZAR_EM_LOTE_PESQUISAR", 81);
 define("CONFIRMAR_ATUALIZAR_EM_LOTE_PESQUISAR", 82);
-define("FINALIZOU_ATUALIZAR_EM_LOTE_PESQUIAR", 83);
+define("FINALIZOU_ATUALIZAR_EM_LOTE_PESQUISAR", 83);
 
-define("ESTRUTURA",                    90);
 define("LISTAGEM",                     95);
 define("FORNECEDORES",                 100);
 define("ALTERAR_FORNECEDOR",           200);
-
-define("POSICAO_FIXA_LOTE",           220);
-define("POSICAO_FIXA_LOTE_IMPORTAR",  221);
-
-define("FILTRO_IMPORTAR_ITENS_KIT", 300);
-define("IMPORTAR_ITENS_KIT", 301);
-define("MENSAGEM_ITENS_KIT", 302);
 
 define("FORMULARIO_IMPORTACAO_DE_FORNECEDORES", 400);
 define("IMPORTACAO_DE_FORNECEDORES", 401);
 define("CONFIRMAÇÃO_IMPORTACAO_DE_FORNECEDORES", 402);
 define("IMPRIMIR_MODELO", 410);
-define('POSICAO_FIXA' , 411);
-define('CADASTRO_POSICAO_FIXA' , 412);
+
 
 // Removendo paginação e limit quando for exportação
 if (isset($_REQUEST["gPDF"])
@@ -95,12 +79,10 @@ $html .= $o->msgTitle("Cadastro de itens");
 if ($gId>0) {
 	$aptoNoBanco = gFieldById("itens", $gId, "apto");
 	$aptoSKUs = $persistencia->aptoSKUs($gId);
-	$aptoAreas = $persistencia->aptoAreas($gId);
 
 	$faz_picking = dbQuery("SELECT faz_picking FROM itens WHERE id = $gId")[0]['faz_picking'];
-	$aptoPosicaoFixa = $persistencia->aptoPosicaoFixa($gId, $faz_picking);
-	if ($aptoNoBanco<>$aptoSKUs || $aptoNoBanco<>$aptoAreas || $aptoNoBanco<>$aptoPosicaoFixa) {
-		if ($aptoSKUs==1 && $aptoAreas==1 && $aptoPosicaoFixa) {
+	if ($aptoNoBanco<>$aptoSKUs) {
+		if ($aptoSKUs==1) {
 			$apto=1;
 		} else {
 			$apto=0;
@@ -109,8 +91,6 @@ if ($gId>0) {
 	}
 }
 
-
-// gD($gPage, 1);
 
 switch ($gPage) {
 	case INICIO:
@@ -169,8 +149,7 @@ switch ($gPage) {
 
 			$html.=$o->tableRow($mtz,'header');
 			$cnt=0;
-			foreach ($rs as $id => $row)
-			{
+			foreach ($rs as $id => $row) {
 				$mtz = [];
 				$mtz[]='<-'.$o->button("{icon: folder-open; caption: Abrir; hint: Abrir a ficha do item; size: small; href: ".$o->page."&gPage=".CAPA."&gId=".$row['id']."}");
 				$mtz[]='<>'.gCheck($row['ativo']);
@@ -1448,193 +1427,6 @@ switch ($gPage) {
 		}
 		break;
 
-	/* ----------------------------- ÁREAS ------------------------ */
-	case AREAS:
-		$html.=mostraCabecalho();
-		$frm=new gForm("{columns: 3}");
-
-		$sql="SELECT * FROM itens WHERE id=".$gId;
-		$item=(dbQuery($sql)[0]);
-		// Ou id_pessoas_proprietário = 0 ou o mesmo do cadastro do item
-		$combo_areas="SELECT id,descricao FROM areas WHERE id_pessoas_proprietario=0 OR id_pessoas_proprietario=".intval($item["id_pessoas_proprietario"]);
-		$combo_areas.=" ORDER BY descricao";
-
-
-		$frm->add("{name: id_areas; fieldLabel: Adicionar área; type: comboMultiSelection; items: ".$combo_areas.";}");
-
-		$frm->add("{name: gPage;type: hidden; value: ".AREAS_SALVAR."}");
-		$frm->add("{name: gId;type: hidden; value: ".$gId."}");
-		$html.=$frm->render($o);
-
-		$sql = "SELECT IA.*, A.descricao area FROM itens_areas IA LEFT JOIN areas A ON IA.id_areas=A.id LEFT JOIN posicoes AS p ON p.id = IA.id_posicoes WHERE IA.id_itens=$gId AND IA.id_posicoes = 0 ORDER BY IA.prioridade, A.descricao";
-		$rs = dbQuery($sql);
-
-		if ($rs) {
-			$o->out($o->modal("{title: Confirme; size: small; content: Excluir este registro?; okCaption: Excluir agora; name: confirmaExclusao; url: excluirRegistro()}"), gLOC_INLINE, 999);
-			$html.=$o->tableBegin("medium", true);
-			$mtz=[];
-			$mtz[]="<-Opções";
-			$mtz[]="->Id";
-			$mtz[]="<>Ativo";
-			$mtz[]="<>Prioridade";
-			$mtz[]="<-Área";
-			$html.=$o->tableRow($mtz, "header");
-			foreach ($rs as $id => $row) {
-				$btns=[];
-				$btns.=$o->button("{icon: trash; caption: Excluir; style: danger; size: small; openModal: confirmaExclusao; }", "javascript:gIdd='" . $row['id'] . "'");
-				$btns.=$o->button("{icon: arrow-up;style: primary; size: small;href: ".$o->page."&gPage=".AREAS_PRIORIDADE_SOBE."&gId=".$gId."&gIdd=".$row['id']."; }");
-				$btns.=$o->button("{icon: arrow-down;style: primary; size: small;href: ".$o->page."&gPage=".AREAS_PRIORIDADE_DESCE."&gId=".$gId."&gIdd=".$row['id']."; }");
-				if ($row['ativo']==1) {
-					$btns.=$o->button("{icon: eraser; caption: Desativar; style: warning; size: small; href:".$o->page."&gPage=".AREAS_DESATIVAR."&gId=".$gId."&gIdd=".$row['id']."}");
-				} else {
-					$btns.=$o->button("{icon: check; caption: Ativar; style: success; size: small; href:".$o->page."&gPage=".AREAS_DESATIVAR."&gId=".$gId."&gIdd=".$row['id']."}");
-				}
-				$mtz=[];
-				$mtz[]="<-".$btns;
-				$mtz[]="->".$row["id"];
-				$mtz[]="<>".gCheck($row["ativo"]);
-				$mtz[]="<>".$row["prioridade"];
-				$mtz[]="<-".$row["area"];
-				$html.=$o->tableRow($mtz, "detail");
-			}
-			$html.=$o->tableEnd();
-			$o->addJavascript('gIdd=0;function excluirRegistro(){document.location.href="'.$o->page."&gPage=".AREAS_EXCLUIR."&gId=$gId&gIdd=".'"+gIdd;}');
-		} else {
-			if ($gParam['POSICIONAMENTO_LIVRE']['ativo'] == 0) {
-				$html.=$o->msgDanger("Nenhuma área definida para este item!<br>É necessário definir ao menos uma área para tornar o item apto para operação");
-			} else {
-				$html.=$o->msgInfo("Nenhuma área definida para este item");
-			}
-		}
-		break;
-
-	case AREAS_SALVAR:
-		$idAreas    = implode(',', $_REQUEST['id_areas']);
-		$erros = [];
-
-		if (!$idAreas) {
-			$erros[] = "Não é possível cadastrar uma área <b>indiferente</b>. Por favor selecione uma área válida";
-		}
-
-		$sql = "SELECT GROUP_CONCAT(A.descricao) area
-				FROM itens_areas I
-				LEFT JOIN areas A ON I.id_areas = A.id
-				WHERE id_itens = {$gId}
-					AND (id_areas IN ('{$idAreas}'))";
-		$rs = dbQuery($sql)[0]['area'];
-
-		if ($rs) {
-			$erros[] = 'Já existe um vínculo com esta área: ' . $rs;
-		}
-
-		if ($erros) {
-			$html .= mostraCabecalho();
-			$html .= $o->msgDanger("Erros de validação: " . $o->ul($erros));
-			$html .= $o->button("{icon:arrow-left; caption:Voltar; href:".$o->page."&gPage=".AREAS."&gId=".$gId.";}");
-			break;
-		}
-
-		// Verifica se a área comporta um palete com as especificações informadas
-		$sql = "SELECT SK.*, U.descricao unidade
-				FROM itens_skus SK
-				LEFT JOIN unidades U ON SK.id_unidades=U.id
-				WHERE SK.id_itens=".$gId;
-		$rs = dbQuery($sql);
-		$posicoesInviaveis = [];
-		// Verifica pra cada SKU cadastrado
-		foreach ($rs as $row) {
-			// Cadastrado em centímetros
-			$altura = $row['altura'];
-			$paleteAltura = $row['palete_altura'];
-			$alturaPaleteSKU = $altura*$paleteAltura;
-			// Verifica para cada posição da área
-			$sql = "SELECT P.*, P.codigo_barras posicao, A.descricao area
-					FROM posicoes P
-					LEFT JOIN areas A ON P.id_areas=A.id
-					WHERE id_areas IN ({$idAreas})";
-			$rsp = dbQuery($sql);
-			foreach ($rsp as $rowp) {
-				// Cadastrado em metros
-				$alturaPosicao = $rowp['altura']*100;
-				if ($alturaPaleteSKU>=$alturaPosicao)
-				{
-					$posicoesInviaveis[]=$rowp['posicao']." ".$o->label($alturaPosicao."cm")." < ".$o->label($alturaPaleteSKU."cm")." do SKU ".$row['unidade'].' com '.intval($row['quantidade']);
-				}
-			}
-		}
-
-		if ($posicoesInviaveis) {
-			$html.=mostraCabecalho();
-			$html.=$o->msgDanger("Não foi possível adicionar esta área, pois existem posições com dimensões que não suportam este item");
-			$html.=$o->ul($posicoesInviaveis);
-			$html.=$backButton;
-		} else {
-			$idAreas = explode(',', $idAreas);
-			foreach ($idAreas as $key => $row) {
-				$hoje = date('Y-m-d H:i:s');
-				$flds="";
-				$flds['id_itens'] = $gId;
-				$flds['id_areas'] = $row;
-				$flds['ativo'] = 1;
-				$gIdd=dbInsert("itens_areas", $flds, true);
-				userLog('Área [' . gFieldById('areas', $row,'descricao') . '] adicionada ao item id <a href="index.php?g=itens&gPage=' . CAPA . '&gId=' . $gId . '">' . $gId . '</a>');
-			}
-			redirect($o->page.'&gPage='.AREAS.'&gId='.$gId."&gIdd=".$gIdd);
-		}
-		break;
-
-
-	case AREAS_DESATIVAR:
-		$sql = "UPDATE itens_areas SET ativo=1-ativo WHERE id_itens=$gId and id=$gIdd";
-		dbQuery($sql);
-		userLog('Área desativada no item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
-
-		if ($_REQUEST['posicaoFixa']) {
-			redirect($o->page . '&gPage=' . POSICAO_FIXA . '&gId=' . $gId);
-		}
-
-		redirect($o->page.'&gPage=' . AREAS . '&gId=' . $gId . "&gIdd=" . $gIdd);
-		break;
-
-
-	case AREAS_EXCLUIR:
-		$sql = "DELETE FROM itens_areas WHERE id_itens = $gId and id = $gIdd";
-		dbQuery($sql);
-		userLog('Área removida do item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
-
-		if ($_REQUEST['posicaoFixa']) {
-			redirect($o->page . '&gPage=' . POSICAO_FIXA . '&gId=' . $gId);
-		}
-
-		redirect($o->page.'&gPage='.AREAS.'&gId='.$gId."&gIdd=".$gIdd);
-		break;
-
-
-	case AREAS_PRIORIDADE_SOBE:
-		$sql = "UPDATE itens_areas SET prioridade=prioridade-1 WHERE id_itens=$gId and id=$gIdd";
-		dbQuery($sql);
-		userLog('Área com prioridade aumentada no item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
-
-		if ($_REQUEST['posicaoFixa']) {
-			redirect($o->page . '&gPage=' . POSICAO_FIXA . '&gId=' . $gId);
-		}
-
-		redirect($o->page.'&gPage='.AREAS.'&gId='.$gId."&gIdd=".$gIdd);
-		break;
-
-
-	case AREAS_PRIORIDADE_DESCE:
-		$sql = "UPDATE itens_areas SET prioridade=prioridade+1 WHERE id_itens=$gId and id=$gIdd";
-		dbQuery($sql);
-		userLog('Área com prioridade diminuida no item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
-
-		if ($_REQUEST['posicaoFixa']) {
-			redirect($o->page . '&gPage=' . POSICAO_FIXA . '&gId=' . $gId);
-		}
-
-		redirect($o->page.'&gPage='.AREAS.'&gId='.$gId."&gIdd=".$gIdd);
-		break;
-
 
 	case ATUALIZAR_EM_LOTE:
 		$html .= $o->msgSubTitle("Atualização em lote");
@@ -1649,12 +1441,12 @@ switch ($gPage) {
 		$form->add("{type: combo; fieldLabel: Faz Picking; name:faz_picking; allowbank: true; items:{'Sim','Não'}}");
 		$form->add("{type: combo; fieldLabel: Crítico; name: critico; allowbank: true; items:{'Sim','Não'}}");
 		$form->add("{type: combo; fieldLabel: Ativo; name: ativo; allowbank: true; items:{'Sim','Não'}}");
-		$form->add("{type: hidden; fieldLabel:; name:gPage; value:" . ATUALIZAR_EM_LOTE_PESQUIAR . ";}");
+		$form->add("{type: hidden; fieldLabel:; name:gPage; value:" . ATUALIZAR_EM_LOTE_PESQUISAR . ";}");
 		$html .= $form->render($o);
 		break;
 
 
-	case ATUALIZAR_EM_LOTE_PESQUIAR:
+	case ATUALIZAR_EM_LOTE_PESQUISAR:
 		$html .= $o->msgSubTitle('Atualização em lote');
 
 		$where   = [];
@@ -2053,195 +1845,13 @@ switch ($gPage) {
 				}
 			}
 		}
-		redirect($o->page."&gPage=".FINALIZOU_ATUALIZAR_EM_LOTE_PESQUIAR);
+		redirect($o->page."&gPage=".FINALIZOU_ATUALIZAR_EM_LOTE_PESQUISAR);
 		break;
 
 
-	case FINALIZOU_ATUALIZAR_EM_LOTE_PESQUIAR:
+	case FINALIZOU_ATUALIZAR_EM_LOTE_PESQUISAR:
 		$html .= $o->msgSuccess("Itens atualizados com sucesso");
 		$html .= $o->button("{icon: arrow-left; caption: Voltar; hint: Voltar; style: info; size: normal; href: " . $o->page . "&gPage=" . ATUALIZAR_EM_LOTE);
-		break;
-
-	case ESTRUTURA:
-		$html .= mostraCabecalho();
-
-		// Proprietário
-		$id_pessoas_proprietario = intval(dbQuery("SELECT * FROM itens WHERE id = " . $gId)[0]['id_pessoas_proprietario']);
-		$gIdd = intval(dbQuery("SELECT id FROM itens_skus WHERE id_itens = " . $gId . " ORDER BY id LIMIT 1")[0]['id']);
-
-		// Insumos deste proprietário
-		$sqlInsumos = "SELECT ik.id, CONCAT(i.codigo,' - ',i.nome, ' (',ik.quantidade,'x', u.sigla,')') nome
-					FROM itens_skus ik
-					LEFT JOIN unidades u ON ik.id_unidades = u.id
-					LEFT JOIN itens i ON ik.id_itens = i.id
-					WHERE i.ativo = 1 AND ik.ativo = 1 AND i.produto_acabado = 0 AND i.id_pessoas_proprietario = $id_pessoas_proprietario
-					ORDER BY i.nome, ik.quantidade";
-
-		$frm = new gForm();
-
-		$frm->row(
-			$frm->add("{name: id_itens_skus_insumo; fieldLabel: Insumo; type: combo; value:" . $row2['id_itens_skus_insumo'] . "; items: " . $sqlInsumos . "}"),
-			$frm->add("{name: quantidade; fieldLabel: Quantidade; type: number; value: " . gFloat($row2['quantidade']) . "}"),
-			$frm->add("{name: grupo; fieldLabel: Grupo; type: upperText; maxLength: 1; value: " . $row2['grupo'] . "}")
-		);
-
-		if ($gParam['PERFIL_PRODUCAO_COM_KITS']['ativo']) {
-			$frm->add("{name: kitItens; fieldLabel: Arquivo CSV;type: file;}");
-		}
-		$frm->add("{name: gPage;type: hidden; value: " . ($gPage+1) . "}");
-		$frm->add("{name: gId;type: hidden; value: " . $gId . "}");
-		$frm->add("{name: gIdd;type: hidden; value: " . $gIdd . "}");
-		$html .= $frm->render($o);
-
-		$sql = "SELECT ie.*, i.nome, i.codigo, ik.quantidade qtd_sku, u.sigla
-				FROM itens_estruturas ie
-				LEFT JOIN itens_skus ik ON ie.id_itens_skus_insumo = ik.id
-				LEFT JOIN itens i ON ik.id_itens = i.id
-				LEFT JOIN unidades u ON ik.id_unidades = u.id
-				WHERE ie.id_itens_skus_produto = $gIdd
-				ORDER BY grupo";
-		$rs = dbQuery($sql);
-		if ($rs) {
-			$cnt   = 0;
-			$o->out($o->modal("{title: Confirme; size: small; content: Excluir este registro?; okCaption: Excluir agora; name: confirmaExclusao; url: excluirRegistro()}"), gLOC_INLINE, 999);
-			$html .= $o->tableBegin("big", true);
-			$mtz   = [];
-			$mtz[] = "<-Opções";
-			$mtz[] = "->Nº";
-			$mtz[] = "<-Código";
-			$mtz[] = "<-Insumo";
-			$mtz[] = "->Qtd";
-			$mtz[] = "->Id";
-			$html .= $o->tableRow($mtz, "header");
-			$grupo = "";
-			foreach ($rs as $id=>$row) {
-				if ($grupo != $row['grupo']) {
-					$grupo = $row['grupo'];
-					$mtz = [];
-					$mtz[] = "~6" . $row['grupo'];
-					$html .= $o->tableRow($mtz, "header");
-				}
-				$cnt++;
-				$mtz = [];
-				$btns = $o->button("{icon: trash; caption: Excluir; style: danger; size: tiny; openModal: confirmaExclusao; }", "javascript:gIda='" . $row['id'] . "'");
-				$mtz[] = "<-" . $btns;
-				$mtz[] = "->" . $cnt;
-				$mtz[] = "<-" . $row["codigo"];
-				$mtz[] = "<-" . $row["nome"] . " (" . $row['qtd_sku'] . "x" . $row['sigla'] . ")";
-				$mtz[] = "->" . gFloat($row["quantidade"]);
-				$mtz[] = "->" . $o->small($row["id"]);
-				$html .= $o->tableRow($mtz, "detail");
-			}
-			$html .= $o->tableEnd();
-		} else {
-			$html .= $o->msgInfo("Este item não tem estrutura de insumos cadastrada.");
-		}
-		$o->addJavascript('gIda=0;function excluirRegistro(){document.location.href="' . $o->page . "&gPage=" . (ESTRUTURA+2) . "&gId=$gId&gIdd=$gIdd&gIda=" . '"+gIda;}');
-		break;
-
-	case (ESTRUTURA+1):
-		if ($_FILES['kitItens']['tmp_name']) {
-			if ($_FILES['kitItens']['type'] != 'text/csv') {
-				$html .= $o->msgDanger('Importar somente arquivos CSV');
-				$html .= $backButton;
-				break;
-			}
-
-			$conteudoCsv = file_get_contents($_FILES['kitItens']['tmp_name']);
-			$colunas = explode("\n", $conteudoCsv);
-
-			foreach ($colunas as $key => $coluna) {
-				$conteudo = explode(";", $coluna);
-				$insumo = $conteudo[0];
-				$quantidade = $conteudo[1];
-				$verificaQuantidade = preg_replace('/[^\d\,]/', '', $quantidade);
-				$verificaQuantidade = str_replace(',', '.', $verificaQuantidade);
-
-				if ($verificaQuantidade == '') {
-					$erro[] = "A linha " . ($key + 1) . " está com o campo de quantidade com a informação incorreta ou vazia";
-				}
-
-				$sql = "SELECT id FROM itens_skus WHERE codigo = '{$insumo}'";
-				$verificaItem = dbQuery($sql);
-				$itensSkus[] = $verificaItem[0]['id'];
-
-				if (!$verificaItem) {
-					$erro[] = "O item {$insumo} não está cadastrado";
-				}
-			}
-
-			if ($erro) {
-				$html .= $o->msgDanger('Os itens de Kit foram criados, mas a estrutura não foi gerada por causa dos seguintes erros:<br><br>'
-						. implode('<br>', $erro));
-				$html .= $backButton;
-				break;
-			}
-
-			foreach ($colunas as $key => $coluna) {
-				$conteudo = explode(";", $coluna);
-				$insumo = $conteudo[0];
-				$quantidade = $conteudo[1];
-				$verificaQuantidade = preg_replace('/[^\d\,]/', '', $quantidade);
-				$verificaQuantidade = str_replace(',', '.', $verificaQuantidade);
-
-				$sql = "SELECT quantidade, id FROM itens_estruturas
-						WHERE id_itens_skus_produto = {$gIdd} AND id_itens_skus_insumo = " . $itensSkus[$key];
-				$rs = dbQuery($sql)[0];
-
-				$flds = [];
-				$flds['id_itens_skus_insumo'] = $itensSkus[$key];
-				$flds['quantidade'] = gDBFloat($verificaQuantidade);
-				if ($rs) {
-					dbUpdate("itens_estruturas", $flds, $rs['id']);
-				} else {
-					$flds['id_itens_skus_produto'] = $gIdd;
-					dbInsert('itens_estruturas', $flds);
-				}
-			}
-
-			userLog('Insumo adicionado à estrutura do item id <a href="index.php?g=itens&gPage=' . CAPA . '&gId=' . $gId . '">' . $gId . '</a>');
-			dbQuery("UPDATE itens SET produto_acabado = 1 WHERE id = " . $gId);
-		}
-
-		if (gDBFloat($_REQUEST['quantidade'])>0 && $_REQUEST['id_itens_skus_insumo']>0 && (!$_FILES['kitItens']['tmp_name'])) {
-			// Verifica se este insumo já foi cadastrado, se foi, não permite novamente
-
-			// $jaTem = intval(dbQuery("SELECT count(id) ttl FROM itens_estruturas WHERE id_itens_skus_produto=".$gIdd." AND id_itens_skus_insumo=".intval($_REQUEST['id_itens_skus_insumo']))[0]['ttl']);
-			// if (!$jaTem)
-
-			$sql = "SELECT quantidade, id FROM itens_estruturas
-					WHERE id_itens_skus_produto = {$gIdd}
-						AND id_itens_skus_insumo = " . $_REQUEST['id_itens_skus_insumo'];
-			$rs = dbQuery($sql)[0];
-
-			$hoje = date('Y-m-d H:i:s');
-			$flds = "";
-			$flds['id_itens_skus_insumo'] = intval($_REQUEST['id_itens_skus_insumo']);
-			$flds['grupo'] = strtoupper((string) $_REQUEST['grupo']);
-			$flds['quantidade'] = gDBFloat($_REQUEST['quantidade']);
-
-			if ($rs) {
-				dbUpdate("itens_estruturas", $flds, $rs['id']);
-			} else {
-				$flds['id_itens_skus_produto'] = $gIdd;
-				dbInsert("itens_estruturas", $flds);
-			}
-
-			userLog('Insumo adicionado à estrutura do item id <a href="index.php?g=itens&gPage=' . CAPA . '&gId=' . $gId . '">' . $gId . '</a>');
-			dbQuery("UPDATE itens SET produto_acabado = 1 WHERE id = " . $gId);
-		}
-		redirect($o->page . '&gPage=' . ESTRUTURA . '&gId=' . $gId . "&gIdd=" . $gIdd);
-		break;
-
-	case (ESTRUTURA+2):
-		$sql = "DELETE FROM itens_estruturas WHERE id_itens_skus_produto = $gIdd and id = " . intval($_REQUEST['gIda']);
-		dbQuery($sql);
-		$temInsumos = intval(dbQuery("SELECT COUNT(id) ttl FROM itens_estruturas WHERE id_itens_skus_produto = $gIdd")[0]['ttl']);
-		if (!$temInsumos) {
-			dbQuery("UPDATE itens SET produto_acabado = 0 WHERE id = " . $gId);
-		}
-		userLog('Insumo removido da estrutura do item id <a href="index.php?g=itens&gPage=' . CAPA . '&gId=' . $gId . '">' . $gId . '</a>');
-		redirect($o->page . '&gPage=' . ESTRUTURA . '&gId=' . $gId);
 		break;
 
 
@@ -2537,256 +2147,6 @@ switch ($gPage) {
 		break;
 
 
-	case POSICAO_FIXA_LOTE:
-		$html .= $o->msgSubTitle("Posição fixa em Lote");
-		$frm = new gForm("{columns: 2}");
-		$frm->add("{name: posicoes; fieldLabel: Arquivo CSV;type: file;}");
-		$frm->add("{name: gPage; type: hidden; value: " . POSICAO_FIXA_LOTE_IMPORTAR . "}");
-
-		$modelo = 'item,posicao';
-
-		$frm->addButton("{icon: download; title: Baixar modelo CSV; hint: Baixar modelo CSV; style: info; size: normal; href: " . $o->page . "&gPage=" . IMPRIMIR_MODELO . "&modelo=" . $modelo);
-		$html .= $frm->render($o);
-
-		$html .= $o->msgInfo('Importe CSV sem título');
-		break;
-
-
-	case POSICAO_FIXA_LOTE_IMPORTAR:
-		$file = file_get_contents ($_FILES['posicoes']['tmp_name']);
-
-		if ($_FILES['posicoes']['type'] != 'text/csv') {
-			$html .= $o->msgDanger('Importar somente arquivos CSV');
-			$html .= $backButton;
-			break;
-		}
-
-		$arquivo = explode("\n",$file);
-		$inserePosicoesFixas = "INSERT INTO itens_areas (id_itens, id_areas, ativo, id_posicoes, prioridade) VALUES ";
-		foreach ($arquivo as $numeroLinha => $rs) {
-
-			$codigo = explode(';', $rs);
-
-			if (empty($rs) || trim(str_replace(';', '', $rs)) === '') {
-				continue;
-			}
-
-			$codigoItem = trim($codigo[0]);
-			$codigoPosicao = trim($codigo[1]);
-			if (!$codigoItem || !$codigoPosicao ) {
-				$erros[] = 'Linha ' . ($numeroLinha+1) . ' deste arquivo com coluna vazia';
-				continue;
-			}
-
-			//Consultar item e posição
-			$sql = "SELECT id_itens AS id
-					FROM itens_skus
-					WHERE itens_skus.codigo = '".$codigoItem
-						."' OR itens_skus.codigo_barras = '".$codigoItem."'
-					ORDER BY ativo desc;";
-			$item = dbQuery($sql)[0];
-
-			$sql = "SELECT id, id_areas FROM posicoes WHERE codigo_barras = '".$codigoPosicao."'";
-			$posicao = dbQuery($sql)[0];
-
-			if (!$item) {
-				$erros[] = 'Item ' . $codigoItem . ' não cadastrado';
-				continue;
-			}
-
-			if (!$posicao) {
-				$erros[] = 'Posição ' . $codigoPosicao . ' não cadastrada';
-				continue;
-			}
-
-			//verificar duplicidade
-			$sql = "SELECT id
-				FROM itens_areas
-				WHERE id_itens = ".((int) $item['id'])."
-					AND id_posicoes = ".((int) $posicao['id'])."
-					AND id_areas = ".((int) $posicao['id_areas'])."
-					AND	ativo = 1";
-			$temDuplicidade = dbQuery($sql)[0];
-
-			if (!$temDuplicidade) {
-				$inserePosicoesFixas .= "(" . ((int) $item['id']) . ", " . ((int) $posicao['id_areas']) . ", 1, " . ((int) $posicao['id']) . ", 1),";
-			} else {
-				$erros[] = $codigoItem . ' já possui posição fixa ' . $codigoPosicao . ' cadastrada';
-			}
-		}
-
-		if ($erros) {
-			$html .= $o->msgDanger($o->ul($erros));
-			$html .= $backButton;
-			break;
-		}
-
-		$inserePosicoesFixas = substr($inserePosicoesFixas, 0, -1);
-		$InserirCadastroPosicoes = dbQuery($inserePosicoesFixas);
-
-		$html .= $o->msgSuccess("Posições fixas cadastradas com sucesso");
-		break;
-
-
-	case FILTRO_IMPORTAR_ITENS_KIT:
-		$html .= $o->msgSubTitle("Kit itens em Lote");
-
-		$frm   = new gForm("{columns: 2}");
-		$frm->add("{name: kitItens; fieldLabel: Arquivo CSV;type: file;}");
-		$frm->add("{name: gPage; type: hidden; value: " . IMPORTAR_ITENS_KIT . "}");
-		$frm->add("{name: gId; type: hidden; value: $gId}");
-
-		$modelo = 'Item de kit,Item de insumo,quantidade';
-		$frm->addButton("{icon: download; title: Baixar modelo CSV; hint: Baixar modelo CSV; style: info; size: normal; href: " . $o->page . "&gPage=" . IMPRIMIR_MODELO . "&modelo=" . $modelo);
-		$html .= $frm->render($o);
-
-		$html .= $o->msgInfo("Observação, antes de importar o arquivo CSV verifique se: <br>
-			<br> - Importe CSV sem título
-			<br> - O arquivo tem alguma linha vazia ou espaços no nome dos itens
-			<br> - Verificar se todos os itens de insumo estão cadastrados no sistema
-			<br> - Verificar se o campo da quantidade está preenchido");
-		break;
-
-
-	case IMPORTAR_ITENS_KIT:
-		$conteudoCsv = file_get_contents($_FILES['kitItens']['tmp_name']);
-
-		if ($_FILES['kitItens']['type'] != 'text/csv') {
-			$html .= $o->msgDanger('Importar somente arquivos CSV');
-			$html .= $backButton;
-			break;
-		}
-
-		$colunas = explode("\n", $conteudoCsv);
-
-		$kits = [];
-		foreach ($colunas as $key => $value) {
-
-			$dados = explode(";", $value);
-
-			if (empty($value) || trim(str_replace(';', '', $value)) === '') {
-				continue;
-			}
-
-			$codigoKit = $dados[0];
-			$codigoSku = $dados[1];
-			$quantidade = $dados[2];
-			$conferirQuantidade = preg_replace('/[^\d\,]/', '', $quantidade);
-			$conferirQuantidade = str_replace(',', '.', $conferirQuantidade);
-
-			if ($conferirQuantidade == '') {
-				$erro[] = "A linha " . ($key + 1) . " está com valor da quantidade incorreta ou a linha está vazia ";
-			}
-
-			$kits[$codigoKit][$codigoSku]['quantidade'] += $quantidade;
-
-			if ($kits[$codigoKit]['id_itens_skus'] == 0) {
-				$sql = "SELECT id FROM itens_skus WHERE codigo = '" . $codigoSku . "'";
-				$rs = dbQuery($sql);
-				if ($rs) {
-					$kits[$codigoKit][$codigoSku]['id_itens_skus'] = $rs[0]['id'];
-				} else {
-					$erro[] = "O item " . $codigoSku . " não está cadastrado";
-				}
-			}
-
-			if ((int) $kits[$codigoKit]['id'] == 0) {
-				$sql = "SELECT id FROM itens_skus WHERE codigo = '" . $codigoKit . "'";
-				$rs = dbQuery($sql);
-				if ($rs) {
-					$idKit = $rs[0]['id'];
-				} else {
-					$campos = [];
-					$campos['codigo'] = gCleanField($codigoKit);
-					$campos['codigo_barras'] = gCleanField($codigoKit);
-					$campos['nome'] = gCleanField($codigoKit);
-					$campos['critico'] = 0;
-					$campos['descricao'] = gCleanField($codigoKit);
-					$campos['id_pessoas_proprietario'] = 4;//4 - wms_siemens.pessoas.id = Siemens Gamesa
-					$campos['id_pessoas_fornecedor'] = 0;
-					$campos['id_grupos'] = 0;
-					$campos['id_tipos'] = 0;
-					$campos['id_prioridades_saida'] = 0;
-					$campos['prazo_validade'] = 0;
-					$campos['shelf_life'] = 0;
-					$campos['ativo'] = 0;
-					$campos['id_itens_skus_operacao'] = 0;
-					$campos['id_itens_skus_pedido'] = 0;
-					$campos['curva'] = "A";
-					$campos['faz_picking'] = 0;
-					$campos['exige_lote'] = 0;
-					$campos['exige_data_fabricacao'] = 0;
-					$campos['exige_data_validade'] = 0;
-					$campos['id_pessoas_criou'] = 1;
-					$campos['data_cadastro'] = date("Y-m-d H:i:s");
-					$idItens = dbInsert("itens",$campos,true);
-
-					$campos = [];
-					$campos['id_itens'] = $idItens;
-					$campos['ativo'] = 0;
-					$campos['codigo'] = $codigoKit;
-					$campos['codigo_barras'] = $codigoKit;
-					$campos['nome'] = gCleanField($codigoKit);
-					$campos['id_unidades'] = 68;//wms_siemens.unidades.id 68 = UN
-					$campos['quantidade'] = 1;
-					$campos['peso_liquido'] = 0;
-					$campos['peso_bruto'] = 0;
-					$campos['largura'] = 1;
-					$campos['altura'] = 1;
-					$campos['comprimento'] = 1;
-					$campos['palete_lastro'] = 1;
-					$campos['palete_altura'] = 1;
-					$idKit = dbInsert("itens_skus", $campos, true);
-				}
-
-				$kits[$codigoKit]['id'] = $idKit;
-			}
-		}
-
-		if ($erro) {
-			$html .= $o->msgDanger('Os itens de Kit foram criados, mas a estrutura não foi gerada por causa dos seguintes erros: <br><br>'
-					. implode('<br>', $erro));
-			$html .= $backButton;
-			break;
-		}
-
-		foreach ($kits as $kit) {
-			$idSku = $kit['id'];
-			foreach ($kit as $indice => $insumo) {
-				//Verifica se a primeira chave é o ID do itemKit
-				if ($indice <> 'id') {
-					$sql = "
-						SELECT id, quantidade
-						FROM itens_estruturas
-						WHERE id_itens_skus_produto = {$idSku}
-							AND id_itens_skus_insumo = " . $insumo['id_itens_skus'];
-					$rs = dbQuery($sql)[0];
-
-					$conferirQuantidade = preg_replace('/[^\d\,]/', '', (string) $insumo['quantidade']);
-					$conferirQuantidade = str_replace(',', '.', $conferirQuantidade);
-
-					$flds = [];
-					$flds['id_itens_skus_insumo'] = $insumo['id_itens_skus'];
-					$flds['quantidade'] = gDBFloat($conferirQuantidade);
-					if ($rs) { //Caso ja tenha insumo cadastrado ele faz um update
-						dbUpdate("itens_estruturas", $flds, $rs['id']);
-					} else { //Caso o item de kit não tenha esse insumo em sua composição, ele cadastra
-						$flds['id_itens_skus_produto'] = $idSku;
-						dbInsert('itens_estruturas', $flds);
-					}
-				}
-			}
-		}
-
-		redirect($o->page . "&gPage=" . MENSAGEM_ITENS_KIT);
-		break;
-
-	case MENSAGEM_ITENS_KIT:
-		$html .= $o->msgSubTitle("Kit itens em Lote");
-		$html .= $o->msgSuccess('Itens de consumo do kit cadastrados com sucesso');
-		$html .= $backButton;
-		break;
-
 	case FORMULARIO_IMPORTACAO_DE_FORNECEDORES:
 		$html .= $o->msgSubTitle("Importação de fornecedores");
 
@@ -2965,144 +2325,6 @@ switch ($gPage) {
 		downloadModeloImportacao($modelo, $_REQUEST['gId']);
 		break;
 
-	case POSICAO_FIXA:
-		$html .= mostraCabecalho($gId);
-		$frm = new gForm("{columns: 3}");
-		$frm->add("{name: id_posicoes; fieldLabel: Adicionar posições fixas; allowBlank: false; type: comboMultiSelection; value: ; items: " . $sp['combo_posicoes_picking'] . "}");
-		$frm->addButton("{icon: arrow-left; title: Voltar; hint: Voltar; style: default; href: " . $o->page . "&gPage=" . AREAS . "&gId=" . $gId . ";}");
-		$frm->add("{name: gPage; type: hidden; value: " . CADASTRO_POSICAO_FIXA . "}");
-		$frm->add("{name: gId; type: hidden; value: $gId}");
-		$html.=$frm->render($o);
-
-		$sql = "SELECT
-					IA.*,
-					p.codigo_barras AS posicoes
-				FROM
-					itens_areas IA
-				LEFT JOIN areas A
-					ON IA.id_areas = A.id
-				LEFT JOIN posicoes AS p
-					ON p.id = IA.id_posicoes
-				WHERE IA.id_itens = $gId AND IA.id_posicoes > 0
-				ORDER BY IA.prioridade, A.descricao";
-		$rs = dbQuery($sql);
-
-		if (!$apto && !$rs) {
-			$html .= $o->msgWarning("Item inapto pois se este faz picking então deve-se cadastrar ao menos uma posição fixa");
-			break;
-		}
-
-		if (!$rs) {
-			$html .= $o->msgWarning("Nenhuma posição fixa definida para este item");
-			break;
-		}
-
-		$o->out($o->modal("{title: Confirme; size: small; content: Excluir este registro?; okCaption: Excluir agora; name: confirmaExclusao; url: excluirRegistro()}"), gLOC_INLINE, 999);
-		$html .= $o->tableBegin("medium", true);
-		$mtz = [];
-		$mtz[] = "<- Opções";
-		$mtz[] = "-> Id";
-		$mtz[] = "<> Ativo";
-		$mtz[] = "<- Posição";
-		$html .= $o->tableRow($mtz, "header");
-		foreach ($rs as $id => $row) {
-			$btns = [];
-			$btns .= $o->button("{icon: trash; caption: Excluir; style: danger; size: small; openModal: confirmaExclusao; }", "javascript:gIdd='" . $row['id'] . "'");
-
-			if ($row['ativo']==1) {
-				$btns .= $o->button("{icon: eraser; caption: Desativar; style: warning; size: small; href:" . $o->page . "&gPage=" . AREAS_DESATIVAR . "&gId=" . $gId . "&gIdd=" . $row['id'] . "&posicaoFixa=1}");
-			} else {
-				$btns .= $o->button("{icon: check; caption: Ativar; style: success; size: small; href:" . $o->page . "&gPage=" . AREAS_DESATIVAR . "&gId=" . $gId . "&gIdd=" . $row['id'] . "&posicaoFixa=1}");
-			}
-
-			$mtz = [];
-			$mtz[] = "<-" . $btns;
-			$mtz[] = "->" . $row["id"];
-			$mtz[] = "<>" . gCheck($row["ativo"]);
-			$mtz[] = "<-" . $row["posicoes"];
-			$html .= $o->tableRow($mtz, "detail");
-		}
-		$html .= $o->tableEnd();
-		$o->addJavascript('gIdd=0;function excluirRegistro(){document.location.href="' . $o->page . "&gPage=" . AREAS_EXCLUIR . "&gId=$gId&posicaoFixa=1&gIdd=" . '"+gIdd;}');
-		break;
-
-	case CADASTRO_POSICAO_FIXA:
-		$idPosicoes = implode(",", $_REQUEST['id_posicoes']);
-
-		$sql = "SELECT I.*, A.descricao area
-				FROM itens_areas I
-				LEFT JOIN areas A ON I.id_areas = A.id
-				WHERE id_itens = {$gId}
-					AND id_posicoes > 0
-					AND id_posicoes IN ({$idPosicoes})";
-		$rs = dbQuery($sql);
-
-		if ($rs) {
-			$erros[] = 'Já existe um vínculo com esta posição';
-		}
-
-		if ($erros) {
-			$html .= mostraCabecalho();
-			$html .= $o->msgDanger("Erros de validação: " . $o->ul($erros));
-			$html .= $o->button("{icon:arrow-left; caption:Voltar; href:" . $o->page . "&gPage=" . POSICAO_FIXA . "&gId=" . $gId . ";}");
-			break;
-		}
-
-		// Verifica se a área comporta um palete com as especificações informadas
-		$sql = "SELECT SK.*, U.descricao unidade
-				FROM itens_skus SK
-				LEFT JOIN unidades U ON SK.id_unidades=U.id
-				WHERE SK.id_itens=".$gId;
-		$rs = dbQuery($sql);
-		$posicoesInviaveis = [];
-
-		$idAreas = dbQuery("SELECT GROUP_CONCAT(id_areas) as areas FROM posicoes WHERE id IN ({$idPosicoes})")[0]['areas'];
-
-		// Verifica pra cada SKU cadastrado
-		foreach ($rs as $row) {
-			// Cadastrado em centímetros
-			$altura = $row['altura'];
-			$paleteAltura = $row['palete_altura'];
-			$alturaPaleteSKU = $altura*$paleteAltura;
-			// Verifica para cada posição da área
-			$sql = "SELECT
-						P.*,
-						P.codigo_barras posicao,
-						A.descricao area
-					FROM posicoes P
-					LEFT JOIN areas A ON P.id_areas=A.id
-					WHERE id_areas IN ($idAreas)";
-			$rsp = dbQuery($sql);
-			foreach ($rsp as $rowp) {
-				// Cadastrado em metros
-				$alturaPosicao = $rowp['altura']*100;
-				if ($alturaPaleteSKU>=$alturaPosicao) {
-					$posicoesInviaveis[]=$rowp['posicao']." ".$o->label($alturaPosicao."cm")." < ".$o->label($alturaPaleteSKU."cm")." do SKU ".$row['unidade'].' com '.intval($row['quantidade']);
-				}
-			}
-		}
-
-		if ($posicoesInviaveis) {
-			$html.=mostraCabecalho();
-			$html.=$o->msgDanger("Não foi possível adicionar esta área, pois existem posições com dimensões que não suportam este item");
-			$html.=$o->ul($posicoesInviaveis);
-			$html.=$backButton;
-		} else {
-			foreach ($_REQUEST['id_posicoes'] as $key => $posicao) {
-				$hoje = date('Y-m-d H:i:s');
-				$flds = [];
-				$flds['id_itens'] = $gId;
-				$flds['ativo'] = 1;
-				$flds['id_posicoes'] = $posicao;
-				$gIdd=dbInsert("itens_areas", $flds, true);
-
-				$area = dbQUery("SELECT id_areas as areas FROM posicoes WHERE id = ({$posicao})")[0]['areas'];
-				userLog('Área [' . gFieldById('areas', $area,'descricao') . '] adicionada ao item id <a href="index.php?g=itens&gPage=' . CAPA . '&gId=' . $gId . '">' . $gId . '</a>');
-			}
-
-			redirect($o->page . '&gPage=' . POSICAO_FIXA . '&gId=' . $gId);
-		}
-		break;
 }
 
 
