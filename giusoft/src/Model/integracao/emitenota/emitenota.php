@@ -21,7 +21,7 @@ class Emitenota
     }
 
 
-    public function acessarRota($nomeRota, $body = array(), $dadosRequisicao)
+    public function acessarRota($nomeRota, $body = [], $dadosRequisicao = [])
     {
         $urlCompleta = $this->montarUrlCompleta($nomeRota);
         $dadosRequisicao['rotas'] = $this->rotas[$nomeRota];
