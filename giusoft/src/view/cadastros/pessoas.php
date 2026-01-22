@@ -494,7 +494,7 @@ switch ($gPage)
 				$mtz['id_pessoas']       = $gId;
 				$mtz['data_criou']       = date("Y-m-d H:i:s");
 				dbInsert('pessoas_filial',$mtz);
-				userLog('Pessoa - armazém adicionado - id <a href="pessoas.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
+				userLog('Pessoa - filial adicionado - id <a href="pessoas.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
 			}
 		}
 		redirect($o->page."&gPage=".FILIAL."&gId=".$gId);
@@ -504,7 +504,7 @@ switch ($gPage)
 		if((int) $gIdDel > 0){
 			$sql="UPDATE pessoas_filial SET data_cancelou='".date("Y-m-d H:i:s")."',id_pessoas_cancelou=$usrId,cancelado=1 WHERE id=$gIdDel";
 			dbQuery($sql);
-			userLog('Pessoa - armazém cancelado - id <a href="pessoas.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
+			userLog('Pessoa - filial cancelado - id <a href="pessoas.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
 		}
 		redirect($o->page."&gPage=".FILIAL."&gId=".$gId);
 	break;
@@ -872,7 +872,7 @@ function mostraCabecalho($gId)
 			'</div>';
 		$btns[]=$o->button("{active: ".$active1."; icon: file-alt; caption: Dados pessoais; hint: Alterar os dados pessoais; href: ".$o->page."&gPage=".DADOS."&gId=".$gId."}");
 		$btns[]=$o->button("{active: ".$active2."; icon: map-marker; caption: Endereços; hint: Incluir ou alterar endereços; href: ".$o->page."&gPage=".ENDERECOS."&gId=".$gId."}");
-		$btns[]=$o->button("{active: ".$active3."; icon: warehouse; caption: Filial; hint: Relacionar pessoa ao armazém; href: ".$o->page."&gPage=".FILIAL."&gId=".$gId."}");
+		$btns[]=$o->button("{active: ".$active3."; icon: warehouse; caption: Filial; hint: Relacionar pessoa ao filial; href: ".$o->page."&gPage=".FILIAL."&gId=".$gId."}");
 		$btns[]=$o->button("{active: ".$active4."; icon: exclamation-triangle; caption: Ocorrências; hint: Incluir ocorrências; href: ".$o->page."&gPage=".OCORRENCIAS."&gId=".$gId."}");
 		$btns[]=$o->button("{active: ".$active5."; icon: paperclip; caption: Anexos; hint: Anexar documentos digitalizados; href: ".$o->page."&gPage=".ANEXOS."&gId=".$gId."}");
 		$btns[]=$o->button("{active: ".$active6."; icon: lock; caption: Permissões; hint: Permissõs de acesso; href: ".$o->page."&gPage=".PERMISSOES."&gId=".$gId."}");

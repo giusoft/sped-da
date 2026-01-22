@@ -77,8 +77,8 @@ class NotasFiscais
 
             return [
                 'sucesso' => false,
-                'msg' => "Esta nota pertence ao armazém: <b>{$nomeFilialNota}</b><br>".
-                         "Por favor, troque para o armazém correto antes de realizar operações nesta nota"
+                'msg' => "Esta nota pertence ao filial: <b>{$nomeFilialNota}</b><br>".
+                         "Por favor, troque para o filial correto antes de realizar operações nesta nota"
             ];
         }
 
@@ -3734,7 +3734,7 @@ class ImportacaoNFE
 		$existeCliente = ($cliente) ? "SIM" : "NÃO";
 		$destinatario=$ni->checarDestinatario(gCleanField($xml->NFe->infNFe->dest->CNPJ));
 		if(!$destinatario){
-			$alertas[] = "A NF-e não tem como destinatário o armazém atual. <br/>CNPJ Filial : ".gFieldById("filial",$_SESSION['filialAtualId'],'cnpj')."<br/>CNPJ NF-e&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: ".gCleanField($xml->NFe->infNFe->dest->CNPJ);
+			$alertas[] = "A NF-e não tem como destinatário o filial atual. <br/>CNPJ Filial : ".gFieldById("filial",$_SESSION['filialAtualId'],'cnpj')."<br/>CNPJ NF-e&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: ".gCleanField($xml->NFe->infNFe->dest->CNPJ);
 		}
 		if ($this->nota['venda']) {
 			$alertas[] = 'Esta nota fiscal utilizará os itens do fornecedor';

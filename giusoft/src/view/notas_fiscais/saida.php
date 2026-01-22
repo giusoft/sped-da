@@ -540,7 +540,7 @@ if ($_REQUEST['gAjax']) {
         $notaOrigem = dbFastQuery($sql)[0];
 
         if ($notaOrigem['id_filial'] != $_SESSION['filialAtualId']) {
-            $return["msgErro"] = "Divergência de armazém: Esta nota pertence a um armazém diferente do que você está logado atualmente. Por favor, troque de armazém para realizar esta operação.";
+            $return["msgErro"] = "Divergência de filial: Esta nota pertence a um filial diferente do que você está logado atualmente. Por favor, troque de filial para realizar esta operação.";
             echo json_encode($return);
             exit;
         }

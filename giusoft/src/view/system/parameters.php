@@ -138,7 +138,7 @@ if ($gPage == QUESTIONARIO_RESUMIDO) {
     $perguntas['Entrada'][] = "Sistema deve indicar o posicionamento na entrada?";
     $perguntas['Entrada'][] = "Qual o mínimo de contagens para aceitar a entrada (padrão é 1)?";
     $perguntas['Entrada'][] = "Aceita entrada com divergência da Nota Fiscal?";
-    $perguntas['Entrada'][] = "Deve exigir a conferência de entrada antes de posicionar no armazém?";
+    $perguntas['Entrada'][] = "Deve exigir a conferência de entrada antes de posicionar no filial?";
 
     $perguntas['Saída'][] = "É necessário conferir antes de autorizar a saída?";
     $perguntas['Saída'][] = "É necessário conferir a saída minuciosamente?";
