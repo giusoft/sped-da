@@ -145,16 +145,6 @@ if ($_REQUEST['gAjax']) {
         $informacao .= " " . $nota["infAdFisco"];
         $dados['infAdFisco'] = $informacao;
 
-        $informacaoContribuente = "";
-        if ($nota["id_programacao"]) {
-            $dados['idProgramacao'] = (int) $nota["id_programacao"];
-            $sql = "SELECT detalhes_nfe FROM programacao WHERE id = " . $nota["id_programacao"];
-            $detalhesNfe = dbFastQuery($sql)[0]['detalhes_nfe'];
-            if ($detalhesNfe) {
-                $informacaoContribuente .= $detalhes_nfe[0]["detalhes_nfe"] . ", ";
-            }
-        }
-
         $informacaoContribuente .= $nota["InfCpl"];
         $dados['informacoesContribuinte'] = $informacaoContribuente;
         $dados['indIntermed'] = $nota['indIntermed']; // Atualmente não usamos na API
@@ -305,9 +295,15 @@ if ($_REQUEST['gAjax']) {
         }
 
         $sql = "SELECT
-                    nfe.id, nfe.protocolo, nfe.chave, nfe.situacao,
-                    notas.id as id_nota, notas.id_pessoas_proprietario,
-                    notas.id_programacao, notas.numero, nfe.xml, nfe.serie
+                    nfe.id,
+                    nfe.protocolo,
+                    nfe.chave,
+                    nfe.situacao,
+                    notas.id as id_nota,
+                    notas.id_pessoas_proprietario,
+                    notas.numero,
+                    nfe.xml,
+                    nfe.serie
                 FROM nfe
                 LEFT JOIN notas ON notas.id_nfe = nfe.id
                 WHERE nfe.id = '{$gId}'";
@@ -376,19 +372,6 @@ if ($_REQUEST['gAjax']) {
             $mtz["id_pessoas_cancelou"] = $usrId;
             $mtz['xml_cancelamento'] = base64_decode((string) $retornoCancelamento['mensagem']['xml_cancelamento']);
             dbUpdate("nfe", $mtz, $nfeBD['id']);
-
-            if ($nfeBD["id_programacao"] > 0) {
-                $mtz = [];
-                $mtz["id_programacao"] = $nfeBD["id_programacao"];
-                $mtz["id_pessoas"] = $usrId;
-                $mtz["id_tipos_atividades"] = 20;
-                $mtz["id_itens_skus"] = 0;
-                $mtz["cancelada"] = 0;
-                $mtz["data"] = date("Y-m-d H:i:s");
-                $mtz["quantidade"] = 0;
-                $mtz["descricao"] = "Cancelou NFE emitida: " . $nfeBD["numero"];
-                dbInsert("programacao_atividades", $mtz);
-            }
 
             // Importar cancelamento
             $sql = "SELECT xml_cancelamento FROM nfe WHERE id = " . $nfeBD['id'];
@@ -553,7 +536,6 @@ if ($_REQUEST['gAjax']) {
         $notaOrigem['entrada_interna'] = 1;
         $notaOrigem['data_criou'] = date('Y-m-d H:i:s');
         $notaOrigem['id_filial'] = $_SESSION['filialAtualId'];
-        $notaOrigem['id_programacao'] = 0;
         $notaOrigem['id_pessoas_criou'] = $_SESSION['usrId'];
         $notaOrigem['id_notas_origem_estorno'] = $idNotaOrigem;
         $notaOrigem['tPag'] = 90;
@@ -625,21 +607,6 @@ if ($_REQUEST['gAjax']) {
 
         $informacao .= " " . $nota["infAdFisco"];
         $dados['infAdFisco'] = $informacao;
-
-        $informacaoContribuente = "";
-        if (intval($nota["id_programacao"]) > 0) {
-            $sql = "SELECT detalhes_nfe FROM programacao WHERE id = " . $nota["id_programacao"];
-            $detalhesNfe = dbFastQuery($sql);
-            if (
-                $detalhesNfe
-                && (
-                    !is_null($detalhesNfe[0]["detalhes_nfe"])
-                    && !empty($detalhesNfe[0]["detalhes_nfe"])
-                )
-            ) {
-                $informacaoContribuente .= $detalhesNfe[0]["detalhes_nfe"].", ";
-            }
-        }
 
         $informacaoContribuente .= $nota["InfCpl"];
         $dados['informacoesContribuinte'] = $informacaoContribuente;
@@ -722,9 +689,6 @@ if ($_REQUEST['gAjax']) {
         $sql = "UPDATE notas
                 SET id_nfe = {$idNfeEstorno}, numero = " . $dados['NfeNumeroEOperacao']['numeroNota'] . "
                 WHERE id = " . $idNovaNota;
-        dbFastQuery($sql);
-
-        $sql = "UPDATE notas SET id_programacao = (-id_programacao) WHERE id IN ({$idNotaOrigem}, {$idNovaNota})";
         dbFastQuery($sql);
 
         $dadosEventos = [];
@@ -1441,18 +1405,6 @@ switch ($gPage) {
             $html.=$o->msgDanger("Não é possível cancelar a nota pois uma nota fiscal eletrônica já foi aprovada, por favor cancele a NFe, e tente novamente");
             return;
         }
-        // Registrar em programação atividades o cancelamento da nota.
-        if ($nota["id_programacao"]) {
-            $mtz = [];
-            $mtz["id_programacao"]=$nota["id_programacao"];
-            $mtz["id_pessoas"]=$usrId;
-            $mtz["id_tipos_atividades"]=20;
-            $mtz["id_itens_skus"]=0;
-            $mtz["data"]=date('Y-m-d H:i:s');
-            $mtz["quantidade"]=0;
-            $mtz["descricao"]="NFe cancelada";
-            dbInsert("programacao_atividades", $mtz);
-        }
 
         // Cancelando nota
         $mtz = [];
@@ -1488,11 +1440,11 @@ switch ($gPage) {
             || in_array('Editar Itens Nota', $_SESSION['permissionsNames'])
             || $_SESSION['usrId'] <= 2
         );
-        if ($nota['id_programacao'] && !$usuarioPodeEditar) {
+
+        if (!$usuarioPodeEditar) {
             $html.=$o->msgDanger("Não é possível adicionar, editar ou excluir os itens sem a permissão necessária, ou se a nota já estiver vinculada à alguma programação");
-            $o->addJavascript("
-                document.getElementsByName('btnExcluirNotaItem')[0].setAttribute('disabled', true);
-            ");
+            $o->addJavascript("document.getElementsByName('btnExcluirNotaItem')[0].setAttribute('disabled', true);");
+
             if (!$gIdEnd) {
                 $o->addJavascript("
                     document.getElementsByName('submit_default')[0].setAttribute('disabled', true);
@@ -1505,7 +1457,6 @@ switch ($gPage) {
                     var rota='".$o->page."&gPage=".ITENS_EXCLUIR."&gId=".$gId."&gIdEnd='+id_notas_itens;
                     location.href=rota;
                 }
-
 
                 function btnExcluirItemNota(idNotaItem)
                 {
@@ -2802,12 +2753,14 @@ switch ($gPage) {
     case LISTAR_CLIENTES_AGRUPAMENTO:
         $form = new gForm();
         $form->row(
-            $form->add('{type: combo; id: id_proprietarios; name:id_pessoas_proprietario; allowBlank: true; fieldLabel:Proprietário; items:'.$sp["combo_clientes"].';}')
+            $form->add('{type: combo; id: id_proprietarios; name:id_pessoas_proprietario; allowBlank: true; fieldLabel:Proprietário; items:'.$sp["combo_proprietarios"].';}')
         );
+
         $form->row(
             $form->add('{name: dataCadastroDe; fieldLabel: Data cadastro de; type: date;}'),
             $form->add('{name: dataCadastroAte; fieldLabel: Data cadastro até; type: date;}')
         );
+
         $form->add('{name: gPage; id: gPage; type: hidden; value: '.LISTAR_NOTAS_AGRUPAMENTO.';}');
         $html .= $form->render($o);
         break;
@@ -2967,9 +2920,7 @@ switch ($gPage) {
 
         $html .= $o->tableEnd();
 
-        $idProgramacao = array_unique(array_column($itens, 'id_programacao'));
-
-        $html .= $nf->obtemTabelaItem($itensNovaNota, 0, 0, 0, $idProgramacao);
+        $html .= $nf->obtemTabelaItem($itensNovaNota, 0, 0, 0);
         break;
 
 
@@ -2985,7 +2936,6 @@ switch ($gPage) {
         $novaNota['data_criou'] = date('Y-m-d H:i:s');
         $novaNota['id_filial'] = $_SESSION['filialAtualId'];
         $novaNota['id_pessoas_criou'] = $_SESSION['usrId'];
-        $novaNota['id_programacao'] = 0;
         $novaNota['id_notas_agrupar'] = 0;
         $idNovaNota = dbInsert('notas', $novaNota, true);
 
