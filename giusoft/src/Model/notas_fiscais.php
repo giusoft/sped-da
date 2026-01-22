@@ -32,7 +32,7 @@ class NotasFiscais
 	{
         $sql = "
         	SELECT data_vencimento_certificado data
-        	FROM armazens_notas
+        	FROM filial_notas
 			WHERE id_filial = " . $_SESSION['filialAtualId'];
         $dataVencimento = dbQuery($sql)[0]['data'];
         if ($dataVencimento == '0000-00-00') {
@@ -60,7 +60,7 @@ class NotasFiscais
 	}
 
 
-    public function validarArmazemSessao($idNota)
+    public function validarFilialSessao($idNota)
     {
         $sql = "SELECT id_filial FROM notas WHERE id = " . (int)$idNota;
         $rs = dbFastQuery($sql);
@@ -73,7 +73,7 @@ class NotasFiscais
         $idArmazemSessao = (int)$_SESSION['filialAtualId'];
 
         if ($idArmazemNota != $idArmazemSessao) {
-            $nomeArmazemNota = dbFastQuery("SELECT descricao FROM armazens WHERE id = $idArmazemNota")[0]['descricao'];
+            $nomeArmazemNota = dbFastQuery("SELECT descricao FROM filial WHERE id = $idArmazemNota")[0]['descricao'];
 
             return [
                 'sucesso' => false,
@@ -1776,7 +1776,7 @@ class NotasFiscais
 			}
 			if ($req["armazen"]) {
 				$armazen = gCleanField($req["armazen"]);
-				$nomeArmazen = dbQuery("SELECT descricao FROM armazens WHERE id = $armazen")[0]["descricao"];
+				$nomeArmazen = dbQuery("SELECT descricao FROM filial WHERE id = $armazen")[0]["descricao"];
 				$where .= " AND N.id_filial={$armazen}";
 				$cabecalho[] = "Armazém: {$nomeArmazen}";
 			}
@@ -1888,7 +1888,7 @@ class NotasFiscais
 		$idArmazem = $registroAtual['id_filial'] ?: $_SESSION['filialAtualId'];
 
 		$frm->row(
-			$frm->add("{name: id_filial; fieldLabel: Armazém; allowBlank: false; type: combo; value: " . $idArmazem . "; items: ".$sp['combo_armazens']."}"),
+			$frm->add("{name: id_filial; fieldLabel: Armazém; allowBlank: false; type: combo; value: " . $idArmazem . "; items: ".$sp['combo_filial']."}"),
 			$frm->add("{name: id_cfops; fieldLabel: CFOP; allowBlank: false; type: combo; items: " . $sp["combo_cfop"] . "; value:".$registroAtual["id_cfops"].";}")
 		);
 
@@ -2375,7 +2375,7 @@ class NotasFiscais
 		LEFT JOIN pessoas P ON P.id = N.id_pessoas_criou
 		LEFT JOIN cfops C ON C.id = N.id_cfops
 		LEFT JOIN pessoas PC ON PC.id = N.id_pessoas_proprietario
-		LEFT JOIN armazens A ON A.id = N.id_filial
+		LEFT JOIN filial A ON A.id = N.id_filial
 		LEFT JOIN pessoas PT ON PT.id = N.id_pessoas_transportadora";
 		if ($this->inner_item)
 		{
@@ -2836,29 +2836,29 @@ class NotasFiscais
 	function obtemDadosEmpresa($idArmazem)
 	{
 		$sql="SELECT
-			armazens.razao_social AS razaoSocial,
-			armazens.razao_social AS nomeArmazem,
-			armazens.cnpj AS cnpjArmazem,
-			armazens.insc_estadual AS inscricaoEstadualArmazem,
-			armazens.insc_municipal AS inscricaoMunicipalArmazem,
-			armazens.cnae AS cnaeArmazem,
-			armazens.endereco AS enderecoArmazem,
-			armazens.numero AS numeroArmazem,
-			armazens.complemento AS enderecoComplementoArmazem,
-			armazens.bairro AS enderecoBairroArmazem,
-			armazens.cep AS cepArmazem,
-			armazens.telefone AS telefoneArmazem,
+			filial.razao_social AS razaoSocial,
+			filial.razao_social AS nomeArmazem,
+			filial.cnpj AS cnpjArmazem,
+			filial.insc_estadual AS inscricaoEstadualArmazem,
+			filial.insc_municipal AS inscricaoMunicipalArmazem,
+			filial.cnae AS cnaeArmazem,
+			filial.endereco AS enderecoArmazem,
+			filial.numero AS numeroArmazem,
+			filial.complemento AS enderecoComplementoArmazem,
+			filial.bairro AS enderecoBairroArmazem,
+			filial.cep AS cepArmazem,
+			filial.telefone AS telefoneArmazem,
 			est.codigo_ibge AS codigoIbgeEstado,
 			est.sigla AS siglaUf,
 			mun.codigo_ibge AS codigoIbgeMunicipio,
 			mun.descricao AS municipioDescricao,
 			pais.nome AS xPais,
 			pais.codigo AS cPais
-		FROM armazens
-		LEFT JOIN enderecos_estados est ON armazens.id_enderecos_estados = est.id
-		LEFT JOIN enderecos_cidades mun ON armazens.id_enderecos_cidades = mun.id
+		FROM filial
+		LEFT JOIN enderecos_estados est ON filial.id_enderecos_estados = est.id
+		LEFT JOIN enderecos_cidades mun ON filial.id_enderecos_cidades = mun.id
 		LEFT JOIN enderecos_paises pais ON pais.id = est.id_enderecos_paises
-		WHERE armazens.id = '{$idArmazem}';";
+		WHERE filial.id = '{$idArmazem}';";
 		return (dbQuery($sql)[0]);
 	}
 
@@ -2876,7 +2876,7 @@ class NotasFiscais
 					ativar_modo_contingencia,
 					data_alteracao_operacao,
 					serie
-                FROM armazens_notas WHERE cnpj = '{$cnpj}'";
+                FROM filial_notas WHERE cnpj = '{$cnpj}'";
 		return dbFastQuery($sql)[0];
 	}
 
@@ -3122,7 +3122,7 @@ class NotasFiscais
 			mun.codigo_ibge enderecoIbgeMunicipio,
 			mun.descricao enderecoMunicipio,
 			est.sigla enderecoUf
-			FROM armazens A
+			FROM filial A
 			LEFT JOIN enderecos_estados est ON A.id_enderecos_estados = est.id
 			LEFT JOIN enderecos_cidades mun ON A.id_enderecos_cidades = mun.id
 			WHERE A.id=".$idProprietario;
@@ -3187,7 +3187,7 @@ class NotasFiscais
 			FROM nfe NF
 			JOIN notas N ON NF.id = N.id_nfe
 			LEFT JOIN pessoas P ON P.id = N.id_pessoas_proprietario
-			LEFT JOIN armazens A ON A.id = N.id_filial
+			LEFT JOIN filial A ON A.id = N.id_filial
 			WHERE NF.id = " . $idNfe;
 		$nota = dbQuery($sql)[0];
 
@@ -3734,7 +3734,7 @@ class ImportacaoNFE
 		$existeCliente = ($cliente) ? "SIM" : "NÃO";
 		$destinatario=$ni->checarDestinatario(gCleanField($xml->NFe->infNFe->dest->CNPJ));
 		if(!$destinatario){
-			$alertas[] = "A NF-e não tem como destinatário o armazém atual. <br/>CNPJ Armazém : ".gFieldById("armazens",$_SESSION['filialAtualId'],'cnpj')."<br/>CNPJ NF-e&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: ".gCleanField($xml->NFe->infNFe->dest->CNPJ);
+			$alertas[] = "A NF-e não tem como destinatário o armazém atual. <br/>CNPJ Armazém : ".gFieldById("filial",$_SESSION['filialAtualId'],'cnpj')."<br/>CNPJ NF-e&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: ".gCleanField($xml->NFe->infNFe->dest->CNPJ);
 		}
 		if ($this->nota['venda']) {
 			$alertas[] = 'Esta nota fiscal utilizará os itens do fornecedor';
@@ -3872,7 +3872,7 @@ class ImportacaoNFE
 		P.id
 		FROM programacao P
 		LEFT JOIN tipos_programacao TP ON P.id_tipos_programacao = TP.id
-		LEFT JOIN armazens A  ON P.id_filial =  A.id
+		LEFT JOIN filial A  ON P.id_filial =  A.id
 		LEFT JOIN pessoas PC ON P.id_pessoas_criou = PC.id
 		WHERE P.id = '{$id}'";
 		return (dbQuery($sql)[0]);
@@ -4104,15 +4104,15 @@ class ImportacaoNFE
 		}
 	}
 
-	public function checarDestinatario($cnpj, $idArmazens=0){
-		if (!empty($idArmazens))
+	public function checarDestinatario($cnpj, $idfilial=0){
+		if (!empty($idfilial))
 		{
-			$where=" A.id = '{$idArmazens}' ";
+			$where=" A.id = '{$idfilial}' ";
 		} else
 		{
 			$where= " A.cnpj='{$cnpj}'";
 		}
-		$sql="SELECT id FROM armazens WHERE ((cnpj='{$cnpj}' AND id=".$_SESSION['filialAtualId'].") OR (cnpj='{$cnpj}' AND id=".(int) $idArmazens.")) ";
+		$sql="SELECT id FROM filial WHERE ((cnpj='{$cnpj}' AND id=".$_SESSION['filialAtualId'].") OR (cnpj='{$cnpj}' AND id=".(int) $idfilial.")) ";
 		$rs=dbQuery($sql);
 		if($rs)
 			return true;
