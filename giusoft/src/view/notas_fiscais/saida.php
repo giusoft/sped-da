@@ -35,13 +35,6 @@ define('ATIVAR_DESATIVAR_CONTINGENCIA'  , 217);
 
 include_once $gPath."/gfw/inc/gPage.php";
 
-if (
-    $_REQUEST["tipo"] == "M"
-    && $gPage <> INICIO_MAQUINA
-) {
-    redirect($o->page . "&gPage=" . INICIO_MAQUINA . "&tipo=M");
-}
-
 // Removendo paginação e limit quando for exportação
 if (
     $_REQUEST["gPDF"]
@@ -150,11 +143,7 @@ if ($_REQUEST['gAjax']) {
         $dados['indIntermed'] = $nota['indIntermed']; // Atualmente não usamos na API
 
         // DADOS DOS ITENS
-        if ($nota["tipo"] == 'M') {
-            $itens = $nf->obtemDadosMaquinaNFE($gId);
-        } else {
-            $itens = $nf->obtemDadosItensNFE($gId);
-        }
+        $itens = $nf->obtemDadosItensNFE($gId);
 
         foreach ($itens as $item) {
             $item["numeroCliente"] = $nota["numseq"];
