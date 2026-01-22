@@ -1875,16 +1875,20 @@ switch ($gPage) {
         $frm->add("{type: number; name: vIBSAjuste; id: vIBSAjuste; fieldLabel: Valor Ajuste IBS (R$); value: " . gFloat($ibsCbs["vIBSAjuste"]) . "; allowBlank: true;}");
         $frm->add("{type: number; name: vCBSAjuste; id: vCBSAjuste; fieldLabel: Valor Ajuste CBS (R$); value: " . gFloat($ibsCbs["vCBSAjuste"]) . "; allowBlank: true;}");
 
-        $checked = $ibsCbs["indDoacao"] == 1 ? 'checked' : '';
         if ($confereNota["situacao"] != 'Aprovada') {
-            $frm->add('{type: html; value:
-                <label for="indDoacao" class="control-label text-left">Indicador de Doação</label>
-                <div>
-                    <label class="switch">
-                        <input type="checkbox" name="indDoacao" id="indDoacao" ' . $checked . '>
-                        <span class="slider round"></span>
-                    </label>
-                </div>;}');
+            $indDoacao = [];
+            $indDoacao[0] = "Não";
+            $indDoacao[1] = "Sim";
+
+            $frm->add("{type: select; name: indDoacao; id: indDoacao; fieldLabel: Indicador de Doação; items: " . json_encode($indDoacao) . "; value: " . $ibsCbs["indDoacao"] . "; allowBlank: true;}");
+            // $frm->add('{type: html; value:
+            //     <label for="indDoacao" class="control-label text-left">Indicador de Doação</label>
+            //     <div>
+            //         <label class="switch">
+            //             <input type="checkbox" name="indDoacao" id="indDoacao" ' . $checked . '>
+            //             <span class="slider round"></span>
+            //         </label>
+            //     </div>;}');
         }
 
         $frm->add("{type: hidden; name: ibscbs_gIdItem; id: ibscbs_gIdItem; value: " . $gId . "}");
