@@ -122,9 +122,8 @@ class NotasFiscais extends ImportacaoNFE
 
 		$html .= $o->tableRow($mtz, 'header');
 
-
 		$mtz = [];
-		$mtz[] = '<-' . $o->small('Número').'<br><b><small>'.$row['numero'].'</small></b>&nbsp;<br/>' . $o->small(gCheck($row["executada"], false, array("Executada", "Não executada")));
+		$mtz[] = '<-' . $o->small('Número').'<br><b><small>'.$row['numero'].'</small></b>&nbsp;<br/>' . $o->small(gCheck($row["situacao"], false, array("Executada", "Não executada")));
 
 		if ($row['cancelada']) {
 			$mtz[] = '<-' . $o->small(gCheck($row["cancelada"], true, array("Cancelada", "")));
