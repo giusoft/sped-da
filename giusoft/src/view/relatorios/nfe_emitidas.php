@@ -97,14 +97,12 @@ switch($gPage) {
 						C.descricao_resumida cfop,
 						PP.apelido proprietario,
 						PP.nome nome_completo_proprietario,
-						T.descricao tipo,
 						NFE.situacao,
 						NFE.chave
 					FROM notas N
 					LEFT JOIN nfe NFE ON NFE.id = N.id_nfe
 					LEFT JOIN pessoas PP ON PP.id = N.id_pessoas_proprietario
 					LEFT JOIN cfops C ON C.id = N.id_cfops
-					LEFT JOIN tipos_programacao T ON PR.id_tipos_programacao = T.id
 					WHERE {$where}
 					ORDER BY N.data_emissao DESC";
 			$rs = dbQuery($sql);
