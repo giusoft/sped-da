@@ -10,7 +10,7 @@ if ($pre == '') {
 	$pre = 'gfw_';
 }
 
-$locales = '';
+$locales = [];
 $langs = explode(",", str_replace(" ", "", gVar("global.languages")));
 foreach ($langs as $l) {
 	$locales[$l] = $l;
