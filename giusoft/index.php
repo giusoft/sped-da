@@ -264,12 +264,8 @@ if (($g == "login")) {
 						$amz=dbQuery("SELECT * FROM filial LIMIT 1");
 				}
 
-				$_SESSION['filialAtualId'] = 1;
-				$_SESSION['filialAtualDescricao'] = 1;
-
-				// echo "<pre>";
-				// var_dump($id_filial,$amz);exit;
-
+				$_SESSION['filialAtualId'] = $amz[0]["id"];
+				$_SESSION['filialAtualDescricao'] = $amz[0]["descricao"];
 
 				//Permissões
 				$sql="SELECT * FROM gfw_menus WHERE active=1 AND locale='".$gLang."' ORDER BY order1 desc, order2 desc";
@@ -359,8 +355,6 @@ if (($g == "login")) {
 		}
 	}
 }
-
-
 
 // ========================================== ONLINE Interface
 if ($usrId > 0) {
