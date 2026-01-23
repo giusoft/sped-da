@@ -3,7 +3,7 @@
 $html = $o->msgTitle("Traduções");
 
 $exit = false;
-$locales = '';
+$locales = [];
 $langs = explode(",", str_replace(" ", "", gVar("global.languages")));
 foreach ($langs as $l) {
 	$locales[$l] = $l;
