@@ -98,8 +98,9 @@ function iniciarChatwoot() {
 }
 
 $AESKEY = "emiteNota";
-function dispararGatilho($momento, $dados) {
+function dispararGatilho($momento, $dados = []) {
 	global $EMPRESA;
+
 	if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
 	    $ambiente = '/teste';
 	}
