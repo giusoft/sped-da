@@ -5,7 +5,7 @@ $html = $o->msgTitle("Pages");
 $exit = false;
 
 // Obtendo idiomas disponíveis
-$locales = '';
+$locales = [];
 $langs = explode(",", str_replace(" ", "", gVar("global.languages")));
 foreach ($langs as $l) {
 	$locales[$l] = $l;
