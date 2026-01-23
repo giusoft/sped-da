@@ -205,11 +205,11 @@ if ($_REQUEST['gAjax']) {
             UPDATE nfe
             SET situacao = '" . gCleanField($retornoEmiteNota['detalhes']['situacao']) . "',
                 chave = '" . gCleanField($retornoEmiteNota['detalhes']['chave']) . "',
-                mensagens = '" . gCleanField($retornoEmiteNota['mensagem']) . "',
-                protocolo = '" . gCleanField($retornoEmiteNota['detalhes']['protocolo']) . "',
+                mensagens = '" . gCleanField(removerAcentos($retornoEmiteNota['mensagem'] ?: $mensagemErro)) . "',
+                protocolo = '" . gCleanField($retornoEmiteNota['detalhes']['protocolo'] ) . "',
                 data_recibo = '" . gCleanField($retornoEmiteNota['detalhes']['dataHoraRecebimento']) . "',
-                xml = '" . base64_decode((string) $retornoEmiteNota['detalhes']['xml']) . ('\'
-            WHERE id = ' . $idNfe);
+                xml = '" . base64_decode($retornoEmiteNota['detalhes']['xml']) . "'
+            WHERE id = {$idNfe}";
         dbFastQuery($sql);
 
         if ($retornoEmiteNota['sucesso']) {
@@ -228,7 +228,6 @@ if ($_REQUEST['gAjax']) {
             } else {
                 $resultado['statusEmail'] = "Enviado ao cliente";
             }
-
 
             if ($dados['config']['tpAmb'] != 2) { //2=homologacao
                 ### Esse metodo é para chamar o OMIE. Ativar só depois para não mandar nada para eles agora ###
@@ -668,7 +667,7 @@ if ($_REQUEST['gAjax']) {
         $sql = "UPDATE nfe
                 SET situacao = '" . gCleanField($retornoEmiteNota['detalhes']['situacao']) . "',
                     chave = '" . gCleanField($retornoEmiteNota['detalhes']['chave']) . "',
-                    mensagens = '" . gCleanField($retornoEmiteNota['mensagem']) . "',
+                    mensagens = '" . gCleanField(removerAcentos($retornoEmiteNota['mensagem'] ?: $mensagemErro)) . "',
                     protocolo = '" . gCleanField($retornoEmiteNota['detalhes']['protocolo']) . "',
                     data_recibo = '" . gCleanField($retornoEmiteNota['detalhes']['dataHoraRecebimento']) . "',
                     xml = '" . base64_decode($retornoEmiteNota['detalhes']['xml']) . "'
