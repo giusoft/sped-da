@@ -391,8 +391,6 @@ switch ($gPage) {
 
 			$retorno = dispararGatilho('inutilizarNfe', $dadosInutilizar);
 
-			// var_dump($dadosEmpresa); exit;
-
 			if ($retorno['erroCurl'] && !$retorno['resposta'] && !empty($retorno['erroCurl'])) {
 				$erros[] = gCleanField($retorno['erroCurl']);
 			}
