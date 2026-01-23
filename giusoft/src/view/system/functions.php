@@ -1,5 +1,151 @@
 <?php
 
+function formataDataSemSeparadores($dataTxt)
+{
+	$dataTxt=str_replace(['-'],'',$dataTxt);
+	$ano = "20" . substr($dataTxt,4,2);
+	$mes = substr($dataTxt,2,2);
+	$dia = substr($dataTxt,0,2);
+	if ($dataTxt<>"" && checkdate(((int) $mes), ((int) $dia), ((int) $ano))) {
+		return $ano ."-".$mes."-".substr($dataTxt,0,2);
+	}
+	return "0000-00-00";
+}
+
+
+function formataDataTirandoSeparadores($dataDB)
+{
+	return($dataDB<>"0000-00-00" ? substr($dataDB,8,2).substr($dataDB,5,2).substr($dataDB,2,2) : "");
+}
+
+
+function formatarParaCabecalho($titulo, $dado)
+{
+	global $o;
+	$dado = $dado ?: 'Indefinido';
+	return $o->small($titulo) . '<br><b>' . $dado . '</b>&nbsp;';
+}
+
+
+function chatBot()
+{
+	if (
+		$_REQUEST['gXLS']
+		|| $_REQUEST['gXML']
+		|| $_REQUEST['gPDF']
+		|| $_REQUEST['gDOC']
+		|| $_REQUEST['gCSV']
+	) return;
+
+	if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
+	    $ambiente = '/teste';
+	}
+
+	include_once $_SERVER['DOCUMENT_ROOT'] . $ambiente . '/emitenotaweb/giusoft/res/system/chatbot/chat.php';
+}
+
+
+function iniciarChatwoot() {
+	global $o, $usrId, $gDevice;
+
+	if (
+		$_SESSION['key_user']
+		&& $_REQUEST['g']
+		&& !$_REQUEST['gXLS']
+		&& !$_REQUEST['gXML']
+		&& !$_REQUEST['gPDF']
+		&& !$_REQUEST['gDOC']
+		&& !$_REQUEST['gCSV']
+		&& $gDevice == "mobile"
+	) return;
+
+	$nomeUsuario = $_SESSION['usrName']
+		. ' - EMITENOTA - ' . $GLOBALS['EMPRESA']
+		. '/FILIAL ' .	$_SESSION['filialAtualDescricao'];
+
+	$js = "
+		var nome = '" . $nomeUsuario . "';
+		var usrId = '" . $usrId . '_' . $GLOBALS['EMPRESA'] . "';
+		(function(d,t) {
+			let BASE_URL = 'https://chat.giusoft.com.br/';
+			let g = d.createElement(t),s=d.getElementsByTagName(t)[0];
+			g.src = BASE_URL+'/packs/js/sdk.js';
+			g.defer = true;
+			g.async = true;
+			s.parentNode.insertBefore(g,s);
+			g.onload=function(){
+				window.chatwootSDK.run({
+				websiteToken: 'WjnqcBFScD659F25CpPAsgqa',
+				baseUrl: BASE_URL
+			});
+			var interval = setInterval(function() {
+				if (window.\$chatwoot && window.\$chatwoot.setUser) {
+					window.\$chatwoot.setUser(usrId, {
+					    email: '',
+						name: nome,
+						avatar_url: '',
+						phone_number: '',
+						});
+
+					clearInterval(interval);
+				}
+			}, 500);
+		}
+		})(document,'script');
+	";
+
+	$o->addJavascript($js);
+}
+
+$AESKEY = "emiteNota";
+function dispararGatilho($momento, $dados) {
+	global $EMPRESA;
+	if (in_array('teste', explode("/", $_SERVER['REQUEST_URI']))) {
+	    $ambiente = '/teste';
+	}
+
+	require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/emitenota/giusoft/src/Model/accesspoint.php";
+	$persistencia = new PontoAcesso(['empresa' => $EMPRESA]);
+
+	$resultado = $persistencia->acionarEventoMomento($momento, $dados);
+
+	if ($dados['temRetorno']) {
+		return $resultado;
+	}
+
+}
+
+/* Verifica se o nome ou apelido do usuário é reservado e retorna erro se for, permitindo apenas nomes válidos */
+function verificarNomeOuApelidoReservado()
+{
+	global $usrId;
+
+	if ($usrId <= 2) {
+		return;
+	}
+
+    $nome    = strtolower(gCleanField($_REQUEST['nome']));
+    $apelido = strtolower(gCleanField($_REQUEST['apelido']));
+
+    $nomesReservados    = array("administrador", "admin", "suporte gs", "root");
+    $apelidosReservados = array("admin", "root");
+
+	$erros = array();
+    if (in_array($nome, $nomesReservados)) {
+        $erros[] = "Você não pode usar o nome '" . $_REQUEST['nome'] . "'. Por favor, escolha outro nome.";
+    }
+
+    if (in_array($apelido, $apelidosReservados)) {
+        $erros[] = "Você não pode usar o apelido '" . $_REQUEST['apelido'] . "'. Por favor, escolha outro apelido.";
+    }
+
+	if ($erros) {
+		return $erros;
+	}
+
+    return false;
+}
+
 function mostraErros($titulo, $erros = [])
 {
 	global $o;

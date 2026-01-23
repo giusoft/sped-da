@@ -259,6 +259,7 @@ class Item
     }
 
 
+
     public function cadastrarItem($dados)
 	{
 		$mtz['apto']   = $dados['apto'] ?? 0;

@@ -59,7 +59,7 @@ if (
 	$gParam["LIMITAR_VISUALIZACAO"]["ativo"] = 0;
 }
 
-if ($gPage<10 || $gPage>=LISTAGEM) {
+if ($gPage<10) {
 	$o->PDFEnabled = true;
 	$o->DOCEnabled = true;
 	$o->XLSEnabled = true;
@@ -76,6 +76,20 @@ include_once __DIR__ . "/../../Model/itens_antigo.php";
 $persistencia = new Itens();
 
 $html .= $o->msgTitle("Cadastro de itens");
+
+
+if ($gId) {
+	$aptoNoBanco = gFieldById("itens", $gId, "apto");
+	$aptoSKUs = $persistencia->aptoSKUs($gId);
+	if ($aptoNoBanco <> $aptoSKUs) {
+		if ($aptoSKUs) {
+			$apto = 1;
+		} else {
+			$apto = 0;
+		}
+		$persistencia->aptoAtualiza($gId, $apto);
+	}
+}
 
 
 switch ($gPage) {
@@ -205,7 +219,6 @@ switch ($gPage) {
 		$html .= '<button type="submit" class="btn btn-default" style="margin-bottom: 4px"><span class="fal fa-search"></span> Pesquisar</button> ';
 		$html .= $o->button("{icon: exchange; caption: Atualização em lote; href: " . $o->page . "&gPage=" . ATUALIZAR_EM_LOTE . "}");
 		$html .= $o->button("{icon: download; caption: Importar; href: " . $o->page . "&gPage=" . IMPORTACOES_DIVERSAS . "}");
-		$html .= $o->button("{icon: tasks; caption: Listagem; href: " . $o->page . "&gPage=" . LISTAGEM . "}");
 		$html .= '</form>';
 		$html .= '<br></div>';
 		$js = "
@@ -391,10 +404,21 @@ switch ($gPage) {
 		}
 
 		$frm = new gForm();
+
+		$campoCodigo = '';
+		$campoCodigoBarras = '';
+		if (!$gId) {
+			$campoCodigo = $frm->add("{name: codigo; fieldLabel: Código *; type: upperText; value: ".$registroAtual['codigo']."; allowBlank: false;}");
+			$campoCodigoBarras = $frm->add("{name: codigo_barras; fieldLabel: Código de barras; type: upperText; value: ".$registroAtual['codigo_barras']."}");
+		}
+
 		$frm->row(
 			$frm->add("{name: nome; fieldLabel: Nome *; type: upperText; value: " . $registroAtual['nome'] . "; allowBlank: false;}"),
-			$frm->add("{name: descricao; fieldLabel: Descrição; type: text; value: " . $registroAtual['descricao'] . "}")
+			$frm->add("{name: descricao; fieldLabel: Descrição; type: text; value: " . $registroAtual['descricao'] . "}"),
+			$campoCodigo,
+			$campoCodigoBarras
 		);
+
 		$frm->row(
 			$frm->add("{name: id_pessoas_proprietario; fieldLabel: Cliente *; allowBlank: false; type: combo; value: " . $registroAtual['id_pessoas_proprietario'].  "; items: " . $sp['combo_clientes'] . "; allowBlank: false;}"),
 			$frm->add("{name: id_pessoas_fornecedor; fieldLabel: Fornecedor; allowBlank: true; type: combo; value: " . $registroAtual['id_pessoas_fornecedor'] . "; items: " . $sp['combo_fornecedores'] . "}"),
@@ -470,7 +494,6 @@ switch ($gPage) {
 			$frm->add("{name: nome; fieldLabel: Nome; type: upperText; value:".$row2['nome']."}"),
 			$frm->add("{name: codigo; fieldLabel: Código *; allowBlank: false; type: upperText; value: ".$row2['codigo']."}"),
 			$campoDatasul,
-			$frm->add("{name: codigo_anterior; fieldLabel: Código anterior; type: upperText; value: ".$row2['codigo_anterior']."}"),
 			$frm->add("{name: codigo_barras; fieldLabel: Cód. de barras 1 *; allowBlank: false; type: upperText; value: ".$row2['codigo_barras']."}"),
 			$frm->add("{name: codigo_barras_alternativo; fieldLabel: Cód. de barras 2; type: upperText; value: ".$row2['codigo_barras_alternativo']."}")
 		);
@@ -479,16 +502,13 @@ switch ($gPage) {
 			$frm->add("{name: id_unidades; fieldLabel: Unidade; allowBlank: false; type: combo; value: ".$row2['id_unidades']."; items: ".$sp['combo_unidades']."}"),
 			$frm->add("{name: quantidade; fieldLabel: Quantidade; type: number; value: ".gFloat($row2['quantidade'])."}"),
 			$frm->add("{name: peso_liquido; fieldLabel: Peso líquido; type: number; value: ".gFloat($row2['peso_liquido'])."}"),
-			$frm->add("{name: peso_bruto; fieldLabel: Peso bruto; type: number; value: ".gFloat($row2['peso_bruto'])."}"),
-			$frm->add("{name: largura; fieldLabel: Largura (cm); type: number; value: ".gFloat($row2['largura'])."}"),
-			$frm->add("{name: comprimento; fieldLabel: Comprimento (cm); type: number; value: ".gFloat($row2['comprimento'])."}")
+			$frm->add("{name: peso_bruto; fieldLabel: Peso bruto; type: number; value: ".gFloat($row2['peso_bruto'])."}")
 		);
 
 		$frm->row(
+			$frm->add("{name: largura; fieldLabel: Largura (cm); type: number; value: ".gFloat($row2['largura'])."}"),
+			$frm->add("{name: comprimento; fieldLabel: Comprimento (cm); type: number; value: ".gFloat($row2['comprimento'])."}"),
 			$frm->add("{name: altura; fieldLabel: Altura (cm); type: number; value: ".gFloat($row2['altura'])."}"),
-			$frm->add("{name: palete_lastro; fieldLabel: Qtd. no palete - Lastro; type: number; value: ".gFloat($row2['palete_lastro'])."}"),
-			$frm->add("{name: palete_altura; fieldLabel: Qtd. no palete - Altura; type: number; value: ".gFloat($row2['palete_altura'])."}"),
-			$frm->add("{name: empilhamento_maximo; fieldLabel: Empilhamento máximo; type: number; value: ".$row2['empilhamento_maximo']."}"),
 			$frm->add("{name: valor; fieldLabel: Valor; type: number; value: ".gFloat($row2['valor'])."}"),
 			$frm->add("{name: ativo; fieldLabel: Ativo; type: checkbox; value: ".$row2['ativo']."}")
 		);
@@ -523,7 +543,6 @@ switch ($gPage) {
 		$mtz[] = "<-Unidade";
 		$mtz[] = "->P.Líquido";
 		$mtz[] = "->P.Bruto";
-		$mtz[] = "->Qtd.p/palete";
 		$mtz[] = "->Alt.SKU";
 		$mtz[] = "->Alt.palete";
 		$mtz[] = "->Valor";
@@ -585,7 +604,6 @@ switch ($gPage) {
 		$flds['codigo'] = gCleanField($_REQUEST['codigo']);
 		$flds['codigo_barras'] = gCleanField($_REQUEST['codigo_barras']);
 		$flds['codigo_barras_alternativo'] = gCleanField($_REQUEST['codigo_barras_alternativo']);
-		$flds['codigo_anterior'] = gCleanField($_REQUEST['codigo_anterior']);
 		$flds['nome'] = gCleanField($_REQUEST['nome']);
 		$flds['id_unidades'] = intval($_REQUEST['id_unidades']);
 		$flds['quantidade'] = gDBFloat($_REQUEST['quantidade']);
@@ -651,7 +669,7 @@ switch ($gPage) {
 		$frm->buttonNextCaption = gT('Incluir');
 		$html .= $frm->render($o);
 
-		$html .= $o->msgFilter("O tamanho máximo permitido para a inclusão de arquivos é de 4Mb");
+		$html .= $o->msgWarning("O tamanho máximo permitido para a inclusão de arquivos é de 4Mb");
 
 		if ($rs) {
 			$http_usr_files.='anexos/';
@@ -732,8 +750,9 @@ switch ($gPage) {
 			ORDER BY a.descricao";
 		$rs = dbQuery($sql);
 
+		$html .= $o->msgWarning("O tamanho máximo permitido para a inclusão de arquivos é de 4Mb");
+
 		$frm = new gForm();
-		$frm->addFormMessage("O tamanho máximo permitido para a inclusão de arquivos é de 4Mb");
 		$frm->add("{name: gPage; type: hidden; value: 41}");
 		$frm->add("{name: gId; type: hidden; value: $gId}");
 		$frm->add("{name: descricao; type: upperFirstLetterText; }");
@@ -822,54 +841,47 @@ switch ($gPage) {
 			$gId = intval($rst[0]['id_itens']);
 		}
 
-		if ($arquivo && $arquivo['name'] <> '') {
-			if ($arquivo['error'] == 1) {
-				$html.=$o->msgDanger("Houve um erro ao salvar o arquivo");
-				$html.=$o->msg("Verifique se o tamanho do arquivo é inferior ao limite, se existe permissão na pasta para salvá-lo e se o tipo de arquivo é compatível.");
-				$html.=$backButton;
-
-			} else {
-				// Verifica tamanho do arquivo
-				if ($arquivo['size'] > $tamanhoMaximo)
-				$erros[] = 'Arquivo em tamanho muito grande! A imagem deve ser de no máximo ' . $tamanhoMaximo . ' bytes. Envie outro arquivo...';
-				if (is_array($erros)) {
-					$msgErro = "Não foi possível salvar o arquivo de imagem.<br><br><ul>";
-					foreach ($erros as $erro)
-					{
-						$msgErro.="<li>$erro</li>";
-					}
-					$msgErro.= '</ul>';
-					$html.=$o->msgDanger($msgErro);
-					$html.=$backButton;
-				} else {
-					$flds = [
-						'data'             => agora(),
-						'id_itens'         => $gId,
-						'id_pessoas_criou' => $usrId,
-						'descricao'        => gCleanField($_REQUEST['descricao']),
-						'arquivo'          => $arquivo['type']
-					];
-					$gPathUsrFiles.='anexos/';
-					$ext = substr((string) $arquivo['type'],strpos((string) $arquivo['type'],'/')+1);
-					if ($ext == "") {
-						$ext = "jpg";
-					}
-					if (!is_dir($gPathUsrFiles)) {
-						mkdir($gPathUsrFiles,0755);
-					}
-
-					$id = dbInsert('itens_anexos', $flds, true);
-					$imgName = $id.'.'.$ext;
-					$ok = move_uploaded_file($arquivo['tmp_name'], $gPathUsrFiles . $imgName);
-					gLog("===> Arquivo salvo: ".$gPathUsrFiles . $imgName . " (".$arquivo['tmp_name'].")");
-					chmod($gPathUsrFiles . $imgName, 0644); // evita ação de hackers
-					userLog('Imagem adicionada ao item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
-					redirect($o->page."&gPage=".IMAGENS."&gId=".$gId);
-				}
-			}
-		} else {
+		if (!$arquivo || $arquivo['name'] == '') {
 			redirect($o->page."&gPage=".IMAGENS."&gId=".$gId);
 		}
+
+		if ($arquivo['error'] == 1) {
+			$html.=$o->msgDanger("Houve um erro ao salvar o arquivo");
+			$html.=$o->msg("Verifique se o tamanho do arquivo é inferior ao limite, se existe permissão na pasta para salvá-lo e se o tipo de arquivo é compatível.");
+			$html .= $backButton;
+			break;
+		}
+		// Verifica tamanho do arquivo
+		if ($arquivo['size'] > $tamanhoMaximo) {
+			$html .= $o->msgDanger("Houve um erro ao salvar o arquivo");
+			$html .= $o->msg("Arquivo em tamanho muito grande! A imagem deve ser de no máximo ' . $tamanhoMaximo . ' bytes. Envie outro arquivo...");
+			$html .= $backButton;
+			break;
+		}
+
+		$flds = [
+			'data'             => agora(),
+			'id_itens'         => $gId,
+			'id_pessoas_criou' => $usrId,
+			'descricao'        => gCleanField($_REQUEST['descricao']),
+			'arquivo'          => $arquivo['type']
+		];
+		$gPathUsrFiles.='anexos/';
+		$ext = substr((string) $arquivo['type'],strpos((string) $arquivo['type'],'/')+1);
+		if ($ext == "") {
+			$ext = "jpg";
+		}
+		if (!is_dir($gPathUsrFiles)) {
+			mkdir($gPathUsrFiles,0755);
+		}
+
+		$id = dbInsert('itens_anexos', $flds, true);
+		$imgName = $id.'.'.$ext;
+		$ok = move_uploaded_file($arquivo['tmp_name'], $gPathUsrFiles . $imgName);
+		gLog("===> Arquivo salvo: ".$gPathUsrFiles . $imgName . " (".$arquivo['tmp_name'].")");
+		chmod($gPathUsrFiles . $imgName, 0644); // evita ação de hackers
+		userLog('Imagem adicionada ao item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
+		redirect($o->page."&gPage=".IMAGENS."&gId=".$gId);
 
 		break;
 
@@ -1850,7 +1862,6 @@ function mostraCabecalho()
 	}
 
 	$mtz = [];
-	$posicaoFixa = dbQuery("SELECT id FROM itens_areas WHERE id_itens = $gId AND id_posicoes > 0 LIMIT 1")[0]['id'];
 	if ($row['apto']==1) {
 		$mtz[] = '~6<>Cadastro do item suficientemente completo - pode ser utilizado';
 		$html .= $o->tableRow($mtz, 'success');

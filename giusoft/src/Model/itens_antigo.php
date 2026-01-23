@@ -152,7 +152,6 @@ class Itens extends Pessoas
 		$campos['codigo']=str_replace("'", '', gCleanField($todosOsCampos['codigo']));
 		$campos['codigo_barras']=str_replace("'", '', gCleanField($todosOsCampos['codigo_barras']));
 		$campos['codigo_barras_alternativo']=str_replace("'", '', gCleanField($todosOsCampos['codigo_barras_alternativo']));
-		$campos['codigo_anterior']=str_replace("'", '', gCleanField($todosOsCampos['codigo_anterior']));
 		$campos['nome']=gCleanField($todosOsCampos['nome']);
 		$campos['descricao']=gCleanField($todosOsCampos['descricao']);
 		$campos['id_pessoas_proprietario']=intval($todosOsCampos['id_pessoas_proprietario']);
@@ -315,7 +314,6 @@ class Itens extends Pessoas
 		$mtz['codigo2'] = gCleanField($sku['codigo2']);
 		$mtz['codigo_barras'] = $sku['itens_skus_codigo_barras'] ?: gCleanField($sku['codigo_barras']);
 		$mtz['codigo_barras_alternativo'] = $sku['itens_skus_codigo_barras_alternativo'] ?: gCleanField($sku['codigo_barras_alternativo']);
-		$mtz['codigo_anterior'] = $sku['itens_skus_codigo_anterior'] ?: gCleanField($sku['codigo_anterior']);
 		$mtz['nome'] = $sku['itens_skus_nome'] ?: gCleanField($sku['nome']);
 		$mtz['id_unidades'] = (int) $sku['id_unidades'];
 		$mtz['quantidade'] = gDBFloat($sku['quantidade']);
@@ -347,7 +345,6 @@ class Itens extends Pessoas
 			itens_skus.ativo AS itens_skus_ativo,
 			itens_skus.codigo AS itens_skus_codigo,
 			itens_skus.codigo_barras AS itens_skus_codigo_barras,
-			itens_skus.codigo_anterior AS itens_skus_codigo_anterior,
 			itens_skus.codigo_barras_alternativo AS itens_skus_codigo_barras_alternativo,
 			itens_skus.nome AS itens_skus_nome,
 			id_itens,
@@ -553,5 +550,42 @@ class Itens extends Pessoas
 		}
 		return $msg;
 
+	}
+
+
+    public function aptoSKUs($gId) {
+        global $gParam;
+        $apto = true;
+        $sql = "
+        	SELECT IK.id_unidades, IK.codigo_barras, IK.codigo
+        	FROM itens_skus IK
+        	WHERE IK.id_itens = " . $gId;
+        $rst = dbFastQuery($sql)[0];
+
+        if (!$rst || !$rst["id_unidades"] || !$rst["codigo_barras"] || !$rst["codigo"]) {
+            $apto = false;
+        }
+
+        foreach ($rst as $row) {
+            if ($row["quantidade"]==0) {
+                $apto = false;
+                break;
+            } else if (
+                ($row['quantidade']>1
+                || ($row["quantidade"]==1 && $row["id_unidades"]>1) )
+                && ($row['palete_altura']==0 || $row['palete_lastro']==0 || $row['altura']==0)
+            ) {
+                $apto = false;
+                break;
+            }
+        }
+        return($apto);
+    }
+
+
+    public function aptoAtualiza($gId, $apto)
+	{
+		$sql = "UPDATE itens SET apto={$apto} WHERE id=".$gId;
+		dbFastQuery($sql);
 	}
 }
