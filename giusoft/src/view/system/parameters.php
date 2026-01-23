@@ -45,7 +45,7 @@ if ($usrId > 2) {
 
     $sql = "SELECT * FROM parametros";
     $rsp = dbQuery($sql);
-    $gParam = '';
+    $gParam = [];
     foreach ($rsp as $key => $value) {
         unset($value[0]);
         unset($value[1]);
