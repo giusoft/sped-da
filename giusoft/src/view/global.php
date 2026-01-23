@@ -212,24 +212,24 @@ function createMenu()
 				}
 				$t=array();
 
-				$t['admin']           ="Administrar";
-				$t['home']            ="Início";
-				$t['profile']         ="Perfil";
-				$t['users']           ="Usuários";
-				$t['locales']         ="Localizações";
-				$t['pages']           ="Páginas";
-				$t['menus']           ="Menu";
-				$t['translations']    ="Traduções";
-				$t['posts']           ="Artigos";
-				$t['homepage']        ="Página inicial";
-				$t['sign_in']         ="Entrar";
-				$t['logout']          ="Sair";
-				$t['permissions']     ="Permissões";
-				$t['dashboard']       ="Painel de controle";
-				$t['representatives'] ="Representantes";
-				$t['links']           ="Links";
-				$t['parameters']      ="Parâmetros";
-				$t['tools']           ="Ferramentas";
+				$t['admin']           = "Administrar";
+				$t['home']            = "Início";
+				$t['profile']         = "Perfil";
+				$t['users']           = "Usuários";
+				$t['locales']         = "Localizações";
+				$t['pages']           = "Páginas";
+				$t['menus']           = "Menu";
+				$t['translations']    = "Traduções";
+				$t['posts']           = "Artigos";
+				$t['homepage']        = "Página inicial";
+				$t['sign_in']         = "Entrar";
+				$t['logout']          = "Sair";
+				$t['permissions']     = "Permissões";
+				$t['dashboard']       = "Painel de controle";
+				$t['representatives'] = "Representantes";
+				$t['links']           = "Links";
+				$t['parameters']      = "Parâmetros";
+				$t['tools']           = "Ferramentas";
 				$t['activities']      = "Log de atividades";
 
 				if ($usrId) {
@@ -237,17 +237,17 @@ function createMenu()
 					$menu->add("{icon: cog; type: dropdown; hint: User options; }");
 					$menu->add("{title: Início; type: dropdownLink; icon: home; url: index.php?g=index}");
 					$menu->add("{title: Perfil; type: dropdownLink; icon: user; url: index.php?g=profile}");
-					if (!$_SESSION['usrCliente'])
-					{
+
+					if (!$_SESSION['usrCliente']) {
 						$menu->add("{title: Mensagens; type: dropdownLink; icon: envelope; url: index.php?g=messages}");
 						$menu->add("{title: Manual; type: dropdownLink; icon: books; url: https://wiki.giusoft.com.br/pt-br/home;}");
 					}
-					if ($usrId == 1)
-					{
+
+					if ($usrId == 1) {
 						$menu->add("{title: sep; type: separator; }");
 						$menu->add("{title: ".$t["admin"]."; type: dropdownLink; }");
 						$menu->add("{title: ".$t['users']."; type: dropdownLink; icon: users; url: index.php?g=users}");
-						$menu->add("{title: ".$t['homepage']."; type: dropdownLink; icon: home; url: index.php?g=home}");
+						$menu->add("{title: ".$t['homepage']."; type: dropdownLink; icon: home; url: index.php?g=index}"); // caso queira colocar para mandar para a página homepage
 						$menu->add("{title: ".$t['pages']."; type: dropdownLink; icon: file-alt; url: index.php?g=pages}");
 						$menu->add("{title: ".$t['menus']."; type: dropdownLink; icon: align-justify; url: index.php?g=menus}");
 						$menu->add("{title: ".$t['translations']."; type: dropdownLink; icon: comment; url: index.php?g=translations}");
@@ -255,18 +255,19 @@ function createMenu()
 						$menu->add("{title: ".$t['posts']."; type: dropdownLink; icon: rss; url: index.php?g=posts}");
 						$menu->add("{title: ".$t['tools']."; type: dropdownLink; icon: toolbox; url: index.php?g=tools}");
 					}
-					if ($usrId==1 || $usrId ==2 )
-					{
+
+					if ($usrId == 1 || $usrId == 2) {
 						$menu->add("{title: ".$t['permissions']."; type: dropdownLink; icon: key; url: index.php?g=permissions}");
 						$menu->add("{title: ".$t['parameters']."; type: dropdownLink; icon: wrench; url: index.php?g=parameters}");
 						$menu->add("{title: ".$t['menus']."; type: dropdownLink; icon: align-justify; url: index.php?g=menus}");
 						$menu->add("{title: ".$t['tools']."; type: dropdownLink; icon: toolbox; url: index.php?g=tools}");
 					}
-					if (!$_SESSION['usrCliente'])
-					{
+
+					if (!$_SESSION['usrCliente']) {
 						$menu->add("{title: sep; type: separator; }");
 						$menu->add("{title: ".$t['activities']."; type: dropdownLink; icon: list; url: index.php?g=activities}");
 					}
+
 					$menu->add("{title: sep; type: separator; }");
 					$menu->add("{title: Sair; type: dropdownLink; icon: power-off; url: index.php?g=logout}");
 
@@ -367,7 +368,7 @@ function createMenu()
 					}
 
 					$bar .= '<div id="barraDeAtalhos" class="btn-group hidden-xs hidden-sm" role="group" style="padding-left: 6px; padding-right: 6px">';
-					$bar .= $o->button("{size: small; icon: doc; style: info; caption: NFe; href: index.php?g=nf_saida&gPage=0}");
+					$bar .= $o->button("{size: small; icon: file-code; style: info; caption: NFe; href: index.php?g=nf_saida&gPage=0}");
 
 					if ($_SESSION['key_user'] && $usrId) {
 						$bar .= $o->button("{id: toggleChatBtn; size: small; icon: " . ($_SESSION['chatAtivo'] ? 'comment' : 'comment-slash') . "; style: info; caption: " . ($_SESSION['chatAtivo'] ? 'Ocultar Chats' : 'Exibir Chats') . "; href: 'javascript:void(0);'}");
