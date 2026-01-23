@@ -1,65 +1,62 @@
 <?php
 
 include_once "Pessoas.php";
+
 class PessoasJuridicas extends Pessoas
 {
 
-
-	function __construct()
+	public function __construct()
 	{
 		parent::__construct();
 		$this->filtro = "p.id>2 AND p.tipo='J' AND p.situacao in ('Ativo', 'Inativo')";
 	}
 
-	function obtemQueryConsulta()
+	public function obtemQueryConsulta()
 	{
-		$sql = "
-			SELECT
-				p.*,
-				pj.razao_social,
-				pj.cnpj,
-				pj.insc_estadual,
-				pj.insc_municipal,
-				pj.site site_empresa,
-				pj.observacoes,
-				pj.matriz,
-				pj.unidade,
-				pj.codigo_sistema_externo,
-				pj.faz_segunda_separacao,
-				pj.lote_xprod,
-				pj.prazo,
-				pj.lead_time,
-				pj.exige_uma_entrada_convencional,
-				pj.exigir_sku_separacao,
-				pj.indicar_posicao,
-				pj.fiscal,
-				pj.tipo_separacao,
-				pj.priorizar_palete_aberto,
-				pj.priorizar_palete_fechado,
-				pj.foto_obrigatoria,
-				pj.permitir_portaria_sem_os,
-				pj.quantidade_posicoes,
-				pj.variacao_divergencia
-			FROM
-				pessoas p
-			LEFT JOIN pessoas_juridicas pj ON
-				pj.id_pessoas = p.id";
+		$sql = "SELECT
+					p.*,
+					pj.razao_social,
+					pj.cnpj,
+					pj.insc_estadual,
+					pj.insc_municipal,
+					pj.site site_empresa,
+					pj.observacoes,
+					pj.matriz,
+					pj.unidade,
+					pj.codigo_sistema_externo,
+					pj.faz_segunda_separacao,
+					pj.lote_xprod,
+					pj.prazo,
+					pj.lead_time,
+					pj.exige_uma_entrada_convencional,
+					pj.exigir_sku_separacao,
+					pj.indicar_posicao,
+					pj.fiscal,
+					pj.tipo_separacao,
+					pj.priorizar_palete_aberto,
+					pj.priorizar_palete_fechado,
+					pj.foto_obrigatoria,
+					pj.permitir_portaria_sem_os,
+					pj.quantidade_posicoes,
+					pj.variacao_divergencia
+				FROM pessoas p
+				LEFT JOIN pessoas_juridicas pj ON pj.id_pessoas = p.id";
 		return ($sql);
 	}
 
 
-	function geraCamposDoFormulario(&$frm, $registroAtual, $proximaPagina="")
+	public function geraCamposDoFormulario(&$frm, $registroAtual, $proximaPagina="")
 	{
 		// O formulário de edição de dados usa este método
 		global $proximaPagina, $gId, $gPage, $o, $gParam;
-		if ($proximaPagina=="")
-		{
+
+		if ($proximaPagina == "") {
 			$proximaPagina=$gPage+1;
 		}
-		$pwd="";
-		if ($gId>0)
-		{
-			$pwd=SENHA_NAO_MODIFICADA;
+
+		$pwd = "";
+		if ($gId > 0) {
+			$pwd = SENHA_NAO_MODIFICADA;
 		}
 
 		$frm->row(
@@ -77,6 +74,7 @@ class PessoasJuridicas extends Pessoas
 			$frm->add("{name: senha; type: password; value: ".$pwd."}"),
 			$frm->add("{name: confirmacao; type: password; value: ".$pwd."}")
 		);
+
 		$frm->row(
 			$frm->add("{name: razao_social; fieldLabel: Razão social; type: upperFirstWordText; maxLength: 100; value: ".$registroAtual['razao_social']."}"),
 			$frm->add("{name: email; fieldLabel: Email; type: text; maxLength: 100; value: ".$registroAtual['email']."}"),
@@ -84,9 +82,7 @@ class PessoasJuridicas extends Pessoas
 			$frm->add("{name: situacao; type: combo; allowBlank: false; value: ".$registroAtual['situacao']."; items: {'Ativo','Inativo'}}")
 		);
 
-		$numero_documento=(!empty($registroAtual["cnpj"]))
-		? $registroAtual["cnpj"]
-		: $registroAtual["cpf"];
+		$numero_documento=(!empty($registroAtual["cnpj"])) ? $registroAtual["cnpj"] : $registroAtual["cpf"];
 
 		$frm->row(
 			$frm->add("{name: unidade; fieldLabel: Unidade; type: upperText; maxLength: 30; value: ".$registroAtual['unidade']."}"),
@@ -99,7 +95,7 @@ class PessoasJuridicas extends Pessoas
 		$frm->add("{name: gId; type: hidden; value: ".$gId."}");
 		$frm->add("{name: gPage; type: hidden; value: ".$proximaPagina."}");
 
-		return($frm->render($o));
+		return $frm->render($o);
 	}
 
 
@@ -110,11 +106,12 @@ class PessoasJuridicas extends Pessoas
 		$frm->add("{name: codigo_sistema_externo; fieldLabel: Código de sistema externo; type: text; maxLength: 9; value: " . $registroAtual['codigo_sistema_externo'] . "}");
 		$frm->add("{name: gId; type: hidden; value: ".$gId."}");
 		$frm->add("{name: gPage; type: hidden; value: ".$proximaPagina."}");
-		return($frm->render($o));
+
+		return $frm->render($o);
 	}
 
 
-	function preparaCampos($todosOsCampos, $gId = 0)
+	public function preparaCampos($todosOsCampos, $gId = 0)
 	{
 		global $usrId;
 		$campos = array();
@@ -131,22 +128,23 @@ class PessoasJuridicas extends Pessoas
 		$campos['situacao']=gCleanField($todosOsCampos['situacao']);
 		$campos['email']=gCleanField($todosOsCampos['email']);
 
-		if ($gId==0)
-		{
-			$campos['data_cadastro']=gDBDateTime(date('Y-m-d H:i:s'));
-			$campos['id_pessoas_criou']=intval($usrId);
+		if ($gId == 0) {
+			$campos['data_cadastro'] = gDBDateTime(date('Y-m-d H:i:s'));
+			$campos['id_pessoas_criou'] = intval($usrId);
 		} else {
-			$campos['data_alteracao']=gDBDateTime(date('Y-m-d H:i:s'));
-			$campos['id_pessoas_alterou']=intval($usrId);
+			$campos['data_alteracao'] = gDBDateTime(date('Y-m-d H:i:s'));
+			$campos['id_pessoas_alterou'] = intval($usrId);
 		}
-		if ($todosOsCampos['senha']<>SENHA_NAO_MODIFICADA)
-		{
-			$campos['senha']=md5(gCleanField($todosOsCampos['senha']));
+
+		if ($todosOsCampos['senha'] <> SENHA_NAO_MODIFICADA) {
+			$campos['senha'] = md5(gCleanField($todosOsCampos['senha']));
 		}
-		return($campos);
+
+		return $campos;
 	}
 
-	function preparaCamposAdicionais($todosOsCampos, $gId = 0)
+
+	public function preparaCamposAdicionais($todosOsCampos, $gId = 0)
 	{
 		global $gParam;
 
@@ -160,60 +158,58 @@ class PessoasJuridicas extends Pessoas
 		$campos['site']=gCleanField($todosOsCampos['site']);
 		$campos['unidade']=gCleanField($todosOsCampos['unidade']);
 		$campos['observacoes']=base64_encode($todosOsCampos['observacoes']);
-		return($campos);
+		return $campos;
 	}
 
-	function insere($campos, &$gId)
+
+	public function insere($campos = [], &$gId = '')
 	{
 		global $gParam;
-		$gId = false;
 
-		if (($campos['senha']!=$campos['confirmacao']) ) {
-			$this->erros[]="A senha e a confirmação devem ser iguais e diferentes de vazio!";
-			$gId = false;
-		} else {
-			// Primeiro obtém o próximo id
-			$gId=dbInsert('pessoas',$this->preparaCampos($campos), true);
-			$campos['id_pessoas']=$gId;
-			dbInsert('pessoas_juridicas', $this->preparaCamposAdicionais($campos));
-
-			// Inserindo acesso ao filial atual.
-			$sql="SELECT
-					id
-				  FROM pessoas_filial
-				  WHERE id_pessoas=$gId
-				  AND id_filial=".$_SESSION["filialAtualId"]."
-				  AND cancelado=0
-				  ";
-			$existe=dbQuery($sql);
-			if (count($existe)==0)
-			{
-				$mtz=array();
-				$mtz["id_pessoas"]=$gId;
-				$mtz["id_filial"]=$_SESSION["filialAtualId"];
-				$mtz["id_pessoas_criou"]=$_SESSION["usrId"];
-				$mtz["data_criou"]=date('Y-m-d H:i:s');
-				dbInsert("pessoas_filial", $mtz);
-			}
-
-
-			// Transportadora então inserir pessoas_fisicas
-
-			if (isset($campos["transportadora"]) && ($campos["transportadora"]=="on" || intval($campos["transportadora"])==1))
-			{
-				if (strlen($campos["cnpj"])<14)
-				{
-					$mtz=array();
-					$mtz["cpf"]=$campos["cnpj"];
-					$mtz["id_pessoas"]=$gId;
-					dbInsert("pessoas_fisicas", $mtz);
-					$sqlu="UPDATE pessoas_juridicas SET cnpj='' WHERE id_pessoas=".$gId;
-					dbQuery($sqlu);
-				}
-			}
-
+		if (($campos['senha'] != $campos['confirmacao']) ) {
+			$this->erros[] = "A senha e a confirmação devem ser iguais e diferentes de vazio!";
+			return false;
 		}
-		return($gId);
+
+		// Primeiro obtém o próximo id
+		$gId = dbInsert('pessoas',$this->preparaCampos($campos), true);
+		$campos['id_pessoas']=$gId;
+		dbInsert('pessoas_juridicas', $this->preparaCamposAdicionais($campos));
+
+		// Inserindo acesso ao filial atual.
+		$sql = "SELECT id
+				FROM pessoas_filial
+				WHERE id_pessoas = $gId
+					AND id_filial = " . $_SESSION["filialAtualId"] . "
+					AND cancelado = 0";
+		$existe = dbQuery($sql);
+		if (!$existe) {
+			$mtz=array();
+			$mtz["id_pessoas"]=$gId;
+			$mtz["id_filial"]=$_SESSION["filialAtualId"];
+			$mtz["id_pessoas_criou"]=$_SESSION["usrId"];
+			$mtz["data_criou"]=date('Y-m-d H:i:s');
+			dbInsert("pessoas_filial", $mtz);
+		}
+
+
+		// Transportadora então inserir pessoas_fisicas
+		if (
+			isset($campos["transportadora"])
+			&& ($campos["transportadora"] == "on"
+			|| intval($campos["transportadora"]) == 1)
+		) {
+			if (strlen($campos["cnpj"]) < 14) {
+				$mtz=array();
+				$mtz["cpf"]=$campos["cnpj"];
+				$mtz["id_pessoas"]=$gId;
+				dbInsert("pessoas_fisicas", $mtz);
+				$sqlu = "UPDATE pessoas_juridicas SET cnpj='' WHERE id_pessoas=".$gId;
+				dbQuery($sqlu);
+			}
+		}
+
+		return $gId;
 	}
 
 
@@ -221,15 +217,15 @@ class PessoasJuridicas extends Pessoas
 	{
 		global $gParam;
 
-		if (($campos['senha']!=$campos['confirmacao']) ) {
-			$this->erros[]="A senha e a confirmação devem ser iguais e diferentes de vazio!";
+		if (($campos['senha'] != $campos['confirmacao']) ) {
+			$this->erros[] = "A senha e a confirmação devem ser iguais e diferentes de vazio!";
 			return false;
 		}
 
-		$sql = "SELECT id FROM pessoas WHERE id>2 AND id=" . $gId;
+		$sql = "SELECT id FROM pessoas WHERE id > 2 AND id = " . $gId;
 		$rs = dbQuery($sql);
 		if (!$rs) {
-			$this->erros[] = "A pessoa selecionada não foi encontrada no banco de dados.";
+			$this->erros[] = "A pessoa selecionada não foi encontrada no banco de dados";
 			return false;
 		}
 
@@ -270,12 +266,9 @@ class PessoasJuridicas extends Pessoas
 
 	public function verificarItensAtivosExigeLote() {
 		global $gId;
-		$sql = "
-			SELECT id
-			FROM itens
-			WHERE ativo = 1
-				AND exige_lote = 1
-				AND id_pessoas_proprietario = {$gId}";
+
+		$sql = "SELECT id FROM itens
+				WHERE ativo = 1 AND exige_lote = 1 AND id_pessoas_proprietario = {$gId}";
 		$rs = dbQuery($sql);
 		return (bool) $rs;
 	}
@@ -302,6 +295,7 @@ class PessoasJuridicas extends Pessoas
 			if ($regra['maxLength'] && strlen($dados[$index]) > $regra['maxLength']) {
 				$errorMessage[] = "Linha {$linha}: O campo {$regra['campo']} excede o limite máximo de {$regra['maxLength']} caracteres";
 			}
+
 			if ($regra['inArray'] && !in_array(strtoupper($dados[$index]), $regra['inArray'])) {
 				$errorMessage[] = "Linha {$linha}: O campo {$regra['campo']} deve ser F para pessoa física ou J para pessoa jurídica";
 			}
