@@ -69,7 +69,7 @@ class Emitenota
     public function estornarNfe($dados)
     {
         $dadosEstornarNfe = $this->montarDadosNfe($dados['dadosNfe']);
-        $dadosEstornarNfe['refNfe'] = extrairNumeros($dados['dadosNfe']['refNfe']);
+        $dadosEstornarNfe['refNfe'] = soNumeros($dados['dadosNfe']['refNfe']);
 
         return $this->acessarRota('estornarNfe', $dadosEstornarNfe);
     }
@@ -78,9 +78,9 @@ class Emitenota
     public function cancelarNfe($dados)
     {
         $dadosCancelarNfe = array(
-            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjFilial']),
-            'chave' => extrairNumeros($dados['chave']),
-            'protocolo' => extrairNumeros($dados['protocolo']),
+            'cnpj_emitente' => soNumeros($dados['empresa']['cnpjFilial']),
+            'chave' => soNumeros($dados['chave']),
+            'protocolo' => soNumeros($dados['protocolo']),
             'justificativa' => removerAcentos($dados['justificativa']),
             'empresa' => $this->montarDadosEmpresa($dados['empresa'], $dados['config'])
         );
@@ -92,7 +92,7 @@ class Emitenota
     public function inutilizarNfe($dados)
     {
         $dadosInutilizarNfe = array(
-            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjFilial']),
+            'cnpj_emitente' => soNumeros($dados['empresa']['cnpjFilial']),
             'serie' => (int) $dados['serie'],
             'numero_inicial' => (int) $dados['numero_inicial'],
             'numero_final' => (int) $dados['numero_final'],
@@ -107,8 +107,8 @@ class Emitenota
     public function cartaCorrecao($dados)
     {
         $dadosCartaCorrecao = array(
-            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjFilial']),
-            'chave' => extrairNumeros($dados['chave']),
+            'cnpj_emitente' => soNumeros($dados['empresa']['cnpjFilial']),
+            'chave' => soNumeros($dados['chave']),
             'correcao' => removerAcentos($dados['correcao']),
             'sequencial' => (int) $dados['sequencial'],
             'empresa' => $this->montarDadosEmpresa($dados['empresa'], $dados['config'])
@@ -122,8 +122,8 @@ class Emitenota
     public function consultarNfe($dados)
     {
         $dadosConsultarNfe = array(
-            'cnpj_emitente' => extrairNumeros($dados['cnpj_emitente']),
-            'chave' => extrairNumeros($dados['chave'])
+            'cnpj_emitente' => soNumeros($dados['cnpj_emitente']),
+            'chave' => soNumeros($dados['chave'])
         );
 
         return $this->acessarRota('consultarNfe', $dadosConsultarNfe);
@@ -133,7 +133,7 @@ class Emitenota
     public function consultarStatusSefaz($dados)
     {
         $dadosConsultarStatusSefaz = array(
-            'cnpj_emitente' => extrairNumeros($dados['cnpj_emitente'])
+            'cnpj_emitente' => soNumeros($dados['cnpj_emitente'])
         );
 
         return $this->acessarRota('consultarStatusSefaz', $dadosConsultarStatusSefaz);
@@ -143,8 +143,8 @@ class Emitenota
     public function gerarDanfe($dados)
     {
         $dadosGerarDanfe = array(
-            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjFilial']),
-            'chave' => extrairNumeros($dados['chave']),
+            'cnpj_emitente' => soNumeros($dados['empresa']['cnpjFilial']),
+            'chave' => soNumeros($dados['chave']),
             'xml' => base64_encode($dados['xml']),
             'empresa' => $this->montarDadosEmpresa($dados['empresa'], $dados['config'])
         );
@@ -156,8 +156,8 @@ class Emitenota
     public function gerarDanfeCancelamento($dados)
     {
         $dadosGerarDanfe = array(
-            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjFilial']),
-            'chave' => extrairNumeros($dados['chave']),
+            'cnpj_emitente' => soNumeros($dados['empresa']['cnpjFilial']),
+            'chave' => soNumeros($dados['chave']),
             'xml' => base64_encode($dados['xml']),
             'xml_cancelamento' => base64_encode($dados['xml_cancelamento']),
             'empresa' => $this->montarDadosEmpresa($dados['empresa'], $dados['config'])
@@ -170,8 +170,8 @@ class Emitenota
     public function gerarDanfeCce($dados)
     {
         $dadosGerarDanfeCce = array(
-            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjFilial']),
-            'chave' => extrairNumeros($dados['chave']),
+            'cnpj_emitente' => soNumeros($dados['empresa']['cnpjFilial']),
+            'chave' => soNumeros($dados['chave']),
             'xml' => base64_encode($dados['xml']),
             'empresa' => $this->montarDadosEmpresa($dados['empresa'], $dados['config'])
         );
@@ -189,7 +189,7 @@ class Emitenota
             foreach ($dados['documentos'] as $doc) {
                 $xmlBase64 = base64_encode($doc['xml']);
                 $documentosFormatados[] = array(
-                    'chave' => extrairNumeros($doc['chave']),
+                    'chave' => soNumeros($doc['chave']),
                     'xml' => $xmlBase64,
                     'tipo' => $doc['tipo'] ?: 'nfe'
                 );
@@ -202,7 +202,7 @@ class Emitenota
         }
 
         $dadosRequest = array(
-            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjFilial']),
+            'cnpj_emitente' => soNumeros($dados['empresa']['cnpjFilial']),
             'empresa' => $dadosEmpresaApi,
             'documentos' => $documentosFormatados,
             'id_lote' => $dados['id_lote'],
@@ -249,7 +249,7 @@ class Emitenota
     public function montarDadosNfe($dados)
     {
         // Monta array de produtos
-        $produtos = array();
+        $produtos = [];
 
         foreach ($dados['item'] as $item) {
 
@@ -299,8 +299,8 @@ class Emitenota
 
             if (isset($item['CSTIS']) && !empty($item['CSTIS'])) {
                 $impostos['is'] = array(
-                    'CSTIS' => extrairNumeros($item['CSTIS']),
-                    'cClassTribIS' => extrairNumeros($item['cClassTribIS']),
+                    'CSTIS' => soNumeros($item['CSTIS']),
+                    'cClassTribIS' => soNumeros($item['cClassTribIS']),
                     'vBCIS' => (float) $item['vBCIS'],
                     'pIS' => (float) $item['pIS'],
                     'vIS' => (float) $item['vIS'],
@@ -311,11 +311,11 @@ class Emitenota
 
             if (isset($item['cst_ibs_cbs']) && !empty($item['cst_ibs_cbs'])) {
 
-                $cst = extrairNumeros($item['cst_ibs_cbs']);
+                $cst = soNumeros($item['cst_ibs_cbs']);
 
                 $ibscbs = [
                     'CST' => $cst,
-                    'cClassTrib' => extrairNumeros($item['cclasstrib_ibs_cbs']),
+                    'cClassTrib' => soNumeros($item['cclasstrib_ibs_cbs']),
                     'indDoacao' => (int) $item['indDoacao']
                 ];
 
@@ -395,8 +395,8 @@ class Emitenota
                 'serieEntrada' => removerEstranhos($item['SerieEntrada']),
                 'numeroCliente' => removerEstranhos($item['NumeroCliente']),
                 'descricao' => removerEstranhos($item['descricao']),
-                'ncm' => extrairNumeros($item['ncm']),
-                'cfop' => extrairNumeros($item['cfop']),
+                'ncm' => soNumeros($item['ncm']),
+                'cfop' => soNumeros($item['cfop']),
                 'unidade' => removerEstranhos($item['unidade']),
                 'quantidade' => (float) $item['quantidade'],
                 'valorUnitario' => (float) $item['valor'],
@@ -408,7 +408,7 @@ class Emitenota
 
         // Monta JSON final
         $dadosNfe = array(
-            'cnpj_emitente' => extrairNumeros($dados['empresa']['cnpjFilial']),
+            'cnpj_emitente' => soNumeros($dados['empresa']['cnpjFilial']),
             'naturezaOperacao' => removerAcentos($dados['operacao']),
             'sistema' => $dados['sistema'],
             'informacoesAdicionais' => removerAcentos($dados['infAdFisco']),
@@ -427,30 +427,30 @@ class Emitenota
                 'nome' => removerEstranhos($dados['cliente']['razaoSocial']),
                 'endereco' => removerEstranhos($dados['cliente']['endereco']),
                 'numero' => removerEstranhos($dados['cliente']['enderecoNumero']),
-                'cnpj' => extrairNumeros($dados['cliente']['cnpj']),
-                'cpf' => extrairNumeros($dados['cliente']['cpf']),
+                'cnpj' => soNumeros($dados['cliente']['cnpj']),
+                'cpf' => soNumeros($dados['cliente']['cpf']),
                 'bairro' => removerEstranhos($dados['cliente']['enderecoBairro']),
-                'codigoMunicipio' => extrairNumeros($dados['cliente']['enderecoIbgeMunicipio']),
+                'codigoMunicipio' => soNumeros($dados['cliente']['enderecoIbgeMunicipio']),
                 'municipio' => removerEstranhos($dados['cliente']['enderecoMunicipio']),
                 'ie' => $dados['cliente']['inscricaoEstadual'],
                 'uf' => strtoupper(trim($dados['cliente']['enderecoUf'])),
                 'indIEDest' => (int) $dados['indIEDest'],
                 'cPais' => (int) (isset($dados['cliente']['enderecoCodigoPais']) ? $dados['cliente']['enderecoCodigoPais'] : 1058),
-                'cep' => extrairNumeros($dados['cliente']['enderecoCep'])
+                'cep' => soNumeros($dados['cliente']['enderecoCep'])
             ),
             'empresa' => $this->montarDadosEmpresa($dados['empresa'], $dados['config']),
             'produtos' => $produtos,
             'transporte' => array(
-                'modalidadeFrete' => extrairNumeros($dados['modalidadeFrete']) ,
+                'modalidadeFrete' => soNumeros($dados['modalidadeFrete']) ,
                 'transportadora' => array(
-                    'cnpj' => extrairNumeros($dados['transportadora']['transportadoraCnpj']),
-                    'cpf' => extrairNumeros($dados['transportadora']['transportadoraCpf']),
+                    'cnpj' => soNumeros($dados['transportadora']['transportadoraCnpj']),
+                    'cpf' => soNumeros($dados['transportadora']['transportadoraCpf']),
                     'razaoSocial' => removerEstranhos($dados['transportadora']['transportadoraRazaoSocial']),
-                    'inscricaoEstadual' => extrairNumeros($dados['transportadora']['transportadoraInscricaoEstadual']),
+                    'inscricaoEstadual' => soNumeros($dados['transportadora']['transportadoraInscricaoEstadual']),
                     'endereco' => removerEstranhos($dados['transportadora']['transportadoraEndereco']),
                     'municipio' => removerEstranhos($dados['transportadora']['transportadoraEnderecoMunicipio']),
                     'uf' => strtoupper(trim($dados['transportadora']['transportadoraEnderecoUf'])),
-                    'cep' => extrairNumeros($dados['transportadora']['transportadoraEnderecoCep'])
+                    'cep' => soNumeros($dados['transportadora']['transportadoraEnderecoCep'])
                 ),
                 'veiculo' => array(
                     'placa' => removerEstranhos($dados['veiculoPlaca']),
@@ -475,7 +475,7 @@ class Emitenota
     public function importarPfx($dados)
     {
         $dadosCertificado = array(
-            'cnpj_emitente' => extrairNumeros($dados['cnpj_filial']),
+            'cnpj_emitente' => soNumeros($dados['cnpj_filial']),
             'certificado' => $dados['certificado']
         );
 
@@ -486,7 +486,7 @@ class Emitenota
     public function buscarDadosCertificado($dados)
     {
         $dadosCertificado = array(
-            'cnpj_emitente' => extrairNumeros($dados['cnpj_filial']),
+            'cnpj_emitente' => soNumeros($dados['cnpj_filial']),
             'senhaCertificado' => $dados['senhaCertificado'],
             'certificado' => $dados['certificado'] ?: ''
         );
