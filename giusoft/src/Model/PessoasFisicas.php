@@ -65,7 +65,7 @@ class PessoasFisicas extends Pessoas
 		);
 
 		$frm->row(
-			$frm->add("{name: situacao; type: combo; allowBlank: false; value: '".$registroAtual['situacao']."'; items: ['Ativo','Inativo']}"),
+			$frm->add("{name: situacao; type: combo; allowBlank: false; value: '".$registroAtual['situacao']."'; items: {'Ativo','Inativo'}}"),
 			$frm->add("{name: telefone; type: text; value: ".$registroAtual['telefone']."}"),
 			$frm->add("{name: celular; type: text; value: ".$registroAtual['celular']."}"),
 			$frm->add("{name: email; type: email; value: ".$registroAtual['email']."}")
