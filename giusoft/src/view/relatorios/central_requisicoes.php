@@ -1,5 +1,7 @@
 <?php
 
+include_once __DIR__ . '/../../Model/Pagination.php';
+
 define("INICIO",                       0);
 define("FILTROS_PESQUISAR_REQUISICAO", 1);
 define("DESCRICAO_REQUISICAO",         2);
@@ -50,11 +52,11 @@ switch ($gPage) {
         }
 
         if ($_REQUEST['dataDe']) {
-            $where[] = "gatilhos_requisicoes_detalhes.data_hora >= '" . gDBDateTime($_REQUEST['dataDe']) . "' ";
+            $where[] = "DATE(gatilhos_requisicoes_detalhes.data_hora) >= '" . gDBDateTime($_REQUEST['dataDe']) . "' ";
         }
 
         if ($_REQUEST['dataAte']) {
-            $where[] = "gatilhos_requisicoes_detalhes.data_hora <= '" . gDBDateTime($_REQUEST['dataAte']) . "' ";
+            $where[] = "DATE(gatilhos_requisicoes_detalhes.data_hora) <= '" . gDBDateTime($_REQUEST['dataAte']) . "' ";
         }
 
         if ($_REQUEST['id_pessoas']) {
@@ -80,27 +82,25 @@ switch ($gPage) {
                     gatilhos.metodo,
                     pessoas.apelido AS proprietario,
                     gatilhos_requisicoes.pendente,
-                    MAX(gatilhos_requisicoes_detalhes.numero_tentativa) AS quantidade_tentativas,
-                    programacao.os
+                    MAX(gatilhos_requisicoes_detalhes.numero_tentativa) AS quantidade_tentativas
                 FROM gatilhos_configuracoes
                 JOIN gatilhos ON gatilhos.id_gatilhos_configuracoes = gatilhos_configuracoes.id
                 JOIN gatilhos_requisicoes ON gatilhos_requisicoes.id_gatilhos = gatilhos.id
                 JOIN gatilhos_requisicoes_detalhes ON gatilhos_requisicoes_detalhes.id_gatilhos_requisicoes = gatilhos_requisicoes.id
                 JOIN pessoas ON pessoas.id = gatilhos_configuracoes.id_pessoas_proprietario
-                LEFT JOIN programacao ON programacao.id = gatilhos_requisicoes.id_programacao
                 WHERE {$where}
                 GROUP BY gatilhos_requisicoes.id
                 ORDER BY gatilhos_requisicoes_detalhes.id DESC";
 
-        $persistencia->pagination = new Pagination();
+        $pagination = new Pagination();
 
         if ($gParam["PAGINACAO"]["ativo"]) {
-            $persistencia->porPagina = $gParam["PAGINACAO"]["valor"];
+            $porPagina = $gParam["PAGINACAO"]["valor"];
         }
 
-        if ($persistencia->porPagina > 0) {
-            $totalRegistros = $persistencia->pagination->controlarQuantidadePaginas($sql, $qtdMinimaPaginas = 10);
-            $pagination = $persistencia->pagination->addPagination($totalRegistros, $persistencia->porPagina);
+        if ($porPagina > 0) {
+            $totalRegistros = $pagination->controlarQuantidadePaginas($sql, $qtdMinimaPaginas = 10);
+            $pagination = $pagination->addPagination($totalRegistros, $porPagina);
             $sql .= sprintf(' LIMIT %s, %s', $pagination->iniciar, $pagination->numero_registro_por_pagina);
         } elseif ($gParam['LIMITAR_VISUALIZACAO']['ativo']) {
             $sql .= " LIMIT " . $gParam['LIMITAR_VISUALIZACAO']['valor'];
@@ -109,13 +109,13 @@ switch ($gPage) {
         $rs = dbFastQuery($sql);
 
         if (!$rs) {
-            $html .= $persistencia->pagination->render('{style:margin-top:-1%;}');
+            $html .= $pagination->render('{style:margin-top:-1%;}');
             $html .= $o->msgDanger("Nenhum registro encontrado");
-            $html .= $persistencia->pagination->render('{id:o;}');
+            $html .= $pagination->render('{id:o;}');
             break;
         }
 
-        $html .= $persistencia->pagination->render('{style:margin-top:-1%;}');
+        $html .= $pagination->render('{style:margin-top:-1%;}');
 
         $html .= $o->tableBegin("big", true);
         $mtz   = [];
@@ -125,7 +125,6 @@ switch ($gPage) {
         $mtz[] = '<-Classe';
         $mtz[] = '<-Método';
         $mtz[] = '<-Proprietário';
-        $mtz[] = '<-OS';
         // $mtz[] = '<-' . 'Ativa / Passiva';
         $mtz[] = '<>Pendente';
         $mtz[] = '->Quantidade tentativas';
@@ -147,7 +146,6 @@ switch ($gPage) {
             $mtz[] = '<-' . ucfirst((string) $row['classe_integracao']);
             $mtz[] = '<-' . $row['metodo'];
             $mtz[] = '<-' . $row['proprietario'];
-            $mtz[] = '<-' . linkParaOS($row['os']);
             // $mtz[] = '<-' . $row['ativa_passiva'];
             $mtz[] = '<>' . gCheck($row['pendente'], true);
             $mtz[] = '->' . $row['quantidade_tentativas'];
@@ -155,7 +153,7 @@ switch ($gPage) {
         }
 
         $html .= $o->tableEnd();
-        $html .= $persistencia->pagination->render('{id:o;}');
+        $html .= $pagination->render('{id:o;}');
         break;
 
 
@@ -169,8 +167,8 @@ switch ($gPage) {
         );
 
         $frm->row(
-            $frm->add("{name: dataDe; fieldLabel: Data de; type: dateTime;}"),
-            $frm->add("{name: dataAte; fieldLabel: Data até; type: dateTime;}")
+            $frm->add("{name: dataDe; fieldLabel: Data de; type: date;}"),
+            $frm->add("{name: dataAte; fieldLabel: Data até; type: date;}")
         );
 
         $frm->add("{name: pendente; fieldLabel: Pendente; type: checkbox;}");
@@ -197,14 +195,12 @@ switch ($gPage) {
                     gatilhos_requisicoes_detalhes.tempo_execucao,
                     gatilhos_requisicoes.enviado,
                     gatilhos.url_rota,
-                    gatilhos_configuracoes.url_base,
-                    programacao.os
+                    gatilhos_configuracoes.url_base
                 FROM gatilhos_configuracoes
                 JOIN gatilhos ON gatilhos.id_gatilhos_configuracoes = gatilhos_configuracoes.id
                 JOIN gatilhos_requisicoes ON gatilhos_requisicoes.id_gatilhos = gatilhos.id
                 JOIN gatilhos_requisicoes_detalhes ON gatilhos_requisicoes_detalhes.id_gatilhos_requisicoes = gatilhos_requisicoes.id
                 JOIN pessoas ON pessoas.id = gatilhos_configuracoes.id_pessoas_proprietario
-                LEFT JOIN programacao ON programacao.id = gatilhos_requisicoes.id_programacao
                 WHERE gatilhos_requisicoes.id = {$_REQUEST['idRequisicao']}
                 GROUP BY gatilhos_requisicoes_detalhes.id
                 ORDER BY gatilhos_requisicoes_detalhes.id";
@@ -218,22 +214,18 @@ switch ($gPage) {
 		$mtz[] = '<-' . formatarParaCabecalho('Id', $dadosCabecalho['id_requisicao']);
 		$mtz[] = '<-' . formatarParaCabecalho('Data', gDateTime($dadosCabecalho['data_hora']));
         $mtz[] = '<-' . formatarParaCabecalho('Proprietário', $dadosCabecalho['proprietario']);
+        $mtz[] = '<-' . formatarParaCabecalho('Pendente', gCheck($dadosCabecalho['pendente'], true));
 		$html .= $o->tableRow($mtz, 'header');
 
 		$mtz = [];
         $mtz[] = '<-' . formatarParaCabecalho('Classe', ucfirst((string) $dadosCabecalho['classe_integracao']));
 		$mtz[] = '<-' . formatarParaCabecalho('Método', $dadosCabecalho['metodo']);
 		$mtz[] = '<-' . formatarParaCabecalho('Ativa / Passiva', $dadosCabecalho['ativa_passiva']);
-		$html .= $o->tableRow($mtz, 'header');
-
-        $mtz = [];
-        $mtz[] = '<-' . formatarParaCabecalho('Pendente', gCheck($dadosCabecalho['pendente'], true));
-		$mtz[] = '<-' . formatarParaCabecalho('OS', linkParaOS($dadosCabecalho['os']));
         $mtz[] = '<-' . formatarParaCabecalho('Quantidade tentativas', count($rs));
 		$html .= $o->tableRow($mtz, 'header');
 
         $mtz = [];
-		$mtz[] = '~3<-' . formatarParaCabecalho('Url completa', $dadosCabecalho['url_base'] . $dadosCabecalho['url_rota']);
+		$mtz[] = '~4<-' . formatarParaCabecalho('Url completa', $dadosCabecalho['url_base'] . $dadosCabecalho['url_rota']);
 		$html .= $o->tableRow($mtz, 'header');
 
         $html .= $o->tableBegin('big', true);
@@ -371,8 +363,7 @@ switch ($gPage) {
                     gatilhos_requisicoes_detalhes.id AS id_gatilhos_requisicoes_detalhes,
                     MAX(gatilhos_requisicoes_detalhes.numero_tentativa) AS total_tentativas,
                     gatilhos_requisicoes.enviado,
-                    gatilhos_requisicoes.id AS id_gatilhos_requisicoes,
-                    gatilhos_requisicoes.id_programacao
+                    gatilhos_requisicoes.id AS id_gatilhos_requisicoes
                 FROM gatilhos_requisicoes_detalhes
                 JOIN gatilhos_requisicoes ON gatilhos_requisicoes.id = gatilhos_requisicoes_detalhes.id_gatilhos_requisicoes
                 JOIN gatilhos ON gatilhos.id = gatilhos_requisicoes.id_gatilhos
@@ -393,7 +384,6 @@ switch ($gPage) {
             $dadosReenvioRequisicao['idGatilhoRequisicaoDetalhes']  = $dadosRequisicao['id_gatilhos_requisicoes_detalhes'];
         }
 
-        $dadosReenvioRequisicao['idProgramacao'] 		= $dadosRequisicao['id_programacao'];
         $dadosReenvioRequisicao['numeroTentativa'] 	    = $dadosRequisicao['total_tentativas'];
         $dadosReenvioRequisicao['idGatilhos'] 	        = $dadosRequisicao['id_gatilhos'];
         $dadosReenvioRequisicao['idGatilhoRequisicao']  = $dadosRequisicao['id_gatilhos_requisicoes'];
