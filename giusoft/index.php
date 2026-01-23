@@ -398,19 +398,20 @@ if ($usrId > 0) {
 		$pag['logout']       = "index.php";
 
 		// Admin
-		$pag['users']        = "view/system/users.php";
-		$pag['translations'] = "view/system/translations.php";
-		$pag['pages']        = "view/system/pages.php";
-		$pag['menus']        = "view/system/menus.php";
-		$pag['links']        = "view/system/links.php";
-		$pag['locales']      = "view/system/locales.php";
-		$pag['posts']        = "view/system/posts.php";
-		$pag['home']         = "view/system/home.php";
-		$pag['messages']     = "view/system/messages.php";
-		$pag['permissions']  = "view/system/permissions.php";
-		$pag['parameters']   = "view/system/parameters.php";
-		$pag['activities']   = "view/system/activities.php";
-		$pag['tools']        = "view/system/tools.php";
+		$pag['users']        		= "view/system/users.php";
+		$pag['translations'] 		= "view/system/translations.php";
+		$pag['pages']        		= "view/system/pages.php";
+		$pag['menus']        		= "view/system/menus.php";
+		$pag['links']        		= "view/system/links.php";
+		$pag['locales']      		= "view/system/locales.php";
+		$pag['posts']        		= "view/system/posts.php";
+		$pag['home']         		= "view/system/home.php";
+		$pag['messages']     		= "view/system/messages.php";
+		$pag['permissions']  		= "view/system/permissions.php";
+		$pag['parameters']   		= "view/system/parameters.php";
+		$pag['activities']   		= "view/system/activities.php";
+		$pag['tools']        		= "view/system/tools.php";
+		$pag['central_requisicoes'] = "view/relatorios/central_requisicoes.php";
 
         // $html = '';
 
