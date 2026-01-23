@@ -94,7 +94,7 @@ class NotasFiscais extends ImportacaoNFE
 
 		$mtz = [];
 		if ($row['cancelada'] == 1) {
-			$mtz[] = '~2<-' . $o->small('Filial') . "<br><b>" . $row['filial'] . "</b>&nbsp;";
+			$mtz[] = '<-' . $o->small('Filial') . "<br><b>" . $row['filial'] . "</b>&nbsp;";
 		} else {
 			$mtz[] = '<-' . $o->small('Filial') . "<br><b>" . $row['filial'] . "</b>&nbsp;";
 		}
@@ -108,26 +108,16 @@ class NotasFiscais extends ImportacaoNFE
 
 		if (
 			in_array($row["situacao"], array("Aprovada", "Reprovada", "Cancelada"))
-			&& $row["tipo"] == "S" || !$row["tipo"]
 		) {
-			$mtz[] = "~2<-" . "</b>&nbsp<br></b>"; // Aqui ficava a OS
-		}
+			$mtz[] = '<-' . $o->small('CFOP').'<br><b>' . $row['codigo_cfops'];
 
-		if (
-			in_array($row["situacao"], array("Aprovada", "Reprovada", "Cancelada"))
-			&& $row["tipo"] == "M"
-		) {
-			$mtz[] = "~2<-";
 		}
 
 		$html .= $o->tableRow($mtz, 'header');
 
 		$mtz = [];
-		$mtz[] = '<-' . $o->small('Número').'<br><b><small>'.$row['numero'].'</small></b>&nbsp;<br/>' . $o->small(gCheck($row["situacao"], false, array("Executada", "Não executada")));
 
-		if ($row['cancelada']) {
-			$mtz[] = '<-' . $o->small(gCheck($row["cancelada"], true, array("Cancelada", "")));
-		}
+		$mtz[] = '<-' . $o->small('Número').'<br><b>' . $row['numero'] . "</b>&nbsp<br/>".$o->small("&nbsp;");
 
 		$mtz[]='<-' . $o->small('Emissão') . '<br><b>'
 			. gDate($row['data_emissao'])."</b>&nbsp <br>"
@@ -138,12 +128,10 @@ class NotasFiscais extends ImportacaoNFE
 		$mtz[]='<-'.$o->small('Movimento').'<br><b>'.gDate($row['data_movimento']) . "</b>&nbsp<br/>".$o->small("&nbsp;");
 		$mtz[]='<-'.$o->small('Cadastro').'<br><b>'.gDateTime($row['data_criou'])."</b>&nbsp<br/>". $o->small($row['nome_criou']);
 
-		if ($row["situacao"] == "Cancelada") {
-			$mtz[] = '<-'. $o->small('Situação').'<br><b><span class="label label-danger">'.$row["situacao"]."</span></b>&nbsp<br>";
+		if (in_array($row['situacao'], ['Cancelada', 'Reprovada'])) {
+			$mtz[] = '<-'. $o->small('Situação').'<br><b><span class="label label-danger">'.$row["situacao"]."</span></b>" . "</b>&nbsp<br/>".$o->small("&nbsp;");
 		} elseif ($row["situacao"] == "Aprovada") {
-			$mtz[] = '<-'. $o->small('Situação').'<br><b><span class="label label-success">'.$row["situacao"]."</span></b>&nbsp<br>";
-		} elseif ($row["situacao"] == "Reprovada") {
-			$mtz[] = '<-'. $o->small('Situação').'<br><b><span class="label label-danger">'.$row["situacao"]."</span></b>&nbsp<br>";
+			$mtz[] = '<-'. $o->small('Situação').'<br><b><span class="label label-success">'.$row["situacao"]."</span></b>" . "</b>&nbsp<br/>".$o->small("&nbsp;");
 		}
 
 		$html .= $o->tableRow($mtz, 'header');
