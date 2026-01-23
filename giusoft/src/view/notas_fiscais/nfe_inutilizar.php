@@ -332,8 +332,6 @@ switch ($gPage) {
 
 
 	case INUTILIZAR:
-		include_once "res/_classes/padrao/notas_fiscais.php";
-
 		if (empty($_REQUEST['numeros'])) {
 			$html .= $o->msgError("Nenhuma numeração informada.");
 			$html .= $backButton;
@@ -371,7 +369,7 @@ switch ($gPage) {
 			$intervalos[] = $intervaloAtual;
 		}
 
-		$nf = new NotasFiscais();
+		$nf = new NotasFiscais('S');
 		$dadosEmpresa = $nf->obtemDadosEmpresa(obtemIdEmpresa());
 		$dadosConfig = $nf->buscarConfiguracoes($dadosEmpresa['cnpjFilial']);
 
@@ -392,6 +390,8 @@ switch ($gPage) {
 			$dadosInutilizar['config']         = $dadosConfig;
 
 			$retorno = dispararGatilho('inutilizarNfe', $dadosInutilizar);
+
+			// var_dump($dadosEmpresa); exit;
 
 			if ($retorno['erroCurl'] && !$retorno['resposta'] && !empty($retorno['erroCurl'])) {
 				$erros[] = gCleanField($retorno['erroCurl']);
