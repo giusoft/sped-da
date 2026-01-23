@@ -57,7 +57,6 @@ class PontoAcesso
         $curl = $this->configurarCurl($verboHttp, $url, $dados, $headers);
 
         $requisicaoEnviar = [];
-        $requisicaoEnviar['idProgramacao']       = $this->parametros['idProgramacao'];
         $requisicaoEnviar['idPessoasCriou']      = $usrId ?: 1;
         $requisicaoEnviar['idGatilhos']          = $dadosRequisicao['rotas']['id'];
         $requisicaoEnviar['sucesso']             = 0;

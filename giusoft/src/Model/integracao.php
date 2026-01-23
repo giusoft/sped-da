@@ -560,7 +560,6 @@ class Integracao
 			$mtz = array();
 			$mtz['enviado'] = base64_encode($enviado);
 			$mtz['pendente'] = $dadosEnviados['pendente'];
-			$mtz['id_programacao'] = $dadosEnviados['idProgramacao'];
 			$mtz['id_pessoas_criou'] = $dadosEnviados['idPessoasCriou'];
 			$mtz['id_gatilhos'] = $dadosEnviados['idGatilhos'];
 			$idGatilhoRequisicao = $this->insertTable('gatilhos_requisicoes', $mtz, 1);
