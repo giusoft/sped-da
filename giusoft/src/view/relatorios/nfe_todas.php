@@ -66,7 +66,6 @@ switch ($gPage) {
 			$where[] = "nfe.numero <= '" . gCleanField($_REQUEST["numero_ate"]) . "'";
 		}
 
-
 		if ($_REQUEST['situacao']) {
 			$situacoes = '';
 			foreach ($_REQUEST['situacao'] as $i) {
@@ -131,7 +130,6 @@ switch ($gPage) {
 		$mtz[] = '<-Chave';
 		$mtz[] = '<-Resposta SEFAZ';
 		$mtz[] = '->Protocolo';
-		$mtz[] = '<-OS de saída';
 		$mtz[] = '<-Nota';
 		$mtz[] = '<-Colaborador emissor';
 		$mtz[] = '<>Cancelada';
