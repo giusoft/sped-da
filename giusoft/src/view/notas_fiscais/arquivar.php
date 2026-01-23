@@ -206,7 +206,7 @@ switch ($gPage) {
             $validacoes[] = "Informe o tipo de nota";
         }
 
-        if (!$validacoes) {
+        if (!isset($validacoes)) {
             $html .= $o->msgDanger("Falhas de validação: " . $o->ul($validacoes));
             $html .= $o->button('{title:Voltar; hint:Voltar a página anterior; icon:arrow-left; href:'.$o->page.'&gPage='.INICIO.';}');
             break;
@@ -304,7 +304,7 @@ switch ($gPage) {
             'processados' => 0
         ];
 
-        $nf = new NotasFiscais();
+        $nf = new NotasFiscais('S');
         $dadosEmpresa = $nf->obtemDadosEmpresa(obtemIdEmpresa($_REQUEST["id_pessoas_proprietario"]));
         $dadosConfig = $nf->buscarConfiguracoes($dadosEmpresa['cnpjFilial']);
 
