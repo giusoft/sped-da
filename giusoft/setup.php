@@ -56,7 +56,7 @@ $gSETUP = "
 
 	database
 	{
-		name: logiclog;
+		name: emitenota_logiclog;
 		transaction: true;
 		charset: utf8mb4;
 		user: web;

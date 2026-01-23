@@ -12,11 +12,6 @@ define("SKUS_NOVO",                 21);
 define("SKUS_SALVAR",               22);
 define("SKUS_EXCLUIR",              23);
 
-define("OCORRENCIAS", 				 30);
-define("OCORRENCIAS_SALVAR", 	  	 31);
-define("OCORRENCIAS_NOVA", 		     32);
-define("OCORRENCIAS_CANCELAR",	     33);
-
 define("IMAGENS",                   40);
 define("IMAGENS_SALVAR",            41);
 define("IMAGENS_EXCLUIR",           42);
@@ -38,8 +33,9 @@ define("ATUALIZAR_EM_LOTE_PESQUISAR", 81);
 define("CONFIRMAR_ATUALIZAR_EM_LOTE_PESQUISAR", 82);
 define("FINALIZOU_ATUALIZAR_EM_LOTE_PESQUISAR", 83);
 
-define("FORNECEDORES",                 100);
-define("ALTERAR_FORNECEDOR",           200);
+define("FORNECEDORES", 100);
+define("CADASTRAR_FORNECEDOR", 101);
+define("EXCLUIR_FORNECEDOR", 102);
 
 define("FORMULARIO_IMPORTACAO_DE_FORNECEDORES", 400);
 define("IMPORTACAO_DE_FORNECEDORES", 401);
@@ -68,7 +64,7 @@ if ($gPage<10) {
 
 $gIdd = (int) $_REQUEST['gIdd'];
 $gPathUsrFiles = $gPath . "files/itens/";
-$http_usr_files = $http_base . "files/itens/";
+$httpUsrFiles = $http_base . "files/itens/";
 
 gVar("global.numformat", "0.000,0000");
 
@@ -672,7 +668,7 @@ switch ($gPage) {
 		$html .= $o->msgWarning("O tamanho máximo permitido para a inclusão de arquivos é de 4Mb");
 
 		if ($rs) {
-			$http_usr_files.='anexos/';
+			$httpUsrFiles.='anexos/';
 			$gPathUsrFiles.='anexos/';
 			$o->out($o->modal("{title: Confirme; size: small; content: Excluir este arquivo?; okCaption: Excluir agora; name: confirmaExclusao; url: excluiItem()}"), gLOC_INLINE, 999);
 			$html.='<div class="row">';
@@ -684,7 +680,7 @@ switch ($gPage) {
 						$ext = "jpg";
 					}
 					$imgName = $row['id'].'.'.$ext;
-					$arquivo = $http_usr_files . $imgName;
+					$arquivo = $httpUsrFiles . $imgName;
 					$html.='<div class="col-lg-3 col-md-3 col-sm-6 col-xs-12 text-center">';
 					$html.='<a href="'.$arquivo.'"><img class="img img-thumbnail img-responsive" src="'.$arquivo.'"></img></a><br>';
 					$html.=$row['descricao'].'<br>';
@@ -763,7 +759,7 @@ switch ($gPage) {
 		$html .= $frm->render($o);
 
 		if ($rs) {
-			$http_usr_files.='anexos/';
+			$httpUsrFiles.='anexos/';
 			$gPathUsrFiles.='anexos/';
 			$o->out($o->modal("{title: Confirme; size: small; content: Excluir este arquivo?; okCaption: Excluir agora; name: confirmaExclusao; url: excluiItem()}"), gLOC_INLINE, 999);
 			$html.='<div class="row">';
@@ -774,7 +770,7 @@ switch ($gPage) {
 				}
 
 				$imgName = $row['id'].'.'.$ext;
-				$arquivo = $http_usr_files . $imgName;
+				$arquivo = $httpUsrFiles . $imgName;
 				$html.='<div class="col-lg-3 col-md-3 col-sm-6 col-xs-12 text-center">';
 				$html.='<a href="'.$arquivo.'"><img class="img img-thumbnail img-responsive" src="'.$arquivo.'"></img></a><br>';
 				$html.=$row['descricao'].'<br>';
@@ -962,20 +958,9 @@ switch ($gPage) {
 		$situacao = intval($_REQUEST['situacao']);
 		$idGrupos = intval($_REQUEST['id_grupos']);
 		$idTipos = intval($_REQUEST['id_tipos']);
-		$idPrioridadesSaida = intval($_REQUEST['id_prioridades_saida']);
-		$faz_picking = intval($_REQUEST['faz_picking']);
-		$exige_lote = intval($_REQUEST['exige_lote']);
-		$critico = intval($_REQUEST['critico']);
-		$exige_data_validade = intval($_REQUEST['exige_data_validade']);
-		$exige_data_fabricacao = intval($_REQUEST['exige_data_fabricacao']);
 
 		$html .= $o->msgSubTitle("Cópia de itens");
 		$frm   = new gForm("{columns: 2}");
-		$frm->row(
-			$frm->add("{name: novo_nome; type: text}"),
-			$frm->add("{name: novo_codigo; fieldLabel: Novo código;type: text; }"),
-			$frm->add("{name: novo_codigo_barras; fieldLabel: Novo código de barras;type: text; }")
-		);
 		$frm->add("{name: novo_id_pessoas_proprietario; allowBlank:false; fieldLabel: Novo proprietário;type: combo; items: " . $sp['combo_clientes'] . "}");
 		$frm->add("{name: novo_id_pessoas_fornecedor; fieldLabel: Novo fornecedor;type: combo; items: " . $sp['combo_fornecedores'] . "}");
 
@@ -988,13 +973,6 @@ switch ($gPage) {
 		$frm->add("{name: situacao; type: hidden; value: $situacao}");
 		$frm->add("{name: id_grupos; type: hidden; value: $idGrupos}");
 		$frm->add("{name: id_tipos; type: hidden; value: $idTipos}");
-		$frm->add("{name: id_prioridades_saida; type: hidden; value: $idPrioridadesSaida}");
-		$frm->add("{name: faz_picking; type: hidden; value: $faz_picking}");
-		$frm->add("{name: exige_lote; type: hidden; value: $exige_lote}");
-		$frm->add("{name: critico; type: hidden; value: $critico}");
-		$frm->add("{name: exige_data_validade; type: hidden; value: $exige_data_validade}");
-		$frm->add("{name: exige_data_fabricacao; type: hidden; value: $exige_data_fabricacao}");
-
 		$frm->add("{name: gPage; type: hidden; value: " . COPIAR_SALVAR . "}");
 		$frm->add("{name: gId; type: hidden; value: " . $gId . "}");
 		$html .= $frm->render($o);
@@ -1014,22 +992,12 @@ switch ($gPage) {
 		$idPessoasFornecedor = intval($_REQUEST['id_pessoas_fornecedor']);
 		$idGrupos = intval($_REQUEST['id_grupos']);
 		$idTipos = intval($_REQUEST['id_tipos']);
-		$idPrioridadesSaida = intval($_REQUEST['id_prioridades_saida']);
 		$situacao = intval($_REQUEST['situacao']);
-		$faz_picking = intval($_REQUEST['faz_picking']);
-		$exige_lote = intval($_REQUEST['exige_lote']);
-		$critico = intval($_REQUEST['critico']);
-		$exige_data_validade = intval($_REQUEST['exige_data_validade']);
-		$exige_data_fabricacao = intval($_REQUEST['exige_data_fabricacao']);
-
 		//Dados a serem alterados no insert
-		$novo_nome = gCleanField($_REQUEST['novo_nome']);
-		$novo_codigo = gCleanField($_REQUEST['novo_codigo']);
-		$novo_codigo_barras = gCleanField($_REQUEST['novo_codigo_barras']);
-		$novo_id_pessoas_proprietario = intval($_REQUEST['novo_id_pessoas_proprietario']);
-		$novo_id_pessoas_fornecedor = intval($_REQUEST['novo_id_pessoas_fornecedor']);
+		$novoIdPessoasProprietario = (int) $_REQUEST['novo_id_pessoas_proprietario'];
+		$novoIdPessoasFornecedor = intval($_REQUEST['novo_id_pessoas_fornecedor']);
 
-		if (!$novo_id_pessoas_proprietario) {
+		if (!$novoIPpessoaPproprietario) {
 			$html .= $o->msgWarning("Insira o novo proprietário para o item");
 			$html .= $backButton;
 			break;
@@ -1071,10 +1039,6 @@ switch ($gPage) {
 			$where[] = "i.id_tipos = {$idTipos}";
 		}
 
-		if ($idPrioridadesSaida) {
-			$where[] = "i.id_prioridades_saida = {$idPrioridadesSaida}";
-		}
-
 		$comboCondicional = [
 			0 => false, // *Indiferente
 			1 => 1, // Opcao "Sim"
@@ -1085,26 +1049,6 @@ switch ($gPage) {
 			$where[] = "i.ativo = " . $comboCondicional[$situacao];
 		}
 
-		if ($faz_picking) {
-			$where[] = "i.faz_picking = " . $comboCondicional[$faz_picking];
-		}
-
-		if ($exige_lote) {
-			$where[] = "i.exige_lote = " . $comboCondicional[$exige_lote];
-		}
-
-		if ($critico) {
-			$where[] = "i.critico = " . $comboCondicional[$critico];
-		}
-
-		if ($exige_data_validade) {
-			$where[] = "i.exige_data_validade = " . $comboCondicional[$exige_data_validade];
-		}
-
-		if ($exige_data_fabricacao) {
-			$where[] = "i.exige_data_fabricacao = " . $comboCondicional[$exige_data_fabricacao];
-		}
-
 		if ($gId>0) {
 			$where = '';
 			$where[] = "i.id = {$gId}";
@@ -1112,8 +1056,8 @@ switch ($gPage) {
 
 		if (is_array($where)) {
 			$novoDadoItem = [
-				'id_pessoas_proprietario' => $novo_id_pessoas_proprietario,
-				'id_pessoas_fornecedor'   => $novo_id_pessoas_fornecedor,
+				'id_pessoas_proprietario' => $novoIdPessoasProprietario,
+				'id_pessoas_fornecedor'   => $novoIdPessoasFornecedor,
 				'apto' => 0
 			];
 			$persistencia->copiarItem($where, $novoDadoItem);
@@ -1199,8 +1143,6 @@ switch ($gPage) {
 		$form->add("{type: combo; fieldLabel: Grupo; name:id_grupos; items:" . $sp["combo_grupos"] . " }");
 		$form->add("{type: combo; fieldLabel: Tipo; name:id_tipos; items:" . $sp["combo_tipos"] . ";}");
 		$form->add("{type: combo; fieldLabel: Fornecedor; name:id_pessoas_fornecedor; items:" . $sp["combo_fornecedores"] . ";}");
-		$form->add("{type: combo; fieldLabel: Faz Picking; name:faz_picking; allowbank: true; items:{'Sim','Não'}}");
-		$form->add("{type: combo; fieldLabel: Crítico; name: critico; allowbank: true; items:{'Sim','Não'}}");
 		$form->add("{type: combo; fieldLabel: Ativo; name: ativo; allowbank: true; items:{'Sim','Não'}}");
 		$form->add("{type: hidden; fieldLabel:; name:gPage; value:" . ATUALIZAR_EM_LOTE_PESQUISAR . ";}");
 		$html .= $form->render($o);
@@ -1260,17 +1202,16 @@ switch ($gPage) {
 		$where = $where ? "WHERE" . $where : "";
 
 		$sql = "SELECT
-					I.ativo, I.faz_picking, I.prazo_recebimento,
+					I.ativo,
 					IK.id, IK.largura, IK.comprimento, P.nome fornecedor,
-					I.nome, IK.codigo, IK.quantidade, IK.peso_liquido, IK.peso_bruto, IK.palete_altura, IK.palete_lastro, U.descricao un_descricao, T.descricao ti_descricao, G.descricao gr_descricao, IK.altura, I.critico,
-					PD.descricao AS descricao_saida, I.picking_quantidade_minima, I.picking_quantidade_maxima, I.id AS id_item, I.dias_bloqueio, I.shelf_life, I.prazo_validade
+					I.nome, IK.codigo, IK.quantidade, IK.peso_liquido, IK.peso_bruto, U.descricao un_descricao, T.descricao ti_descricao, G.descricao gr_descricao, IK.altura,
+					I.id AS id_item
 				FROM itens_skus IK
-				LEFT JOIN itens I ON IK.id_itens = I.id
+				JOIN itens I ON IK.id_itens = I.id
 				LEFT JOIN unidades U ON IK.id_unidades = U.id
 				LEFT JOIN grupos G ON G.id = I.id_grupos
 				LEFT JOIN pessoas P ON P.id = I.id_pessoas_fornecedor
 				LEFT JOIN tipos T ON I.id_tipos = T.id
-				LEFT JOIN prioridades_saida PD ON PD.id = I.id_prioridades_saida
 				{$where}
 				ORDER BY I.nome ASC";
 		$itens = dbQuery($sql);
@@ -1314,14 +1255,6 @@ switch ($gPage) {
 		$frm->row(
 			$frm->add("{name:item_ativar; fieldLabel:Ativo; type:combo; items:'" . json_encode($comboAtivarItem) . "';}")
 		);
-
-
-		$curvas = [
-			'0' => "* Indiferente",
-			'1' => 'A',
-			'2' => 'B',
-			'3' => 'C'
-		];
 
 		$frm->row(
 			$frm->add("{type: combo; fieldLabel: Grupo; name:id_grupo; items:" . $sp["grupos"] . ";}"),
@@ -1540,7 +1473,7 @@ switch ($gPage) {
 
 		break;
 
-	case (FORNECEDORES+1):
+	case CADASTRAR_FORNECEDOR:
 		if ($_REQUEST['cnpj']<>'' && $_REQUEST['codigo']<>'' && $_REQUEST['id_itens_skus']>0) {
 			$flds = [];
 			$flds['id_itens']=$gId;
@@ -1553,85 +1486,12 @@ switch ($gPage) {
 		redirect($o->page.'&gPage='.FORNECEDORES.'&gId='.$gId."&gIdd=".$gIdd);
 		break;
 
-	case (FORNECEDORES+2):
+
+	case EXCLUIR_FORNECEDOR:
 		$sql = "DELETE FROM itens_fornecedores WHERE id_itens=$gId AND id=".intval($_REQUEST['gIda']);
 		dbQuery($sql);
 		userLog('Código de fornecedor removido da estrutura do item id <a href="index.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
 		redirect($o->page.'&gPage='.FORNECEDORES.'&gId='.$gId);
-		break;
-
-
-	case ALTERAR_FORNECEDOR:
-		$doc = file('/var/www/html/wms/ga/res/cadastros/produtos_nome_fornecedor_cnpj.csv');
-		$doc = array_splice($doc,1);
-
-		$html.=$o->tableBegin("big", true);
-		$mtz = [];
-		$mtz[]="Codigo";
-		$mtz[]="Produto";
-		$mtz[]="CodBarras";
-		$mtz[]="Fornecedor";
-		$mtz[]="CNPJ";
-		$mtz[]="Alterado";
-		$mtz[]="<- Mensagem";
-		$html.=$o->tableRow($mtz, "header");
-
-		foreach($doc as $res){
-			$codigo = $produto = $codBarras = $fornecedor = $cnpj = '';
-			[$codigo, $produto, $codBarras, $fornecedor, $cnpj] = explode(";",(string) $res);
-			$cnpj = trim((string) preg_replace('/[^\d]/', '',$cnpj));
-
-			$mtz   = [];
-			$mtz[] = $codigo;
-			$mtz[] = $produto;
-			$mtz[] = $codBarras;
-			$mtz[] = $fornecedor;
-			$mtz[] = $cnpj;
-
-			$item = dbQuery("SELECT id, nome FROM itens WHERE codigo = '".$codigo."'")[0];
-			if(count($item) > 0){
-
-				$res = dbQuery("SELECT p.id, pj.razao_social
-								FROM pessoas p
-								LEFT JOIN pessoas_juridicas pj ON pj.id_pessoas = p.id
-								WHERE REPLACE(REPLACE(REPLACE(pj.cnpj, '/',''),'.', ''),'-', '') = '$cnpj' ")[0];
-
-				if ($res['id'] > 0) {
-					dbQuery("UPDATE itens SET id_pessoas_fornecedor = ".$res['id']." WHERE id = ".$item['id']);
-					dbQuery("UPDATE pessoas SET fornecedor=1,situacao='Ativo',nome='".$fornecedor."' WHERE id=".$res['id']);
-					$mtz[]=gCheck(1);
-					$mtz[]= "<- Alterado o item <b>".$item['nome']."</b> (".$codigo.") para o fornecedor <b>".$fornecedor."</b> (".$cnpj.")";
-					$html.=$o->tableRow($mtz, "detail");
-				} else {
-					$flds = [];
-					$flds["data_cadastro"] = agora();
-					$flds["id_pessoas_criou"] = 1;
-					$flds["tipo"] = 'J';
-					$flds["situacao"] = 'Ativo';
-					$flds["fornecedor"] = 1;
-					$flds["nome"] = $fornecedor;
-					$flds["apelido"] = ($cnpj);
-					$id = dbInsert('pessoas', $flds, true);
-
-					$flds = [];
-					$flds["id_pessoas"] = $id;
-					$flds["cnpj"] = $cnpj;
-					$flds["razao_social"] = $cnpj;
-					$id_juridico = dbInsert('pessoas_juridicas', $flds, true);
-
-					dbQuery("UPDATE itens SET id_pessoas_fornecedor = ".$id." WHERE id = ".$item['id']);
-					$mtz[]=gCheck(1);
-					$mtz[]= "<- Não foi possível encontrar um fornecedor com o CNPJ: ".$cnpj.". Foi necessário realizar o cadastro deste fornecedor.";
-					$html.=$o->tableRow($mtz, "detail");
-				}
-			} else {
-				$mtz[]=gCheck(0);
-				$mtz[]= "<- Não foi possível encontrar um item com o código: ".$codigo;
-				$html.=$o->tableRow($mtz, "detail");
-			}
-		}
-		$html.=$o->tableEnd();
-
 		break;
 
 
@@ -1822,7 +1682,7 @@ switch ($gPage) {
 function mostraCabecalho()
 {
 
-	global $o, $html, $gPage, $gId, $rs, $row, $gParam, $persistencia, $faz_picking;
+	global $o, $html, $gPage, $gId, $rs, $row, $gParam, $persistencia;
 
 	if (!$gId) {
 		return;

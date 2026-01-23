@@ -229,6 +229,7 @@ function createMenu()
 				$t['representatives'] = "Representantes";
 				$t['links']           = "Links";
 				$t['parameters']      = "Parâmetros";
+				$t['parameters']      = "Parâmetros";
 				$t['tools']           = "Ferramentas";
 				$t['activities']      = "Log de atividades";
 
@@ -240,7 +241,7 @@ function createMenu()
 
 					if (!$_SESSION['usrCliente']) {
 						$menu->add("{title: Mensagens; type: dropdownLink; icon: envelope; url: index.php?g=messages}");
-						$menu->add("{title: Manual; type: dropdownLink; icon: books; url: https://wiki.giusoft.com.br/pt-br/home;}");
+						$menu->add("{title: Central de integrações; type: dropdownLink; icon: sync; url: index.php?g=central_requisicoes}");
 					}
 
 					if ($usrId == 1) {

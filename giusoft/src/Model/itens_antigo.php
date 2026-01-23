@@ -79,9 +79,6 @@ class Itens extends Pessoas
 			$where[] = "(SK.largura='".gDBFloat($_REQUEST["largura"])."')";
 			$where[] = "(SK.comprimento='".gDBFloat($_REQUEST["comprimento"])."')";
 			$where[] = "(SK.altura='".gDBFloat($_REQUEST["altura"])."')";
-			$where[] = "(SK.palete_altura='".gDBFloat($_REQUEST["palete_altura"])."')";
-			$where[] = "(SK.palete_lastro='".gDBFloat($_REQUEST["palete_lastro"])."')";
-			$where[] = "(SK.empilhamento_maximo='".intval($_REQUEST["empilhamento_maximo"])."')";
 			$where[] = "(SK.id_unidades=".intval($_REQUEST["id_unidades"]).")";
 			$where[] = "(I.id_pessoas_proprietario=".$item["id_pessoas_proprietario"].")";
 
@@ -114,9 +111,6 @@ class Itens extends Pessoas
 
 			$outrosAtributos = "
 				, unidades.sigla AS unidade,
-				itens_skus.palete_lastro,
-				itens_skus.palete_altura,
-				(itens_skus.palete_lastro * itens_skus.palete_altura) AS regra_paletizacao,
 				itens_skus.peso_liquido,
 				itens_skus.peso_bruto,
 				itens_skus.codigo_barras AS codigo_barras_1,
@@ -160,8 +154,6 @@ class Itens extends Pessoas
 		$campos['id_tipos']=intval($todosOsCampos['id_tipos']);
 		$campos['ativo']=gDBCheck($todosOsCampos['ativo']);
 		$campos['ncm']=gJustNumbers($todosOsCampos['ncm']);
-		$campos['id_itens_skus_operacao']=intval($todosOsCampos['id_itens_skus_operacao']);
-		$campos['id_itens_skus_pedido']=intval($todosOsCampos['id_itens_skus_pedido']);
 		$campos['id_grupos_combustivel'] = intval($todosOsCampos['id_grupos_combustivel']);
 
 		if (strlen($todosOsCampos['observacoes'])<20) {
@@ -172,25 +164,26 @@ class Itens extends Pessoas
 
 		# Campos necessários para que o item esteja apto para uso
 		$campos['apto'] = 0;
-		if (	$campos['nome']<>"" &&
-				$campos['codigo_barras']<>"" &&
-				$campos['codigo']<>"" &&
-				$campos['ncm']<>"" &&
-				$campos['id_pessoas_proprietario']>0
-			)
-		{
+		if (
+			$campos['nome'] <> ""
+			&& $campos['codigo_barras'] <> ""
+			&& $campos['codigo'] <> ""
+			&& $campos['ncm'] <> ""
+			&& $campos['id_pessoas_proprietario']
+		) {
 			$campos['apto'] = 1;
 		} else {
 			$this->erros[] = 'Preencha todos os campos obrigatórios: Nome, código, código de barras, NCM e proprietário';
 		}
 
-		if ($gId==0) {
+		if ($gId == 0) {
 			$campos['data_cadastro']      = $hoje;
 			$campos['id_pessoas_criou']   = $usrId;
-		}else {
+		} else {
 			$campos['data_alteracao']     = $hoje;
 			$campos['id_pessoas_alterou'] = $usrId;
 		}
+
 		return $campos;
 	}
 
@@ -224,7 +217,7 @@ class Itens extends Pessoas
 		}
 
 		// Verifica se já existe algum produto com este código de barras
-		$sql   = "SELECT id FROM itens WHERE $flt codigo_barras = '" . $campos['codigo_barras'] . "'";
+		$sql   = "SELECT id FROM itens WHERE {$flt} codigo_barras = '" . $campos['codigo_barras'] . "'";
 		$itens = dbFastQuery($sql)[0]['id'];
 
 		if ($itens) {
@@ -275,11 +268,11 @@ class Itens extends Pessoas
 		// Verifica se já existe algum produto com este código, se ele não estiver em branco
 		if ($campos['codigo'] <> "") {
 			$codigoOk = true;
-			$sql = "SELECT * FROM itens WHERE id<>$gId AND id_pessoas_proprietario=".$campos['id_pessoas_proprietario']." AND codigo='".$campos['codigo']."' AND ativo=1";
-			$rst = dbQuery($sql);
+			$sql = "SELECT id FROM itens WHERE id<>$gId AND id_pessoas_proprietario=".$campos['id_pessoas_proprietario']." AND codigo='".$campos['codigo']."' AND ativo=1";
+			$rst = dbQuery($sql)[0]['id'];
 			if ($rst) {
 				$sucesso = false;
-				$this->erros[] = "Produto com o código [" . $campos['codigo'] . "] já está cadastrado para esta empresa (Item <a href=".$o->page."&gPage=10&gId=".$rst[0]['id'].">[".$campos['nome']."]</a>)";
+				$this->erros[] = "Produto com o código [" . $campos['codigo'] . "] já está cadastrado para esta empresa (Item <a href=".$o->page."&gPage=10&gId=".$rst.">[".$campos['nome']."]</a>)";
 				return false;
 			}
 		}
@@ -289,10 +282,10 @@ class Itens extends Pessoas
 		}
 		// Verifica se já existe algum produto com este código de barras
 		$sql = "SELECT id FROM itens WHERE id <> $gId AND $flt codigo_barras = '" . $campos['codigo_barras'] . "' AND ativo = 1 LIMIT 1";
-		$rst = dbFastQuery($sql);
+		$rst = dbFastQuery($sql)[0]['id'];
 
 		if ($rst) {
-			$this->erros[] = "Código de barras já está em uso pelo item: <a href=".$o->page."&gPage=10&gId=".$rst[0]['id'].">[".$campos['nome']."]</a>";
+			$this->erros[] = "Código de barras já está em uso pelo item: <a href=".$o->page."&gPage=10&gId=".$rst.">[".$campos['nome']."]</a>";
 			return false;
 		}
 
@@ -311,9 +304,7 @@ class Itens extends Pessoas
 		$mtz['id_itens'] = $sku['id_itens'] ?: $gId;
 		$mtz['ativo']   = $sku['itens_skus_ativo'] ?: gDBCheck($sku['ativo']);
 		$mtz['codigo']  = $sku['itens_skus_codigo'] ?: gCleanField($sku['codigo']);
-		$mtz['codigo2'] = gCleanField($sku['codigo2']);
 		$mtz['codigo_barras'] = $sku['itens_skus_codigo_barras'] ?: gCleanField($sku['codigo_barras']);
-		$mtz['codigo_barras_alternativo'] = $sku['itens_skus_codigo_barras_alternativo'] ?: gCleanField($sku['codigo_barras_alternativo']);
 		$mtz['nome'] = $sku['itens_skus_nome'] ?: gCleanField($sku['nome']);
 		$mtz['id_unidades'] = (int) $sku['id_unidades'];
 		$mtz['quantidade'] = gDBFloat($sku['quantidade']);
@@ -322,9 +313,6 @@ class Itens extends Pessoas
 		$mtz['largura'] = gDBFloat($sku['largura']);
 		$mtz['altura'] = gDBFloat($sku['altura']);
 		$mtz['comprimento'] = gDBFloat($sku['comprimento']);
-		$mtz['palete_lastro'] = gDBFloat($sku['palete_lastro']);
-		$mtz['palete_altura'] = gDBFloat($sku['palete_altura']);
-		$mtz['empilhamento_maximo'] = (int) $sku['empilhamento_maximo'];
 		$mtz['valor'] = gDBFloat($sku['valor']);
 		if ($gIdd) {
 			$mtz['data_alteracao']     = date('Y-m-d H:i:s');
@@ -345,7 +333,6 @@ class Itens extends Pessoas
 			itens_skus.ativo AS itens_skus_ativo,
 			itens_skus.codigo AS itens_skus_codigo,
 			itens_skus.codigo_barras AS itens_skus_codigo_barras,
-			itens_skus.codigo_barras_alternativo AS itens_skus_codigo_barras_alternativo,
 			itens_skus.nome AS itens_skus_nome,
 			id_itens,
 			id_unidades,
@@ -356,13 +343,8 @@ class Itens extends Pessoas
 			largura,
 			altura,
 			comprimento,
-			palete_lastro,
-			palete_altura,
-			empilhamento_maximo,
 			valor,
-			invisivel,
-			sigla,
-			codigo2";
+			sigla";
 		$sql = $this->obtemQueryConsulta($joinSku = 1, $camposSku) . " WHERE " . implode(" AND ", $where) . " ORDER BY i.ativo DESC";
 		$rs  = dbQuery($sql);
 
@@ -434,85 +416,6 @@ class Itens extends Pessoas
 			}
 		}
 		$this->avisos = array_unique($this->avisos);
-	}
-
-
-	// OCORRÊNCIAS -----------------------------------------------
-
-	public function obtemRegistrosOcorrencias($id="")
-	{
-		global $gId;
-
-		$sql="SELECT p.* , f.nome funcionario, t.descricao tipo_ocorrencia
-		FROM itens_ocorrencias p
-		LEFT JOIN pessoas f ON p.id_pessoas_funcionario=f.id
-		LEFT JOIN tipos_ocorrencias t ON p.id_tipos_ocorrencias=t.id
-		WHERE p.id_itens=" . $gId;
-		if ($id>0)
-		$sql.=" AND p.id=".$id;
-		$sql.=" ORDER BY p.id DESC";
-		return(dbQuery($sql));
-	}
-
-	/**
-	* Gera os campos necessários para um formulário de entrada de dados
-	*/
-	public function geraCamposDoFormularioOcorrencias(&$frm, $registroAtual, $proximaPagina="", $gIdEnd)
-	{
-		global $proximaPagina, $gId, $gPage, $o, $sp;
-		if ($proximaPagina == "") {
-			$proximaPagina = OCORRENCIAS_SALVAR;
-		}
-
-		$frm->row(
-			$frm->add("{name: descricao; type: textarea; fieldLabel: Descrição; value: ".$registroAtual['descricao']."}")
-		);
-		$frm->row(
-			$frm->add("{name: data_ocorrencia; fieldLabel: Data da ocorrência; type: date; value: ".gDate($registroAtual['data_ocorrencia']=='0000-00-00 00:00:00' || $registroAtual['data_ocorrencia']=='' ? date('Y-m-d') : $registroAtual['data_ocorrencia'])."}"),
-			$frm->add("{name: id_pessoas_funcionario; fieldLabel: Colaborador; type: combo; items: ".$sp['combo_funcionarios']."; value: ".$registroAtual['id_pessoas_funcionario']."}"),
-			$frm->add("{name: id_tipos_ocorrencias; fieldLabel: Tipo de ocorrência; allowBlank: false; type: combo; items: ".$sp['combo_tipos_ocorrencias']."; value: ".$registroAtual['tipos_ocorrencias']."}"),
-			$frm->add("{name: publica; type: checkbox; fieldLabel: Informação pública; value: ".$registroAtual['publica']."}")
-		);
-
-		$frm->add("{name: gId; type: hidden; value: $gId}");
-		$frm->add("{name: gIdEnd; type: hidden; value: $gIdEnd}");
-		$frm->add("{name: gPage; type: hidden; value: ".$proximaPagina."}");
-		return($frm->render($o));
-	}
-
-	/**
-	* Formata campos de endereços enviados pelas funções de persistência no banco de dados
-	*/
-	function preparaCamposOcorrencia($todosOsCampos)
-	{
-		$campos = array();
-		$campos['id_itens']=intval($todosOsCampos['id_itens']);
-		$campos['id_pessoas_funcionario']=intval($todosOsCampos['id_pessoas_funcionario']);
-		$campos['id_tipos_ocorrencias']=intval($todosOsCampos['id_tipos_ocorrencias']);
-		$campos['descricao']=gCleanField($todosOsCampos['descricao']);
-		$campos['data_ocorrencia']=gDBDate($todosOsCampos['data_ocorrencia']);
-		$campos['data_digitacao']=date("Y-m-d H:i:s");
-		$campos['publica']=gDBCheck($todosOsCampos['publica']);
-		return $campos;
-	}
-
-	/**
-	* Cria um novo registro no banco de dados e salva valores passados (tratando dados antes)
-	*/
-	function insereOcorrencia($todosOsCampos, $gId)
-	{
-		$todosOsCampos['id_itens'] = $gId;
-		return dbInsert("itens_ocorrencias", $this->preparaCamposOcorrencia($todosOsCampos), true);
-	}
-
-	/**
-	* Modifica um registro no banco de dados e salva com valores passados (tratando dados antes)
-	*/
-	function modificaOcorrencia($todosOsCampos, $gId, $gIdEnd)
-	{
-		$todosOsCampos['id_itens']=$gId;
-		dbUpdate('itens_ocorrencias', $this->preparaCamposOcorrencia($todosOsCampos), $gIdEnd);
-		return true;
 	}
 
 

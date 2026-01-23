@@ -6,6 +6,8 @@ services:
     image: emitenota-app
     container_name: emitenota_app
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "2083:2083"
     volumes:
