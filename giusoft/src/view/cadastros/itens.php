@@ -1,4 +1,5 @@
-<?
+<?php
+
 define("INICIO",                     0);
 define("INICIO_PESQUISAR", 		     1);
 define("INICIO_PESQUISAR_RESULTADO", 2);
@@ -19,7 +20,6 @@ define("IMAGENS_UPLOAD",            43);
 
 define("IMAGENS_RAPIDO",            45);
 define("IMAGENS_RAPIDO_SALVAR",     46);
-
 
 define("ATIVAR_DESATIVAR",          50);
 define("COPIAR",                    51);
@@ -55,7 +55,7 @@ if (
 	$gParam["LIMITAR_VISUALIZACAO"]["ativo"] = 0;
 }
 
-if ($gPage<10) {
+if ($gPage < 10) {
 	$o->PDFEnabled = true;
 	$o->DOCEnabled = true;
 	$o->XLSEnabled = true;
@@ -73,7 +73,6 @@ $persistencia = new Itens();
 
 $html .= $o->msgTitle("Cadastro de itens");
 
-
 if ($gId) {
 	$aptoNoBanco = gFieldById("itens", $gId, "apto");
 	$aptoSKUs = $persistencia->aptoSKUs($gId);
@@ -86,7 +85,6 @@ if ($gId) {
 		$persistencia->aptoAtualiza($gId, $apto);
 	}
 }
-
 
 switch ($gPage) {
 	case INICIO:
@@ -111,7 +109,7 @@ switch ($gPage) {
 
 		$persistencia->agrupamento = "p.id, pf.id, pc.id, pa.id, g.id, t.id, i.id {$agrupaSku}";
 
-		$persistencia->filtro = "((a.id_filial=" . intval($_SESSION["filialAtualId"]) . ") OR (a.id_filial IS NULL))";
+		$persistencia->filtro = "((a.id_filial=" . intval($_SESSION["filialAtualId"]) . ") OR (a.id_filial IS NULL)) AND a.cancelado = 0";
 
 		$rs = $persistencia->obtemRegistros();
 
@@ -299,7 +297,7 @@ switch ($gPage) {
 			$filtro[] = "Mostrar detalhes dos SKUs: " . gCheck($_REQUEST['mostrarDetalhesSku']);
 		}
 
-		$where[] = "((a.id_filial=" . intval($_SESSION["filialAtualId"]) . ") OR (a.id_filial IS NULL))";
+		$where[] = "((a.id_filial=" . intval($_SESSION["filialAtualId"]) . ") OR (a.id_filial IS NULL)) AND a.cancelado = 0";
 
 		if ($filtro) {
 			$html .= $o->msgFilter('Filtros selecionados: ' . implode(" • ", $filtro));
@@ -396,7 +394,7 @@ switch ($gPage) {
 	case DADOS:
 		if ($gId) {
 			$html .= mostraCabecalho();
-			$registroAtual = $persistencia->obtemRegistros("i.id=" . $gId)[0];
+			$registroAtual = $persistencia->obtemRegistros("i.id = " . $gId)[0];
 		}
 
 		$frm = new gForm();
@@ -437,9 +435,12 @@ switch ($gPage) {
 		$frm->row(
 			$frm->add("{name: observacoes; type: textarea; value: " . $observacoes . "}")
 		);
+
 		$frm->add("{name: gId;type: hidden; value: ".$gId."}");
 		$frm->add("{name: gPage; type: hidden; value: " . DADOS_SALVAR . "}");
+
 		$html .= $frm->render($o);
+
 		$html .= $o->msg("* Campos obrigatórios para tornar o item apto para utilização.");
 
 		break;
@@ -463,6 +464,7 @@ switch ($gPage) {
 			$html .= $o->msgDanger(implode("<br>",$persistencia->erros));
 			$html .= $o->backButton;
 		}
+
 		break;
 
 
@@ -471,14 +473,14 @@ switch ($gPage) {
 		$html .= mostraCabecalho();
 		if ($gIdd == 0) {
 			$sql = "SELECT ik.*, u.descricao unidade
-			FROM itens_skus ik
-			LEFT JOIN unidades u ON ik.id_unidades=u.id
-			WHERE ik.id_itens=$gId";
+					FROM itens_skus ik
+					LEFT JOIN unidades u ON ik.id_unidades=u.id
+					WHERE ik.id_itens = $gId";
 		} else {
 			$sql = "SELECT ik.*, u.descricao unidade
-			FROM itens_skus ik
-			LEFT JOIN unidades u ON ik.id_unidades=u.id
-			WHERE ik.id=$gIdd";
+					FROM itens_skus ik
+					LEFT JOIN unidades u ON ik.id_unidades=u.id
+					WHERE ik.id = $gIdd";
 		}
 		$rs = dbQuery($sql);
 		$row2 = $rs[0];
@@ -590,6 +592,7 @@ switch ($gPage) {
 				document.location.href="'.$o->page."&gPage=".SKUS_EXCLUIR."&gId=$gId&gIdd=".'"+gIdd;
 			}'
 		);
+
 		break;
 
 
@@ -733,6 +736,7 @@ switch ($gPage) {
 		";
 		$o->addJavascript($js);
 		break;
+
 
 	/* ----------------------------- IMAGENS ------------------------ */
 	case IMAGENS:
@@ -1117,8 +1121,8 @@ switch ($gPage) {
 
 	case IMPORTAR:
 		include 'res/_classes/padrao/importacoes.php';
-		$imp =new Importacoes();
-		$html.=$imp->processar("itens");
+		$imp = new Importacoes();
+		$html .= $imp->processar("itens");
 		break;
 
 
@@ -1513,6 +1517,7 @@ switch ($gPage) {
 			<br> - Verificar se o item ja foi cadastrado");
 		break;
 
+
 	case IMPORTACAO_DE_FORNECEDORES:
 		$html .= $o->msgSubTitle("Importação de fornecedores");
 		if ($_FILES['fornecedores']['type'] != 'text/csv') {
@@ -1669,7 +1674,7 @@ switch ($gPage) {
 		}
 
 		$html .= $o->button("{icon:arrow-left; caption: Voltar; style: info; size: small; href: " . $o->page . "&gPage=" . FORMULARIO_IMPORTACAO_DE_FORNECEDORES . " ;}");;
- 		break;
+		break;
 
 
 	case IMPRIMIR_MODELO:
@@ -1687,57 +1692,68 @@ function mostraCabecalho()
 	if (!$gId) {
 		return;
 	}
-	$sql = "SELECT i.*, p.nome cliente, pf.nome fornecedor, pc.nome criou, pa.nome alterou, g.descricao grupo, t.descricao tipo
+
+	$sql = "SELECT
+				i.*,
+				p.nome cliente,
+				pf.nome fornecedor,
+				pc.nome criou,
+				pa.nome alterou,
+				g.descricao grupo,
+				t.descricao tipo
 			FROM itens i
-			LEFT JOIN pessoas p ON (i.id_pessoas_proprietario=p.id and p.cliente=1)
-			LEFT JOIN pessoas pf ON (i.id_pessoas_fornecedor=pf.id AND pf.cliente=0)
-			LEFT JOIN pessoas pc ON (i.id_pessoas_criou=pc.id AND pc.cliente=0)
-			LEFT JOIN pessoas pa ON (i.id_pessoas_alterou=pa.id AND pa.cliente=0)
+			LEFT JOIN pessoas p ON (i.id_pessoas_proprietario = p.id and p.cliente = 1)
+			LEFT JOIN pessoas pf ON (i.id_pessoas_fornecedor = pf.id AND pf.cliente = 0)
+			LEFT JOIN pessoas pc ON (i.id_pessoas_criou = pc.id AND pc.cliente = 0)
+			LEFT JOIN pessoas pa ON (i.id_pessoas_alterou = pa.id AND pa.cliente = 0)
 			LEFT JOIN grupos g ON i.id_grupos = g.id
 			LEFT JOIN tipos t ON i.id_tipos = t.id
-			WHERE i.id=$gId ";
+			WHERE i.id = " . $gId;
 	$rs = dbQuery($sql);
 	if (!$rs) {
 		$html .= $o->msgError("Erro ao localizar o item. Pode ter sido excluído de forma inapropriada.");
 		return;
 	}
-	$row=$rs[0];
+
+	$row = $rs[0];
 	$cor = 'header';
 	if ($row['ativo'] == 0) {
-		$cor="danger";
+		$cor = "danger";
 	}
 
-	$html.=$o->tableBegin("big");
-	$mtz=[];
-	$mtz[]='<-'. $o->small('Código').'<br><b>'.$row['codigo'].'</b><br>&nbsp;';
-	$mtz[]='<-'. $o->small('Empresa').'<br><b>'.$row['cliente'].'<br>'.$row['fornecedor']."</b>&nbsp;";
-	$mtz[]='<-'. $o->small('Nome').'<br><b>'.$row['nome'].'<br><small>'.$row['descricao'].'</small></b>&nbsp;';
-	$mtz[]='<-'. $o->small('Cadastro').'<br><b>'.gDateTime($row['data_cadastro'])."<br><small>".$row['criou']."</small></b>&nbsp;";
-	$mtz[]='<-'. $o->small('Alteração').'<br><b>'.gDateTime($row['data_alteracao'])."<br><small>".$row['alterou']."</small></b>&nbsp;";
-	$html.=$o->tableRow($mtz, $cor);
-	if ($row['produto_acabado']==1) {
+	$html .= $o->tableBegin("big");
+	$mtz = [];
+	$mtz[] = '<-' . $o->small('Código') . '<br><b>' . $row['codigo'] . '</b><br>&nbsp;';
+	$mtz[] = '<-' . $o->small('Empresa') . '<br><b>' . $row['cliente'] . '<br>' . $row['fornecedor'] . "</b>&nbsp;";
+	$mtz[] = '<-' . $o->small('Nome') . '<br><b>' . $row['nome'] . '<br><small>' . $row['descricao'] . '</small></b>&nbsp;';
+	$mtz[] = '<-' . $o->small('Cadastro') . '<br><b>' . gDateTime($row['data_cadastro']) . "<br><small>" . $row['criou'] . "</small></b>&nbsp;";
+	$mtz[] = '<-' . $o->small('Alteração') . '<br><b>' . gDateTime($row['data_alteracao']) . "<br><small>" . $row['alterou'] . "</small></b>&nbsp;";
+	$html .= $o->tableRow($mtz, $cor);
+
+	if ($row['produto_acabado'] == 1) {
 		$mtz = [];
-		$mtz[]='~6<>Produto acabado';
-		$html.=$o->tableRow($mtz, 'warning');
+		$mtz[] = '~6<>Produto acabado';
+		$html .= $o->tableRow($mtz, 'warning');
 	}
 
 	$mtz = [];
-	if ($row['apto']==1) {
+	if ($row['apto'] == 1) {
 		$mtz[] = '~6<>Cadastro do item suficientemente completo - pode ser utilizado';
 		$html .= $o->tableRow($mtz, 'success');
 	} else {
 		$mtz[] = '~6<>Cadastro do item sem dados suficientes - não poderá ser utilizado';
 		$html .= $o->tableRow($mtz, 'danger');
 	}
+
 	$html .= $o->tableEnd();
 
-	$active1='false';
-	$active2='false';
-	$active3='false';
-	$active4='false';
-	$active5='false';
-	$active6='false';
-	$active7='false';
+	$active1 = 'false';
+	$active2 = 'false';
+	$active3 = 'false';
+	$active4 = 'false';
+	$active5 = 'false';
+	$active6 = 'false';
+	$active7 = 'false';
 	switch ($gPage) {
 		case DADOS:
 			$active1 = 'true';
@@ -1758,7 +1774,7 @@ function mostraCabecalho()
 
 	$btns = [];
 
-	$btns[]=$o->button("{active: ".$active1."; caption: Dados do item; icon: barcode-read; hint: Dados do item; responsive: true; href: ".$o->page."&gPage=".DADOS."&gId=".$gId."}");
+	$btns[] = $o->button("{active: ".$active1."; caption: Dados do item; icon: barcode-read; hint: Dados do item; responsive: true; href: ".$o->page."&gPage=".DADOS."&gId=".$gId."}");
 	if (!$persistencia->aptoSKUs($gId)) {
 		$caption = "SKUs&nbsp&nbsp" . $o->badge("1");
 		$btns[] = $o->button("{active: " . $active2 . "; style:danger; caption: " . $caption . ";icon: box; hint: SKU; responsive: true; href: ".$o->page."&gPage=".SKUS."&gId=".$gId."}");
