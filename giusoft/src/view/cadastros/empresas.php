@@ -331,15 +331,15 @@ switch ($gPage) {
 
             $sql = "SELECT
                         count(p.id) p,
-                        count(f.id) f,
+                        count(j.id) j,
                         count(e.id) e
 					FROM pessoas p
-					LEFT JOIN pessoas_fisicas f ON p.id=f.id_pessoas
-					LEFT JOIN pessoas_enderecos e ON p.id=e.id_pessoas
+					LEFT JOIN pessoas_juridicas j ON p.id = j.id_pessoas
+					LEFT JOIN pessoas_enderecos e ON p.id = e.id_pessoas
 					WHERE p.id = " . $gId;
             $rs = dbQuery($sql);
 
-            if ($rs[0]['f'] == 0) {
+            if ($rs[0]['j'] == 0) {
                 $erros[] = "Nenhum documento foi cadastrado";
             }
 
