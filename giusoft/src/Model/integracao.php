@@ -214,7 +214,6 @@ class Integracao
 		$idPessoas = $this->insertTable('pessoas', $pessoa);
 
 		if ($juridico) {
-			$juridico['tipo_separacao'] = $pessoa['tipo_separacao'] ?: 2;
 			$juridico['id_pessoas'] = $juridico['id_pessoas'] ?: $idPessoas;
 			$this->insertTable('pessoas_juridicas', $juridico);
 		}
