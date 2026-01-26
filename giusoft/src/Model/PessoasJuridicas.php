@@ -23,22 +23,7 @@ class PessoasJuridicas extends Pessoas
 					pj.observacoes,
 					pj.matriz,
 					pj.unidade,
-					pj.codigo_sistema_externo,
-					pj.faz_segunda_separacao,
-					pj.lote_xprod,
-					pj.prazo,
-					pj.lead_time,
-					pj.exige_uma_entrada_convencional,
-					pj.exigir_sku_separacao,
-					pj.indicar_posicao,
-					pj.fiscal,
-					pj.tipo_separacao,
-					pj.priorizar_palete_aberto,
-					pj.priorizar_palete_fechado,
-					pj.foto_obrigatoria,
-					pj.permitir_portaria_sem_os,
-					pj.quantidade_posicoes,
-					pj.variacao_divergencia
+					pj.fiscal
 				FROM pessoas p
 				LEFT JOIN pessoas_juridicas pj ON pj.id_pessoas = p.id";
 		return ($sql);
@@ -92,18 +77,6 @@ class PessoasJuridicas extends Pessoas
 		);
 
 		$frm->add("{name: observacoes; fieldLabel: Observações; type: textarea; value: ".base64_decode($registroAtual['observacoes'])."}");
-		$frm->add("{name: gId; type: hidden; value: ".$gId."}");
-		$frm->add("{name: gPage; type: hidden; value: ".$proximaPagina."}");
-
-		return $frm->render($o);
-	}
-
-
-	public function gerarCamposAbaConfiguracao(&$frm, $registroAtual, $proximaPagina="")
-	{
-		global $gId, $gPage, $o, $gParam;
-
-		$frm->add("{name: codigo_sistema_externo; fieldLabel: Código de sistema externo; type: text; maxLength: 9; value: " . $registroAtual['codigo_sistema_externo'] . "}");
 		$frm->add("{name: gId; type: hidden; value: ".$gId."}");
 		$frm->add("{name: gPage; type: hidden; value: ".$proximaPagina."}");
 
