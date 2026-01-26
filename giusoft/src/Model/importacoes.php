@@ -803,16 +803,11 @@ class Importacoes
 			$registro["id_itens"] = $idItem;
 			$registro["id_unidades"] = (int) $idUnidade;
 			$registro["quantidade"] = gDBFloat($registro["quantidade"]);
-			$registro["prazo_validade"] = gDBFloat($registro["prazo_validade"]);
-			$registro["shelf_life"] = gDBFloat($registro["shelf_life"]);
 			$registro["peso_liquido"] = gDBFloat($registro["peso_liquido"]);
 			$registro["peso_bruto"] = gDBFloat($registro["peso_bruto"]);
-			$registro["palete_lastro"] = gDBFloat($registro["palete_lastro"]);
-			$registro["palete_altura"] = gDBFloat($registro["palete_altura"]);
 			$registro["altura"] = gDBFloat($registro["altura"]);
 			$registro["largura"] = gDBFloat($registro["largura"]);
 			$registro["comprimento"] = gDBFloat($registro["comprimento"]);
-			$registro["empilhamento_maximo"] = gDBFloat($registro["empilhamento_maximo"]);
 			$registro = $this->validarCampos("itens_skus", $registro);
 
 			dbInsert("itens_skus", $registro);

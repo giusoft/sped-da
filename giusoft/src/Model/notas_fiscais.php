@@ -2083,8 +2083,7 @@ class NotasFiscais extends ImportacaoNFE
 					notas_itens.peso_bruto,
 					notas_itens.peso_liquido,
 					notas_itens.data_fabricacao,
-					notas_itens.data_vencimento,
-					notas_itens.prazo_validade,
+					notas_itens.data_validade,
 					notas_itens.valor_frete,
 					notas_itens.valor_base_calculo,
 					itens_skus.nome,
@@ -2701,7 +2700,7 @@ class NotasFiscais extends ImportacaoNFE
             $item = excluirIndicesNumericos($item);
             unset($item['id']);
             $item['id_notas'] = $idNovaNota;
-            $item['prazo_validade']  = $item['prazo_validade']  ?: '0';
+			$item['data_validade']  = $item['data_validade']  ?: '0';
             $item['aliquota_ipi']    = $item['aliquota_ipi']    ?: '0';
             $item['total_icms_calc'] = $item['total_icms_calc'] ?: '0';
 
@@ -4505,8 +4504,7 @@ class ImportacaoNFE
 			$this->notaItem["data_fabricacao"] = gCleanField($registro->prod->Rastro->RastroItem->dFab);
 
 		if (isset($registro->prod->Rastro->RastroItem->dVal))
-			$this->notaItem["prazo_validade"] = gCleanField($registro->prod->Rastro->RastroItem->dVal);
-
+			$this->notaItem["data_validade"] = gCleanField($registro->prod->Rastro->RastroItem->dVal);
 		// --- IMPOSTOS ---
 
 		/* ICMS */
@@ -4626,7 +4624,6 @@ class ImportacaoNFE
 		$this->item=[];
 		$this->item["ativo"] = 0;
 		$this->item["apto"]  = 0;
-		$this->item["faz_picking"]   = 0;
 		$this->item["data_cadastro"] = date('Y-m-d H:i:s');
 		$this->item["id_pessoas_proprietario"] = $this->cliente["id"];
 		$this->item["id_pessoas_criou"] = $usrId;
@@ -4680,20 +4677,13 @@ class ImportacaoNFE
 				$flds = [];
 				$flds['ativo'] = '1';
 				$flds['apto'] = '1';
-				$flds['faz_picking'] = '0';
 				$flds['data_cadastro'] = date("Y-m-d H:i:s");
 				$flds['id_pessoas_proprietario'] = $this->cliente['id'];
 				$flds['id_pessoas_criou'] = $usrId;
 				$flds['id_grupos'] = '0';
 				$flds['id_tipos'] = '0';
-				$flds['id_prioridades_saida'] = '1';
-				$flds['codigo'] = '000';
-				$flds['codigo_barras'] = '000';
 				$flds['nome'] = 'VCD';
 				$flds['descricao'] = 'Volume de Cross Docking';
-				$flds['exige_lote'] = '0';
-				$flds['exige_data_fabricacao'] = '0';
-				$flds['exige_data_validade'] = '0';
 				$idItem = dbInsert("itens", $flds, true);
 				if ($idItem > 0) {
 					$flds = [];
@@ -4710,11 +4700,7 @@ class ImportacaoNFE
 					$flds['largura'] = '1';
 					$flds['altura'] = '1';
 					$flds['comprimento'] = '1';
-					$flds['empilhamento_maximo'] = '100';
-					$flds['palete_lastro'] = '100';
-					$flds['palete_altura'] = '100';
 					$flds['nome'] = 'VCD';
-					$flds['sigla'] = 'VCD';
 					$idItemSku = dbInsert("itens_skus", $flds, true);
 				} else {
 					$this->erros[] = "Erro ao criar item de cadastro";

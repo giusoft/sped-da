@@ -2951,7 +2951,7 @@ switch ($gPage) {
             "INSERT INTO notas_itens (".implode(',', array_keys(reset($itensNovaNota))).") VALUES ";
         foreach ($itensNovaNota as $item) {
             $item['id_notas'] = $idNovaNota;
-            $item['prazo_validade']  = $item['prazo_validade']  ?: '0';
+            $item['data_validade']  = $item['data_validade']  ?: '0';
             $item['aliquota_ipi']    = $item['aliquota_ipi']    ?: '0';
             $item['total_icms_calc'] = $item['total_icms_calc'] ?: '0';
             $sql .= "('".implode("','", array_values($item))."'),";

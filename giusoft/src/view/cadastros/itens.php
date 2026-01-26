@@ -186,7 +186,6 @@ switch ($gPage) {
 		$frm->add("{name: id_pessoas_fornecedor; fieldLabel: Fornecedor; type: combo; items: " . $sp['combo_fornecedores'] . "}");
 		$frm->add("{name: id_grupos; fieldLabel: Grupo; type: combo; items: " . $sp['combo_grupos'] . "}");
 		$frm->add("{name: id_tipos; fieldLabel: Tipos; type: combo; items: " . $sp['combo_tipos'] . "}");
-		$frm->add("{name: id_prioridades_saida; fieldLabel: Prioridade saída; type: combo; items: " . $sp['combo_prioridades_saida'] . "}");
 		$frm->add("{name: mostrarDetalhesSku; fieldLabel: Mostrar detalhes SKU; type: checkbox;}");
 		$frm->add("{name: gPDFOrientation; type: hidden; value: L;}");
 		$frm->add("{name: gPage; type: hidden; value: " . INICIO_PESQUISAR_RESULTADO . "}");
@@ -205,7 +204,6 @@ switch ($gPage) {
 		$situacao = (int) $_REQUEST['situacao'];
 		$idGrupos = (int) $_REQUEST['id_grupos'];
 		$idTipos = (int) $_REQUEST['id_tipos'];
-		$idPrioridadesSaida = (int) $_REQUEST['id_prioridades_saida'];
 
 		$html .= '<div class="hidden-print"><form class="form-inline" method="POST" action="index.php?g=itens">';
 		$html .= $o->button("{icon: plus; caption: Novo; hint: Cadastrar um novo item; style: info; size: normal; href: index.php?g=itens&gPage=" . DADOS . "}");
@@ -542,7 +540,6 @@ switch ($gPage) {
 		$mtz[] = "->P.Líquido";
 		$mtz[] = "->P.Bruto";
 		$mtz[] = "->Alt.SKU";
-		$mtz[] = "->Alt.palete";
 		$mtz[] = "->Valor";
 		$html .= $o->tableRow($mtz, "header");
 		foreach ($rs as $id=>$row) {
@@ -575,7 +572,6 @@ switch ($gPage) {
 			$mtz[] = "->" . gFloat($row["peso_liquido"]);
 			$mtz[] = "->" . gFloat($row["peso_bruto"]);
 			$mtz[] = "->" . str_replace(",0000","",gFloat($row["altura"]))."cm";
-			$mtz[] = "->" . str_replace(",0000","",gFloat($row["altura"]*$row["palete_altura"]))."cm";
 			$mtz[] = "->" . gFloat($row["valor"]);
 			if ($gIdd == $row['id']) {
 				$html .= $o->tableRow($mtz, "detail", "style='border: 4px solid #fe6600'");
@@ -1344,12 +1340,6 @@ switch ($gPage) {
 		}
 
 		$mtzItem = [];
-		if ($_REQUEST["exige_lote"]) {
-			$exige_lote = (int) ($_REQUEST["exige_lote"] == 1);
-			$mtzItem["exige_lote"] = $exige_lote;
-		}
-
-
 		if ($_REQUEST["id_grupo"]) {
 			$mtzItem["id_grupos"] = $_REQUEST["id_grupo"];
 		}
@@ -1415,7 +1405,6 @@ switch ($gPage) {
 				WHERE i.ativo=1
 					AND i.id={$gId}
 					AND ik.ativo=1
-					AND i.produto_acabado=0
 				ORDER BY i.nome, ik.quantidade";
 
 		$frm->row(
@@ -1602,8 +1591,6 @@ switch ($gPage) {
 					$dados['largura'] = 1;
 					$dados['altura'] = 1;
 					$dados['comprimento'] = 1;
-					$dados['palete_altura'] = 10000;
-					$dados['palete_lastro'] = 10000;
 					$dados['comprimento'] = 1;
 
 					$novosSkus[$codigo]['dados'] = $dados;// dados a inserir na tabela itens_skus
@@ -1729,12 +1716,6 @@ function mostraCabecalho()
 	$mtz[] = '<-' . $o->small('Cadastro') . '<br><b>' . gDateTime($row['data_cadastro']) . "<br><small>" . $row['criou'] . "</small></b>&nbsp;";
 	$mtz[] = '<-' . $o->small('Alteração') . '<br><b>' . gDateTime($row['data_alteracao']) . "<br><small>" . $row['alterou'] . "</small></b>&nbsp;";
 	$html .= $o->tableRow($mtz, $cor);
-
-	if ($row['produto_acabado'] == 1) {
-		$mtz = [];
-		$mtz[] = '~6<>Produto acabado';
-		$html .= $o->tableRow($mtz, 'warning');
-	}
 
 	$mtz = [];
 	if ($row['apto'] == 1) {

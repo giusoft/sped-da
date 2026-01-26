@@ -144,8 +144,6 @@ class Integracao
 		$mtz['id_itens'] = $idItens;
 		$mtz['unidade']  = $dados['unidade'];
 		$mtz['descricao_unidade'] = $dados['descricaoUnidade'];
-		$mtz['palete_lastro'] = $dados['palete_lastro'];
-		$mtz['palete_altura'] = $dados['palete_altura'];
 		$mtz['quantidade'] = $dados['quantidade'];
 		$mtz['largura'] = $dados['largura'];
 		$mtz['altura'] = $dados['altura'];
@@ -185,8 +183,6 @@ class Integracao
 		$mtz['data_cadastro'] = date('Y-m-d H:i:s');
 		$mtz['codigo'] = $dados['codigo'];
 		$mtz['codigo_barras'] = $dados['codigo_barras'];
-		$mtz['palete_lastro'] = $dados['palete_lastro'];
-		$mtz['palete_altura'] = $dados['palete_altura'];
 		$mtz['quantidade'] = $dados['quantidade'];
 		$mtz['largura'] = $dados['largura'];
 		$mtz['altura'] = $dados['altura'];

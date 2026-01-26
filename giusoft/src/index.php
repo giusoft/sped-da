@@ -83,9 +83,6 @@ function gerarTokenAlexa($id)
 
 // ------------- Estrutura do dashboard -------------
 $col1 = $dash->avatar("{id: $usrId; name: ".gShortName($usrName)." ".$o->label($gId,"success")."; token_alexa: $token; email: $usrEmail; phone: $usrPhone; hint: $hint; href: index.php?g=profile;}", $graf);
-$col2 = $dash->text("{title: OS de entrada; hint: Faltando executar: ".$o->badge($osEntradaHojeFaltando).";value: $osEntradaHoje; }", $btnsPraticas);
-$col3 = $dash->text("{title: OS de saída; hint: Faltando executar: ".$o->badge($osSaidaHojeFaltando).";value: $osSaidaHoje; }", $btnsTeoricas);
-$col4 = $dash->text("{title: OS de hoje; hint: Faltando executar: ".$o->badge($osHojeFaltando).";value: $osHoje; }", $btnsTeoricas);
 
 $dash->setColumnsWidth(1,1,1,1);
 $dash->addRow($col1,$col2, $col3, $col4);
@@ -93,11 +90,7 @@ $dash->addRow($col1,$col2, $col3, $col4);
 if (!$_SESSION['usrClient']) {
     $dash->setColumnsWidth(1,1,2);
     $col1 = $dash->card("{title: Alertas; titleStyle: danger}", $ocorrencias.$vencimentos);
-    // $col3 = $dash->card("{}", $giusoft);
     $col2 = '';
-    if ($rsVeiculosEsperando) {
-		$col2 = $dash->card("{title: Veículos aguardando; titleStyle: warning}", $noticias);
-    }
     $col3 = '';
 
 	$dash->addRow($col1, $col2, $col3);

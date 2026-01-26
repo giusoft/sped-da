@@ -67,10 +67,6 @@ class Itens extends Pessoas
 			$item = dbQuery($sql)[0];
 
 			$where = [];
-			if ($_REQUEST['codigo2']) {
-				$where[] = "(I.id <> " . $item["id"] . " AND codigo2)";
-			}
-
 			if ($_REQUEST['gIdd']) {
 				$where[] = "(SK.id <> " . $_REQUEST['gIdd'] . ")";
 			}
@@ -419,7 +415,6 @@ class Itens extends Pessoas
 			itens_skus.nome AS itens_skus_nome,
 			id_itens,
 			id_unidades,
-			id_itens_skus_intermediario,
 			quantidade,
 			peso_liquido,
 			peso_bruto,

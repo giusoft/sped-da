@@ -237,16 +237,6 @@ class PessoasJuridicas extends Pessoas
 	}
 
 
-	public function verificarItensAtivosExigeLote() {
-		global $gId;
-
-		$sql = "SELECT id FROM itens
-				WHERE ativo = 1 AND exige_lote = 1 AND id_pessoas_proprietario = {$gId}";
-		$rs = dbQuery($sql);
-		return (bool) $rs;
-	}
-
-
 	public function validarDadosEmpresa($dados, $linha)
 	{
 		$errorMessage = [];
