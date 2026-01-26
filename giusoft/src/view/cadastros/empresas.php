@@ -343,11 +343,12 @@ switch ($gPage) {
                 $erros[] = "Nenhum endereço foi cadastrado";
             }
 
-            if (is_array($erros)) {
+            if ($erros) {
                 $msgErro = '<ul>';
                 foreach ($erros as $erro) {
                     $msgErro .= "<li>$erro</li>";
                 }
+
                 $msgErro .= '</ul>';
                 $html .= $o->msgDanger($msgErro);
             } else {
@@ -360,6 +361,7 @@ switch ($gPage) {
             $html .= $o->msgDanger("A pessoa selecionada não foi encontrada");
             $html .= $backButton;
         }
+
         break;
 
 
