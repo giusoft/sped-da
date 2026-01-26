@@ -1,7 +1,10 @@
 <?php
+
 include_once "Pessoas.php";
+
 class Itens extends Pessoas
 {
+
 	public function __construct()
 	{
 		$this->tabela = "itens";
@@ -13,20 +16,21 @@ class Itens extends Pessoas
 	public function validarSKU($atualizacao = 0)
 	{
 		global $gId, $gIdd, $gParam;
-		$erros = array();
+
 		if ($gIdd > 0 && !isset($_REQUEST["ativo"])) {
-			return (array());
+			return [];
 		}
+
 		// Se for mesmo proprietário e o código de barras for igual não permitir.
 		// Se for proprietário diferentes mas todas as caracteristicas forem iguais, não permitid.
-
 		$idProprietario = gFieldById("itens", $gId, "id_pessoas_proprietario");
-		$where = array();
-		$where[] = "(SK.ativo=1)";
-		$where[] = "(I.id_pessoas_proprietario=".$idProprietario.")";
-		$where[] = "(SK.id <> ".$gIdd.")";
-		$orWhere = array();
 
+		$where = [];
+		$where[] = "(SK.ativo = 1)";
+		$where[] = "(I.id_pessoas_proprietario = " . $idProprietario . ")";
+		$where[] = "(SK.id <> " . $gIdd . ")";
+
+		$orWhere = [];
 		if (!empty($_REQUEST["codigo"])) {
 			$orWhere[] = "(SK.codigo='" . gCleanField($_REQUEST["codigo"]) . "' AND SK.id_unidades=" . intval($_REQUEST["id_unidades"]) . ")";
 		}
@@ -46,6 +50,7 @@ class Itens extends Pessoas
 				LIMIT 1";
 		$rs = dbFastQuery($sql);
 
+		$erros = [];
 		if ($rs[0]['id']) {
 			// Será um item repetido não permitir.
 			if (!empty($_REQUEST["codigo"])) {
@@ -59,15 +64,17 @@ class Itens extends Pessoas
 			// Verificar se tem todas as caracteristicas iguais, ignorando o proprietário.
 
 			$sql  = "SELECT id, id_pessoas_proprietario FROM itens WHERE id = " . $gId;
-			$item = (dbQuery($sql)[0]);
+			$item = dbQuery($sql)[0];
 
-			$where=array();
+			$where = [];
 			if ($_REQUEST['codigo2']) {
 				$where[] = "(I.id <> " . $item["id"] . " AND codigo2)";
 			}
+
 			if ($_REQUEST['gIdd']) {
 				$where[] = "(SK.id <> " . $_REQUEST['gIdd'] . ")";
 			}
+
 			$where[] = "(SK.ativo=1)";
 			$where[] = "(SK.codigo='".gCleanField($_REQUEST["codigo"])."')";
 			$where[] = "(SK.codigo_barras='".gCleanField($_REQUEST["codigo"])."')";
@@ -91,7 +98,7 @@ class Itens extends Pessoas
 			$rs = dbFastQuery($sql);
 
 			if ($rs) {
-				$erros[]=" O mesmo item com as mesmas caracteristicas já existe no sistema.";
+				$erros[] = " O mesmo item com as mesmas caracteristicas já existe no sistema.";
 			}
 		}
 
@@ -119,30 +126,104 @@ class Itens extends Pessoas
 				itens_skus.comprimento";
 		}
 
-		$sql = "
-			SELECT
-				i.*, p.nome proprietario, pf.nome fornecedor, pc.nome criou,
-				pa.nome alterou, g.descricao grupo, t.descricao tipo {$outrosAtributos}
-			FROM itens i
-			JOIN pessoas p ON i.id_pessoas_proprietario = p.id
-			JOIN pessoas_filial a ON a.id_pessoas = p.id
-			LEFT JOIN pessoas pc ON i.id_pessoas_criou = pc.id
-			LEFT JOIN pessoas pf ON i.id_pessoas_fornecedor = pf.id
-			LEFT JOIN pessoas pa ON i.id_pessoas_alterou = pa.id
-			LEFT JOIN grupos g ON i.id_grupos = g.id
-			LEFT JOIN tipos t ON i.id_tipos = t.id
-			{$leftSkus}";
+		$sql = "SELECT
+					i.*,
+					p.nome proprietario,
+					pf.nome fornecedor,
+					pc.nome criou,
+					pa.nome alterou,
+					g.descricao grupo,
+					t.descricao tipo
+					{$outrosAtributos}
+				FROM itens i
+				JOIN pessoas p ON i.id_pessoas_proprietario = p.id
+				JOIN pessoas_filial a ON a.id_pessoas = p.id
+				LEFT JOIN pessoas pc ON i.id_pessoas_criou = pc.id
+				LEFT JOIN pessoas pf ON i.id_pessoas_fornecedor = pf.id
+				LEFT JOIN pessoas pa ON i.id_pessoas_alterou = pa.id
+				LEFT JOIN grupos g ON i.id_grupos = g.id
+				LEFT JOIN tipos t ON i.id_tipos = t.id
+				{$leftSkus}";
 
 		return($sql);
 	}
 
+
+	public function obtemRegistros($filtro = "", $ordenacao = "", $agrupamento = "", $naoLimitar = '')
+	{
+		global $gParam;
+
+		$sql = $this->obtemQueryConsulta();
+
+		$filtros = [];
+		if ($this->filtro <> "") {
+			$filtros[] = $this->filtro;
+		}
+
+		if ($filtro <> "") {
+			$filtros[] = $filtro;
+		}
+
+		$ordenacoes = [];
+		if ($this->ordenacao <> "") {
+			$ordenacoes[] = $this->ordenacao;
+		}
+
+		if ($ordenacao <> "") {
+			$ordenacoes[] = $ordenacao;
+		}
+
+		$agrupamentos = [];
+		if ($this->agrupamento <> "") {
+			$agrupamentos[] = $this->agrupamento;
+		}
+
+		if ($agrupamento <> "") {
+			$agrupamentos[] = $agrupamento;
+		}
+
+		if ($filtros) {
+			$sql .= " WHERE ".implode(" AND ", $filtros);
+		}
+
+		if ($agrupamentos) {
+			$sql .= " GROUP BY ".implode(", ", $agrupamentos);
+		}
+
+		if ($ordenacoes) {
+			$sql .= " ORDER BY ".implode(", ", $ordenacoes);
+		}
+
+		if ($gParam["PAGINACAO"]["ativo"]) {
+			$this->porPagina = $gParam["PAGINACAO"]["valor"];
+		}
+
+		if (!$naoLimitar) {
+			if ($this->porPagina > 0) {
+				include_once 'Pagination.php';
+
+				$this->pagination = new Pagination();
+				$totalRegistros = $this->pagination->controlarQuantidadePaginas($sql, $qtdMinimaPaginas = 10);
+				$pagination = $this->pagination->addPagination($totalRegistros, $this->porPagina);
+				$sql .= " LIMIT {$pagination->iniciar}, $pagination->numero_registro_por_pagina";
+			} else {
+				if ($gParam['LIMITAR_VISUALIZACAO']['ativo']) {
+					$sql .= " LIMIT " . $gParam['LIMITAR_VISUALIZACAO']['valor'];
+				} else {
+					$sql .= " LIMIT 500";
+				}
+			}
+		}
+
+		return dbFastQuery($sql);
+	}
 
 
 	function preparaCampos($todosOsCampos, $gId = 0) {
 
 		global $usrId, $gParam;
 		$hoje = date('Y-m-d H:i:s');
-		$campos = array();
+		$campos = [];
 		$campos['codigo']=str_replace("'", '', gCleanField($todosOsCampos['codigo']));
 		$campos['codigo_barras']=str_replace("'", '', gCleanField($todosOsCampos['codigo_barras']));
 		$campos['codigo_barras_alternativo']=str_replace("'", '', gCleanField($todosOsCampos['codigo_barras_alternativo']));
@@ -156,7 +237,7 @@ class Itens extends Pessoas
 		$campos['ncm']=gJustNumbers($todosOsCampos['ncm']);
 		$campos['id_grupos_combustivel'] = intval($todosOsCampos['id_grupos_combustivel']);
 
-		if (strlen($todosOsCampos['observacoes'])<20) {
+		if (strlen($todosOsCampos['observacoes']) < 20) {
 			$campos['observacoes'] = ($todosOsCampos['observacoes']);
 		} else {
 			$campos['observacoes'] = base64_encode($todosOsCampos['observacoes']);
@@ -209,7 +290,6 @@ class Itens extends Pessoas
 			}
 		}
 
-
 		$flt = "";
 		// Permite o cadastramento do mesmo item em clientes diferentes (definido por parametro de configuração)
 		if ($gParam['PERMITIR_ITENS_IGUAIS']['ativo']) {
@@ -233,7 +313,7 @@ class Itens extends Pessoas
 
 		$gId = dbInsert('itens', $campos, true);
 
-		$campos = array();
+		$campos = [];
 		$campos['id_itens']      = $gId;
 		$campos['data_cadastro'] = date('Y-m-d H:i:s');
 		$campos['codigo']        = gCleanField($_REQUEST['codigo']);
@@ -250,8 +330,8 @@ class Itens extends Pessoas
 	public function modifica($campos, $gId)
 	{
 		global $o, $gParam;
-		$sucesso = true;
 
+		$sucesso = true;
 		if (!is_numeric($campos['ncm']) || strlen($campos['ncm']) != 8) {
 			$this->erros[] = "O NCM informado não é válido. Verifique se o código foi digitado corretamente";
 			return false;
@@ -269,17 +349,19 @@ class Itens extends Pessoas
 		if ($campos['codigo'] <> "") {
 			$codigoOk = true;
 			$sql = "SELECT id FROM itens WHERE id<>$gId AND id_pessoas_proprietario=".$campos['id_pessoas_proprietario']." AND codigo='".$campos['codigo']."' AND ativo=1";
-			$rst = dbQuery($sql)[0]['id'];
+			$rst = dbFastQuery($sql)[0]['id'];
 			if ($rst) {
 				$sucesso = false;
 				$this->erros[] = "Produto com o código [" . $campos['codigo'] . "] já está cadastrado para esta empresa (Item <a href=".$o->page."&gPage=10&gId=".$rst.">[".$campos['nome']."]</a>)";
 				return false;
 			}
 		}
+
 		// Permite o cadastramento do mesmo item em clientes diferentes (definido por parametro de configuração)
 		if ($gParam['PERMITIR_ITENS_IGUAIS']['ativo'] == 1) {
 			$flt = "id_pessoas_proprietario = " . $campos['id_pessoas_proprietario'] . " AND ";
 		}
+
 		// Verifica se já existe algum produto com este código de barras
 		$sql = "SELECT id FROM itens WHERE id <> $gId AND $flt codigo_barras = '" . $campos['codigo_barras'] . "' AND ativo = 1 LIMIT 1";
 		$rst = dbFastQuery($sql)[0]['id'];
@@ -291,7 +373,6 @@ class Itens extends Pessoas
 
 		dbUpdate('itens', $campos, $gId);
 
-
 		return $sucesso;
 	}
 
@@ -300,10 +381,10 @@ class Itens extends Pessoas
 	{
 		global $gId, $gIdd, $usrId;
 
-		$mtz = array();
+		$mtz = [];
 		$mtz['id_itens'] = $sku['id_itens'] ?: $gId;
-		$mtz['ativo']   = $sku['itens_skus_ativo'] ?: gDBCheck($sku['ativo']);
-		$mtz['codigo']  = $sku['itens_skus_codigo'] ?: gCleanField($sku['codigo']);
+		$mtz['ativo'] = $sku['itens_skus_ativo'] ?: gDBCheck($sku['ativo']);
+		$mtz['codigo'] = $sku['itens_skus_codigo'] ?: gCleanField($sku['codigo']);
 		$mtz['codigo_barras'] = $sku['itens_skus_codigo_barras'] ?: gCleanField($sku['codigo_barras']);
 		$mtz['nome'] = $sku['itens_skus_nome'] ?: gCleanField($sku['nome']);
 		$mtz['id_unidades'] = (int) $sku['id_unidades'];
@@ -314,6 +395,7 @@ class Itens extends Pessoas
 		$mtz['altura'] = gDBFloat($sku['altura']);
 		$mtz['comprimento'] = gDBFloat($sku['comprimento']);
 		$mtz['valor'] = gDBFloat($sku['valor']);
+
 		if ($gIdd) {
 			$mtz['data_alteracao']     = date('Y-m-d H:i:s');
 			$mtz['id_pessoas_alterou'] = $usrId;
@@ -326,7 +408,8 @@ class Itens extends Pessoas
 	}
 
 
-	public function copiarItem($where, $novoItem) {
+	public function copiarItem($where, $novoItem)
+	{
 		global $usrId;
 
 		$camposSku = "
@@ -346,7 +429,7 @@ class Itens extends Pessoas
 			valor,
 			sigla";
 		$sql = $this->obtemQueryConsulta($joinSku = 1, $camposSku) . " WHERE " . implode(" AND ", $where) . " ORDER BY i.ativo DESC";
-		$rs  = dbQuery($sql);
+		$rs  = dbFastQuery($sql);
 
 		foreach ($rs as $chave => $row) {
 
@@ -356,40 +439,29 @@ class Itens extends Pessoas
 			$cadastrarItem = true;
 			$cadastrarSku  = true;
 			// consulta se item existe
-			$sql = "
-				SELECT
-					ativo, codigo, id
-				FROM
-					itens
-				WHERE
-					(
-						codigo = '" . $row['codigo'] . "'
-							OR codigo_barras = '" . $row['codigo_barras'] . "'
-					)
-					AND id_pessoas_proprietario = '" . $row['id_pessoas_proprietario'] . "'
-				ORDER BY ativo DESC LIMIT 1";
+			$sql = "SELECT
+						ativo,
+						codigo,
+						id
+					FROM itens
+					WHERE (codigo = '" . $row['codigo'] . "' OR codigo_barras = '" . $row['codigo_barras'] . "')
+						AND id_pessoas_proprietario = '" . $row['id_pessoas_proprietario'] . "'
+					ORDER BY ativo DESC LIMIT 1";
 			$item = dbQuery($sql)[0];
+
 			// se item existe
 			if ($item) {
 				$cadastrarItem = false;
-				$idItens  = $item['id'];
+				$idItens = $item['id'];
 				$this->avisos[] = 'Item já criado [' . $item['codigo'] . ']';
 			}
 
 			// 	verifica se existe sku
-			$sql = "
-				SELECT
-					*
-				FROM
-					itens_skus
-				WHERE
-					(
-						codigo = '" . $row['codigo'] . "'
-							OR codigo_barras = '" . $row['codigo_barras'] . "'
-					)
-					AND id_unidades = '" . $row['id_unidades'] . "'
-					AND id_itens = '" . $item['id'] . "'
-				ORDER BY ativo DESC LIMIT 1";
+			$sql = "SELECT * FROM itens_skus
+					WHERE (codigo = '" . $row['codigo'] . "' OR codigo_barras = '" . $row['codigo_barras'] . "')
+						AND id_unidades = '" . $row['id_unidades'] . "'
+						AND id_itens = '" . $item['id'] . "'
+					ORDER BY ativo DESC LIMIT 1";
 			$sku  = dbQuery($sql)[0];
 			if ($sku) {
 				$cadastrarSku = false;
@@ -415,13 +487,14 @@ class Itens extends Pessoas
 				}
 			}
 		}
+
 		$this->avisos = array_unique($this->avisos);
 	}
 
 
 	public function verificarDuplicataSku($idPessoasProprietario, $idItens, $codigoBarras)
 	{
-		$where = array();
+		$where = [];
 		if ($idItens) {
 			$where[] = "skuReferencia.id_itens = {$idItens}";
 			$where[] = "skuComparado.id_itens <> {$idItens}";
@@ -447,48 +520,65 @@ class Itens extends Pessoas
 			return false;
 		}
 
-		$msg = array();
+		$msg = [];
 		foreach ($skus as $sku) {
 			$msg[] = "Esse SKU já está sendo utilizado no cadastro do item: " . linkParaCadastroSku($sku['id_itens_skus'], $sku['itemDetalhes']);
 		}
-		return $msg;
 
+		return $msg;
 	}
 
 
-    public function aptoSKUs($gId) {
+    public function aptoSKUs($gId)
+	{
         global $gParam;
-        $apto = true;
-        $sql = "
-        	SELECT IK.id_unidades, IK.codigo_barras, IK.codigo
-        	FROM itens_skus IK
-        	WHERE IK.id_itens = " . $gId;
-        $rst = dbFastQuery($sql)[0];
 
-        if (!$rst || !$rst["id_unidades"] || !$rst["codigo_barras"] || !$rst["codigo"]) {
-            $apto = false;
-        }
+		$apto = true;
+		$sql = "SELECT
+					IK.codigo,
+					IK.altura,
+					IK.quantidade,
+					IK.id_unidades,
+					IK.codigo_barras
+				FROM itens_skus IK
+				WHERE IK.id_itens = " . $gId;
+		$rst = dbFastQuery($sql);
 
-        foreach ($rst as $row) {
-            if ($row["quantidade"]==0) {
-                $apto = false;
-                break;
-            } else if (
-                ($row['quantidade']>1
-                || ($row["quantidade"]==1 && $row["id_unidades"]>1) )
-                && ($row['palete_altura']==0 || $row['palete_lastro']==0 || $row['altura']==0)
-            ) {
-                $apto = false;
-                break;
-            }
-        }
-        return($apto);
+		// Nenhum SKU, então não está apto
+		if (!$rst) {
+			return false;
+		}
+
+		foreach ($rst as $row) {
+			if ($row["quantidade"] == 0) {
+				$apto = false;
+				break;
+			} elseif (
+				(
+					$row['quantidade'] > 1
+					|| ($row["quantidade"] == 1 && $row["id_unidades"] > 1)
+				)
+				&& $row['altura'] == 0
+			) {
+				$apto = false;
+				break;
+			} elseif (
+				!$row["id_unidades"]
+				|| !$row["codigo_barras"]
+				|| !$row["codigo"]
+			) {
+				$apto = false;
+				break;
+			}
+		}
+
+		return $apto;
     }
 
 
     public function aptoAtualiza($gId, $apto)
 	{
-		$sql = "UPDATE itens SET apto={$apto} WHERE id=".$gId;
+		$sql = "UPDATE itens SET apto = {$apto} WHERE id = " . $gId;
 		dbFastQuery($sql);
 	}
 }
