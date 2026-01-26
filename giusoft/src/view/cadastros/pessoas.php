@@ -288,7 +288,7 @@ switch ($gPage)
 				$erros[]="Nenhum endereço foi cadastrado";
 			}
 
-			if (is_array($erros)) {
+			if ($erros) {
 				$msgErro='<ul>';
 				foreach ($erros as $erro) {
 					$msgErro .= "<li>$erro</li>";
