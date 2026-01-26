@@ -1,6 +1,6 @@
-<?
-$debug = false; // pra não gerar Log do gBrowser
+<?php
 
+$debug = false; // pra não gerar Log do gBrowser
 
 $sp["gfw_locales"]="SELECT id,idd, name FROM gfw_locales ORDER BY locale='pt_BR' DESC";
 $sp["gfw_pages"]="SELECT DISTINCT keyword, title FROM gfw_pages";
@@ -10,21 +10,14 @@ $sp["gfw_themes"]="SELECT name,description FROM gfw_themes ORDER BY description"
 $sp["gfw_permissions"]="SELECT DISTINCT * FROM gfw_permissions ORDER BY active DESC, name";
 $sp["gfw_permissions_links"]="SELECT DISTINCT * FROM gfw_permissions_links ";
 $sp["gfw_permissions_users"]="SELECT DISTINCT * FROM gfw_permissions_users ";
-$sp["parametros"]="SELECT * FROM parametros ORDER BY grupo,chave";
+$sp["parametros"]="SELECT * FROM parametros ORDER BY chave";
 
 $sp["combo_gfw_permissions"]="SELECT id,name FROM gfw_permissions ORDER BY name";
 
 // Pessoas
 $sp['combo_pessoas']="SELECT id, apelido FROM pessoas WHERE tipo = 'F' AND situacao = 'Ativo' AND apelido <> '' ORDER BY apelido";
 $sp['combo_funcionarios']="SELECT id, apelido FROM pessoas WHERE tipo = 'F' AND situacao = 'Ativo' AND funcionario = 1 AND cliente = 0 AND apelido <> '' ORDER BY apelido";
-$sp['combo_clientes'] = "SELECT pessoas.id, pessoas.apelido
-						FROM pessoas
-						JOIN pessoas_filial ON pessoas_filial.id_pessoas = pessoas.id
-						WHERE situacao = 'Ativo'
-							AND (cliente = 1)
-							AND apelido <> ''
-							AND pessoas_filial.id_filial = " . $_SESSION['filialAtualId'] . "
-						ORDER BY apelido";
+$sp['combo_clientes'] = "SELECT id, apelido FROM pessoas WHERE situacao = 'Ativo' AND (cliente = 1) AND apelido <> '' ORDER BY apelido";
 $sp['combo_cliente_final'] = "
       SELECT pessoas.id,
             pessoas.apelido  descricao
@@ -60,8 +53,6 @@ $sp["combo_grupos_proprietario"]="SELECT id, descricao
 $sp["combo_unidades"]="SELECT id, IF((descricao IS NULL OR descricao = ''), sigla, CONCAT(sigla, ' - ', descricao)) as descricao FROM unidades ORDER BY descricao";
 $sp["combo_tipos"]="SELECT id,descricao FROM tipos ORDER BY descricao";
 
-
-
 $sp["combo_itens_por_proprietario"]="SELECT ISK.id,
 			            CONCAT(CONCAT_WS(' • ',ISK.codigo, I.nome,U.descricao), ' com ', CAST(ISK.quantidade as SIGNED)) descricao
 			            FROM itens I
@@ -84,7 +75,6 @@ $sp["combo_imp_cofins_cst"] = "SELECT id, CONCAT(codigo,' - ',descricao) FROM im
 $sp["combo_imp_ibs_cbs_cst"] = "SELECT id, CONCAT(codigo,' - ',descricao) FROM imp_ibs_cbs_cst WHERE ativo = 1 ORDER BY codigo";
 $sp["combo_informacoes_nfe"] = "SELECT id, descricao FROM nfe_informacoes ORDER BY descricao ASC";
 $sp['combo_tipos_ocorrencias']="SELECT id,descricao FROM tipos_ocorrencias WHERE ativo=1 ORDER BY id";
-
 
 // Estoque
 $sp["filial"]="SELECT * FROM filial ORDER BY descricao";
