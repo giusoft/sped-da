@@ -17,7 +17,14 @@ $sp["combo_gfw_permissions"]="SELECT id,name FROM gfw_permissions ORDER BY name"
 // Pessoas
 $sp['combo_pessoas']="SELECT id, apelido FROM pessoas WHERE tipo = 'F' AND situacao = 'Ativo' AND apelido <> '' ORDER BY apelido";
 $sp['combo_funcionarios']="SELECT id, apelido FROM pessoas WHERE tipo = 'F' AND situacao = 'Ativo' AND funcionario = 1 AND cliente = 0 AND apelido <> '' ORDER BY apelido";
-$sp['combo_clientes']="SELECT id, apelido FROM pessoas WHERE situacao = 'Ativo' AND (cliente = 1) AND apelido <> '' ORDER BY apelido";
+$sp['combo_clientes'] = "SELECT pessoas.id, pessoas.apelido
+						FROM pessoas
+						JOIN pessoas_filial ON pessoas_filial.id_pessoas = pessoas.id
+						WHERE situacao = 'Ativo'
+							AND (cliente = 1)
+							AND apelido <> ''
+							AND pessoas_filial.id_filial = " . $_SESSION['filialAtualId'] . "
+						ORDER BY apelido";
 $sp['combo_cliente_final'] = "
       SELECT pessoas.id,
             pessoas.apelido  descricao
