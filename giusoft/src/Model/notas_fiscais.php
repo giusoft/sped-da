@@ -4499,16 +4499,7 @@ class ImportacaoNFE
 		$this->notaItem["valor"]         = gCleanField($registro->prod->vUnCom);
 
 		// Lote
-		$sql = "SELECT lote_xprod FROM pessoas_juridicas WHERE id_pessoas =" . $this->cliente["id"];
-		$rs = dbQuery($sql);
-		$loteXprod = isset($rs[0]['lote_xprod']) ? $rs[0]['lote_xprod'] : false;
-
-		if ($loteXprod) {
-			$loteExtraido = $this->extrairLoteTagXprod($registro->prod->xProd, false);
-			$this->notaItem["lote"] = gCleanField($loteExtraido);
-		} else {
-			$this->notaItem["lote"] = isset($registro->prod->Rastro->RastroItem->nLote) ? gCleanField($registro->prod->Rastro->RastroItem->nLote) : '';
-		}
+		$this->notaItem["lote"] = isset($registro->prod->Rastro->RastroItem->nLote) ? gCleanField($registro->prod->Rastro->RastroItem->nLote) : '';
 
 		if (isset($registro->prod->Rastro->RastroItem->dFab))
 			$this->notaItem["data_fabricacao"] = gCleanField($registro->prod->Rastro->RastroItem->dFab);
@@ -4628,21 +4619,6 @@ class ImportacaoNFE
 	}
 
 
-	private function extrairLoteTagXprod($tagXProd, $retornarNomeItem)
-	{
-		if ($retornarNomeItem) {
-			$posicaoInicialLote = (strpos($tagXProd, '(LOTE')-2);
-            return substr($tagXProd, 0, -($posicaoInicialLote));
-		}
-
-		//extrai lote
-		$posicaoInicialLote = str_replace(' ', '', substr($tagXProd, strpos($tagXProd, "(")));
-		$loteExtraido = str_ireplace('(LOTE', '', substr($posicaoInicialLote, 0, strpos($posicaoInicialLote, ")")));
-
-		return $loteExtraido;
-	}
-
-
 	private function preparaItem($registro)
 	{
 		global $usrId, $gParam;
@@ -4657,13 +4633,8 @@ class ImportacaoNFE
 		$this->item["codigo"]=gCleanField($registro->prod->cProd);
 		$this->item["codigo_barras"]=gCleanField($registro->prod->cProd);
 		$this->item["ncm"] = trim($registro->prod->NCM);
-
-		//se esse cliente usa lote na descricao e o cliente esta ativo
-		$sql = "SELECT lote_xprod FROM pessoas_juridicas WHERE id_pessoas =".$this->cliente["id"];
-		$rs = dbQuery($sql)[0]['lote_xprod'];
-		$nomeItem = ($rs) ? $this->extrairLoteTagXprod($registro->prod->xProd, 1) : $registro->prod->xProd;
-		$this->item["nome"]= gToUpper(gCleanField($nomeItem));
-		$this->item["descricao"] = gToUpper(gCleanField($nomeItem));
+		$this->item["nome"]= gToUpper(gCleanField($registro->prod->xProd));
+		$this->item["descricao"] = gToUpper(gCleanField($registro->prod->xProd));
 	}
 
 
