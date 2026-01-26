@@ -58,13 +58,9 @@ define("FILIAL_CANCELAR", 112);
 
 define("CANCELAR", 120);
 
-
 define("CFOPS", 200);
 define("CFOPS_SALVAR", 201);
 define("CFOPS_EXCLUIR", 202);
-
-define("CONFIGURACAO", 300);
-define("SALVAR_ABA_CONFIGURACAO", 301);
 
 define("IMPORTACAO", 400);
 define("IMPORTACAO_SALVAR", 401);
@@ -1418,32 +1414,6 @@ switch ($gPage) {
         break;
 
 
-    case CONFIGURACAO:
-        $html .= mostraCabecalho($gId);
-
-        $rs = $persistencia->obtemRegistros("p.id=" . $gId)[0];
-        $frm = new gForm();
-        $html .= $persistencia->gerarCamposAbaConfiguracao($frm, $rs, SALVAR_ABA_CONFIGURACAO);
-        break;
-
-
-    case SALVAR_ABA_CONFIGURACAO:
-
-        $idPessoaJuridica = dbQuery("SELECT id FROM pessoas_juridicas WHERE id_pessoas = {$gId}")[0]['id'];
-        if (!$idPessoaJuridica) {
-            $html .= $o->msgDanger('Clique no botão Confirmar na aba de Dados pessoais');
-            $html .= $backButton;
-            break;
-        }
-
-        $flds = [];
-        $flds['codigo_sistema_externo'] = gCleanField($_REQUEST['codigo_sistema_externo']);
-        dbUpdate('pessoas_juridicas', $flds, $idPessoaJuridica);
-
-        $persistencia->atualizarPessoasSituacao($gId);
-        redirect($o->page . "&gPage=" . CONFIGURACAO . "&gId=" . $gId);
-        break;
-
     case IMPORTACAO:
         $frm = new gForm("columns: 2");
         $frm->addFormMessage("<b>Importação de empresas</b>");
@@ -1657,7 +1627,7 @@ function mostraCabecalho($gId)
 
         $html .= $o->tableEnd();
 
-        $active1 = $active2 = $active3 = $active4 = $active5 = $active6 = $active7 = $active8 = $active9 = 'false';
+        $active1 = $active2 = $active3 = $active4 = $active5 = $active6 = $active7 = $active8 = 'false';
         switch ($gPage) {
             case CAPA:
                 $active0 = 'true';
@@ -1683,8 +1653,8 @@ function mostraCabecalho($gId)
             case CFOPS:
                 $active7 = 'true';
                 break;
-            case CONFIGURACAO:
-                $active9 = 'true';
+            case GERENCIADOR_ACCESS_POINT:
+                $active8 = 'true';
                 break;
         }
 
@@ -1696,14 +1666,13 @@ function mostraCabecalho($gId)
                 $o->button("{icon: arrow-right; style: info; hint: Próximo registro; href: " . $o->page . "&gPage=" . REGISTRO_AVANCAR . "&gId=" . $gId . "&gIdRel=" . $gPage . "}") .
             '</div>';
         $btns[] = $o->button("{active: " . $active1 . "; icon: file-alt; caption: Dados pessoais; hint: Alterar os dados pessoais; href: " . $o->page . "&gPage=" . DADOS . "&gId=" . $gId . "}");
-        $btns[] = $o->button("{active: " . $active9 . "; icon: person-carry; caption: Configuração; hint: Controle de configurações; href: " . $o->page . "&gPage=" . CONFIGURACAO . "&gId=" . $gId . "}");
         $btns[] = $o->button("{active: " . $active2 . "; icon: map-marker; caption: Endereços; hint: Incluir ou alterar endereços; href: " . $o->page . "&gPage=" . ENDERECOS . "&gId=" . $gId . "}");
         $btns[] = $o->button("{active: " . $active3 . "; icon: warehouse; caption: Filial; hint: Relacionar pessoa ao filial; href: " . $o->page . "&gPage=" . FILIAL . "&gId=" . $gId . "}");
         $btns[] = $o->button("{active: " . $active4 . "; icon: exclamation-triangle; caption: Ocorrências; hint: Incluir ocorrências; href: " . $o->page . "&gPage=" . OCORRENCIAS . "&gId=" . $gId . "}");
         $btns[] = $o->button("{active: " . $active5 . "; icon: paperclip; caption: Anexos; hint: Anexar documentos digitalizados; href: " . $o->page . "&gPage=" . ANEXOS . "&gId=" . $gId . "}");
         $btns[] = $o->button("{active: " . $active6 . "; icon: lock; caption: Permissões; hint: Permissõs de acesso; href: " . $o->page . "&gPage=" . PERMISSOES . "&gId=" . $gId . "}");
         if ($_SESSION['usrId'] == 1) {
-            $btns[] = $o->button("{active: " . $active5 . "; icon: sign-out; caption: Gatilhos; hint: Configuração de gatilhos de integração; href: " . $o->page . "&gPage=" . GERENCIADOR_ACCESS_POINT . "&gId=" . $gId . "}");
+            $btns[] = $o->button("{active: " . $active8 . "; icon: sign-out; caption: Gatilhos; hint: Configuração de gatilhos de integração; href: " . $o->page . "&gPage=" . GERENCIADOR_ACCESS_POINT . "&gId=" . $gId . "}");
         }
 
         //$html.='<div class="btn-group" role="group" aria-label="...">'.implode(" ",$btns).'</div>';
