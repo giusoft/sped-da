@@ -88,7 +88,7 @@ if ($_REQUEST['task'] == 'enviarNfesOmie') {
 
 	if ($_REQUEST['dia']) {
 		$where[] = " DAY(nfe.data) = " . $_REQUEST['dia'];
-	} 
+	}
 
 	$where = implode(' AND ', $where);
 
@@ -96,13 +96,14 @@ if ($_REQUEST['task'] == 'enviarNfesOmie') {
 
 		$persistencia = new PontoAcesso(['empresa' => $empresa]);
 
-		$sql = "
-			SELECT  nfe.chave, nfe.xml, nfe.id_os,
-					nfe.xml_cancelamento, nfe.cancelada
+		$sql = "SELECT
+					nfe.chave,
+					nfe.xml,
+					nfe.xml_cancelamento,
+					nfe.cancelada
 			FROM nfe
 			JOIN notas ON notas.id = nfe.id_notas AND notas.tipo = 'S'
 			WHERE
-				nfe.sistema IN ('WMS', 'WMS2')
 				AND (
 					(
 						nfe.situacao = 'Aprovada'
