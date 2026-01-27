@@ -2083,7 +2083,6 @@ class NotasFiscais extends ImportacaoNFE
 					notas_itens.peso_bruto,
 					notas_itens.peso_liquido,
 					notas_itens.data_fabricacao,
-					notas_itens.data_validade,
 					notas_itens.valor_frete,
 					notas_itens.valor_base_calculo,
 					itens_skus.nome,
@@ -2700,7 +2699,6 @@ class NotasFiscais extends ImportacaoNFE
             $item = excluirIndicesNumericos($item);
             unset($item['id']);
             $item['id_notas'] = $idNovaNota;
-			$item['data_validade']  = $item['data_validade']  ?: '0';
             $item['aliquota_ipi']    = $item['aliquota_ipi']    ?: '0';
             $item['total_icms_calc'] = $item['total_icms_calc'] ?: '0';
 
@@ -4503,8 +4501,6 @@ class ImportacaoNFE
 		if (isset($registro->prod->Rastro->RastroItem->dFab))
 			$this->notaItem["data_fabricacao"] = gCleanField($registro->prod->Rastro->RastroItem->dFab);
 
-		if (isset($registro->prod->Rastro->RastroItem->dVal))
-			$this->notaItem["data_validade"] = gCleanField($registro->prod->Rastro->RastroItem->dVal);
 		// --- IMPOSTOS ---
 
 		/* ICMS */
