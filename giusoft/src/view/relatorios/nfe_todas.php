@@ -66,7 +66,7 @@ switch ($gPage) {
 			$where[] = "nfe.numero <= '" . gCleanField($_REQUEST["numero_ate"]) . "'";
 		}
 
-	if ($_REQUEST['situacao']) {
+		if ($_REQUEST['situacao']) {
             $situacoes = '';
             $whereSituacaoImportada = '';
             foreach ($_REQUEST['situacao'] as $i) {
@@ -107,7 +107,6 @@ switch ($gPage) {
 					nfe.chave AS chave,
 					nfe.situacao,
 					nfe.id_notas,
-					nfe.mensagens,
 					nfe.protocolo,
 					SUBSTR(nfe.xml_cancelamento, 1, 1) AS tem_xml_cancelamento,
 					nfe.data_cancelamento,
@@ -195,4 +194,4 @@ switch ($gPage) {
         echo($rs[$_REQUEST['atributo']]);
         exit;
 		break;
-} 
+}
