@@ -89,6 +89,7 @@ $sp["itens_aptos"]="SELECT id,descricao FROM itens WHERE apto=1 AND ativo=1 ORDE
 $sp["importacoes"]="SELECT * FROM importacoes ORDER BY descricao";
 $sp["importacoes_cabecalho"]="SELECT * FROM importacoes_cabecalho ORDER BY ordem";
 $sp["importacoes_registros"]="SELECT * FROM importacoes_registros ORDER BY ordem";
+$sp["tipos_ocorrencias"]="SELECT * FROM tipos_ocorrencias ORDER BY descricao";
 $sp["nfe_informacoes"]="SELECT * FROM nfe_informacoes ORDER BY descricao";
 $sp["imp_icms_cst"] = "SELECT * FROM imp_icms_cst";
 $sp["imp_ipi_cst"] = "SELECT * FROM imp_ipi_cst";
