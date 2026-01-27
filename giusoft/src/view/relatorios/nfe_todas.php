@@ -13,7 +13,7 @@ if (in_array($gPage, $paginasPodeExportar)) {
 	$o->CSVEnabled = true;
 }
 
-$html .= $o->msgTitle("NFe todas");
+$html .= $o->msgTitle("NFe status");
 
 $situacoesNfe = [];
 $situacoesNfe[] = 'Aprovada';
