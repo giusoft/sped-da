@@ -489,7 +489,7 @@ function linkParaNota($id = '', $numero = '', $tipo = '')
 		$notas[0]['tipo'] = $tipo;
 		$notas[0]['numero'] = $numero;
 	} else {
-		$sql  = sprintf('SELECT DISTINCT id, tipo, numero FROM notas WHERE id IN (%s)', $id);
+		$sql  = "SELECT DISTINCT id, tipo, numero FROM notas WHERE id IN ({$id})";
 		$notas = dbFastQuery($sql);
 		if (!$notas) {
 			return $link;
@@ -509,11 +509,7 @@ function linkParaNota($id = '', $numero = '', $tipo = '')
 			continue;
 		}
 
-		if ($nota['tipo'] == 'E') {
-			$rota = 'index.php?g=nf_entrada&gPage=1&gId=' . $nota['id']; // aba Dados
-		} else {
-			$rota = 'index.php?g=nf_saida&gPage=1&gId=' . $nota['id']; // aba Dados
-		}
+		$rota = 'index.php?g=nf_saida&gPage=1&gId=' . $nota['id']; // aba Dados
 
 		$link .= '<a target="_new" href="' . $rota . '">' . $conteudoExibir . '</a>' . ', ';
 	}
