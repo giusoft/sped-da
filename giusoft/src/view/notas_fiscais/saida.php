@@ -109,7 +109,6 @@ if ($_REQUEST['gAjax']) {
         $dados['vPag'] = $nota['vPag'];
         $dados['idDest'] = $nota["idDestino"];
         $dados['idNotas'] = $gId;
-        $dados['sistema'] = "WMS2";
         $dados['idEmpresa'] = $_SESSION['filialAtualId'];
         $dados['indIEDest'] = $nota["IE"];
         $dados['codigoAntt'] = $nota["RNTC"];
@@ -204,10 +203,8 @@ if ($_REQUEST['gAjax']) {
             UPDATE nfe
             SET situacao = '" . gCleanField($retornoEmiteNota['detalhes']['situacao']) . "',
                 chave = '" . gCleanField($retornoEmiteNota['detalhes']['chave']) . "',
-                mensagens = '" . gCleanField(removerAcentos($retornoEmiteNota['mensagem'] ?: $mensagemErro)) . "',
                 protocolo = '" . gCleanField($retornoEmiteNota['detalhes']['protocolo'] ) . "',
-                data_recibo = '" . gCleanField($retornoEmiteNota['detalhes']['dataHoraRecebimento']) . "',
-                xml = '" . base64_decode($retornoEmiteNota['detalhes']['xml']) . "'
+                data_recibo = '" . gCleanField($retornoEmiteNota['detalhes']['dataHoraRecebimento']) . "'
             WHERE id = {$idNfe}";
         dbFastQuery($sql);
 
@@ -288,9 +285,7 @@ if ($_REQUEST['gAjax']) {
                     nfe.situacao,
                     notas.id as id_nota,
                     notas.id_pessoas_proprietario,
-                    notas.numero,
-                    nfe.xml,
-                    nfe.serie
+                    notas.numero
                 FROM nfe
                 LEFT JOIN notas ON notas.id = nfe.id_notas
                 WHERE nfe.id = '{$gId}'";
@@ -357,17 +352,12 @@ if ($_REQUEST['gAjax']) {
             $mtz["situacao"] = "Cancelada";
             $mtz["data_cancelamento"] = date("Y-m-d H:i:s");
             $mtz["id_pessoas_cancelou"] = $usrId;
-            $mtz['xml_cancelamento'] = base64_decode((string) $retornoCancelamento['mensagem']['xml_cancelamento']);
             dbUpdate("nfe", $mtz, $nfeBD['id']);
-
-            // Importar cancelamento
-            $sql = "SELECT xml_cancelamento FROM nfe WHERE id = " . $nfeBD['id'];
-            $xmlCancelamento = dbFastQuery($sql)[0]['xml_cancelamento'];
 
             if ($dados['config']['tpAmb'] != 2) { //2=homologacao
                 $dadosImportacao = [
                     "chave" => $nfeBD['chave'],
-                    "xml" => $xmlCancelamento,
+                    "xml" => $mtz['xml_cancelamento'] = base64_decode((string) $retornoCancelamento['mensagem']['xml_cancelamento']),
                     "idPessoasProprietario" => 1
                 ];
                 dispararGatilho("importarCancNFe", $dadosImportacao); // Esse aqui é do OMIE
@@ -435,15 +425,30 @@ if ($_REQUEST['gAjax']) {
         $existeNfe = dbFastQuery("SELECT id FROM nfe WHERE id = '{$gId}'");
 
         if ($existeNfe) {
+
+            $join = '';
+            $select = '';
+            if ($_REQUEST['cancelamento']) {
+                $select = "nfe_eventos_cancelamento.xml AS xml_cancelamento,";
+                $join = "LEFT JOIN nfe_eventos AS nfe_eventos_cancelamento
+                            ON nfe_eventos_cancelamento.id_nfe = nfe.id
+                            AND nfe_eventos_cancelamento.id_nfe_tipos_eventos = 2"; // id_nfe_tipos_eventos = 2 (Evento de cancelamento)
+            }
+
             $sql = "SELECT
                         nfe.chave,
-                        nfe.xml,
-                        nfe.xml_cancelamento,
                         notas.id AS idNota,
-                        notas.id_pessoas_proprietario
+                        notas.id_pessoas_proprietario,
+                        {$select}
+                        nfe_eventos_normal.xml AS xml
                     FROM nfe
-                    LEFT JOIN notas ON notas.id_nfe = nfe.id
-                    WHERE nfe.id = '{$gId}'";
+                    LEFT JOIN notas ON notas.id = nfe.id_notas
+                    LEFT JOIN nfe_eventos AS nfe_eventos_normal
+                        ON nfe_eventos_normal.id_nfe = nfe.id
+                        AND nfe_eventos_normal.id_nfe_tipos_eventos IN (1, 5)
+                    {$join}
+                    WHERE nfe.id = '{$gId}' {$where}
+                    GROUP BY nfe.id";
             $xml = dbFastQuery($sql)[0];
 
             $dadosDanfe = [];
@@ -562,7 +567,6 @@ if ($_REQUEST['gAjax']) {
         $dados['vPag'] = $nota['vPag'];
         $dados['idDest'] =  $nota["idDestino"];
         $dados['idNotas'] = $idNovaNota;
-        $dados['sistema'] = "WMS2";
         $dados['operacao'] = '999 - ESTORNO DE NFE NAO CANCELADA NO PRAZO LEGAL';
         $dados['indIEDest'] = $nota["IE"]; // Atualmente não usamos na API
         $dados['codigoAntt'] = $nota["RNTC"];
@@ -665,10 +669,8 @@ if ($_REQUEST['gAjax']) {
         $sql = "UPDATE nfe
                 SET situacao = '" . gCleanField($retornoEmiteNota['detalhes']['situacao']) . "',
                     chave = '" . gCleanField($retornoEmiteNota['detalhes']['chave']) . "',
-                    mensagens = '" . gCleanField(removerAcentos($retornoEmiteNota['mensagem'] ?: $mensagemErro)) . "',
                     protocolo = '" . gCleanField($retornoEmiteNota['detalhes']['protocolo']) . "',
-                    data_recibo = '" . gCleanField($retornoEmiteNota['detalhes']['dataHoraRecebimento']) . "',
-                    xml = '" . base64_decode($retornoEmiteNota['detalhes']['xml']) . "'
+                    data_recibo = '" . gCleanField($retornoEmiteNota['detalhes']['dataHoraRecebimento']) . "'
                 WHERE id = " . $idNfeEstorno;
         dbFastQuery($sql);
 
@@ -749,11 +751,10 @@ if ($_REQUEST['gAjax']) {
         $sql = "SELECT
                     nfe.protocolo,
                     nfe.chave,
-                    nfe.serie,
                     notas.id_pessoas_proprietario,
                     notas.id AS id_notas
                 FROM nfe
-                LEFT JOIN notas ON notas.id_nfe = nfe.id
+                LEFT JOIN notas ON notas.id = nfe.id_notas
                 WHERE nfe.id = '{$gId}'";
         $nfeBD = dbFastQuery($sql)[0];
 
@@ -783,7 +784,7 @@ if ($_REQUEST['gAjax']) {
         $dadosCartaCorrecao = [];
         $dadosCartaCorrecao['temRetorno']   = 1;
         $dadosCartaCorrecao['chave']        = $nfeBD['chave'];
-        $dadosCartaCorrecao['sequencial']    = $numeroSequencial;
+        $dadosCartaCorrecao['sequencial']   = $numeroSequencial;
         $dadosCartaCorrecao['correcao']     = gCleanField($_REQUEST["cce_correcao"]);
         $dadosCartaCorrecao['empresa']      = $nf->obtemDadosEmpresa(obtemIdEmpresa($nfeBD["id_pessoas_proprietario"]));
         $dadosCartaCorrecao['config']       = $nf->buscarConfiguracoes($dadosCartaCorrecao['empresa']['cnpjFilial']);
@@ -808,7 +809,7 @@ if ($_REQUEST['gAjax']) {
         $mtz['id_pessoas']           = $usrId;
         $mtz['id_nfe_tipos_eventos'] = 3; // 3 = carta de correção
         $mtz['data']                 = date('Y-m-d H:i:s');
-        $mtz['serie']                = (int) $nfeBD['serie'];
+        $mtz['serie']                = (int) $dadosCartaCorrecao['config']['serie'];
         $mtz['motivo']               = gCleanField($_REQUEST['cce_correcao']);
         $mtz['sequencial']           = $numeroSequencial;
         $mtz['retorno_mensagem']     = gCleanField(removerAcentos($retornoCartaCorrecao['mensagem'] ?: $mensagemErro));
@@ -870,7 +871,7 @@ if ($_REQUEST['gAjax']) {
         if (!$rs) {
             $html .= $o->msgTitle("Notas fiscais internas");
             $html .= $o->msgDanger("Erro: Carta de correção (ID: " . $idCce . ") não encontrada ou não pertence a esta NFe (ID: " . $gId . ").");
-            $html .= $o->button("{name: back; icon: arrow-left; title: Voltar; style: default; href: " . $o->page . "&gPage=" . NFE . "&gId=" . $rs['id_notas_saida'] . "}");
+            $html .= $o->button("{name: back; icon: arrow-left; title: Voltar; style: default; href: " . $o->page . "&gPage=" . NFE . "&gId=" . $rs['id_notas'] . "}");
             return;
         }
 
@@ -911,7 +912,7 @@ if ($_REQUEST['gAjax']) {
 
             $mensagemErro = $o->ul([$mensagemErro]);
             $html .= $o->msgDanger("Erro ao gerar o danfe da carta de correção: " . $mensagemErro);
-            $html .= $o->button("{name: back; icon: arrow-left; title: Voltar; style: default; href: " . $o->page . "&gPage=" . NFE . "&gId=" . $rs['id_notas_saida'] . "}");
+            $html .= $o->button("{name: back; icon: arrow-left; title: Voltar; style: default; href: " . $o->page . "&gPage=" . NFE . "&gId=" . $rs['id_notas'] . "}");
             return;
         }
     }
@@ -2614,7 +2615,11 @@ switch ($gPage) {
 
 
     case NFE_OBTER_XML:
-        $rs = dbFastQuery("SELECT * FROM nfe where id = '{$gId}'")[0];
+        $sql = "SELECT nfe_eventos.xml, nfe.chave
+                FROM nfe_eventos
+                LEFT JOIN nfe ON nfe.id = nfe_eventos.id_nfe
+                WHERE id_nfe = '{$gId}'";
+        $rs = dbFastQuery($sql)[0];
 
         if (!$rs) {
             $msg = "Não foi possível fazer o download do xml pois aconteceram os seguintes erros: <br>";
@@ -2642,7 +2647,10 @@ switch ($gPage) {
 
 
     case NFE_OBTER_XML_CANCELAMENTO:
-        $sql = "SELECT id, chave, xml_cancelamento FROM nfe WHERE id = '{$gId}'";
+        $sql = "SELECT nfe_eventos.id, nfe_eventos.xml, nfe.chave
+                FROM nfe_eventos
+                LEFT JOIN nfe ON nfe.id = nfe_eventos.id_nfe
+                WHERE id_nfe_tipos_eventos = 2 AND id_nfe = '{$gId}'"; // id_nfe_tipos_eventos = 2 (Evento de cancelamento)
         $rs = dbFastQuery($sql)[0];
 
         if (!$rs['id']) {
@@ -2659,10 +2667,10 @@ switch ($gPage) {
         header('Expires: 0');
         header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
         header('Pragma: public');
-        header('Content-Length: ' . strlen((string) $rs['xml_cancelamento']));
+        header('Content-Length: ' . strlen((string) $rs['xml']));
         ob_clean();
         flush();
-        echo($rs['xml_cancelamento']);
+        echo($rs['xml']);
         exit;
         break;
 
@@ -2971,4 +2979,4 @@ switch ($gPage) {
 
         redirect($o->page . '&gPage=' . INICIO);
         break;
-} 
+}
