@@ -157,7 +157,6 @@ switch ($gPage) {
         $combo_tipo_nota = [];
         $combo_tipo_nota[0] = "* Indiferente";
         $combo_tipo_nota[1] = "NF-e Saída";
-        $combo_tipo_nota[2] = "NF-e Equipamento";
         $combo_tipo_nota[3] = "NF-e Entrada";
 
         $mtz = [];
