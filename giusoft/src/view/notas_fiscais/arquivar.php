@@ -6,7 +6,7 @@ define("INICIO", 			0);
 define("PREPARAR", 			1);
 define("PROCESSAR_LOTE", 	2);
 define("FINALIZAR", 		3);
-define("BAIXAR_ARQUIVO", 	4);
+define("BAIXAR_ARQUIVO", 	4); 
 
 $html .= $o->msgTitle("Arquivar");
 

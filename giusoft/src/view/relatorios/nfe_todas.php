@@ -195,4 +195,4 @@ switch ($gPage) {
         echo($rs[$_REQUEST['atributo']]);
         exit;
 		break;
-}
+} 

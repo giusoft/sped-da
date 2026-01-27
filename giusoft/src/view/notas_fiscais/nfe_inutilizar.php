@@ -451,4 +451,4 @@ switch ($gPage) {
 		$html .= $o->button("{icon: arrow-left; caption: Voltar; style: default; size: small; href: " . $o->page . "&gPage=" . INICIO . "}");
 		break;
 
-}
+} 

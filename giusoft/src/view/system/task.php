@@ -88,7 +88,7 @@ if ($_REQUEST['task'] == 'enviarNfesOmie') {
 
 	if ($_REQUEST['dia']) {
 		$where[] = " DAY(nfe.data) = " . $_REQUEST['dia'];
-	}
+	} 
 
 	$where = implode(' AND ', $where);
 

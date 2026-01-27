@@ -2971,4 +2971,4 @@ switch ($gPage) {
 
         redirect($o->page . '&gPage=' . INICIO);
         break;
-}
+} 

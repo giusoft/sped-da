@@ -4842,4 +4842,4 @@ class ImportacaoNFE
 		}
 	}
 
-}
+} 

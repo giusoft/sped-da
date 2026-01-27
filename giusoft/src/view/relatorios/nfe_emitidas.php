@@ -10,7 +10,7 @@ if ($gPage == 10) {
 	$o->CSVEnabled = true;
 }
 
-$html .= $o->msgTitle("NFe emitidas");
+$html .= $o->msgTitle("NFe emitidas"); 
 
 switch($gPage) {
 	case INICIO:
