@@ -100,7 +100,7 @@ switch($gPage) {
 						NFE.situacao,
 						NFE.chave
 					FROM notas N
-					LEFT JOIN nfe NFE ON NFE.id = N.id_nfe
+					LEFT JOIN nfe NFE ON NFE.id_notas = N.id
 					LEFT JOIN pessoas PP ON PP.id = N.id_pessoas_proprietario
 					LEFT JOIN cfops C ON C.id = N.id_cfops
 					WHERE {$where}

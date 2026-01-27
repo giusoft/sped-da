@@ -114,7 +114,7 @@ switch ($gPage) {
 					nfe.cancelada,
 					nfe.id_notas
 				FROM nfe
-				LEFT JOIN notas ON nfe.id = notas.id_nfe
+				LEFT JOIN notas ON notas.id = nfe.id_notas
 				WHERE {$where}
 					AND (notas.tipo = 'S' OR notas.tipo IS NULL)
 					AND nfe.id_notas_saida = 0

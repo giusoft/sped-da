@@ -58,7 +58,7 @@ if ($_REQUEST['gAjax']) {
         }
 
         $sql = "SELECT nfe.situacao FROM notas
-                INNER JOIN nfe ON nfe.id = notas.id_nfe
+                INNER JOIN nfe ON nfe.id_notas = notas.id
                 WHERE notas.id = '{$gId}'";
         $confereNFE = dbFastQuery($sql)[0];
 
@@ -86,7 +86,7 @@ if ($_REQUEST['gAjax']) {
         // Busca os dados do responsável pelo envio do produto
         $dadosTransportadora = $nf->obtemDadosTransportadora($idTransportadora);
 
-        if ($nota["tipo"] == "E" || $nota['entrada_interna'] == 1) {
+        if ($nota["tipo"] == "E") {
             $dados['tipoOperacao'] = 0; // entrada (Usamos estorno)
         }
 
@@ -155,8 +155,7 @@ if ($_REQUEST['gAjax']) {
         $idNfe = dbInsert('nfe', $nf->prepararCamposNfe($dados), 1);
 
         $sql = "UPDATE notas
-                SET id_nfe = {$idNfe},
-                    numero = " . $dados['NfeNumeroEOperacao']['numeroNota'] . "
+                SET numero = " . $dados['NfeNumeroEOperacao']['numeroNota'] . "
                 WHERE id = " . $nota['id'];
         dbFastQuery($sql);
 
@@ -293,7 +292,7 @@ if ($_REQUEST['gAjax']) {
                     nfe.xml,
                     nfe.serie
                 FROM nfe
-                LEFT JOIN notas ON notas.id_nfe = nfe.id
+                LEFT JOIN notas ON notas.id = nfe.id_notas
                 WHERE nfe.id = '{$gId}'";
         $nfeBD = dbQuery($sql)[0];
 
@@ -521,7 +520,6 @@ if ($_REQUEST['gAjax']) {
         unset($notaOrigem['numero']);
         unset($notaOrigem['confirmada']);
         unset($notaOrigem['data_movimento']);
-        $notaOrigem['entrada_interna'] = 1;
         $notaOrigem['data_criou'] = date('Y-m-d H:i:s');
         $notaOrigem['id_filial'] = $_SESSION['filialAtualId'];
         $notaOrigem['id_pessoas_criou'] = $_SESSION['usrId'];
@@ -675,7 +673,7 @@ if ($_REQUEST['gAjax']) {
         dbFastQuery($sql);
 
         $sql = "UPDATE notas
-                SET id_nfe = {$idNfeEstorno}, numero = " . $dados['NfeNumeroEOperacao']['numeroNota'] . "
+                SET numero = " . $dados['NfeNumeroEOperacao']['numeroNota'] . "
                 WHERE id = " . $idNovaNota;
         dbFastQuery($sql);
 
@@ -863,7 +861,7 @@ if ($_REQUEST['gAjax']) {
                     notas.id_pessoas_proprietario
                 FROM nfe_eventos
                 LEFT JOIN nfe ON nfe.id = nfe_eventos.id_nfe
-                LEFT JOIN notas ON notas.id_nfe = nfe.id
+                LEFT JOIN notas ON notas.id = nfe.id_notas
                 WHERE nfe_eventos.id_nfe = {$gId}
                     AND nfe_eventos.sucesso = 1
                     AND nfe_eventos.id = {$idCce}";
@@ -943,7 +941,7 @@ if ($gId > 0) {
                 nfe.id AS idNfe,
                 nfe.situacao
             FROM notas
-            INNER JOIN nfe ON nfe.id = notas.id_nfe
+            INNER JOIN nfe ON nfe.id_notas = notas.id
             WHERE notas.id = " . intval($idNotaFiscal);
     $confereNFE = dbFastQuery($sql);
     if ($confereNFE
@@ -1640,7 +1638,7 @@ switch ($gPage) {
                     nfe.situacao
                 FROM notas
                 INNER JOIN notas_itens ON notas.id = notas_itens.id_notas
-                INNER JOIN nfe ON nfe.id = notas.id_nfe
+                INNER JOIN nfe ON nfe.id_notas = notas.id
                 WHERE notas_itens.id = '{$gId}'";
         $confereNota = dbFastQuery($sql)[0];
 
@@ -2346,10 +2344,6 @@ switch ($gPage) {
 
         $rs = $nf->obtemRegistro($gId);
         $html .= $nf->obtemCabecalho($rs);
-        if ($rs['nota_importada_cliente']) {
-            $html .= $o->msgDanger('Não é possível alterar esta nota de saída pois ela foi emitida pelo cliente');
-            break;
-        }
 
         $nota  = $nf->obtemDadosNFE($gId);
         $totaisNota = $nf->totaisNota($gId);
@@ -2384,7 +2378,7 @@ switch ($gPage) {
                     notas.id idNota,
                     notas.id_notas_origem_estorno
                 FROM notas
-                INNER JOIN nfe ON nfe.id = notas.id_nfe
+                INNER JOIN nfe ON nfe.id_notas = notas.id
                 LEFT  JOIN cfops C ON C.id = notas.id_cfops
                 WHERE notas.id = '{$gId}'";
         $confereNFE = dbFastQuery($sql);
@@ -2706,7 +2700,7 @@ switch ($gPage) {
                     nfe.situacao,
                     notas.id_notas_origem_estorno
                 FROM nfe
-                LEFT JOIN notas ON notas.id_nfe = nfe.id
+                LEFT JOIN notas ON notas.id = nfe.id_notas
                 WHERE nfe.id = '{$gId}'";
         $nfe = dbFastQuery($sql)[0];
 

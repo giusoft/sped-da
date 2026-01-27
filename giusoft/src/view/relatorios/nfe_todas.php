@@ -66,20 +66,26 @@ switch ($gPage) {
 			$where[] = "nfe.numero <= '" . gCleanField($_REQUEST["numero_ate"]) . "'";
 		}
 
-		if ($_REQUEST['situacao']) {
-			$situacoes = '';
-			foreach ($_REQUEST['situacao'] as $i) {
-				if ($i == 5) { // 5 = importada
-					$whereSituacaoImportada = " OR (nfe.situacao = 'Importada' OR notas.nota_importada_cliente = 1)";
-				}
+	if ($_REQUEST['situacao']) {
+            $situacoes = '';
+            $whereSituacaoImportada = '';
+            foreach ($_REQUEST['situacao'] as $i) {
+                if ($i == 5) { // 5 = importada (ou situação que identifica notas de terceiros)
+                    $whereSituacaoImportada = " OR (nfe.situacao = 'Importada')";
+                }
 
-				$situacoes .= "'" . $situacoesNfe[$i] . "',";
-			}
+                $situacoes .= "'" . $situacoesNfe[$i] . "',";
+            }
 
-			$situacoes = substr($situacoes, 0, -1);
-			$filtros[] = "Situações: " . str_replace("'", "", $situacoes);
-			$where[] = "((nfe.situacao IN (" . $situacoes .sprintf(') AND (notas.nota_importada_cliente = 0 OR notas.nota_importada_cliente IS null)) %s)', $whereSituacaoImportada);
-		}
+            $situacoes = substr($situacoes, 0, -1);
+            $filtros[] = "Situações: " . str_replace("'", "", $situacoes);
+
+            $where[] = sprintf(
+                '((nfe.situacao IN (%s) AND nfe.sistema IN ("WMS", "WMS2")) %s)',
+                $situacoes,
+                $whereSituacaoImportada
+            );
+        }
 
 		$html .= $o->msgFilter("Filtros selecionados: " . implode(" • ", $filtros));
 

@@ -100,9 +100,9 @@ if ($_REQUEST['task'] == 'enviarNfesOmie') {
 			SELECT  nfe.chave, nfe.xml, nfe.id_os,
 					nfe.xml_cancelamento, nfe.cancelada
 			FROM nfe
-			JOIN notas ON notas.id_nfe = nfe.id AND notas.tipo = 'S'
+			JOIN notas ON notas.id = nfe.id_notas AND notas.tipo = 'S'
 			WHERE
-				notas.nota_importada_cliente = 0
+				nfe.sistema IN ('WMS', 'WMS2')
 				AND (
 					(
 						nfe.situacao = 'Aprovada'

@@ -249,12 +249,12 @@ switch ($gPage) {
             $where[] = "(pessoas_juridicas.fiscal = " . ((int) ($_REQUEST['tratamento_fiscal'] == 1)) . " )";
         }
 
-        $where[] = "N.nota_importada_cliente = 0";
+        $where[] = "NE.sistema IN ('WMS', 'WMS2')";
         $where = implode(" AND ", $where);
 
         $sql = "SELECT NE.id, NE.xml, NE.chave, NE.data, NE.xml_cancelamento, NE.cancelada
                 FROM notas N
-                LEFT JOIN nfe NE ON NE.id=N.id_nfe
+                LEFT JOIN nfe NE ON NE.id_notas = N.id
                 {$joinEmpresa}
                 WHERE {$where}";
         $rs = dbFastQuery($sql);

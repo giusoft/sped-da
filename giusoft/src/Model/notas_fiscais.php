@@ -103,7 +103,7 @@ class NotasFiscais extends ImportacaoNFE
 			. linkParaCadastroEmpresa($row['id_pessoas_proprietario'], $row['nome_proprietario'])
 			. '</b>&nbsp;<br/>';
 		$mtz[] = '<-' . $o->small('Transportadora') . '<br><b>' . $row['nome_transportadora'] . "</b>&nbsp;";
-		$tipo = ($row["tipo"] == "E" || $row['entrada_interna']) ? "Entrada" : "Saída";
+		$tipo = $row["tipo"] == "E" ? "Entrada" : "Saída";
 		$mtz[] = '<-'. $o->small('Tipo').'<br><b>'."{$tipo}</b>&nbsp;";
 
 		if (
@@ -136,7 +136,7 @@ class NotasFiscais extends ImportacaoNFE
 
 		$html .= $o->tableRow($mtz, 'header');
 
-		if ($this->tipo == 'E' || $row['nota_importada_cliente']) {
+		if ($this->tipo == 'E') {
 			$mtz = [];
 			$mtz[] = '<-' . $o->small('CFOP')  . "<br><b>" . $row['codigo_cfops'] ."</b>&nbsp;";
 			$mtz[] = '<-' . $o->small('Chave') . '<br><b>' . $row['chave'] . '</b>&nbsp;<br/>';
@@ -145,7 +145,7 @@ class NotasFiscais extends ImportacaoNFE
 			$html .= $o->tableRow($mtz, 'header');
 		}
 
-		if ($this->tipo == 'S' && !$row['nota_importada_cliente']) {
+		if ($this->tipo == 'S') {
 			$mensagemCertificado = $this->verificarVencimentoCertificado();
 			if ($mensagemCertificado) {
 				$colspan = count($mtz);
@@ -320,9 +320,6 @@ class NotasFiscais extends ImportacaoNFE
 			}
 
 			$siglaTipo = $row['tipo'];
-			if ($row['entrada_interna']) {
-				$siglaTipo = 'E';
-			}
 
 			$mtz[] = "<-" . $btns;
 			$mtz[] = "<-" . $row['id'];
@@ -361,16 +358,12 @@ class NotasFiscais extends ImportacaoNFE
 	) {
 		global $o, $gId, $gIdEnd, $gParam, $usrId;
 
-		$sql = "SELECT N.id_pessoas_proprietario, N.id, N.id_cfops, C.codigo codigo_cfops, N.venda, N.cancelada, N.refNfe ref
+		$sql = "SELECT N.id_pessoas_proprietario, N.id, N.id_cfops, C.codigo codigo_cfops, N.cancelada, N.refNfe ref
 				FROM notas N
 				LEFT JOIN cfops C ON C.id = N.id_cfops
 				WHERE N.id = " . $rs[0]["id_notas"];
 		$nota   = (dbQuery($sql)[0]);
 		$idNota = $rs[0]["id_notas"];
-
-		if ($nota['venda'] && !$nota['cancelada']) {
-			$html .= $o->button("{name: btnCriasOsTrans; icon: calendar; title: Fragmentar transferência de proprietário; style: info; href: " . $o->page . "&gPage=" . TRANSFERENCIA_PROPRIETARIO_FRAGMENTADA . "&gId=" . $nota["id"] . "}");
-		}
 
 		$html   = $o->msgFilter("Itens da nota");
 		$html  .= $o->tableBegin("big",true, true);
@@ -1771,7 +1764,7 @@ class NotasFiscais extends ImportacaoNFE
 			$comboTipo["S"]="Saída";
 			$comboTipo["E"]="Entrada";
 			$campoTipoNota = $frm->add("{name: tipoNota; type: combo; items:'".json_encode($comboTipo)."'; allowBlank: false; fieldLabel: Tipo; value: ".$registroAtual["tipo"]."}");
-			if ($registroAtual['entrada_interna']) {
+			if ($registroAtual['tipo'] == 'E') {
 				$campoTipoNota = $frm->add("{name: tipoNota; type: show; fieldLabel: Tipo; value: Entrada;}");
 			}
 			$frm->row($campoTipoNota);
@@ -1807,8 +1800,6 @@ class NotasFiscais extends ImportacaoNFE
 			$frm->add("{name: data_movimento; type:date; fieldLabel: Movimento; value: ".gDate($registroAtual['data_movimento']).";}")
 		);
 
-		$o->addJavascript("$('#venda').attr('disabled', 'disabled');");
-		$frm->add("{id: venda; name: venda; fieldLabel: Nota de venda; type: checkbox; value: " . $registroAtual['venda'] . "; disabled: disabled;}");
 		$frm->add("{name: gId; type: hidden; value: $gId}");
 		$frm->add("{name: gPage; type: hidden; value: $proximaPagina}");
 		return($frm);
@@ -2004,7 +1995,6 @@ class NotasFiscais extends ImportacaoNFE
 		$campos['data_movimento'] = gDBDate($todosOsCampos['data_movimento']);
 		$campos['tipo'] = $todosOsCampos["tipoNota"];
 		$campos['volume'] = intval($todosOsCampos["volume"]);
-		$campos['venda'] = gDBCheck($todosOsCampos["venda"]);
 		if (!$gId) {
 			$campos['data_criou'] = date("Y-m-d H:i:s");
 			$campos['id_pessoas_criou'] = intval($usrId);
@@ -2114,7 +2104,7 @@ class NotasFiscais extends ImportacaoNFE
 					CFOPSAIDA.id id_cfops_saida
 					{$selectChaveNfeAssociada}
 				FROM notas
-				LEFT JOIN nfe NFE ON NFE.id = notas.id_nfe
+				LEFT JOIN nfe NFE ON NFE.id_notas = notas.id
 				INNER JOIN notas_itens ON notas_itens.id_notas = notas.id
 				LEFT JOIN grupos_combustivel ON notas_itens.id_grupos_combustivel=grupos_combustivel.id
 				INNER JOIN itens_skus ON notas_itens.id_itens_skus = itens_skus.id
@@ -2177,7 +2167,6 @@ class NotasFiscais extends ImportacaoNFE
 					NE.data data_nfe,
 					PE.nome nome_nfe,
 					PE.apelido apelido_nfe,
-					N.serie,
 					N.data_emissao,
 					N.data_criou,
 					P.nome as nome_criou,
@@ -2194,7 +2183,6 @@ class NotasFiscais extends ImportacaoNFE
 					N.id_pessoas_fornecedor,
 					N.confirmada,
 					N.cancelada,
-					N.venda,
 					NE.situacao,
 					N.id_cfops,
 					PC.nome nome_proprietario,
@@ -2204,12 +2192,10 @@ class NotasFiscais extends ImportacaoNFE
 					N.id_filial,
 					N.volume,
 					NOTA_AGRUPADA.id AS id_nota_agrupada,
-					'0' AS agrupada,
-					N.entrada_interna,
-					N.nota_importada_cliente
+					'0' AS agrupada
 				FROM notas N
 				LEFT JOIN notas NOTA_AGRUPADA ON NOTA_AGRUPADA.id = N.id_notas_agrupar
-				LEFT JOIN nfe NE ON (N.id_nfe = NE.id AND NE.sistema IN ('WMS', 'WMS2'))
+				LEFT JOIN nfe NE ON (NE.id_notas = N.id AND NE.sistema IN ('WMS', 'WMS2'))
 				LEFT JOIN pessoas PE ON PE.id = NE.id_pessoa
 				LEFT JOIN pessoas P ON P.id = N.id_pessoas_criou
 				LEFT JOIN cfops C ON C.id = N.id_cfops
@@ -2836,7 +2822,7 @@ class NotasFiscais extends ImportacaoNFE
         $dadosNfe['enviada']     = 0;
         $dadosNfe['xml']         = '';
         $dadosNfe['recibo']      = '';
-        $dadosNfe['id_notas_saida'] = $dados['nota']["id"];
+        $dadosNfe['id_notas'] = $dados['nota']["id"];
 		return $dadosNfe;
 	}
 
@@ -2973,7 +2959,7 @@ class NotasFiscais extends ImportacaoNFE
 					NF.data_recibo,
 					A.descricao filial
 				FROM nfe NF
-				JOIN notas N ON NF.id = N.id_nfe
+				JOIN notas N ON N.id = NF.id_notas
 				LEFT JOIN pessoas P ON P.id = N.id_pessoas_proprietario
 				LEFT JOIN filial A ON A.id = N.id_filial
 				WHERE NF.id = " . $idNfe;
@@ -3283,8 +3269,7 @@ class ImportacaoNFE
 	{
 		$sql = "SELECT count(chave) as qtd, notas.id
 				FROM nfe
-				LEFT JOIN notas ON notas.id_nfe = nfe.id
-					AND notas.nota_importada_cliente = 1
+				LEFT JOIN notas ON notas.id = nfe.id_notas
 					AND notas.cancelada = 0
 				WHERE nfe.chave = '{$chave}'
 					AND nfe.cancelada = 0
@@ -3354,12 +3339,11 @@ class ImportacaoNFE
 
 		$sql = "SELECT notas.id AS id_notas, nfe.id AS id_nfe
 				FROM nfe
-				LEFT JOIN notas ON notas.id_nfe = nfe.id
+				LEFT JOIN notas ON notas.id = nfe.id_notas
 				WHERE (
 						nfe.chave = '{$chave}'
 						AND nfe.cancelada = 0
 						AND nfe.sistema <> 'gWMS'
-						AND notas.nota_importada_cliente = 1
 						AND notas.cancelada = 0
 					)
 				{$where}
@@ -3498,10 +3482,6 @@ class ImportacaoNFE
 			$alertas[] = "A NF-e não tem como destinatário o filial atual. <br/>CNPJ Filial : ".gFieldById("filial",$_SESSION['filialAtualId'],'cnpj')."<br/>CNPJ NF-e&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: ".gCleanField($xml->NFe->infNFe->dest->CNPJ);
 		}
 
-		if ($this->nota['venda']) {
-			$alertas[] = 'Esta nota fiscal utilizará os itens do fornecedor';
-		}
-
 		if (gDBCheck($_REQUEST['agrupar_itens_nota'])) {
 			$alertas[] = 'Agrupamento de itens por código e valor foi ativado';
 		}
@@ -3636,7 +3616,7 @@ class ImportacaoNFE
 					NE.serie,
 					NE.chave
 				FROM notas N
-				LEFT JOIN nfe NE  ON NE.id = N.id_nfe
+				LEFT JOIN nfe NE  ON NE.id_notas = N.id
 				LEFT JOIN cfops C ON C.id  = N.id_cfops
 				WHERE N.id = '{$id}'";
 		return (dbQuery($sql)[0]);
@@ -3682,7 +3662,7 @@ class ImportacaoNFE
 				AND itens_fornecedores.codigo = '{$codigo}'
 			ORDER BY itens.ativo DESC, itens_skus.ativo DESC
 			LIMIT 1";
-		if ($_REQUEST['id_pessoas_fornecedor'] && $this->nota['venda']) {
+		if ($_REQUEST['id_pessoas_fornecedor']) {
 			$sql = "
 				SELECT itens_skus.id AS id_itens_skus, itens.*
 				FROM itens
@@ -3694,7 +3674,7 @@ class ImportacaoNFE
 				LIMIT 1";
 		}
 		$rsf = dbFastQuery($sql)[0];
-		if ($rsf['id_itens_skus'] || $this->nota["venda"]) {
+		if ($rsf['id_itens_skus']) {
 			$this->idItensSkusConverter = $rsf['id_itens_skus'];
 			return $rsf;
 		}
@@ -4326,9 +4306,6 @@ class ImportacaoNFE
 		$liberar=true;
 		if (isset($this->sku["codigo"])) {
 			$idProprietario = $this->cliente['id'];
-			if ($this->nota['venda']) {
-				$idProprietario = $this->nota['id_pessoas_fornecedor'];
-			}
 
 			$sql = "SELECT SK.id
 					FROM itens_skus SK
@@ -4411,7 +4388,6 @@ class ImportacaoNFE
 			$dataMovimento="0000-00-00";
 		}
 
-		//$this->nota["ajuste"] = null;
 		$this->nota["id_pessoas_proprietario"]  = $this->cliente["id"];
 		$this->nota["numero"]         			=  gCleanField($this->informacoesXML->nNF);
 		$this->nota["serie"]          			=  gCleanField($this->informacoesXML->serie);
@@ -4468,11 +4444,9 @@ class ImportacaoNFE
 		}
 
 		$this->nota['id_notas_agrupar'] = 0;
-		$this->nota["venda"] = gDBCheck($_REQUEST['venda']);
 
 		if (gDBCheck($_REQUEST['importarComoSaida']) == 1) {
 			$this->nota['tipo'] = 'S';
-			$this->nota['nota_importada_cliente'] = 1;
 		}
 
 	}
