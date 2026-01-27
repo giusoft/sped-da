@@ -938,13 +938,14 @@ $idNotaFiscal = (int) ($_REQUEST['gIdNota'] ?: $_REQUEST['gId']);
 
 if ($gId > 0) {
     $sql = "SELECT
-                notas.refNfe,
                 notas.id AS idNota,
                 nfe.id AS idNfe,
                 nfe.situacao
             FROM notas
             INNER JOIN nfe ON nfe.id_notas = notas.id
-            WHERE notas.id = " . intval($idNotaFiscal);
+            WHERE notas.id = " . intval($idNotaFiscal) . "
+            ORDER BY nfe.id DESC
+            LIMIT 1";
     $confereNFE = dbFastQuery($sql);
     if ($confereNFE
         && in_array($confereNFE[0]["situacao"], ["Submetida", "Aprovada", "Cancelada"])
@@ -1355,9 +1356,8 @@ switch ($gPage) {
                 $rs = $nf->obtemRegistros("N.id DESC", $where);
             }
         } else {
-            $where = " (N.tipo='S')
-                        AND (N.id_filial=".intval($_SESSION["filialAtualId"]).")
-                        AND N.id_notas_agrupar=0";
+            $where = "(N.id_filial = " . intval($_SESSION["filialAtualId"]) . ")
+                    AND N.id_notas_agrupar = 0";
             $rs = $nf->obtemRegistros("N.id DESC", $where);
         }
 
@@ -1455,7 +1455,7 @@ switch ($gPage) {
         }
 
         if ($nota["id_pessoas_proprietario"]) {
-            if ($nota["tipo"]=='S' && in_array($nota["situacao"], ['Aprovada', 'Cancelada'])) {
+            if (in_array($nota["situacao"], ['Aprovada', 'Cancelada'])) {
                 $html .= "";
             } else {
                 $html .= $frm->render($o);
@@ -2382,7 +2382,9 @@ switch ($gPage) {
                 FROM notas
                 INNER JOIN nfe ON nfe.id_notas = notas.id
                 LEFT  JOIN cfops C ON C.id = notas.id_cfops
-                WHERE notas.id = '{$gId}'";
+                WHERE notas.id = '{$gId}'
+                ORDER BY nfe.id DESC
+                LIMIT 1";
         $confereNFE = dbFastQuery($sql);
 
         $html .= $o->hr();
@@ -2492,7 +2494,7 @@ switch ($gPage) {
         $frm->add("{type: hidden; name: gPage; value: " . NFE_SALVAR . ";}");
         $frm->add("{type: hidden; name: gTipoOperacao; value: 1;}");
 
-        $frm->addButton("{name:btnEmitirNfe; icon: print; title: Emitir Nf-e; hint: Emitir NF-e; style: info; size: small;}", "emitNFE('".$gId."', this)");
+        $frm->addButton("{name: btnEmitirNfe; icon: print; title: Emitir Nf-e; hint: Emitir NF-e; style: info; size: small;}", "emitNFE('".$gId."', this)");
 
         $sql = "SELECT nfe_eventos.id_nfe_tipos_eventos
                 FROM nfe_eventos
