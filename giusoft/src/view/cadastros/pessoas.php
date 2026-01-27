@@ -1,36 +1,38 @@
-<?
-// Roteamento para seções dentro desta página
-define("INICIO", 							0);
-define("INICIO_PESQUISAR", 					1);
-define("INICIO_PESQUISAR_RESULTADO",		2);
-define("CAPA", 								10);
-define("DADOS", 							20);
-define("DADOS_SALVAR", 						21);
-define("ENDERECOS", 						30);
-define("ENDERECOS_SALVAR", 					31);
-define("ENDERECOS_NOVO", 					32);
-define("ENDERECOS_EXCLUIR", 				33);
-define("FILIAL", 							40);
-define("FILIAL_SALVAR", 					41);
-define("FILIAL_CANCELAR", 					42);
-define("OCORRENCIAS", 						50);
-define("OCORRENCIAS_SALVAR", 				51);
-define("OCORRENCIAS_NOVA", 					52);
-define("OCORRENCIAS_CANCELAR",				53);
-define("ANEXOS", 							60);
-define("ANEXOS_ADICIONAR",					61);
-define("ANEXOS_REMOVER", 					62);
-define("PERMISSOES", 						70);
-define("PERMISSOES_ADICIONAR",				71);
-define("PERMISSOES_EXCLUIR", 				72);
-define("PERMISSOES_EXCLUIR_TODAS",			73);
-define("PERMISSOES_COPIAR",					74);
-define("PERMISSOES_COPIAR_SALVAR",			75);
-define("REGISTRO_AVANCAR",					100);
-define("REGISTRO_VOLTAR",					101);
-define("WEBCAM", 							102);
-define("WEBCAM_SALVAR", 					103);
+<?php
 
+// Roteamento para seções dentro desta página
+define("INICIO", 					 0);
+define("INICIO_PESQUISAR", 			 1);
+define("INICIO_PESQUISAR_RESULTADO", 2);
+define("CAPA", 						 10);
+define("DADOS", 					 20);
+define("DADOS_SALVAR", 				 21);
+define("ENDERECOS", 				 30);
+define("ENDERECOS_SALVAR", 			 31);
+define("ENDERECOS_NOVO", 			 32);
+define("ENDERECOS_EXCLUIR", 		 33);
+define("FILIAL", 					 40);
+define("FILIAL_SALVAR", 			 41);
+define("FILIAL_CANCELAR", 			 42);
+define("OCORRENCIAS", 				 50);
+define("OCORRENCIAS_SALVAR", 		 51);
+define("OCORRENCIAS_NOVA", 			 52);
+define("OCORRENCIAS_CANCELAR",		 53);
+define("ANEXOS", 					 60);
+define("ANEXOS_ADICIONAR",			 61);
+define("ANEXOS_REMOVER", 			 62);
+define("PERMISSOES", 				 70);
+define("PERMISSOES_ADICIONAR",		 71);
+define("PERMISSOES_EXCLUIR", 		 72);
+define("PERMISSOES_EXCLUIR_TODAS",	 73);
+define("PERMISSOES_COPIAR",			 74);
+define("PERMISSOES_COPIAR_SALVAR",	 75);
+define("CONFIGURACAO", 				 80);
+define("SALVAR_ABA_CONFIGURACAO", 	 81);
+define("REGISTRO_AVANCAR",			 100);
+define("REGISTRO_VOLTAR",			 101);
+define("WEBCAM", 					 102);
+define("WEBCAM_SALVAR", 			 103);
 
 $paginasPodeExportar = [
 	INICIO,
@@ -55,9 +57,7 @@ $agora=date('Y-m-d H:i:s');
 include_once __DIR__ . "/../../Model/PessoasFisicas.php";
 $persistencia = new PessoasFisicas();
 
-switch ($gPage)
-{
-
+switch ($gPage) {
 
 	case INICIO:
 		$html .= '<div class="hidden-print"><form class="form-inline" method="POST" action="index.php?g=pessoas">';
@@ -67,51 +67,53 @@ switch ($gPage)
 		$html .= '</form>';
 		$html .= '<br></div>';
 		$js = "
-		$('#nome').keydown(function(event) {
-			if (event.keyCode == 13) {
-				this.form.submit();
-				return false;
-			}
-		});
+			$('#nome').keydown(function(event) {
+				if (event.keyCode == 13) {
+					this.form.submit();
+					return false;
+				}
+			});
 		";
 		$o->addJavascript($js);
 
 		$rs = $persistencia->obtemRegistros();
-		if (count($rs)>0)
-		{
-			if ($gParam["PAGINACAO"]["ativo"]==1)
-			{
-				$html.=$persistencia->pagination->render();
-			}
-			$html.=$o->tableBegin('big', true, true);
-			$mtz = [];
-			$mtz[]="<-Opções";
-			$mtz[]="<>Situação";
-			$mtz[]="<-Apelido";
-			$mtz[]="<-Nome";
-			$mtz[]="<-Telefone";
-			$mtz[]="<-Celular";
-			$mtz[]="<-E-mail";
-			$html.=$o->tableRow($mtz,'header');
-			foreach ($rs as $pessoa) {
-				$mtz=[];
-				$mtz[]='<-'.$o->button("{icon: folder-open; caption: Abrir; hint: Abrir a ficha da pessoa; size: small; href: ".$o->page."&gPage=".CAPA."&gId=".$pessoa['id']."}");
-				$mtz[]='<>'.$pessoa['situacao'];
-				$mtz[]='<-'.$pessoa['apelido'];
-				$mtz[]='<-'.$pessoa['nome'];
-				$mtz[]='<-'.$pessoa['telefone'];
-				$mtz[]='<-'.$pessoa['celular'];
-				$mtz[]='<-'.$pessoa['email'];
-				$html.=$o->tableRow($mtz,'detail');
+		if ($rs) {
+			if ($gParam["PAGINACAO"]["ativo"]) {
+				$html .= $persistencia->pagination->render();
 			}
 
-			$html.=$o->tableEnd();
-			if ($gParam["PAGINACAO"]["ativo"]==1) {
+			$html .= $o->tableBegin('big', true, true);
+			$mtz = [];
+			$mtz[] = "<-Opções";
+			$mtz[] = "<>Situação";
+			$mtz[] = "<-Apelido";
+			$mtz[] = "<-Nome";
+			$mtz[] = "<-Telefone";
+			$mtz[] = "<-Celular";
+			$mtz[] = "<-E-mail";
+			$html .= $o->tableRow($mtz,'header');
+
+			foreach ($rs as $pessoa) {
+				$mtz = [];
+				$mtz[] = '<-'.$o->button("{icon: folder-open; caption: Abrir; hint: Abrir a ficha da pessoa; size: small; href: ".$o->page."&gPage=".CAPA."&gId=".$pessoa['id']."}");
+				$mtz[] = '<>'.$pessoa['situacao'];
+				$mtz[] = '<-'.$pessoa['apelido'];
+				$mtz[] = '<-'.$pessoa['nome'];
+				$mtz[] = '<-'.$pessoa['telefone'];
+				$mtz[] = '<-'.$pessoa['celular'];
+				$mtz[] = '<-'.$pessoa['email'];
+				$html .= $o->tableRow($mtz,'detail');
+			}
+
+			$html .= $o->tableEnd();
+			if ($gParam["PAGINACAO"]["ativo"]) {
 				$html.=$persistencia->pagination->render('{id:o; style:margin-top:-1.4%;}');
 			}
+
 		} else {
 			$html.=$o->msginfo("Nenhuma pessoa cadastrada ainda.");
 		}
+
 	break;
 
 	case INICIO_PESQUISAR:
@@ -119,7 +121,7 @@ switch ($gPage)
 			redirect($o->page . '&gPage=' . INICIO_PESQUISAR_RESULTADO . '&pesquisaRapida=' . $_REQUEST['nome']);
 		}
 
-		$frm=new gForm('{columns: 2}');
+		$frm = new gForm('{columns: 2}');
 		$frm->addFormMessage("Informe uma ou mais opções abaixo para a busca");
 		$frm->add("{name: nome}");
 		$frm->add("{name: apelido; fieldLabel: Apelido}");
@@ -145,10 +147,10 @@ switch ($gPage)
 		$telefone = gCleanField($_REQUEST['telefone']);
 		$celular = gCleanField($_REQUEST['celular']);
 		$email = gCleanField($_REQUEST['email']);
-		$motorista=isset($_REQUEST["motorista"]);
-		$cliente=isset($_REQUEST["cliente"]);
-		$funcionario=isset($_REQUEST["funcionario"]);
-		$fornecedor=isset($_REQUEST["fornecedor"]);
+		$motorista = isset($_REQUEST["motorista"]);
+		$cliente = isset($_REQUEST["cliente"]);
+		$funcionario = isset($_REQUEST["funcionario"]);
+		$fornecedor = isset($_REQUEST["fornecedor"]);
 
 		$html .= '<div class="hidden-print"><form class="form-inline" method="POST" action="index.php?g=pessoas">';
 		$html .= $o->button("{icon: plus; caption: Novo; hint: Cadastrar um novo item; style: info; size: normal; href: index.php?g=pessoas&gPage=" . DADOS . "}");
@@ -157,12 +159,12 @@ switch ($gPage)
 		$html .= '</form>';
 		$html .= '<br></div>';
 		$js = "
-		$('#nome').keydown(function(event) {
-			if (event.keyCode == 13) {
-				this.form.submit();
-				return false;
-			}
-		});
+			$('#nome').keydown(function(event) {
+				if (event.keyCode == 13) {
+					this.form.submit();
+					return false;
+				}
+			});
 		";
 		$o->addJavascript($js);
 
@@ -197,75 +199,92 @@ switch ($gPage)
 				$filtros[] = "email: {$email}";
 			}
 
-			if ($motorista)
-				$where[] = "motorista=1";
-				$filtros[] = "motorista: " . gCheck($motorista);
-			if ($cliente)
-				$where[] = "cliente=1";
-				$filtros[] = "cliente: " . gCheck($cliente);
-			if ($funcionario)
-				$where[] = "funcionario=1";
-				$filtros[] = "funcionario: " . gCheck($funcionario);
-			if ($fornecedor)
+			$filtros[] = "motorista: " . gCheck($motorista);
+			if ($motorista) {
+				$where[] = "motorista = 1";
+			}
+			$filtros[] = "cliente: " . gCheck($cliente);
+			if ($cliente) {
+				$where[] = "cliente = 1";
+			}
+
+			$filtros[] = "funcionario: " . gCheck($funcionario);
+			if ($funcionario) {
+				$where[] = "funcionario = 1";
+			}
+
+			$filtros[] = "fornecedor: " . gCheck($fornecedor);
+			if ($fornecedor) {
 				$where[] = "fornecedor=1";
-				$filtros[] = "fornecedor: " . gCheck($fornecedor);
+			}
 
 			$html .= $o->msgFilter('Filtros selecionados: ' . implode(" • ", $filtros));
 		}
 
-		if (is_array($where)) {
+		if ($where) {
 			$where = implode(' AND ', $where);
-			$sql = "SELECT p.id, p.apelido,nome,email,telefone,cpf,rg
+			$sql = "SELECT
+						p.id,
+						p.apelido,
+						nome,
+						email,
+						telefone,
+						cpf,
+						rg
 					FROM pessoas p
-					LEFT JOIN pessoas_fisicas f ON p.id=f.id_pessoas
+					LEFT JOIN pessoas_fisicas f ON p.id = f.id_pessoas
 					WHERE p.id > 2 AND tipo = 'F' AND {$where}
 					ORDER BY p.nome";
-			$rs = dbQuery($sql);
+			$rs = dbFastQuery($sql);
 			if ($rs) {
-				$row=$rs[0];
-				$html.=$o->tableBegin('big', true);
+				$row = $rs[0];
+				$html .= $o->tableBegin('big', true);
 				$mtz = [];
-				$mtz[]='<-Opções';
-				$mtz[]='<-Apelido';
-				$mtz[]='<-Nome';
-				$mtz[]='<-Telefone';
-				$mtz[]='<-Celular';
-				$mtz[]='<-E-mail';
-				$html.=$o->tableRow($mtz, 'header');
+				$mtz[] = '<-Opções';
+				$mtz[] = '<-Apelido';
+				$mtz[] = '<-Nome';
+				$mtz[] = '<-Telefone';
+				$mtz[] = '<-Celular';
+				$mtz[] = '<-E-mail';
+				$html .= $o->tableRow($mtz, 'header');
 				foreach ($rs as $row) {
-					$salt=gSalt($row['apelido']);
+					$salt = gSalt($row['apelido']);
 					$mtz = [];
-					$mtz[]='<-'.$o->button("{icon: search; caption: Abrir; size: small; href: ".$o->page."&gPage=".CAPA."&gId=".$row['id']."}");
-					$mtz[]='<-'.$row['apelido'];
-					$mtz[]='<-'.$row['nome'];
-					$mtz[]='<-'.$row['telefone'];
-					$mtz[]='<-'.$row['celular'];
-					$mtz[]='<-'.$row['email'];
-					$html.=$o->tableRow($mtz, 'detail');
+					$mtz[] = '<-'.$o->button("{icon: search; caption: Abrir; size: small; href: ".$o->page."&gPage=".CAPA."&gId=".$row['id']."}");
+					$mtz[] = '<-'.$row['apelido'];
+					$mtz[] = '<-'.$row['nome'];
+					$mtz[] = '<-'.$row['telefone'];
+					$mtz[] = '<-'.$row['celular'];
+					$mtz[] = '<-'.$row['email'];
+					$html .= $o->tableRow($mtz, 'detail');
 				}
 
 				$html.=$o->tableEnd();
 			} else {
 				$html .= $o->msgWarning("Nenhuma pessoa encontrada");
 			}
+
 		} else {
-			$html.=$o->msgDanger("Você deve especificar ao menos uma opção de filtro");
-			$html.=$backButton;
+			$html .= $o->msgDanger("Você deve especificar ao menos uma opção de filtro");
+			$html .= $backButton;
 		}
+
 	break;
 
 
 	case CAPA:
 		$cabecalho = mostraCabecalho($gId);
 		if ($cabecalho <> '') {
-			$html.=$cabecalho;
-			$html.='<div class="row">';
-			$html.='<div class="col-lg-3 col-md-3 col-sm-4 col-xl-6">';
+			$html .= $cabecalho;
+			$html .= '<div class="row">';
+			$html .= '<div class="col-lg-3 col-md-3 col-sm-4 col-xl-6">';
+
 			if (file_exists($gPathUsrFiles . '/' . $gId . '.jpg')) {
 				$html.='<img class="img img-responsive img-thumbnail" src="files/pessoas/' . $gId . '.jpg?'.random_int(1,9999).'">';
 			} else {
 				$html.='<img class="img img-responsive img-thumbnail" src="files/pessoas/0.jpg">';
 			}
+
 			$html .= $o->button("{icon: camera; block: true; caption: Obter foto pela webcam; href: ".$o->page."&gPage=".WEBCAM."&gId=".$gId."&gIdDetalhe=".$_REQUEST['gIdDetalhe']."&tipo=0}");
 
 			$html .= '</div>';
@@ -274,37 +293,42 @@ switch ($gPage)
 			$html .= $o->msgSubTitle("Pendências");
 			$erros = [];
 
-			$sql = "SELECT count(p.id) p, count(f.id) f, count(e.id) e
+			$sql = "SELECT
+						count(p.id) p,
+						count(f.id) f,
+						count(e.id) e
 					FROM pessoas p
-					LEFT JOIN pessoas_fisicas f ON p.id=f.id_pessoas
-					LEFT JOIN pessoas_enderecos e ON p.id=e.id_pessoas
-					WHERE p.id=".$gId;
-			$rs = dbQuery($sql);
+					LEFT JOIN pessoas_fisicas f ON p.id = f.id_pessoas
+					LEFT JOIN pessoas_enderecos e ON p.id = e.id_pessoas
+					WHERE p.id = " . $gId;
+			$rs = dbFastQuery($sql);
+
 			if ($rs[0]['f'] == 0) {
-				$erros[]="Nenhum documento foi cadastrado";
+				$erros[] = "Nenhum documento foi cadastrado";
 			}
 
 			if ($rs[0]['e'] == 0) {
-				$erros[]="Nenhum endereço foi cadastrado";
+				$erros[] = "Nenhum endereço foi cadastrado";
 			}
 
 			if ($erros) {
-				$msgErro='<ul>';
+				$msgErro = '<ul>';
 				foreach ($erros as $erro) {
 					$msgErro .= "<li>$erro</li>";
 				}
 				$msgErro .= '</ul>';
-				$html.=$o->msgDanger($msgErro);
+				$html .= $o->msgDanger($msgErro);
 			} else {
 				$html .= $o->msgInfo("O cadastro está completo. Não há nenhuma pendência.");
 			}
-			$html.='</div>';
 
-			$html.='</div>';
+			$html .= '</div>';
+			$html .= '</div>';
 		} else {
 			$html.=$o->msgDanger("A pessoa selecionada não foi encontrada");
 			$html.=$backButton;
 		}
+
 	break;
 
 
@@ -344,31 +368,64 @@ switch ($gPage)
 			$html.=$o->msgDanger(implode("<br>",$persistencia->erros));
 			$html.=$o->backButton;
 		}
+
+	break;
+
+
+	case CONFIGURACAO:
+        $html .= mostraCabecalho($gId);
+
+        $rs  = $persistencia->obtemRegistros("p.id=" . $gId)[0];
+        $frm = new gForm();
+        $frm->add("{name: codigo_sistema_externo; fieldLabel: Código de sistema externo; type: text; maxLength: 9; value: " . $rs['codigo_sistema_externo'] . "}");
+		$frm->add("{name: gId; type: hidden; value: " . $gId . "}");
+		$frm->add("{name: gPage; type: hidden; value: " . SALVAR_ABA_CONFIGURACAO . "}");
+
+		$html .= $frm->render($o);
+	break;
+
+
+    case SALVAR_ABA_CONFIGURACAO:
+
+        $idPessoa = dbQuery("SELECT id FROM pessoas WHERE id = {$gId}")[0]['id'];
+
+        $flds = [];
+        $flds['codigo_sistema_externo'] = gCleanField($_REQUEST['codigo_sistema_externo']);
+        dbUpdate('pessoas', $flds, $idPessoa);
+
+        $persistencia->atualizarPessoasSituacao($gId);
+        redirect($o->page . "&gPage=" . CONFIGURACAO . "&gId=" . $gId);
 	break;
 
 
 	case ENDERECOS:
-		$gIdEnd=intval($_REQUEST['gIdEnd']);
-		$html.=mostraCabecalho($gId);
+		$gIdEnd = intval($_REQUEST['gIdEnd']);
+		$html .= mostraCabecalho($gId);
 		$rs = $persistencia->obtemRegistrosEnderecos($gIdEnd);
 		$gIdEnd = $rs[0]['id'];
+
 		$frm = new gForm();
+
 		if ($rs) {
 			$frm->addButton("{title: Adicionar outro endereço; style: default; href: ".$o->page."&gPage=".ENDERECOS_NOVO."&gId=".$gId."}");
 		}
-		$html.=$persistencia->geraCamposDoFormularioEnderecos($frm, $rs[0], ENDERECOS_SALVAR, $gIdEnd);
+
+		$html .= $persistencia->geraCamposDoFormularioEnderecos($frm, $rs[0], ENDERECOS_SALVAR, $gIdEnd);
 
 		// Mostra os endereços que já existem
 		$rs = $persistencia->obtemRegistrosEnderecos();
 		if ($rs) {
-			if ($gIdEnd==0)
-			{
-				$gIdEnd=$rs[0]['id'];
+
+			if ($gIdEnd == 0) {
+				$gIdEnd = $rs[0]['id'];
 			}
-			$temMaisDeUm=(count($rs)>1);
-			if ($temMaisDeUm)
+
+			$temMaisDeUm = (count($rs)>1);
+			if ($temMaisDeUm) {
 				$o->out($o->modal("{title: Confirme; size: small; content: Excluir este endereço?; okCaption: Excluir agora; name: confirmaExclusaoEnd; url: excluiEnd()}"), gLOC_INLINE, 999);
-			$html.=$o->tableBegin('big', true);
+			}
+
+			$html .= $o->tableBegin('big', true);
 			$mtz = [];
 			$mtz[]='<-Opções';
 			$mtz[]='<-Endereço';
@@ -378,33 +435,37 @@ switch ($gPage)
 			$html.=$o->tableRow($mtz, 'header');
 			foreach ($rs as $row) {
 				$mtz = [];
-				$btns=$o->button("{icon: pencil; hint: Alterar endereço; caption: Editar; size: small; href: ".$o->page."&gPage=".ENDERECOS."&gId=".$gId."&gIdEnd=".$row['id']."}");
-				if ($temMaisDeUm) {
-					$btns.=$o->button("{icon: trash; caption: Excluir; style: danger; size: small; openModal: confirmaExclusaoEnd; }", "javascript:gIda='" . $row['id'] . "'");
-				}
-				$mtz[]='<-'.$btns;
 
-				$mtz[]='<-'.$row['endereco']." ".$row['numero'].($row['complemento']==''?'':'<br>'.$o->small($row['complemento']));
-				$mtz[]='<-'.$row['bairro'];
-				$mtz[]='<-'.$row['cidade'].'/'.$row['estado'];
-				$mtz[]='<-'.$row['cep'];
-				if ($row['id'] == $gIdEnd) {
-					$html.=$o->tableRow($mtz, 'success');
-				} else {
-					$html.=$o->tableRow($mtz, 'detail');
+				$btns = $o->button("{icon: pencil; hint: Alterar endereço; caption: Editar; size: small; href: ".$o->page."&gPage=".ENDERECOS."&gId=".$gId."&gIdEnd=".$row['id']."}");
+				if ($temMaisDeUm) {
+					$btns .= $o->button("{icon: trash; caption: Excluir; style: danger; size: small; openModal: confirmaExclusaoEnd; }", "javascript:gIda='" . $row['id'] . "'");
 				}
+
+				$mtz[] = '<-'.$btns;
+				$mtz[] = '<-'.$row['endereco']." ".$row['numero'].($row['complemento']==''?'':'<br>'.$o->small($row['complemento']));
+				$mtz[] = '<-'.$row['bairro'];
+				$mtz[] = '<-'.$row['cidade'].'/'.$row['estado'];
+				$mtz[] = '<-'.$row['cep'];
+				if ($row['id'] == $gIdEnd) {
+					$html .= $o->tableRow($mtz, 'success');
+				} else {
+					$html .= $o->tableRow($mtz, 'detail');
+				}
+
 				$primeiro=false;
 			}
-			$html.=$o->tableEnd();
+
+			$html .= $o->tableEnd();
 			if ($temMaisDeUm) {
 				$o->addJavascript('gIda=0;function excluiEnd(){document.location.href="'.$o->page."&gPage=".ENDERECOS_EXCLUIR."&gId=$gId&gIdEnd=".'"+gIda;}');
 			}
 		}
-		break;
+	break;
+
 
 	case ENDERECOS_SALVAR:
-		$gIdEnd=intval($_REQUEST['gIdEnd']);
-		if ($gIdEnd==0) {
+		$gIdEnd = intval($_REQUEST['gIdEnd']);
+		if ($gIdEnd == 0) {
 			$ok = $persistencia->insereEndereco($_REQUEST, $gId);
 			$gIdEnd = $ok;
 			userLog('Pessoa - endereço adicionado - id <a href="pessoas.php?g=itens&gPage='.CAPA.'&gId='.$gId.'">'.$gId.'</a>');
@@ -419,12 +480,15 @@ switch ($gPage)
 			$html.=$o->msgDanger(implode("<br>",$persistencia->erros));
 			$html.=$o->backButton;
 		}
+
 	break;
+
 
 	case ENDERECOS_NOVO:
 		$gIdEnd=dbInsert('pessoas_enderecos', ['id_pessoas'	=> $gId], true);
 		redirect($o->page."&gPage=".ENDERECOS."&gId=".$gId."&gIdEnd=".$gIdEnd);
 	break;
+
 
 	case ENDERECOS_EXCLUIR:
 		$sql="DELETE FROM pessoas_enderecos WHERE id=".intval($_REQUEST['gIdEnd']);
@@ -478,6 +542,7 @@ switch ($gPage)
 			$html.=$o->tableEnd();
 		}
 		break;
+
 
 	case FILIAL_SALVAR:
 		if($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -625,7 +690,8 @@ switch ($gPage)
 				$mtz[]='<-'.$row['arquivo'];
 				$html.=$o->tableRow($mtz, 'detail');
 			}
-			$html.=$o->tableEnd();
+
+			$html .= $o->tableEnd();
 			$o->addJavascript('gIda=0;function excluiItem(){document.location.href="'.$o->page."&gPage=".ANEXOS_REMOVER."&gId=$gId&gIda=".'"+gIda;}');
 		}
 		break;
@@ -838,7 +904,7 @@ function mostraCabecalho($gId)
 
 		$html.=$o->tableEnd();
 
-		$active1=$active2=$active3=$active4=$active5=$active6=$active7=$active8=$active9='false';
+		$active1 = $active2 = $active3 = $active4 = $active5 = $active6 = $active7 = $active8 = $active9 = 'false';
 		switch ($gPage) {
 			case CAPA:
 				$active0='true';
@@ -846,20 +912,23 @@ function mostraCabecalho($gId)
 			case DADOS:
 				$active1='true';
 				break;
-			case ENDERECOS:
+			case CONFIGURACAO:
 				$active2='true';
 				break;
-			case FILIAL:
+			case ENDERECOS:
 				$active3='true';
 				break;
-			case OCORRENCIAS:
+			case FILIAL:
 				$active4='true';
 				break;
-			case ANEXOS:
+			case OCORRENCIAS:
 				$active5='true';
 				break;
-			case PERMISSOES:
+			case ANEXOS:
 				$active6='true';
+				break;
+			case PERMISSOES:
+				$active7='true';
 				break;
 		}
 
@@ -870,12 +939,13 @@ function mostraCabecalho($gId)
 				$o->button("{icon: arrow-left; style: info; hint: Registro anterior; href: ".$o->page."&gPage=".REGISTRO_VOLTAR."&gId=".$gId."&gIdRel=".$gPage."}").
 				$o->button("{icon: arrow-right; style: info; hint: Próximo registro; href: ".$o->page."&gPage=".REGISTRO_AVANCAR."&gId=".$gId."&gIdRel=".$gPage."}").
 			'</div>';
-		$btns[]=$o->button("{active: ".$active1."; icon: file-alt; caption: Dados pessoais; hint: Alterar os dados pessoais; href: ".$o->page."&gPage=".DADOS."&gId=".$gId."}");
-		$btns[]=$o->button("{active: ".$active2."; icon: map-marker; caption: Endereços; hint: Incluir ou alterar endereços; href: ".$o->page."&gPage=".ENDERECOS."&gId=".$gId."}");
-		$btns[]=$o->button("{active: ".$active3."; icon: warehouse; caption: Filial; hint: Relacionar pessoa ao filial; href: ".$o->page."&gPage=".FILIAL."&gId=".$gId."}");
-		$btns[]=$o->button("{active: ".$active4."; icon: exclamation-triangle; caption: Ocorrências; hint: Incluir ocorrências; href: ".$o->page."&gPage=".OCORRENCIAS."&gId=".$gId."}");
-		$btns[]=$o->button("{active: ".$active5."; icon: paperclip; caption: Anexos; hint: Anexar documentos digitalizados; href: ".$o->page."&gPage=".ANEXOS."&gId=".$gId."}");
-		$btns[]=$o->button("{active: ".$active6."; icon: lock; caption: Permissões; hint: Permissõs de acesso; href: ".$o->page."&gPage=".PERMISSOES."&gId=".$gId."}");
+		$btns[] = $o->button("{active: " . $active1 . "; icon: file-alt; caption: Dados pessoais; hint: Alterar os dados pessoais; href: ".$o->page."&gPage=".DADOS."&gId=".$gId."}");
+		$btns[] = $o->button("{active: " . $active2 . "; icon: person-carry; caption: Configuração; hint: Controle de configurações; href: " . $o->page . "&gPage=" . CONFIGURACAO . "&gId=" . $gId . "}");
+		$btns[] = $o->button("{active: " . $active3 . "; icon: map-marker; caption: Endereços; hint: Incluir ou alterar endereços; href: ".$o->page."&gPage=".ENDERECOS."&gId=".$gId."}");
+		$btns[] = $o->button("{active: " . $active4 . "; icon: warehouse; caption: Filial; hint: Relacionar pessoa ao filial; href: ".$o->page."&gPage=".FILIAL."&gId=".$gId."}");
+		$btns[] = $o->button("{active: " . $active5 . "; icon: exclamation-triangle; caption: Ocorrências; hint: Incluir ocorrências; href: ".$o->page."&gPage=".OCORRENCIAS."&gId=".$gId."}");
+		$btns[] = $o->button("{active: " . $active6 . "; icon: paperclip; caption: Anexos; hint: Anexar documentos digitalizados; href: ".$o->page."&gPage=".ANEXOS."&gId=".$gId."}");
+		$btns[] = $o->button("{active: " . $active7 . "; icon: lock; caption: Permissões; hint: Permissõs de acesso; href: ".$o->page."&gPage=".PERMISSOES."&gId=".$gId."}");
 		//$html.='<div class="btn-group" role="group" aria-label="...">'.implode(" ",$btns).'</div>';
 		$html.='<div>'.implode(" ",$btns).'</div>';
 
