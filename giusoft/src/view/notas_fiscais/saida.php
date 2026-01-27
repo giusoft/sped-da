@@ -529,6 +529,7 @@ if ($_REQUEST['gAjax']) {
         $notaOrigem['id_filial'] = $_SESSION['filialAtualId'];
         $notaOrigem['id_pessoas_criou'] = $_SESSION['usrId'];
         $notaOrigem['id_notas_origem_estorno'] = $idNotaOrigem;
+        $notaOrigem['tipo'] = "E";
         $notaOrigem['tPag'] = 90;
         $notaOrigem['vPag'] = 0;
         $notaOrigem['finNFe'] = 3; // finNFe = 3 (Finalidade da Emissão para nota de estorno)
