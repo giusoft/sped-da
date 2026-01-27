@@ -29,36 +29,26 @@ switch ($gPage) {
 			$filtros[] = "Usuário: " . $rs[0]['nome'];
 		}
 
-		if ((int) $id_equip > 0) {
-			$where[] = " AND id_equip = " . $id_equip;
-			$rs = dbQuery('SELECT equipamentos.descricao FROM equipamentos WHERE id = ' . $id_equip);
-			$filtros[] = "Equipamento: ".$rs[0]['descricao'];
-		}
-
 		$html .= $o->msgFilter(ucfirst(implode(" • ",$filtros)));
 		$sql = "SELECT
 					gfw_log.*,
-					E.descricao equipamento,
 					gfw_users.nickname,
 					gfw_menus.title,
 					gfw_menus.content
 				FROM gfw_log
 				LEFT JOIN gfw_users ON gfw_users.id=gfw_log.id_gfw_users
 				LEFT JOIN gfw_menus ON gfw_menus.id=gfw_log.id_gfw_menus
-				LEFT JOIN equipamentos E ON gfw_log.id_equip=E.id
 				WHERE gfw_log.id > 0 " . implode("",$where) . "";
 		$rs = dbQuery($sql);
 		if ($rs) {
-			$mtz = ["<-Opções", "<-Usuário", "<-Equipamento", "Data/Hora", "<-Atividade", "<-Detalhes"];
+			$mtz = ["<-Opções", "<-Usuário", "Data/Hora", "<-Atividade", "<-Detalhes"];
 			$html .= $o->tableBegin("big",true);
 			$html .= $o->tableRow($mtz,"header");
 			foreach ($rs as $row) {
 				$mtz = [];
 				$mtz[] = "<-".$o->button("{icon: search; caption: Detalhes; size: small; href: ".$o->page."&gPage=2&gId=".$row['id']."}");
 				$mtz[] = "<-".strtoupper((string) $row['nickname']);
-				$mtz[] = "<-".($row['equipamento']);
 				$mtz[] = "".gDateTime($row['date']);
-				//$mtz[]="<-".$row['title']." - ".$row['content'];
 				$mtz[] = "<-".$row['title'];
 				$mtz[] = "<-".$row['details'];
 				$html .= $o->tableRow($mtz,"detail");
@@ -120,7 +110,6 @@ switch ($gPage) {
 		$frm = new gForm("{columns: 2}");
 		$frm->add("{name: gPage; type: hidden; value: 1}");
 		$frm->add(sprintf('{name: id_gfw_users; fieldLabel: Usuário; type: combo; value:%s; items: ', $id).$sp['combo_funcionarios']."}");
-		$frm->add("{name: id_equip; fieldLabel: Equipamento; type: combo; items: ".$sp['combo_equipamentos']."}");
 		$frm->add("{name: data_de; fieldLabel: Data de; type: dateTime; allowBlank: true; value:'".date("d-m-y")."00:00'"."}");
 		$frm->add("{name: data_ate; fieldLabel: Data até; type: dateTime; allowBlank: true;value:'".date("d-m-y")."23:59'"." }");
 		$frm->add("{name: details; fieldLabel: Detalhes; type: text; allowBlank: true; }");

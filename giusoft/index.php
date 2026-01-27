@@ -120,14 +120,12 @@ if (($g == "login")) {
 	{
 		$email = gCleanField($_REQUEST['email']);
 		$senha = gCleanField($_REQUEST['password']);
-		$equipamento = gCleanField($_REQUEST['equipamento']);
 
 		if ($email=='' || $senha=='')
 			$senha='senhaNaoInformada';
 		$sql = "SELECT u.* FROM pessoas u WHERE u.situacao='Ativo' and (u.email='$email' or u.apelido='$email') and (u.senha='" . md5($senha) . "' or u.senha='" . $senha . "') LIMIT 1";
 		$rs = dbFastQuery($sql);
 
-		$acessoAoEquipamento = true;
 		if ($rs[0]['id']) {
 			if ($gParam['RESTRINGIR_ACESSO_POR_IP']['ativo']) {
 				$ipsLiberados = dbFastQuery("SELECT ips FROM filial WHERE id = {$id_filial} LIMIT 1")[0]['ips'];
@@ -148,7 +146,7 @@ if (($g == "login")) {
 					dbFastQuery("
 						INSERT INTO gfw_access (idd, date, try, ip, details)
 						VALUES (" . $rs[0]['id'] . ", NOW(), 1, '" . getIpUser() . "',
-							'Email: {$email} / Password: {$password} / Equip: {$equipamento}')");
+							'Email: {$email} / Password: {$password}')");
 					$txt  .= $o->msgTitle('Acesso');
 					$txt  .= $o->msgError('IP não liberado. Solicite informações da TI para liberação.');
 					$html .= $o->rowTags($txt);
@@ -165,193 +163,15 @@ if (($g == "login")) {
 			}
 
 
-			// Se informou o equipamento, verifica se a pessoa tem acesso
-			$usrEquip = 0;
-			$usrEquipName = '';
-			if ($equipamento<>"")
-			{
-				$acessoAoEquipamento = false;
-				if (intval($rs[0]['id'])<=2)
-				{
-					$sql = "SELECT E.*
-							FROM equipamentos E
-							LEFT JOIN equipamentos_pessoas EP ON E.id=EP.id_equipamentos
-							WHERE E.codigo_barras='".$equipamento."'";
-
-				} else {
-					$sql = "SELECT E.*
-							FROM equipamentos E
-							LEFT JOIN equipamentos_pessoas EP ON E.id=EP.id_equipamentos
-							WHERE EP.id_pessoas=".intval($rs[0]['id'])." AND E.codigo_barras='".$equipamento."'";
-				}
-				$rst = dbQuery($sql);
-				if (count($rst)>0)
-				{
-					$usrEquip = $rst[0]['id'];
-					$usrEquipName = $rst[0]['descricao'];
-					$acessoAoEquipamento = true;
-				}
-			}
-
-			if ($acessoAoEquipamento)
-			{
-				$usrId = (int) $rs[0]['id'];
-				$usrIdd = $usrId;
-				$usrName = $rs[0]['nome'];
-				$usrNickname = $rs[0]['apelido'];
-				$usrCliente=$rs[0]["cliente"];
-				$usrEmail = $rs[0]['email'];
-				$usrDate = date("Y-m-d H:i:s");
-				$_SESSION['defaultTimezone'] = "America/Bahia";
-				$_SESSION['modalPicking']=true;
-				$_SESSION['usrId'] = $usrId;
-				$_SESSION['usrIdd'] = $usrIdd;
-				$_SESSION['usrAdmin'] = $usrAdmin;
-				$_SESSION['usrName'] = $usrName;
-				$_SESSION['usrEquip'] = $usrEquip;
-				$_SESSION['usrEquipName'] = $usrEquipName;
-				$_SESSION['usrNickname'] = ucfirst($usrNickname);
-				$_SESSION['usrEmail'] = $usrEmail;
-				$_SESSION['usrDate'] = $usrDate;
-				$_SESSION['usrCliente'] = intval($rs[0]['cliente']);
-				$_SESSION['usrClient'] = intval($rs[0]['cliente']);
-				$_SESSION['usrFuncionario'] = intval($rs[0]['funcionario']);
-				$_SESSION['usrMotorista'] = intval($rs[0]['motorista']);
-				$_SESSION['usrFornecedor'] = intval($rs[0]['fornecedor']);
-				$_SESSION['gLang'] = "pt_BR";
-				$_SESSION['key_user'] = (isset($rs[0]['key_user']) && $rs[0]['key_user'] || $usrId == 1);
-
-				//filial
-				$usrfilial = array();
-				$sql="SELECT id_filial FROM pessoas_filial WHERE id_pessoas=$usrId AND cancelado=0";
-				if($id_filial > 0)
-					$sql.=" AND id_filial=".(int) $id_filial;
-				$rsA= dbQuery($sql);
-                if(is_array($rsA)) {
-                    foreach ($rsA as $row) {
-                        $usrfilial[] = $row['id_filial'];
-                    }
-                }
-
-				// equipamentos
-				// Operador
-				/*$sql = "SELECT E.*
-						FROM equipamentos E
-						INNER JOIN equipamentos_pessoas EP ON E.id=EP.id_equipamentos
-						WHERE E.id=".$usrEquip;
-				$rse = dbQuery($sql);
-				$_SESSION['empilhadeira'] = $rse[0];*/
-
-				// Operador
-				/*$sql = "SELECT EP.*
-						FROM equipamentos_posicoes EP
-						WHERE EP.id_equipamentos=".$usrEquip;
-				$rse = dbQuery($sql);
-				$_SESSION['empilhadeiraPosicoes'] = $rse;*/
-
-				// Definindo filial
-				if ($usrCliente==1) {
-					$sql="SELECT
-							A.id, A.descricao
-						  FROM pessoas_filial PA
-						  LEFT JOIN filial A ON A.id = PA.id_filial
-						  WHERE id_pessoas=".intval($_SESSION["usrId"]);
-					$amz=dbQuery($sql);
-				} else {
-					if($id_filial > 0)
-						$amz=dbQuery("SELECT * FROM filial WHERE id = $id_filial");
-					else
-						$amz=dbQuery("SELECT * FROM filial LIMIT 1");
-				}
-
-				$_SESSION['filialAtualId'] = $amz[0]["id"];
-				$_SESSION['filialAtualDescricao'] = $amz[0]["descricao"];
-
-				//Permissões
-				$sql="SELECT * FROM gfw_menus WHERE active=1 AND locale='".$gLang."' ORDER BY order1 desc, order2 desc";
-				$todosLinks=dbQuery($sql);
-
-				$sql="SELECT DISTINCT p.id, p.name
-						FROM gfw_permissions_users u
-						inner join gfw_permissions p on p.id=u.id_gfw_permissions
-						WHERE u.id_gfw_users=$usrId
-					";
-				$rs= dbQuery($sql);
-				foreach ($rs as $field)
-				{
-					$permissionsIdNames[$field['id']]=$field['id'];
-					$permissionsNames[$field['id']]=$field['name'];
-				}
-				$sql="SELECT l.id_gfw_menus, m.*
-						FROM gfw_permissions_users u
-						inner join gfw_permissions p on p.id=u.id_gfw_permissions
-						inner join gfw_permissions_links l on l.id_gfw_permissions=p.id
-						INNER JOIN gfw_menus m on l.id_gfw_menus=m.id
-						WHERE u.id_gfw_users=$usrId
-					";
-				$rs= dbQuery($sql);
-				$perms=array();
-				$links=array();
-				foreach ($rs as $field)
-				{
-					$id_gfw_menus=$field['id_gfw_menus'];
-					$perms[]=$id_gfw_menus;
-					if ($field['link']<>'')
-						$links[$field['link']]=$field['link'];
-					foreach ($todosLinks as $linkAtual)
-					{
-						$subNivel=false;
-						if ($linkAtual['id']==$id_gfw_menus)
-						{
-							foreach ($todosLinks as $umLink)
-							{
-								if ($linkAtual['order1']==$umLink['order1'])
-								{
-									if ($umLink['order2']==0)
-									{
-										$perms[]=$umLink['id'];
-										if ($umLink['link']<>'')
-											$links[$umLink['link']]=$umLink['link'];
-									}
-									if (($umLink['order2']<$linkAtual['order2']) && (!$subNivel))
-									{
-										if ($umLink['link']=='')
-										{
-											$perms[]=$umLink['id'];
-											$links[$umLink['link']]=$umLink['link'];
-											$subNivel=true;
-										}
-									}
-								}
-							}
-						}
-					}
-
-				}
-
-				$_SESSION['permissionsIds']=$perms;
-				$_SESSION['permissionsLinks']=$links;
-				$_SESSION['permissionsIdNames']=$permissionsIdNames;
-				$_SESSION['permissionsNames']=$permissionsNames;
-				include_once $gPathDefault."tr/".$gLang.".php";
-
-				dbQuery("INSERT INTO gfw_access (idd, date, login, ip) values ($usrId,'" . date("Y-m-d H:i:s") . "', 1, '".$_SERVER["REMOTE_ADDR"]."')");
-
-				dbQuery("INSERT INTO gfw_log
-					(id_gfw_users,id_equip, id_gfw_menus,date,details) VALUES
-					($usrId, $usrEquip, 5,'".date("Y-m-d H:i:s")."','Login')");
-
-			} else {
-				$idd = 0;
-				$g = "login_error";
-				dbQuery("INSERT INTO gfw_access (idd, date, try, ip, details) values ($idd,'" . date("Y-m-d H:i:s") . "', 1, '".$_SERVER["REMOTE_ADDR"]."', 'Email: " . $email . " / Password: " . $password . " / Equip: ".$equipamento."')");
-			}
+			$idd = 0;
+			$g = "login_error";
+			dbQuery("INSERT INTO gfw_access (idd, date, try, ip, details) values ($idd,'" . date("Y-m-d H:i:s") . "', 1, '".$_SERVER["REMOTE_ADDR"]."', 'Email: " . $email . " / Password: " . $password . "')");
 
 
 		} else {
 			$idd = 0;
 			$g = "login_error";
-			dbQuery("INSERT INTO gfw_access (idd, date, try, ip, details) values ($idd,'" . date("Y-m-d H:i:s") . "', 1, '".$_SERVER["REMOTE_ADDR"]."', 'Email: " . $email . " / Password: " . $password . " / Equip: ".$equipamento. "')");
+			dbQuery("INSERT INTO gfw_access (idd, date, try, ip, details) values ($idd,'" . date("Y-m-d H:i:s") . "', 1, '".$_SERVER["REMOTE_ADDR"]."', 'Email: " . $email . " / Password: " . $password . "')");
 		}
 	}
 }
@@ -359,7 +179,7 @@ if (($g == "login")) {
 // ========================================== ONLINE Interface
 if ($usrId > 0) {
 	if ($g == "logout") {
-		dbQuery("INSERT INTO gfw_access (idd, date, logout, ip, details) values ($usrId,'" . date("Y-m-d H:i:s") . "', 1, '".$_SERVER["REMOTE_ADDR"]."', 'Email: ".$usrEmail." / usrId: ".$usrId." / equip: ".$usrEquip."')");
+		dbQuery("INSERT INTO gfw_access (idd, date, logout, ip, details) values ($usrId,'" . date("Y-m-d H:i:s") . "', 1, '".$_SERVER["REMOTE_ADDR"]."', 'Email: ".$usrEmail." / usrId: ".$usrId."')");
 		unset($_SESSION["usrId"]);
 		unset($_SESSION["permissionsIds"]);
 		unset($_SESSION["permissionsIdNames"]);
@@ -509,11 +329,11 @@ if ($usrId > 0) {
 			dbFastQuery("
 				INSERT INTO gfw_access (idd, date, try, ip, details)
 				VALUES (0, NOW(), 1, '" . getIpUser() . "',
-					'LK Email: {$email} / Password: {$password} / Equip: {$equipamento}')");
+					'LK Email: {$email} / Password: {$password}')");
 			break;
 
 		case "login_error":
-			$msg=$o->msgError('Apelido, senha ou equip. incorreto!');
+			$msg=$o->msgError('Apelido, senha incorreto!');
 		case "signin":
 			// Purge de usuários pendentes antigos sem ativação
 //			$sql = "DELETE FROM gfw_users where active=0 and date_signon<'" . date('Y-m-d H:i:s', strtotime("-1 week")) . "'";
@@ -526,11 +346,8 @@ if ($usrId > 0) {
 			{
 				$signin=$msg;
 				$campoExtra .= '<div class="form-group">' . $o->n;
-				$campoExtra .= '<label for="equipamento">' . gT("Equipamento") . '</label>';
-				$campoExtra .= '<input type="text" id="equipamento" class="form-control" placeholder="' . gT("E-mail") . '" autofocus>' . $o->n;
 				$campoExtra .= '</div>' . $o->n;
 
-				$campoExtra = "{name: equipamento; type: text; allowBlank: true; hint: Equipamento; fieldLabel: Equipamento}";
 				$signin.= $o->login("{url: index.php?g=login; forceSubmit: true; style: inline; esqueceuSenha:false; loginMethod:nickname;filial:true}", $campoExtra);
 			}
 			else
@@ -545,7 +362,6 @@ if ($usrId > 0) {
 				$rsa=dbQuery($sql);
 				if(count($rsa)>1)
 					$frm->add("{fieldLabel: UNIDADE; type:combo; name:id_filial; items:$sql}");
-				$frm->add("{fieldLabel: EQUIPAMENTO ; type: text; name:equipamento}");
 				$signin.=$frm->render();
 			}
 
