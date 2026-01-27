@@ -2937,9 +2937,8 @@ class NotasFiscais extends ImportacaoNFE
 	}
 
 
-	public function enviarEmail($idNfe)
+	public function enviarEmail($idNfe, $xml = '')
 	{
-		$erros = [];
 
 		$sql = "SELECT
 					N.id,
@@ -2949,14 +2948,17 @@ class NotasFiscais extends ImportacaoNFE
 					NF.chave,
 					N.id_pessoas_proprietario,
 					NF.data_recibo,
-					A.descricao filial
+					A.descricao filial,
+					nfe_eventos.xml
 				FROM nfe NF
 				JOIN notas N ON N.id = NF.id_notas
+				LEFT JOIN nfe_eventos ON nfe_eventos.id_nfe = NF.id
 				LEFT JOIN pessoas P ON P.id = N.id_pessoas_proprietario
 				LEFT JOIN filial A ON A.id = N.id_filial
 				WHERE NF.id = " . $idNfe;
-		$nota = dbQuery($sql)[0];
+		$nota = dbFastQuery($sql)[0];
 
+		$erros = [];
 		if (!$nota['id']) {
 			$erros[] = "Nota não encontrada";
 			return $erros;
@@ -2969,6 +2971,7 @@ class NotasFiscais extends ImportacaoNFE
 			$para = $nota['email_proprietario'];
 			dbQuery("UPDATE notas SET emails_enviar = '{$para}' WHERE id = " . (int) $nota['id']);
 		}
+
 		$para = str_replace(" ", "", $para);
 		if (is_null($para) || empty($para)) {
 			$erros[] = 'Endereço de destino do e-mail não foi informado';
@@ -2977,7 +2980,7 @@ class NotasFiscais extends ImportacaoNFE
 
 		$dadosDanfe = [];
         $dadosDanfe['temRetorno'] = 1;
-        $dadosDanfe['xml'] = $nota['xml'];
+        $dadosDanfe['xml'] = $xml ?: $nota['xml'];
         $dadosDanfe['chave'] = $nota['chave'];
         $dadosDanfe['idPessoasProprietario'] = 1;
         $dadosDanfe['empresa'] = $this->obtemDadosEmpresa(obtemIdEmpresa($nota['id_pessoas_proprietario']));
