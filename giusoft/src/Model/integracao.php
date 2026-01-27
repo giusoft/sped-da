@@ -228,8 +228,7 @@ class Integracao
 
 		if ($retornarDetalhes) {
 			return array(
-				'id' => $idPessoas,
-				'codigoSistemaExterno' => $juridico['codigo_sistema_externo']
+				'id' => $idPessoas
 			);
 		}
 		return $idPessoas;

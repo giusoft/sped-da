@@ -260,14 +260,20 @@ switch ($gPage) {
 
         $where = implode(' AND ', $where);
 
-        $sql = "
-			SELECT p.id, p.apelido,nome,razao_social, cnpj, email,telefone, codigo_sistema_externo
-			FROM pessoas p
-			LEFT JOIN pessoas_juridicas f ON p.id = f.id_pessoas
-			WHERE p.id > 2
-				AND tipo = 'J'
-				AND {$where}
-			ORDER BY p.nome";
+        $sql = "SELECT
+                    p.id,
+                    p.apelido,
+                    nome,
+                    razao_social,
+                    cnpj,
+                    email,
+                    telefone
+                FROM pessoas p
+                LEFT JOIN pessoas_juridicas f ON p.id = f.id_pessoas
+                WHERE p.id > 2
+                    AND tipo = 'J'
+                    AND {$where}
+                ORDER BY p.nome";
         $rs = dbQuery($sql);
 
         if (!$rs[0]['id']) {
@@ -285,7 +291,6 @@ switch ($gPage) {
         $mtz[] = '<-CNPJ';
         $mtz[] = '<-E-mail';
         $mtz[] = '<-Telefone';
-        $mtz[] = '<-Código externo';
 
         $html .= $o->tableRow($mtz, 'header');
 
@@ -298,7 +303,6 @@ switch ($gPage) {
             $mtz[] = '<-' . $row['cnpj'];
             $mtz[] = '<-' . $row['email'];
             $mtz[] = '<-' . $row['telefone'];
-            $mtz[] = '<-' . $row['codigo_sistema_externo'];
             $html .= $o->tableRow($mtz, 'detail');
         }
 
@@ -1496,7 +1500,12 @@ switch ($gPage) {
                 continue;
             }
 
-            $sql = "SELECT id, razao_social FROM pessoas_juridicas WHERE cnpj = '" . preg_replace("/[^0-9]/", "", gCleanField($dados[3])) . "' AND codigo_sistema_externo = '" . preg_replace("/[^0-9]/", "", gCleanField($dados[6])) . "' LIMIT 1";
+            $sql = "SELECT
+                        id,
+                        razao_social
+                    FROM pessoas_juridicas
+                    WHERE cnpj = '" . preg_replace("/[^0-9]/", "", gCleanField($dados[3])) . "'
+                    LIMIT 1";
             $rs = dbQuery($sql)[0];
             if ($rs['id']) {
                 $erros[] = "Linha " . ($linha + 1) . ": Já existe uma empresa cadastrada com este cnpj e código de sistema externo. Empresa: " . $rs['razao_social'];
@@ -1525,8 +1534,7 @@ switch ($gPage) {
                     'razao_social' => preg_replace("/[^a-zA-Z0-9\s]/", "", gCleanField($dados[1])),
                     'cnpj' => preg_replace("/[^0-9]/", "", gCleanField($dados[3])),
                     'insc_estadual' => preg_replace("/[^0-9]/", "", gCleanField($dados[4])),
-                    'insc_municipal' => preg_replace("/[^0-9]/", "", gCleanField($dados[5])),
-                    'codigo_sistema_externo' => preg_replace("/[^0-9]/", "", gCleanField($dados[6]))
+                    'insc_municipal' => preg_replace("/[^0-9]/", "", gCleanField($dados[5]))
                 ];
                 $pessoasJuridicas[$linha] = $pessoaJuridica;
 
