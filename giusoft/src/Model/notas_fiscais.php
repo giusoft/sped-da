@@ -1989,7 +1989,6 @@ class NotasFiscais extends ImportacaoNFE
 		$campos['id_pessoas_cliente']  =  intval($todosOsCampos['id_pessoas_proprietario']);
 		$campos['id_filial'] = intval($todosOsCampos['id_filial']);
 		$campos['id_cfops'] = intval($todosOsCampos['id_cfops']);
-		$campos['serie'] = intval($todosOsCampos['serie']);
 		$campos['numero'] = $todosOsCampos['numero'];
 		$campos['data_emissao'] = gDBDate($todosOsCampos['data_emissao']);
 		$campos['data_movimento'] = gDBDate($todosOsCampos['data_movimento']);
@@ -2195,7 +2194,7 @@ class NotasFiscais extends ImportacaoNFE
 					'0' AS agrupada
 				FROM notas N
 				LEFT JOIN notas NOTA_AGRUPADA ON NOTA_AGRUPADA.id = N.id_notas_agrupar
-				LEFT JOIN nfe NE ON (NE.id_notas = N.id AND NE.sistema IN ('WMS', 'WMS2'))
+				LEFT JOIN nfe NE ON (NE.id_notas = N.id)
 				LEFT JOIN pessoas PE ON PE.id = NE.id_pessoa
 				LEFT JOIN pessoas P ON P.id = N.id_pessoas_criou
 				LEFT JOIN cfops C ON C.id = N.id_cfops
@@ -2525,7 +2524,6 @@ class NotasFiscais extends ImportacaoNFE
 					n.emails_enviar AS emails_nota,
 					p.email AS email_proprietario,
 					ne.numero NumeroEntrada,
-					ne.serie SerieEntrada,
 					notas_itens_ibs_cbs.vBC AS vbc_ibs_cbs,
 					notas_itens_ibs_cbs.gIBSUF_pIBSUF,
 					notas_itens_ibs_cbs.gIBSUF_pRedAliq,
@@ -2807,10 +2805,8 @@ class NotasFiscais extends ImportacaoNFE
 	public function prepararCamposNfe($dados)
 	{
 		$dadosNfe = [];
-        $dadosNfe['sistema']     = $dados["sistema"];
         $dadosNfe['data']        = date("Y-m-d H:i:s");
         $dadosNfe['numero']      = $dados['NfeNumeroEOperacao']["numeroNota"];
-        $dadosNfe['serie']       = $dados['NfeNumeroEOperacao']["serie"];
         $dadosNfe['chave']       = '';
         $dadosNfe['situacao']    = 'Submetida';
         $dadosNfe['data_recibo'] = '0000-00-00 00:00:00';
@@ -2819,9 +2815,6 @@ class NotasFiscais extends ImportacaoNFE
         $dadosNfe['id_pessoa']   = $_SESSION['usrId'];
         $dadosNfe['modo_operacao'] = $dados['NfeNumeroEOperacao']["modoOperacao"];
         $dadosNfe['cancelada']   = 0;
-        $dadosNfe['enviada']     = 0;
-        $dadosNfe['xml']         = '';
-        $dadosNfe['recibo']      = '';
         $dadosNfe['id_notas'] = $dados['nota']["id"];
 		return $dadosNfe;
 	}
@@ -2954,7 +2947,6 @@ class NotasFiscais extends ImportacaoNFE
 					N.emails_enviar AS emails_nota,
 					P.email AS email_proprietario,
 					NF.chave,
-					NF.xml,
 					N.id_pessoas_proprietario,
 					NF.data_recibo,
 					A.descricao filial
@@ -2967,11 +2959,6 @@ class NotasFiscais extends ImportacaoNFE
 
 		if (!$nota['id']) {
 			$erros[] = "Nota não encontrada";
-			return $erros;
-		}
-
-		if ($nota["tipo"] == 'M') {
-			$erros[] = "Este tipo de nota não pode ser enviada ao cliente";
 			return $erros;
 		}
 
@@ -3268,12 +3255,10 @@ class ImportacaoNFE
 	public function conferirNota($chave)
 	{
 		$sql = "SELECT count(chave) as qtd, notas.id
-				FROM nfe
 				LEFT JOIN notas ON notas.id = nfe.id_notas
 					AND notas.cancelada = 0
 				WHERE nfe.chave = '{$chave}'
-					AND nfe.cancelada = 0
-					AND nfe.sistema <> 'gWMS'";
+					AND nfe.cancelada = 0";
 		$conferir = dbQuery($sql);
 		return !($conferir[0]['qtd'] > 0 && $conferir[0]['id'] > 1);
 	}
@@ -3324,7 +3309,8 @@ class ImportacaoNFE
 		}
 	}
 
-	public function checarDuplicidade($chave, $numeroNF) {
+	public function checarDuplicidade($chave, $numeroNF)
+	{
 		if (isset($this->xml->NFe->infNFe->ide->cNF)) {
 			$where = [];
 			$where[] = "(notas.numero='{$numeroNF}' AND notas.cancelada=0)";
@@ -3343,7 +3329,6 @@ class ImportacaoNFE
 				WHERE (
 						nfe.chave = '{$chave}'
 						AND nfe.cancelada = 0
-						AND nfe.sistema <> 'gWMS'
 						AND notas.cancelada = 0
 					)
 				{$where}
@@ -3613,7 +3598,6 @@ class ImportacaoNFE
 					N.data_movimento,
 					N.data_criou,
 					C.descricao as desc_cfops,
-					NE.serie,
 					NE.chave
 				FROM notas N
 				LEFT JOIN nfe NE  ON NE.id_notas = N.id
@@ -4332,9 +4316,7 @@ class ImportacaoNFE
 		$this->nfe=[];
 		$this->nfe["data"]   = date('Y-m-d H:i:s');
 		$this->nfe["chave"]  = $this->validarChave($this->xml->NFe->infNFe["Id"]);
-		$this->nfe["serie"]  = gCleanField($this->informacoesXML->serie);
 		$this->nfe["numero"] = gCleanField($this->informacoesXML->nNF);
-		$this->nfe["sistema"]= "WMS";
 		$this->nfe["situacao"]   = "Importada";
 		$this->nfe["id_empresa"] = $this->cliente["id"];
 		$this->nfe["id_cliente"] = $this->cliente["id"];
@@ -4346,10 +4328,6 @@ class ImportacaoNFE
 
 		if (isset($this->xml->protNFe->infProt->nProt)) {
 			$this->nfe["protocolo"] = gCleanField($this->xml->protNFe->infProt->nProt);
-		}
-
-		if (isset($this->xml->protNFe->infProt->xMotivo)) {
-			$this->nfe["mensagens"] = gCleanField($this->xml->protNFe->infProt->xMotivo);
 		}
 
 	}
@@ -4842,4 +4820,4 @@ class ImportacaoNFE
 		}
 	}
 
-} 
+}
