@@ -410,7 +410,6 @@ class Emitenota
         $dadosNfe = array(
             'cnpj_emitente' => soNumeros($dados['empresa']['cnpjFilial']),
             'naturezaOperacao' => removerAcentos($dados['operacao']),
-            'sistema' => $dados['sistema'],
             'informacoesAdicionais' => removerAcentos($dados['infAdFisco']),
             'informacoesContribuinte' => removerAcentos($dados['informacoesContribuinte']),
             'dataHoraContingencia' => $dados['NfeNumeroEOperacao']['dataHoraContingencia'],
