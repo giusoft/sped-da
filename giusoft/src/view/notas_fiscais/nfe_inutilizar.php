@@ -117,7 +117,7 @@ switch ($gPage) {
 				LEFT JOIN notas ON notas.id = nfe.id_notas
 				WHERE {$where}
 					AND (notas.tipo = 'S' OR notas.tipo IS NULL)
-					AND nfe.id_notas_saida = 0
+					AND nfe.id_notas = 0
 				ORDER BY nfe.numero";
 
 		$rs = dbFastQuery($sql);
@@ -451,4 +451,4 @@ switch ($gPage) {
 		$html .= $o->button("{icon: arrow-left; caption: Voltar; style: default; size: small; href: " . $o->page . "&gPage=" . INICIO . "}");
 		break;
 
-} 
+}
