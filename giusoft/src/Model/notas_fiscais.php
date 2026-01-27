@@ -494,7 +494,7 @@ class NotasFiscais extends ImportacaoNFE
 				$btnMedicamento = $o->button("{icon: ambulance;caption:; hint:Informações do medicamento; style: danger; size: small;openModal:modalMedicamento}",'modalMedicamento(' . $row['id'] . ', ' . $gId . ')');
 			}
 
-			if ($row["tipo"]=="S") {
+			if ($row["tipo"] == "S") {
 				if (in_array($row["situacao"], array('Aprovada', 'Cancelada'))) {
 					$btns = $o->button("{icon: info; size: small; onClick: hideWait(); hint: Item de nota fiscal cancelada ou aprovada não pode ser editado;}") . $btnImpostos . $btnMedicamento;
 				} else {
@@ -504,16 +504,17 @@ class NotasFiscais extends ImportacaoNFE
 				}
 
 				if ($exibirOpcoes) {
-					$mtz[]="<-".$btns;
+					$mtz[] = "<-" . $btns;
 				}
 			} else {
 				$btns = "";
-				if (!in_array($row["situacao"], array('Aprovada', 'Cancelada'))) {
-					$btns .= $o->button("{icon: pencil; caption:; hint: Editar nota fiscal; style: default; size: small; href: ". $o->page ."&gPage=60&gId=". $gId ."&gIdEnd=". $row['id'] ."}");
-					$btns .= $o->button("{icon: trash; caption:; hint: Excluir item da nota fiscal; style: danger; size: small;}", "javascript:btnExcluirItemNota(". $row["id"] .")");
+				if (in_array($row["situacao"], array('Aprovada', 'Cancelada'))) {
+					$btns = $o->button("{icon: info; size: small; onClick: hideWait(); hint: Item de nota fiscal cancelada ou aprovada não pode ser editado;}") . $btnImpostos . $btnMedicamento;
+				} else {
+					$btnsEdicaoExclusao = $o->button("{icon: pencil; caption:; hint: Editar nota fiscal; style: default; size: small; href: ". $o->page ."&gPage=60&gId=". $gId ."&gIdEnd=". $row['id'] ."}");
+					$btnsEdicaoExclusao .= $o->button("{name: btnExcluirNotaItem; icon: trash; caption:; hint: Excluir item da nota fiscal; style: danger; size: small;}", "javascript:btnExcluirItemNota(". $row["id"] .")");
+					$btns = $btnsEdicaoExclusao . $btnImpostos . $btnMedicamento;
 				}
-
-				$btns .= $btnImpostos . $btnMedicamento;
 
 				if ($exibirOpcoes) {
 					$mtz[]="<-".$btns;
@@ -1764,9 +1765,6 @@ class NotasFiscais extends ImportacaoNFE
 			$comboTipo["S"]="Saída";
 			$comboTipo["E"]="Entrada";
 			$campoTipoNota = $frm->add("{name: tipoNota; type: combo; items:'".json_encode($comboTipo)."'; allowBlank: false; fieldLabel: Tipo; value: ".$registroAtual["tipo"]."}");
-			if ($registroAtual['tipo'] == 'E') {
-				$campoTipoNota = $frm->add("{name: tipoNota; type: show; fieldLabel: Tipo; value: Entrada;}");
-			}
 			$frm->row($campoTipoNota);
 		} else {
 			$frm->row(
