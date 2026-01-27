@@ -216,7 +216,7 @@ if ($_REQUEST['gAjax']) {
             $resultado['botoesHtml'] = $botoesHtml;
 
             if ($itens[0]['emails_nota'] || $itens[0]['email_proprietario']) {
-                $statusEnvioEmail = $nf->enviarEmail($idNfe);
+                $statusEnvioEmail = $nf->enviarEmail($idNfe, base64_decode((string) $retornoEmiteNota['detalhes']['xml']));
             }
 
             if (is_array($statusEnvioEmail)) {
