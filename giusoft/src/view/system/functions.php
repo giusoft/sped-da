@@ -205,13 +205,13 @@ function obtemSKU($id, $separador="•", $campo="")
 
 function userLog($details="")
 {
-	global $usrId, $usrEquip, $gMenuParameters;
+	global $usrId, $gMenuParameters;
 
 	$usrId = (int) $usrId;
 	$request = base64_encode(serialize($_REQUEST));
 	$sql = "INSERT INTO gfw_log
-	(id_gfw_users,id_equip, id_gfw_menus,date,full_link,request,details) VALUES
-	($usrId, $usrEquip, ".intval($gMenuParameters['id_gfw_menus']).", NOW(),'".$gMenuParameters['full_link']."','$request','$details')";
+	(id_gfw_users, id_gfw_menus,date,full_link,request,details) VALUES
+	($usrId, ".intval($gMenuParameters['id_gfw_menus']).", NOW(),'".$gMenuParameters['full_link']."','$request','$details')";
 	dbFastQuery($sql);
 }
 
