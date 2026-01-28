@@ -117,7 +117,6 @@ switch ($gPage) {
 				LEFT JOIN notas ON notas.id = nfe.id_notas
 				WHERE {$where}
 					AND (notas.tipo = 'S' OR notas.tipo IS NULL)
-					AND nfe.id_notas = 0
 				ORDER BY nfe.numero";
 
 		$rs = dbFastQuery($sql);
