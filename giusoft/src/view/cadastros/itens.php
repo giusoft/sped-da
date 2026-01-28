@@ -1116,7 +1116,7 @@ switch ($gPage) {
 
 
 	case IMPORTAR:
-		include 'res/_classes/padrao/importacoes.php';
+		require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/emitenota/giusoft/src/Model/importacoes.php";
 		$imp = new Importacoes();
 		$html .= $imp->processar("itens");
 		break;
@@ -1128,7 +1128,6 @@ switch ($gPage) {
 
 		if ($gParam['CONVERTER_SKU_AO_IMPORTAR_NF']['ativo']) {
 			$html .= $o->button("{icon: download; caption: Importar fornecedores; style: primary; size: big; href: " . $o->page . "&gPage=" . FORMULARIO_IMPORTACAO_DE_FORNECEDORES . "}");
-			$html .= $o->button("{icon: download; caption: Itens kits em lote; style: primary; size: big; href: " . $o->page . "&gPage=" . FILTRO_IMPORTAR_ITENS_KIT . "}");
 		}
 		break;
 
