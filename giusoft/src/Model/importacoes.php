@@ -1218,7 +1218,7 @@ class Importacoes
 			case 0:
 				// gD($grupo);
 				$html .= $o->msgSubTitle("Importação de dados");
-				$html .= $o->msg("Utilize esta opção para importar dados de outro sistema/cliente para processamento no gWMS.");
+				$html .= $o->msg("Utilize esta opção para importar dados de outro sistema/cliente para processamento no emiteNota.");
 				$frm   = new gForm("{columns: 2}");
 				$sql   = "SELECT id, descricao FROM importacoes WHERE grupo = '" . $grupo . "'";
 				$frm->add("{onChange:mudouProprietario; fieldLabel:Proprietário; name:id_pessoas_proprietario; type:combo; allowBlank:true; items:" . $sp["combo_clientes"] . ";}");
@@ -1421,7 +1421,7 @@ class Importacoes
 
 				if ($_FILES['arquivo']['name']=='' && false)
 				{
-					$html.=$o->msg("As instruções abaixo são direcionadas para equipes de desenvolvimento de software para integração de outros sistemas com o gWMS.");
+					$html.=$o->msg("As instruções abaixo são direcionadas para equipes de desenvolvimento de software para integração de outros sistemas com o emiteNota.");
 					$html.=$o->hr();
 					$html.=$o->msgSubTitle("Exemplos dos formatos de arquivos compatíveis:");
 					$html.=$o->tableBegin("big", true);

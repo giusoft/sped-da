@@ -1329,7 +1329,7 @@ switch ($gPage) {
         $html .= $o->br();
         $frm   = new gForm("columns: 3");
         $urlCancelar    = $o->page."&gPage=" . CANCELAR_NOTA . "&gId=".$gId;
-        $conteudoModal  = "Cancelar espelho da NF-e?<br> Este procedimento só cancela no WMS, não cancela na SEFAZ. Para cancelar na SEFAZ abra a nota e cancele-a";
+        $conteudoModal  = "Cancelar espelho da NF-e?<br> Este procedimento só cancela no emiteNota, não cancela na SEFAZ. Para cancelar na SEFAZ abra a nota e cancele-a";
         $conteudoModal .= "<input type='hidden' name='id_nfe' id='id_nfe'/>";
         $html .= $o->modal("{title: Confirmação; cancelCaption: Fechar; url:btnConfirmarCancelarNFE(); confirm: true; name: modalCancelarNFE; size:large; }", $conteudoModal);
 
