@@ -27,8 +27,6 @@ define("PERMISSOES_EXCLUIR", 		 72);
 define("PERMISSOES_EXCLUIR_TODAS",	 73);
 define("PERMISSOES_COPIAR",			 74);
 define("PERMISSOES_COPIAR_SALVAR",	 75);
-define("CONFIGURACAO", 				 80);
-define("SALVAR_ABA_CONFIGURACAO", 	 81);
 define("REGISTRO_AVANCAR",			 100);
 define("REGISTRO_VOLTAR",			 101);
 define("WEBCAM", 					 102);
@@ -369,32 +367,6 @@ switch ($gPage) {
 			$html.=$o->backButton;
 		}
 
-	break;
-
-
-	case CONFIGURACAO:
-        $html .= mostraCabecalho($gId);
-
-        $rs  = $persistencia->obtemRegistros("p.id=" . $gId)[0];
-        $frm = new gForm();
-        $frm->add("{name: codigo_sistema_externo; fieldLabel: Código de sistema externo; type: text; maxLength: 9; value: " . $rs['codigo_sistema_externo'] . "}");
-		$frm->add("{name: gId; type: hidden; value: " . $gId . "}");
-		$frm->add("{name: gPage; type: hidden; value: " . SALVAR_ABA_CONFIGURACAO . "}");
-
-		$html .= $frm->render($o);
-	break;
-
-
-    case SALVAR_ABA_CONFIGURACAO:
-
-        $idPessoa = dbQuery("SELECT id FROM pessoas WHERE id = {$gId}")[0]['id'];
-
-        $flds = [];
-        $flds['codigo_sistema_externo'] = gCleanField($_REQUEST['codigo_sistema_externo']);
-        dbUpdate('pessoas', $flds, $idPessoa);
-
-        $persistencia->atualizarPessoasSituacao($gId);
-        redirect($o->page . "&gPage=" . CONFIGURACAO . "&gId=" . $gId);
 	break;
 
 
@@ -912,23 +884,20 @@ function mostraCabecalho($gId)
 			case DADOS:
 				$active1='true';
 				break;
-			case CONFIGURACAO:
+			case ENDERECOS:
 				$active2='true';
 				break;
-			case ENDERECOS:
+			case FILIAL:
 				$active3='true';
 				break;
-			case FILIAL:
+			case OCORRENCIAS:
 				$active4='true';
 				break;
-			case OCORRENCIAS:
+			case ANEXOS:
 				$active5='true';
 				break;
-			case ANEXOS:
-				$active6='true';
-				break;
 			case PERMISSOES:
-				$active7='true';
+				$active6='true';
 				break;
 		}
 
@@ -940,12 +909,11 @@ function mostraCabecalho($gId)
 				$o->button("{icon: arrow-right; style: info; hint: Próximo registro; href: ".$o->page."&gPage=".REGISTRO_AVANCAR."&gId=".$gId."&gIdRel=".$gPage."}").
 			'</div>';
 		$btns[] = $o->button("{active: " . $active1 . "; icon: file-alt; caption: Dados pessoais; hint: Alterar os dados pessoais; href: ".$o->page."&gPage=".DADOS."&gId=".$gId."}");
-		$btns[] = $o->button("{active: " . $active2 . "; icon: person-carry; caption: Configuração; hint: Controle de configurações; href: " . $o->page . "&gPage=" . CONFIGURACAO . "&gId=" . $gId . "}");
-		$btns[] = $o->button("{active: " . $active3 . "; icon: map-marker; caption: Endereços; hint: Incluir ou alterar endereços; href: ".$o->page."&gPage=".ENDERECOS."&gId=".$gId."}");
-		$btns[] = $o->button("{active: " . $active4 . "; icon: warehouse; caption: Filial; hint: Relacionar pessoa ao filial; href: ".$o->page."&gPage=".FILIAL."&gId=".$gId."}");
-		$btns[] = $o->button("{active: " . $active5 . "; icon: exclamation-triangle; caption: Ocorrências; hint: Incluir ocorrências; href: ".$o->page."&gPage=".OCORRENCIAS."&gId=".$gId."}");
-		$btns[] = $o->button("{active: " . $active6 . "; icon: paperclip; caption: Anexos; hint: Anexar documentos digitalizados; href: ".$o->page."&gPage=".ANEXOS."&gId=".$gId."}");
-		$btns[] = $o->button("{active: " . $active7 . "; icon: lock; caption: Permissões; hint: Permissõs de acesso; href: ".$o->page."&gPage=".PERMISSOES."&gId=".$gId."}");
+		$btns[] = $o->button("{active: " . $active2 . "; icon: map-marker; caption: Endereços; hint: Incluir ou alterar endereços; href: ".$o->page."&gPage=".ENDERECOS."&gId=".$gId."}");
+		$btns[] = $o->button("{active: " . $active3 . "; icon: warehouse; caption: Filial; hint: Relacionar pessoa ao filial; href: ".$o->page."&gPage=".FILIAL."&gId=".$gId."}");
+		$btns[] = $o->button("{active: " . $active4 . "; icon: exclamation-triangle; caption: Ocorrências; hint: Incluir ocorrências; href: ".$o->page."&gPage=".OCORRENCIAS."&gId=".$gId."}");
+		$btns[] = $o->button("{active: " . $active5 . "; icon: paperclip; caption: Anexos; hint: Anexar documentos digitalizados; href: ".$o->page."&gPage=".ANEXOS."&gId=".$gId."}");
+		$btns[] = $o->button("{active: " . $active6 . "; icon: lock; caption: Permissões; hint: Permissõs de acesso; href: ".$o->page."&gPage=".PERMISSOES."&gId=".$gId."}");
 		//$html.='<div class="btn-group" role="group" aria-label="...">'.implode(" ",$btns).'</div>';
 		$html.='<div>'.implode(" ",$btns).'</div>';
 
