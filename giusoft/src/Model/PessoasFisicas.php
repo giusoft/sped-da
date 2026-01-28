@@ -120,7 +120,7 @@ class PessoasFisicas extends Pessoas
 		$campos['telefone']=gCleanField($todosOsCampos['telefone']);
 		$campos['celular']=gCleanField($todosOsCampos['celular']);
 		$campos['situacao']=gCleanField($todosOsCampos['situacao']);
-		$campos['key_user']=gDBCheck($todosOsCampos['key_user']);
+		$campos['key_user'] = gDBCheck($todosOsCampos['key_user']);
 		$campos['codigo_sistema_externo'] = gCleanField($todosOsCampos['codigo_sistema_externo']);
 
 		if ($gId == 0) {
