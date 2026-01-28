@@ -3,6 +3,7 @@
 define('INICIO', 0);
 define('PESQUISAR', 1);
 define('DOWNLOAD_XML', 2);
+define('DOWNLOAD_XML_CANCELAMENTO', 3);
 
 $paginasPodeExportar = [PESQUISAR];
 
@@ -80,11 +81,7 @@ switch ($gPage) {
             $situacoes = substr($situacoes, 0, -1);
             $filtros[] = "Situações: " . str_replace("'", "", $situacoes);
 
-            $where[] = sprintf(
-                '((nfe.situacao IN (%s) AND nfe.sistema IN ("WMS", "WMS2")) %s)',
-                $situacoes,
-                $whereSituacaoImportada
-            );
+			$where[] = "(nfe.situacao IN (" . $situacoes .") {$whereSituacaoImportada})";
         }
 
 		$html .= $o->msgFilter("Filtros selecionados: " . implode(" • ", $filtros));
@@ -103,16 +100,18 @@ switch ($gPage) {
 					pessoa_emitiu.apelido AS colaborador_emitiu,
 					nfe.cancelada,
 					nfe.numero,
-					SUBSTR(nfe.xml, 1, 1) AS tem_xml,
+					SUBSTR(nfe_eventos.xml, 1, 1) AS tem_xml,
+					nfe_eventos.sucesso,
+					nfe_eventos.id_nfe_tipos_eventos,
 					nfe.chave AS chave,
 					nfe.situacao,
 					nfe.id_notas,
 					nfe.protocolo,
-					SUBSTR(nfe.xml_cancelamento, 1, 1) AS tem_xml_cancelamento,
 					nfe.data_cancelamento,
 					pessoa_cancelou.apelido AS colaborador_cancelou
 				FROM nfe
-				LEFT JOIN pessoas pessoa_emitiu ON pessoa_emitiu.id = nfe.id_pessoa
+				LEFT JOIN nfe_eventos ON nfe_eventos.id_nfe = nfe.id AND nfe_eventos.id_nfe_tipos_eventos IN (1, 2, 5)
+				LEFT JOIN pessoas pessoa_emitiu ON 	pessoa_emitiu.id = nfe.id_pessoa
 				LEFT JOIN pessoas pessoa_cancelou ON pessoa_cancelou.id = nfe.id_pessoas_cancelou
 				LEFT JOIN notas ON notas.id = nfe.id_notas
 				WHERE {$where}
@@ -144,12 +143,13 @@ switch ($gPage) {
 		foreach ($rs as $key => $row) {
 			$mtz = [];
 			$botoes = '';
-			if ($row['tem_xml']) {
+			if (in_array($row['id_nfe_tipos_eventos'], [1,5]) && $row['sucesso'] == 1) {
 				$botoes .= $o->button("{icon: download; caption: XML enviado; style: default ; size: small; href: " . $o->page . "&gPage=" . DOWNLOAD_XML . "&gId=" . $row['id'] . "&atributo=xml; hint: Baixar xml enviado para SEFAZ; target: _blank;}");
 			}
 
-			if ($row['tem_cancelamento']) {
-				$botoes .= $o->button("{icon: download; caption: XML cancelamento; style: danger; size: small; href: " . $o->page . "&gPage=" . DOWNLOAD_XML . "&gId=" . $row['id'] . "&atributo=xml_cancelamento; hint: Baixar xml enviado para cancelamento; target: _blank;}");
+			if ($row['id_nfe_tipos_eventos'] == 2 && $row['sucesso'] == 1) {
+
+				$botoes .= $o->button("{icon: download; caption: XML cancelamento; style: danger; size: small; href: " . $o->page . "&gPage=" . DOWNLOAD_XML_CANCELAMENTO . "&gId=" . $row['id'] . "&atributo=xml_cancelamento; hint: Baixar xml enviado para cancelamento; target: _blank;}");
 			}
 
 			$mtz[] = '->' . $botoes;
@@ -174,7 +174,44 @@ switch ($gPage) {
 
 
 	case DOWNLOAD_XML:
-		$rs = dbFastQuery("SELECT id, chave, situacao, numero, " . $_REQUEST['atributo'] . sprintf(" FROM nfe WHERE id = '%s'", $gId))[0];
+        $sql = "SELECT nfe_eventos.xml, nfe.chave
+                FROM nfe_eventos
+                LEFT JOIN nfe ON nfe.id = nfe_eventos.id_nfe
+                WHERE id_nfe = '{$gId}'";
+        $rs = dbFastQuery($sql)[0];
+
+        if (!$rs) {
+            $html .= $o->msgDanger("Não foi possível fazer o download do xml pois aconteceram os seguintes erros: <br> NF-e não encontrada");
+           	$html .= $backButton;
+			break;
+        }
+
+        $formato = "xml";
+        $file = $rs[$formato];
+        $nome = $rs['chave'];
+        $nome = $nome . "-nfe." . strtolower($formato);
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename=' . $nome);
+        header('Content-Transfer-Encoding: binary');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+        header('Pragma: public');
+        header('Content-Length: ' . strlen((string) $file));
+        ob_clean();
+        flush();
+        echo($file);
+        exit;
+        break;
+
+
+	case DOWNLOAD_XML_CANCELAMENTO:
+        $sql = "SELECT nfe_eventos.id, nfe_eventos.xml, nfe.chave
+                FROM nfe_eventos
+                LEFT JOIN nfe ON nfe.id = nfe_eventos.id_nfe
+                WHERE id_nfe_tipos_eventos = 2 AND id_nfe = '{$gId}'"; // id_nfe_tipos_eventos = 2 (Evento de cancelamento)
+        $rs = dbFastQuery($sql)[0];
+
         if (!$rs['id']) {
             $html .= $o->msgDanger("Não foi possível fazer o download do xml pois aconteceram os seguintes erros: <br> NF-e não encontrada");
            	$html .= $backButton;
@@ -183,15 +220,15 @@ switch ($gPage) {
 
         header('Content-Description: File Transfer');
         header('Content-Type: application/octet-stream');
-        header('Content-Disposition: attachment; filename=' . $rs['numero'] . '_' . $rs['situacao'] . "_" . $rs['chave'] . "_" . $_REQUEST['atributo'] . ".xml");
+        header('Content-Disposition: attachment; filename=' . $rs['chave'] . "-xml_cancelamento.xml");
         header('Content-Transfer-Encoding: binary');
         header('Expires: 0');
         header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
         header('Pragma: public');
-        header('Content-Length: ' . strlen((string) $rs[$_REQUEST['atributo']]));
+        header('Content-Length: ' . strlen((string) $rs['xml']));
         ob_clean();
         flush();
-        echo($rs[$_REQUEST['atributo']]);
+        echo($rs['xml']);
         exit;
-		break;
+        break;
 }
