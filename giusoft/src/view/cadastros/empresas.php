@@ -1035,7 +1035,7 @@ switch ($gPage) {
 			$ambiente = '/teste';
 		}
 
-        require_once $_SERVER["DOCUMENT_ROOT"].$ambiente."/wms/giusoft/res/api/accesspoint.php";
+        require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/emitenota/giusoft/src/Model/accesspoint.php";
         $pontoAcesso = new PontoAcesso(['empresa' => $EMPRESA]);
 
         $autenticar = $pontoAcesso->testarConexao($classeIntegracao, [
@@ -1704,7 +1704,7 @@ function requireAccessPoint()
         $ambiente = '/teste';
         $empresa = $uriParameters[3];
     }
-    require_once "{$_SERVER["DOCUMENT_ROOT"]}{$ambiente}/wms/{$empresa}/res/api/accesspoint.php";
+    require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/emitenota/giusoft/src/Model/accesspoint.php";
 }
 
 function testarConexaoIntegracao($classIntegracao, $args)
@@ -1718,7 +1718,7 @@ function testarConexaoIntegracao($classIntegracao, $args)
 // 	} elseif (strpos($empresa, "/teste") !== false) {
 // 		$ambiente = '/teste';
 // 	}
-// 	require_once $_SERVER['DOCUMENT_ROOT'] . $ambiente . '/wms/giusoft/res/api/accesspoint.php';
+// 	require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/emitenota/giusoft/src/Model/accesspoint.php";
 
 // 	$pathClassesIntegracao = str_replace("cadastros", "_classes/integracao/*", __DIR__);
 // 	$naoIntegrar = ["gmi", "kimberly_suzano"];

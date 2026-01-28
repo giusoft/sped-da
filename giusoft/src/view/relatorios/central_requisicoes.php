@@ -354,7 +354,7 @@ switch ($gPage) {
 
     case REENVIAR_REQUISICAO:
 
-        require_once $_SERVER["DOCUMENT_ROOT"] . '/' . $ambiente . "/wms/giusoft/res/api/accesspoint.php";
+        require_once $_SERVER["DOCUMENT_ROOT"] . $ambiente . "/emitenota/giusoft/src/Model/accesspoint.php"
 
         $sql = "SELECT
                     gatilhos.metodo,
