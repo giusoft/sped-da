@@ -1433,7 +1433,7 @@ switch ($gPage) {
         $frm->add("{type: comboMultiSelection; name: tipo_empresa; fieldLabel: Tipo de Empresa; items:'" . json_encode($comboTipoEmpresa) . "'; allowBlank: false;}");
         $frm->add("{name: arquivo; fieldLabel: Arquivo .CSV; type: file; accept: .csv; allowBlank: false; }");
 
-        $modelo = "Nome,Razão Social,Tipo,CNPJ,Inscrição Estadual,Inscrição Municipal,Código do sistema externo,Bairro,Endereço,Número,CEP";
+        $modelo = "Nome,Razão Social,Tipo,CNPJ,Inscrição Estadual,Inscrição Municipal,Bairro,Endereço,Número,CEP";
         $frm->addButton("{icon: download; title: Baixar modelo CSV; hint: Baixar modelo CSV; style: info; size: normal; href: " . $o->page . "&gPage=" . IMPRIMIR_MODELO . "&modelo=" . $modelo);
 
         $frm->add("{name: gPage; type: hidden; value: " . IMPORTACAO_SALVAR . "}");
@@ -1444,7 +1444,7 @@ switch ($gPage) {
                 "Submeta o arquivo sem o título nas colunas",
                 "Use o delimitador de campo ponto e vírgula <b>( ; )</b> e o delimitador de texto sendo aspas duplas <b>( \" )</b>",
                 "O <b>Tipo</b> de empresa deve ser <b>'F'</b> para pessoa física e <b>'J'</b> para pessoa jurídica",
-                "Informe <b>apenas números</b> para os dados: CNPJ, CEP, Inscrição Estadual, Inscrição Municipal e Código do sistema externo"
+                "Informe <b>apenas números</b> para os dados: CNPJ, CEP, Inscrição Estadual e Inscrição Municipal"
             ]
         );
         break;

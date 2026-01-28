@@ -247,11 +247,10 @@ class PessoasJuridicas extends Pessoas
 	        3 => ['maxLength' => 14, 		'campo' => 'CNPJ'],
 	        4 => ['maxLength' => 12, 		'campo' => 'Inscrição Estadual'],
 	        5 => ['maxLength' => 12, 		'campo' => 'Inscrição Municipal'],
-	        6 => ['maxLength' => 30, 		'campo' => 'Código do sistema externo'],
-	        7 => ['maxLength' => 100, 		'campo' => 'Bairro'],
-	        8 => ['maxLength' => 100, 		'campo' => 'Endereço'],
-	        9 => ['maxLength' => 10, 		'campo' => 'Número'],
-	        10 => ['maxLength' => 9, 		'campo' => 'CEP']
+	        6 => ['maxLength' => 100, 		'campo' => 'Bairro'],
+	        7 => ['maxLength' => 100, 		'campo' => 'Endereço'],
+	        8 => ['maxLength' => 10, 		'campo' => 'Número'],
+	        9 => ['maxLength' => 9, 		'campo' => 'CEP']
 	    ];
 
 		foreach ($validacoes as $index => $regra) {
