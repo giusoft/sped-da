@@ -1382,34 +1382,34 @@ switch ($gPage) {
 
 
     case CANCELAR_NOTA:
-        $sql="SELECT
-                    notas.*,
-                    nfe.situacao
-              FROM notas
-              LEFT JOIN nfe ON nfe.id = notas.id_nfe
-              WHERE notas.id=".$gId;
-        $nota=(dbQuery($sql)[0]);
-        if ($nota["situacao"] == "Aprovada") {
-            $html.=$o->msgDanger("Não é possível cancelar a nota pois uma nota fiscal eletrônica já foi aprovada, por favor cancele a NFe, e tente novamente");
+        $nota = dbQuery("SELECT id FROM notas WHERE id = " . $gId)[0];
+        if (!$nota) {
+            $html .= $o->msgDanger("Nota não encontrada");
+            $html .= $backButton;
             return;
         }
 
-        // Cancelando nota
-        $mtz = [];
-        $mtz["cancelada"]=1;
-        dbUpdate("notas", $mtz, $nota["id"]);
-        $sql =
-            "UPDATE notas
-            SET   id_notas_agrupar = 0,
-                  confirmada = 1
-            WHERE id_notas_agrupar = ".$nota["id"];
-        dbQuery($sql);
+        $notasFiscaisVinculadas = dbQuery("SELECT id, situacao FROM nfe WHERE id_notas = " . $gId);
 
-        $mtz = [];
-        $mtz["cancelada"]=1;
-        dbUpdate("nfe", $mtz, $nota["id_nfe"]);
+        if (in_array('Aprovada', array_column($notasFiscaisVinculadas, 'situacao'))) {
+            $html .= $o->msgDanger("Não é possível cancelar a nota pois uma nota fiscal eletrônica já foi aprovada, por favor cancele a NFe, e tente novamente");
+            $html .= $backButton;
+            return;
+        }
+
+        $sqlCancelamento = "UPDATE notas
+                        SET cancelada = 1,
+                            id_notas_agrupar = 0,
+                            confirmada = 1
+                        WHERE id = " . $nota["id"] . "
+                           OR id_notas_agrupar = " . $nota["id"];
+        dbQuery($sqlCancelamento);
+
+        if ($notasFiscaisVinculadas) {
+            dbQuery("UPDATE nfe SET cancelada = 1 WHERE id_notas = " . $nota["id"]);
+        }
+
         redirect($o->page . "&gPage=" . INICIO);
-
         break;
 
 
