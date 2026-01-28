@@ -2247,7 +2247,7 @@ class NotasFiscais extends ImportacaoNFE
 	public function obtemRegistro($id)
 	{
 		$sql = $this->obtemQuery();
-		$sql .= " WHERE N.id = '{$id}'";
+		$sql .= " WHERE N.id = '{$id}' ORDER BY NE.id DESC";
 		return dbFastQuery($sql)[0];
 	}
 
