@@ -2510,7 +2510,7 @@ switch ($gPage) {
             $frm->addButton("{icon: cog; title: Opções da NF-e; hint: Opções; style: info; size: small;}", "btnOpcoesNFE('".$confereNFE[0]["id"]."', '".$confereNFE[0]["idNota"]."')");
         }
 
-        if ($confereNFE && $confereNFE[0]["situacao"] == "Cancelada" && $confereNFE[0]['xml_cancelamento'] != '') {
+        if ($confereNFE && $confereNFE[0]["situacao"] == "Cancelada") {
             $frm->addButton("{icon: download; title: Baixar XML de cancelamento; hint: Baixar XML de cancelamento; style: info; size: small; href: " . $o->page . "&gPage=" . NFE_OBTER_XML_CANCELAMENTO . "&gId=" . $confereNFE[0]['id'] . ";}");
         }
 
