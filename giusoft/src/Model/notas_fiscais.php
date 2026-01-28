@@ -2142,6 +2142,9 @@ class NotasFiscais extends ImportacaoNFE
 		if ($idNotasItens > 0) {
 			$sql.=" AND notas_itens.id = {$idNotasItens}";
 		}
+
+		$sql .= " GROUP BY notas_itens.id";
+
 		return(dbQuery($sql));
 	}
 
