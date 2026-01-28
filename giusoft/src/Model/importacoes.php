@@ -1,4 +1,5 @@
-<?
+<?php
+
 include_once "res/_classes/classes.php";
 
 define("IMPORTAR_PROCESSA",200);
@@ -19,7 +20,7 @@ class Importacoes
 
 	function __construct ()
 	{
-		$this->persistencia = new Persistencia();
+		// $this->persistencia = new Persistencia();
 	}
 
 	function obtemFormato($id)
