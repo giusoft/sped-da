@@ -88,7 +88,6 @@ switch($gPage) {
 		if (count($where)<=1) {
 			$html.=$o->msgDanger("Informe ao menos um filtro antes de tentar gerar um relatório");
 		} else {
-			$where[]="(N.tipo='S')";
 			$where[] = "(N.id_filial=" . $_REQUEST['id_filial'] . ")";
 			$where = implode(" AND ", $where);
 			$sql = "SELECT
