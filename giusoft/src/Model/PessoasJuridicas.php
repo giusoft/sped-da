@@ -63,7 +63,7 @@ class PessoasJuridicas extends Pessoas
 		$frm->row(
 			$frm->add("{name: razao_social; fieldLabel: Razão social; type: upperFirstWordText; maxLength: 100; value: ".$registroAtual['razao_social']."}"),
 			$frm->add("{name: email; fieldLabel: Email; type: text; maxLength: 100; value: ".$registroAtual['email']."}"),
-			$frm->add("{name: site; fieldLabel: Site; type: text; maxLength: 100; value: ".$registroAtual['site_empresa']."}"),
+			$frm->add("{name: codigo_sistema_externo; fieldLabel: Código de sistema externo; type: text; maxLength: 9; value: " . $registroAtual['codigo_sistema_externo'] . "}"),
 			$frm->add("{name: situacao; type: combo; allowBlank: false; value: ".$registroAtual['situacao']."; items: {'Ativo','Inativo'}}")
 		);
 
@@ -76,6 +76,7 @@ class PessoasJuridicas extends Pessoas
 			$frm->add("{name: insc_estadual; fieldLabel: Insc. estadual; type: text; maxLength: 20; value: ".$registroAtual['insc_estadual']."}")
 		);
 
+		$frm->add("{name: site; fieldLabel: Site; type: text; maxLength: 100; value: ".$registroAtual['site_empresa']."}");
 		$frm->add("{name: observacoes; fieldLabel: Observações; type: textarea; value: ".base64_decode($registroAtual['observacoes'])."}");
 		$frm->add("{name: gId; type: hidden; value: ".$gId."}");
 		$frm->add("{name: gPage; type: hidden; value: ".$proximaPagina."}");
@@ -100,6 +101,7 @@ class PessoasJuridicas extends Pessoas
 		$campos['celular']=gCleanField($todosOsCampos['celular']);
 		$campos['situacao']=gCleanField($todosOsCampos['situacao']);
 		$campos['email']=gCleanField($todosOsCampos['email']);
+		$campos['codigo_sistema_externo'] = gCleanField($todosOsCampos['codigo_sistema_externo']);
 
 		if ($gId == 0) {
 			$campos['data_cadastro'] = gDBDateTime(date('Y-m-d H:i:s'));

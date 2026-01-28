@@ -84,6 +84,7 @@ class PessoasFisicas extends Pessoas
 		$frm->row(
 			$frm->add("{name: cpf; fieldLabel: CPF; type: text; maxLength: 30; value: ".$registroAtual['cpf']."}"),
 			$frm->add("{name: rg; fieldLabel: RG; type: text; maxLength: 20; value: ".$registroAtual['rg']."}"),
+			$frm->add("{name: codigo_sistema_externo; fieldLabel: Código de sistema externo; type: text; maxLength: 9; value: " . $registroAtual['codigo_sistema_externo'] . "}"),
 			$frm->add("{name: data_nascimento; fieldLabel: Data de nascimento; type: date; value: ".gDate($registroAtual['data_nascimento'])."}")
 		);
 
@@ -120,6 +121,7 @@ class PessoasFisicas extends Pessoas
 		$campos['celular']=gCleanField($todosOsCampos['celular']);
 		$campos['situacao']=gCleanField($todosOsCampos['situacao']);
 		$campos['key_user']=gDBCheck($todosOsCampos['key_user']);
+		$campos['codigo_sistema_externo'] = gCleanField($todosOsCampos['codigo_sistema_externo']);
 
 		if ($gId == 0) {
 			$campos['data_cadastro']=gDBDateTime($todosOsCampos['data_cadastro']);
