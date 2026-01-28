@@ -6,7 +6,7 @@ define("INICIO", 			0);
 define("PREPARAR", 			1);
 define("PROCESSAR_LOTE", 	2);
 define("FINALIZAR", 		3);
-define("BAIXAR_ARQUIVO", 	4); 
+define("BAIXAR_ARQUIVO", 	4);
 
 $html .= $o->msgTitle("Arquivar");
 
@@ -157,7 +157,7 @@ switch ($gPage) {
         $combo_tipo_nota = [];
         $combo_tipo_nota[0] = "* Indiferente";
         $combo_tipo_nota[1] = "NF-e Saída";
-        $combo_tipo_nota[3] = "NF-e Entrada";
+        $combo_tipo_nota[2] = "NF-e Entrada";
 
         $mtz = [];
         $mtz[0] = 'Somente aprovadas';
@@ -216,29 +216,27 @@ switch ($gPage) {
         $situacao = $_REQUEST['situacao'];
 
         $where = [];
-        $where[] = sprintf("(DATE(NE.data)>='%s' AND DATE(NE.data)<='%s')", $dataInicio, $dataFinal);
+        $where[] = "(DATE(NE.data) >= '" . $dataInicio . "' AND DATE(NE.data) <= '" . $dataFinal . "')" ;
 
         if ($_REQUEST["id_pessoas_proprietario"]) {
             $where[] = "(N.id_pessoas_proprietario=" . intval($_REQUEST["id_pessoas_proprietario"]) . ")";
         }
 
-        if ($situacao != 0) {
-            $orNfeCancelada = " OR NE.cancelada = 1 ";
+        if ($situacao == 1) {
+            $orNfeCancelada = " AND nfe_eventos.id_nfe_tipos_eventos = 2 ";
+        } elseif ($situacao == 0) {
+            $orNfeCancelada = " AND nfe_eventos.id_nfe_tipos_eventos <> 2 AND NE.cancelada = 0 ";
         }
 
         if ($_REQUEST["tipo_nota"]) {
             switch ($_REQUEST["tipo_nota"]) {
                 case 1:
                     $where[] = "(N.tipo = 'S')";
-                    $where[] = "(NE.situacao = 'Aprovada' {$orNfeCancelada})";
+                    $where[] = "(nfe_eventos.sucesso = 1 {$orNfeCancelada})";
                     break;
                 case 2:
-                    $where[] = "(N.tipo = 'M')";
-                    $where[] = "(NE.situacao = 'Aprovada' {$orNfeCancelada})";
-                    break;
-                case 3:
                     $where[] = "(N.tipo = 'E')";
-                    $where[] = "(NE.situacao = 'Aprovada' OR NE.situacao = 'Importada' {$orNfeCancelada})";
+                    $where[] = "(nfe_eventos.sucesso = 1 OR NE.situacao = 'Importada' {$orNfeCancelada})";
                     break;
             }
         }
@@ -248,12 +246,18 @@ switch ($gPage) {
             $where[] = "(pessoas_juridicas.fiscal = " . ((int) ($_REQUEST['tratamento_fiscal'] == 1)) . " )";
         }
 
-        $where[] = "NE.sistema IN ('WMS', 'WMS2')";
         $where = implode(" AND ", $where);
 
-        $sql = "SELECT NE.id, NE.xml, NE.chave, NE.data, NE.xml_cancelamento, NE.cancelada
+        $sql = "SELECT
+                    NE.id,
+                    NE.chave,
+                    NE.data,
+                    NE.cancelada,
+                    nfe_eventos.xml,
+                    nfe_eventos.id_nfe_tipos_eventos
                 FROM notas N
                 LEFT JOIN nfe NE ON NE.id_notas = N.id
+                LEFT JOIN nfe_eventos ON nfe_eventos.id_nfe = NE.id
                 {$joinEmpresa}
                 WHERE {$where}";
         $rs = dbFastQuery($sql);
@@ -269,15 +273,15 @@ switch ($gPage) {
                 continue;
             }
 
-            if ($row['cancelada'] && !empty($row['xml_cancelamento'])) {
+            if ($row['cancelada'] && $row['id_nfe_tipos_eventos'] == 2) {
                 $documentosParaApi[] = [
                     'chave' => $row['chave'],
-                    'xml' => $row['xml_cancelamento'],
+                    'xml' => $row['xml'],
                     'tipo' => 'xml_cancelamento'
                 ];
             }
 
-            if ($row['xml']) {
+            if ($row['xml'] && $row['id_nfe_tipos_eventos'] != 2) {
                 $documentosParaApi[] = [
                     'chave' => $row['chave'],
                     'xml' => $row['xml'],
