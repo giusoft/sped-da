@@ -162,11 +162,133 @@ if (($g == "login")) {
 				}
 			}
 
+			$usrId = (int) $rs[0]['id'];
+			$usrIdd = $usrId;
+			$usrName = $rs[0]['nome'];
+			$usrNickname = $rs[0]['apelido'];
+			$usrCliente=$rs[0]["cliente"];
+			$usrEmail = $rs[0]['email'];
+			$usrDate = date("Y-m-d H:i:s");
+			$_SESSION['defaultTimezone'] = "America/Bahia";
+			$_SESSION['modalPicking']=true;
+			$_SESSION['usrId'] = $usrId;
+			$_SESSION['usrIdd'] = $usrIdd;
+			$_SESSION['usrAdmin'] = $usrAdmin;
+			$_SESSION['usrName'] = $usrName;
+			$_SESSION['usrNickname'] = ucfirst($usrNickname);
+			$_SESSION['usrEmail'] = $usrEmail;
+			$_SESSION['usrDate'] = $usrDate;
+			$_SESSION['usrCliente'] = intval($rs[0]['cliente']);
+			$_SESSION['usrClient'] = intval($rs[0]['cliente']);
+			$_SESSION['usrFuncionario'] = intval($rs[0]['funcionario']);
+			$_SESSION['usrMotorista'] = intval($rs[0]['motorista']);
+			$_SESSION['usrFornecedor'] = intval($rs[0]['fornecedor']);
+			$_SESSION['gLang'] = "pt_BR";
+			$_SESSION['key_user'] = ($rs[0]['key_user'] || $usrId == 1);
 
-			$idd = 0;
-			$g = "login_error";
-			dbQuery("INSERT INTO gfw_access (idd, date, try, ip, details) values ($idd,'" . date("Y-m-d H:i:s") . "', 1, '".$_SERVER["REMOTE_ADDR"]."', 'Email: " . $email . " / Password: " . $password . "')");
+			//Filial
+			$usrFilial = "";
+			$sql="SELECT id_filial FROM pessoas_filial WHERE id_pessoas=$usrId AND cancelado=0";
+			if($id_filial > 0)
+				$sql.=" AND id_filial=".(int) $id_filial;
+			//echo $sql;exit;
+			$rsA= dbQuery($sql);
+			foreach ($rsA as $row) {
+				$usrFilial[] = $row['id_filial'];
+			}
 
+			// Definindo filial
+			if ($usrCliente == 1) {
+				$sql = "SELECT
+							A.id, A.descricao
+						FROM pessoas_filial PA
+						LEFT JOIN filial A ON A.id = PA.id_filial
+						WHERE id_pessoas=".intval($_SESSION["usrId"]);
+				$amz=dbQuery($sql);
+			} else {
+				if ($id_filial > 0) {
+					$amz = dbQuery("SELECT * FROM filial WHERE id = $id_filial");
+				} else {
+					$amz = dbQuery("SELECT * FROM filial LIMIT 1");
+				}
+			}
+
+			$_SESSION['filialAtualId'] = $amz[0]["id"];
+			$_SESSION['filialAtualDescricao'] = $amz[0]["descricao"];
+
+			//Permissões
+			$sql="SELECT * FROM gfw_menus WHERE active=1 AND locale='".$gLang."' ORDER BY order1 desc, order2 desc";
+			$todosLinks=dbQuery($sql);
+
+			$sql="SELECT DISTINCT p.id, p.name
+					FROM gfw_permissions_users u
+					inner join gfw_permissions p on p.id=u.id_gfw_permissions
+					WHERE u.id_gfw_users=$usrId
+				";
+			$rs= dbQuery($sql);
+			foreach ($rs as $field)
+			{
+				$permissionsIdNames[$field['id']]=$field['id'];
+				$permissionsNames[$field['id']]=$field['name'];
+			}
+			$sql="SELECT l.id_gfw_menus, m.*
+					FROM gfw_permissions_users u
+					inner join gfw_permissions p on p.id=u.id_gfw_permissions
+					inner join gfw_permissions_links l on l.id_gfw_permissions=p.id
+					INNER JOIN gfw_menus m on l.id_gfw_menus=m.id
+					WHERE u.id_gfw_users=$usrId
+				";
+			$rs= dbQuery($sql);
+			$perms=array();
+			$links=array();
+			foreach ($rs as $field)
+			{
+				$id_gfw_menus=$field['id_gfw_menus'];
+				$perms[]=$id_gfw_menus;
+				if ($field['link']<>'')
+					$links[$field['link']]=$field['link'];
+				foreach ($todosLinks as $linkAtual)
+				{
+					$subNivel=false;
+					if ($linkAtual['id']==$id_gfw_menus)
+					{
+						foreach ($todosLinks as $umLink)
+						{
+							if ($linkAtual['order1']==$umLink['order1'])
+							{
+								if ($umLink['order2']==0)
+								{
+									$perms[]=$umLink['id'];
+									if ($umLink['link']<>'')
+										$links[$umLink['link']]=$umLink['link'];
+								}
+								if (($umLink['order2']<$linkAtual['order2']) && (!$subNivel))
+								{
+									if ($umLink['link']=='')
+									{
+										$perms[]=$umLink['id'];
+										$links[$umLink['link']]=$umLink['link'];
+										$subNivel=true;
+									}
+								}
+							}
+						}
+					}
+				}
+
+			}
+
+			$_SESSION['permissionsIds']=$perms;
+			$_SESSION['permissionsLinks']=$links;
+			$_SESSION['permissionsIdNames']=$permissionsIdNames;
+			$_SESSION['permissionsNames']=$permissionsNames;
+			include_once $gPathDefault."tr/".$gLang.".php";
+
+			dbQuery("INSERT INTO gfw_access (idd, date, login, ip) values ($usrId,'" . date("Y-m-d H:i:s") . "', 1, '".$_SERVER["REMOTE_ADDR"]."')");
+
+			dbQuery("INSERT INTO gfw_log
+				(id_gfw_users, id_gfw_menus,date,details) VALUES
+				($usrId, 5,'".date("Y-m-d H:i:s")."','Login')");
 
 		} else {
 			$idd = 0;
@@ -211,7 +333,7 @@ if ($usrId > 0) {
 
 		*/
 
-		$pag = array();
+		$pag = [];
 		// Básicos
 		$pag['index']        = "index.php";
 		$pag['profile']      = "view/system/profile.php";
@@ -233,8 +355,6 @@ if ($usrId > 0) {
 		$pag['tools']        		= "view/system/tools.php";
 		$pag['central_requisicoes'] = "view/relatorios/central_requisicoes.php";
 
-        // $html = '';
-
 		if (isset($_REQUEST['pp']) && $_REQUEST['pp'] <> '') {
 			$html.='<div class="container">';
 			$html.=gPosts($o);
@@ -242,8 +362,9 @@ if ($usrId > 0) {
 		} elseif ($pag[$g] <> '') {
 			// Acessando um link
 			$link = "src/" . $pag[$g];
-			if($gDevice<>"mobile")
+			if ($gDevice<>"mobile") {
 				include ($link);
+			}
 		} elseif ($g == 'open') {
 			// Montando a página a partir do banco de dados (gerenciador de conteúdo)
 			$do = false;
@@ -259,49 +380,41 @@ if ($usrId > 0) {
 
 			$links = $_SESSION['permissionsLinks'];
 
-			if ((!empty($links[$g])) || ($acessoTotal))
-			{
+			if ((!empty($links[$g])) || ($acessoTotal)) {
 				// Identifica quando a página é em php através do BD (campo arquivo)
-				$rs=dbQuery("SELECT * FROM gfw_menus WHERE link='".$g."'");
+				$rs = dbQuery("SELECT * FROM gfw_menus WHERE link='".$g."'");
 				$debug = $oldDebug;
-				if (count($rs))
-				{
+				if ($rs) {
 					gLog("---------");
 					$link = "src/" . $rs[0]['file'];
 					$arq=str_replace('//','/',$gPath . '/' . $link);
 					$gMenuParameters['id_gfw_menus'] = $rs[0]['id'];
 					$gMenuParameters['full_link'] = $arq;
 
-					if (file_exists($arq))
-					{
+					if (file_exists($arq)) {
 						$t = explode('/', $rs[0]['file']);
 						$classe = "src/Model/".$t[1].".php";
-						if (file_exists($classe))
-						{
+						if (file_exists($classe)) {
 							include ($classe);
 						}
 						include ($link);
-					} else
-					{
+					} else {
 						$html.=$o->msgTitle('error_404');
 						$html.=$o->msgError("error_404_message");
 					}
-				} else
-				{
+				} else {
 					$html.=$o->msgTitle('error_404');
 					$html.=$o->msgError("error_404_message");
 				}
-			} else
-			{
+			} else {
 				$html.=$o->msgTitle('error');
 				$html.=$o->msgError("error_access_denied");
 			}
 		}
 		if ($do) {
-			if ($_REQUEST['gAjs']==1)
+			if ($_REQUEST['gAjs'] == 1) {
 				$o->out($html);
-			else
-			{
+			} else {
 				$o->out(createNormalPage($html, $macros));
 			}
 
@@ -342,16 +455,10 @@ if ($usrId > 0) {
 			$o->setRowLayout();
 
 			// Login
-			if($gDevice<>"mobile")
-			{
-				$signin=$msg;
-				$campoExtra .= '<div class="form-group">' . $o->n;
-				$campoExtra .= '</div>' . $o->n;
-
-				$signin.= $o->login("{url: index.php?g=login; forceSubmit: true; style: inline; esqueceuSenha:false; loginMethod:nickname;filial:true}", $campoExtra);
-			}
-			else
-			{
+			if ($gDevice <> "mobile") {
+				$signin = $msg;
+				$signin .= $o->login("{url: index.php?g=login; forceSubmit: true; style: inline; esqueceuSenha:false; loginMethod:nickname;filial:true}", $campoExtra);
+			} else {
 				$signin='<style>body {background-color: black; color: white}</style>';
 				$signin.='<div style="text-align: center; background-color: black"><img width="100%" src="pub/img/login.jpg"></div>';
 				$signin.=$msg;
@@ -360,9 +467,12 @@ if ($usrId > 0) {
 				$frm->add("{fieldLabel: SENHA; type: text; inputType:password; name:password;}");
 				$sql="SELECT id,descricao FROM filial ORDER BY descricao";
 				$rsa=dbQuery($sql);
-				if(count($rsa)>1)
+
+				if (count($rsa) > 1) {
 					$frm->add("{fieldLabel: UNIDADE; type:combo; name:id_filial; items:$sql}");
-				$signin.=$frm->render();
+				}
+
+				$signin .= $frm->render();
 			}
 
 
