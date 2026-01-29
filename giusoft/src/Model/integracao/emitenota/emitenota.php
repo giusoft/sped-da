@@ -69,7 +69,6 @@ class Emitenota
     public function estornarNfe($dados)
     {
         $dadosEstornarNfe = $this->montarDadosNfe($dados['dadosNfe']);
-        $dadosEstornarNfe['refNfe'] = soNumeros($dados['dadosNfe']['refNfe']);
 
         return $this->acessarRota('estornarNfe', $dadosEstornarNfe);
     }
@@ -466,6 +465,10 @@ class Emitenota
                 )
             )
         );
+
+        if ($dados['refNfe']) {
+            $dadosNfe['refNfe'] = soNumeros($dados['refNfe']);
+        }
 
         return $dadosNfe;
     }
