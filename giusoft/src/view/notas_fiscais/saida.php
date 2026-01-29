@@ -539,6 +539,12 @@ if ($_REQUEST['gAjax']) {
         $idCfop = dbFastQuery("SELECT id FROM cfops WHERE codigo = '{$cfop}' LIMIT 1")[0]['id'];
 
         $notaOrigem['id_cfops'] = $idCfop;
+
+        $chaveNfe = dbFastQuery('SELECT chave FROM nfe WHERE id = ' . $idNFe)[0]['chave'];
+
+        $notaOrigem['refNfe'] = $chaveNfe;
+        $dados['refNfe'] = $chaveNfe;
+
         $idNovaNota = dbInsert('notas', $notaOrigem, true);
 
         $nf->salvarNotasItensEImpostos($idNotaOrigem, $idNovaNota);
@@ -571,8 +577,6 @@ if ($_REQUEST['gAjax']) {
         $dados['operacao'] = '999 - ESTORNO DE NFE NAO CANCELADA NO PRAZO LEGAL';
         $dados['indIEDest'] = $nota["IE"]; // Atualmente não usamos na API
         $dados['codigoAntt'] = $nota["RNTC"];
-        $chaveNfe = dbFastQuery('SELECT chave FROM nfe WHERE id = ' . $idNFe)[0]['chave'];
-        $dados['refNfe'] = $chaveNfe;
         $dados['finalidadeOperacao'] = 3;
 
         $dados['especieMarca'] = $nota["marca"];
