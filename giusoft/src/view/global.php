@@ -146,8 +146,8 @@ function createMenu()
 					$logo="logo_".$dbname.".jpg";
 				if (file_exists($gPathImg."logo_".$dbname.".png"))
 					$logo="logo_".$dbname.".png";
-				if (file_exists($gPath."files/logo.jpg"))
-					$logo="files/logo.jpg";
+				if (file_exists($gPath."pub/logo.jpg"))
+					$logo="pub/logo.jpg";
 				if ($usrId == 0 || $_SESSION['edicaoAtiva']==1)
 				{
 					$menu=new gMenu("{title: ".$titulo."; logo: ".$logo."; maxHeight: 43px; debug: " . $debug . "; type: bar; fixed: true; url: index.php}");
@@ -155,7 +155,7 @@ function createMenu()
 				} else
 				{
 
-					$menu=new gMenu("{title: ".$titulo."; logo: faviconw.png; maxHeight: 24px; debug: " . $debug . "; type: bar; fixed: true; url: index.php?g=index}");
+					$menu=new gMenu("{title: ".$titulo."; logo:".$logo."; maxHeight: 24px; debug: " . $debug . "; type: bar; fixed: true; url: index.php?g=index}");
 					$show="and (show_at=0 or show_at=2)";
 				}
 

@@ -24,6 +24,21 @@ if (count($rs)>0)
 	$html.='<div class="alert alert-danger alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>Você possui mensagens não lidas</div>';
 }
 
+
+$sql = "SELECT
+            COUNT(DISTINCT notas.id) AS total_emitidas,
+            COUNT(DISTINCT CASE
+                WHEN (nfe.situacao IS NULL OR nfe.situacao <> 'Aprovada')
+                THEN notas.id
+            END) AS total_pendentes
+        FROM notas
+        LEFT JOIN nfe ON nfe.id_notas = notas.id
+        WHERE notas.data_emissao = CURDATE()
+            AND notas.id_filial = {$_SESSION['filialAtualId']}
+            AND notas.cancelada = 0";
+$notas = dbQuery($sql)[0];
+
+
 // ----------------- DASHBOARD -----------------
 
 include_once $gPathDefault . "gDashboard.php";
@@ -83,6 +98,7 @@ function gerarTokenAlexa($id)
 
 // ------------- Estrutura do dashboard -------------
 $col1 = $dash->avatar("{id: $usrId; name: ".gShortName($usrName)." ".$o->label($gId,"success")."; token_alexa: $token; email: $usrEmail; phone: $usrPhone; hint: $hint; href: index.php?g=profile;}", $graf);
+$col2 = $dash->text("{title: Notas fiscais; hint: Faltando executar: ".$o->badge($notas['total_pendentes']).";value:" . $notas['total_emitidas'] . "; }", false);
 
 $dash->setColumnsWidth(1,1,1,1);
 $dash->addRow($col1,$col2, $col3, $col4);
