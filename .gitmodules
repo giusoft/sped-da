@@ -1,12 +1,15 @@
-[submodule "src/Lib/sped-da"]
-	path = src/Lib/sped-da
+[submodule "giusoft/src/Lib/sped-da"]
+	path = giusoft/src/Lib/sped-da
 	url = git@github.com:giusoft/sped-da.git
-[submodule "src/Lib/sped-common"]
-	path = src/Lib/sped-common
+
+[submodule "giusoft/src/Lib/sped-common"]
+	path = giusoft/src/Lib/sped-common
 	url = git@github.com:giusoft/sped-common.git
-[submodule "src/Lib/sped-nfe"]
-	path = src/Lib/sped-nfe
+
+[submodule "giusoft/src/Lib/sped-nfe"]
+	path = giusoft/src/Lib/sped-nfe
 	url = git@github.com:giusoft/sped-nfe.git
+
 [submodule "giusoft/gfw"]
 	path = giusoft/gfw
 	url = git@github.com:giusoft/gfw.git
